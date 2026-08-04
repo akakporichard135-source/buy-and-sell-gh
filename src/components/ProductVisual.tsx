@@ -5,7 +5,7 @@ export function ProductVisual({ product, size = "card", priority = false }: { pr
   if (image) {
     return (
       <div
-        className={`product-visual product-image-frame relative grid overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
+        className={`product-visual product-image-frame relative grid min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
           size === "large" ? "min-h-[360px]" : "min-h-[230px]"
         } place-items-center`}
       >
@@ -27,7 +27,7 @@ export function ProductVisual({ product, size = "card", priority = false }: { pr
 
   return (
     <div
-      className={`product-visual relative grid overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
+      className={`product-visual relative grid min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
         size === "large" ? "min-h-[360px]" : "min-h-[230px]"
       } place-items-center`}
       role="img"

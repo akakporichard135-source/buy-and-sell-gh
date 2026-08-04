@@ -122,15 +122,6 @@ export function ProductDetailsPage() {
           </div>
           <p className="mt-2 text-sm font-bold text-ink/58">Confirm availability and final details before payment.</p>
 
-          <div className="mt-7 grid gap-5 sm:grid-cols-2">
-            <label className="choice-label">Storage
-              <select value={storage} onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
-            </label>
-            <label className="choice-label">Colour
-              <select value={color} onChange={(e) => setColor(e.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
-            </label>
-          </div>
-
           <div className="mt-6 grid gap-2 text-sm font-bold text-ink/75 sm:grid-cols-2">
             <span><CheckCircle2 size={17} /> Condition: {product.condition}</span>
             <span><CheckCircle2 size={17} /> Stock: {product.stockStatus}</span>
@@ -138,6 +129,15 @@ export function ProductDetailsPage() {
             <span><CheckCircle2 size={17} /> Face ID: {product.faceIdStatus ?? "Confirm selected unit"}</span>
             <span><CheckCircle2 size={17} /> SIM: {product.simStatus ?? "Confirm selected unit"}</span>
             <span><CheckCircle2 size={17} /> Pickup: {business.location}</span>
+          </div>
+
+          <div className="mt-7 grid gap-5 sm:grid-cols-2">
+            <label className="choice-label">Storage
+              <select value={storage} onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
+            </label>
+            <label className="choice-label">Colour
+              <select value={color} onChange={(e) => setColor(e.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
+            </label>
           </div>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -176,9 +176,13 @@ export function ProductDetailsPage() {
           <ProductGrid products={recentlyViewed} />
         </section>
       )}
+      <div className="product-sticky-spacer" aria-hidden="true" />
       <div className="sticky-product-actions">
+        <div className="sticky-product-price">
+          <span>{formatGhs(product.price)}</span>
+          <small>{isSoldOut ? "Sold Out" : product.stockStatus}</small>
+        </div>
         <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={17} /> WhatsApp</a>
-        <button className="btn-primary" type="button" onClick={handleAddToCart} disabled={isSoldOut}><ShoppingBag size={17} /> Add</button>
       </div>
     </>
   );

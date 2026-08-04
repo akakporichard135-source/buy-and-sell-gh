@@ -17,7 +17,7 @@ export function CartPage() {
         <h1>Your selected devices</h1>
         <p>Checkout continues through WhatsApp. Delivery and final availability are confirmed by the shop.</p>
       </section>
-      <section className="section grid gap-8 lg:grid-cols-[1fr_360px]">
+      <section className="section cart-layout grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="grid gap-4">
           {items.length === 0 ? (
             <div className="rounded-lg border border-black/7 bg-white p-8 text-center shadow-card">
@@ -26,18 +26,18 @@ export function CartPage() {
             </div>
           ) : (
             items.map((item) => (
-              <article className="grid gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={`${item.product.id}-${item.storage}-${item.color}`}>
+              <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={`${item.product.id}-${item.storage}-${item.color}`}>
                 <ProductVisual product={item.product} />
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-black">{item.product.name}</h2>
                   <p className="mt-1 text-sm font-bold text-ink/60">{item.storage} | {item.color}</p>
                   <p className="mt-3 text-lg font-black">{formatGhs(item.product.price)}</p>
                 </div>
-                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                  <div className="flex items-center rounded-full border border-black/10">
-                    <button className="p-2" type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity - 1)}><Minus size={16} /></button>
+                <div className="cart-item-controls flex items-center gap-2 sm:flex-col sm:items-end">
+                  <div className="quantity-stepper">
+                    <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity - 1)}><Minus size={16} /></button>
                     <span className="min-w-8 text-center font-black">{item.quantity}</span>
-                    <button className="p-2" type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity + 1)}><Plus size={16} /></button>
+                    <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity + 1)}><Plus size={16} /></button>
                   </div>
                   <button className="icon-button" type="button" aria-label="Remove item" onClick={() => removeItem(item.product.id, item.storage, item.color)}><Trash2 size={18} /></button>
                 </div>

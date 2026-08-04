@@ -77,7 +77,7 @@ export function HomePage() {
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
               Shop original iPhones, iPads and Apple gadgets with confidence. Buy, sell, swap or request the device you want from a trusted gadget shop in Accra.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="hero-actions mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="btn-primary bg-gold text-black hover:bg-gold-light" to="/shop">
                 Shop Available Devices <ArrowRight size={18} />
               </Link>
@@ -90,7 +90,7 @@ export function HomePage() {
         </div>
       </section>
       <section className="section">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        <div className="trust-grid grid gap-3 lg:grid-cols-6">
           {trust.map(({ label, description, icon: Icon }) => (
             <div key={label} className="trust-card trust-card-premium">
               <Icon size={24} />
@@ -154,7 +154,7 @@ export function HomePage() {
           <p className="eyebrow-dark">Shop by category</p>
           <h2>Find the right device faster</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="category-grid grid gap-4 lg:grid-cols-4">
           {categories.map((category) => {
             const Icon = categoryIcons[category];
             return (

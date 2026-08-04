@@ -51,12 +51,18 @@ export function ShopPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
+    if (!drawerOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setDrawerOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [drawerOpen]);
 
   const activeFilterCount = useMemo(() => {
     return Object.entries(filters).filter(([key, value]) => value !== defaultFilters[key as keyof FiltersState]).length;
@@ -151,8 +157,18 @@ export function ShopPage() {
         <div className="filter-drawer" role="dialog" aria-modal="true" aria-label="Product filters">
           <button className="filter-drawer-backdrop" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)} />
           <div className="filter-drawer-panel">
-            <button className="icon-button ml-auto" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-lg font-black text-ink">Filters</p>
+                <p className="text-sm font-bold text-ink/60">{activeFilterCount} active</p>
+              </div>
+              <button className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
+            </div>
             <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} />
+            <div className="filter-drawer-actions">
+              <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Apply Filters</button>
+              <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
+            </div>
           </div>
         </div>
       )}
@@ -172,7 +188,7 @@ function FilterControls({
   activeFilterCount: number;
 }) {
   return (
-    <div>
+    <div className="filter-controls">
       <div className="mb-4 flex items-center justify-between gap-3 text-lg font-black">
         <span className="flex items-center gap-2"><SlidersHorizontal size={20} /> Filters</span>
         {activeFilterCount > 0 && <button className="text-sm font-black text-gold-dark" type="button" onClick={clearFilters}>Clear All</button>}

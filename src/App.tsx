@@ -32,7 +32,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
-      <WhatsAppButton className="fixed bottom-4 right-4 z-40 px-4 py-3 shadow-2xl sm:bottom-6 sm:right-6">Chat</WhatsAppButton>
+      <WhatsAppButton className="floating-whatsapp fixed z-40 px-4 py-3 shadow-2xl">Chat</WhatsAppButton>
     </div>
   );
 }

@@ -14,27 +14,27 @@ export function ProductCard({ product }: { product: Product }) {
   const badges = product.badges?.length ? product.badges : [product.badge, product.condition].filter(Boolean);
 
   return (
-    <article className="group flex h-full min-h-[650px] flex-col rounded-lg border border-black/7 bg-white p-3 shadow-card transition hover:-translate-y-1 hover:shadow-xl">
+    <article className="product-card group flex h-full min-w-0 flex-col rounded-lg border border-black/7 bg-white p-3 shadow-card transition hover:-translate-y-1 hover:shadow-xl">
       <ProductVisual product={product} />
-      <div className="flex flex-1 flex-col p-2">
+      <div className="flex min-w-0 flex-1 flex-col p-2">
         <div className="mt-4 flex flex-wrap gap-2">
           {badges.slice(0, 3).map((badge) => (
             <span key={badge} className={`product-badge ${badge === "Sold Out" ? "product-badge-danger" : ""}`}>{badge}</span>
           ))}
         </div>
-        <div className="mt-3 flex items-start justify-between gap-3">
-          <div>
+        <div className="mt-3 flex min-w-0 flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-extrabold uppercase text-gold-dark">{product.condition}</p>
             <h3 className="mt-1 text-lg font-black text-ink">{product.name}</h3>
           </div>
-          <span className={`rounded-full px-2.5 py-1 text-xs font-black ${isSoldOut ? "bg-red-100 text-red-700" : "bg-warm text-ink"}`}>{product.stockStatus}</span>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-black ${isSoldOut ? "bg-red-100 text-red-700" : "bg-warm text-ink"}`}>{product.stockStatus}</span>
         </div>
         <div className="mt-3 flex flex-wrap items-end gap-2">
           <p className="text-2xl font-black text-ink sm:text-3xl">{formatGhs(product.price)}</p>
           {product.oldPrice && <p className="pb-1 text-sm font-black text-ink/40 line-through">{formatGhs(product.oldPrice)}</p>}
         </div>
         <p className="mt-1 text-sm font-bold text-ink/60">Confirm availability before payment</p>
-        <div className="mt-4 grid gap-2 text-base font-semibold text-ink/75">
+        <div className="mt-4 grid min-w-0 gap-2 text-base font-semibold text-ink/75">
           <span>Storage: {product.storage.join(", ")}</span>
           <span>Colours: {product.colors.slice(0, 3).join(", ")}</span>
         </div>
