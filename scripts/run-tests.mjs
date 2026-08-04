@@ -23,6 +23,7 @@ const bundle = async (entry, outfile) => {
 try {
   const cart = await bundle(path.join(projectRoot, "src/context/cartOperations.ts"), path.join(outdir, "cartOperations.mjs"));
   const whatsapp = await bundle(path.join(projectRoot, "src/utils/whatsapp.ts"), path.join(outdir, "whatsapp.mjs"));
+  const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
 
   const product = {
     id: "iphone-15-pro-max",
@@ -76,8 +77,23 @@ try {
   assert.ok(productUrl.startsWith("https://wa.me/233244182149?text="), "Product WhatsApp link uses primary number");
   assert.ok(decodeURIComponent(productUrl).includes("iPhone 15 Pro Max"), "Product WhatsApp link includes product name");
 
-  const checkoutUrl = whatsapp.checkoutWhatsAppUrl(items);
-  assert.ok(decodeURIComponent(checkoutUrl).includes("Subtotal: GHS 14,500"), "Checkout WhatsApp link includes subtotal");
+  const order = orders.buildOrderRequestPayload(items, {
+    fullName: "Test Customer",
+    phone: "0240000000",
+    fulfilmentType: "delivery",
+    deliveryLocation: "Accra",
+    preferredPaymentMethod: "Mobile Money",
+    additionalNote: "Please confirm today.",
+  }, "BSGH-TEST-0001");
+  assert.equal(order.referenceNumber, "BSGH-TEST-0001", "Order request keeps generated reference");
+  assert.equal(order.status, "New", "Order request starts in New status");
+  assert.equal(order.total, 14500, "Order request total is calculated from cart items");
+
+  const orderRequestUrl = whatsapp.orderRequestWhatsAppUrl(order);
+  const decodedOrderRequest = decodeURIComponent(orderRequestUrl);
+  assert.ok(orderRequestUrl.startsWith("https://wa.me/233244182149?text="), "Order request WhatsApp link uses primary number");
+  assert.ok(decodedOrderRequest.includes("Order reference: BSGH-TEST-0001"), "Order request WhatsApp link includes reference");
+  assert.ok(decodedOrderRequest.includes("Total: GHS 14,500"), "Order request WhatsApp link includes total");
 
   console.log("All tests passed");
 } finally {

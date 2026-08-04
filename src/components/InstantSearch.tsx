@@ -15,6 +15,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
     if (!open) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("instant-search-open");
     const id = window.setTimeout(() => inputRef.current?.focus(), 50);
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -23,6 +24,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
     return () => {
       window.clearTimeout(id);
       document.body.style.overflow = originalOverflow;
+      document.body.classList.remove("instant-search-open");
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [onClose, open]);

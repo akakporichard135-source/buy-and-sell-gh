@@ -169,7 +169,7 @@ export function ProductDetailsPage() {
               <button type="button" aria-label="Increase quantity" onClick={() => setQuantity((value) => Math.min(9, value + 1))}><Plus size={17} /></button>
             </div>
             <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> Add to Cart</button>
-            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> Buy Now on WhatsApp</a>
+            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> Confirm Availability</a>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={18} /> WhatsApp Enquiry</a>

@@ -1,5 +1,6 @@
 import { business } from "../config/business";
-import type { CartItem, Product } from "../types/product";
+import type { OrderRequestPayload } from "../types/order";
+import type { Product } from "../types/product";
 import { formatGhs } from "./format";
 
 export type WhatsAppIntent = "general" | "product" | "trade" | "request" | "delivery";
@@ -28,22 +29,28 @@ export const productWhatsAppUrl = (product: Product, storage: string, color: str
     ].filter(Boolean).join(" "),
   );
 
-export const checkoutWhatsAppUrl = (items: CartItem[], customerNote = "Customer details to be confirmed on WhatsApp.") => {
-  const lines = items.map(
+export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
+  const lines = order.items.map(
     (item, index) =>
-      `${index + 1}. ${item.product.name} - ${item.storage}, ${item.color} x${item.quantity} (${formatGhs(
-        item.product.price * item.quantity,
+      `${index + 1}. ${item.productName} - ${item.storage}, ${item.colour}, ${item.condition} x${item.quantity} (${formatGhs(
+        item.lineTotal,
       )})`,
   );
-  const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return whatsappUrl(
     [
-      "Hello Buy & Sell GH, I would like to checkout with these items:",
+      "Hello Buy & Sell GH, I would like to send this order request:",
+      `Order reference: ${order.referenceNumber}`,
+      `Customer name: ${order.customer.fullName}`,
+      `Phone: ${order.customer.phone}`,
+      order.customer.email ? `Email: ${order.customer.email}` : "",
       ...lines,
-      `Subtotal: ${formatGhs(total)}`,
-      "Delivery/pickup: Please confirm the best option.",
-      customerNote,
-    ].join("\n"),
+      `Total: ${formatGhs(order.total)}`,
+      `Delivery or pickup: ${order.customer.fulfilmentType === "delivery" ? "Delivery" : "Pickup"}`,
+      order.customer.deliveryLocation ? `Delivery location: ${order.customer.deliveryLocation}` : "",
+      `Preferred payment method: ${order.customer.preferredPaymentMethod}`,
+      order.customer.additionalNote ? `Additional note: ${order.customer.additionalNote}` : "Additional note: None",
+      "Please verify product availability, price, payment and delivery details.",
+    ].filter(Boolean).join("\n"),
   );
 };
