@@ -1,0 +1,85 @@
+import { BarChart3, Bell, LogOut, Menu, Package, Settings, ShoppingBag, Star, Tag, UserCircle, X } from "lucide-react";
+import { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { business } from "../config/business";
+import { useAdminAuth } from "../admin/AdminAuth";
+import { Logo } from "../components/Logo";
+
+const adminLinks = [
+  { label: "Overview", to: "/admin", icon: BarChart3 },
+  { label: "Products", to: "/admin/products", icon: Package },
+  { label: "Order Requests", to: "/admin/orders", icon: ShoppingBag },
+  { label: "Trade-In Requests", to: "/admin/trade-ins", icon: Tag },
+  { label: "Device Requests", to: "/admin/device-requests", icon: Bell },
+  { label: "Contact Messages", to: "/admin/contact-messages", icon: Bell },
+  { label: "Reviews", to: "/admin/reviews", icon: Star },
+  { label: "Promotions", to: "/admin/promotions", icon: Tag },
+  { label: "Business Settings", to: "/admin/settings", icon: Settings },
+  { label: "Admin Account", to: "/admin/account", icon: UserCircle },
+];
+
+export function AdminLayout() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { logout, session } = useAdminAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/admin/login", { replace: true });
+  };
+
+  return (
+    <div className="admin-shell">
+      <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
+        <div className="admin-sidebar-header">
+          <Logo />
+          <button className="icon-button lg:hidden" type="button" aria-label="Close admin menu" onClick={() => setMenuOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+        <nav className="admin-nav" aria-label="Admin navigation">
+          {adminLinks.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                className={({ isActive }) => `admin-nav-link ${isActive ? "is-active" : ""}`}
+                end={item.to === "/admin"}
+                key={item.to}
+                onClick={() => setMenuOpen(false)}
+                to={item.to}
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+        <button className="admin-logout" type="button" onClick={handleLogout}>
+          <LogOut size={18} />
+          Logout
+        </button>
+      </aside>
+
+      {menuOpen && <button className="admin-menu-backdrop lg:hidden" type="button" aria-label="Close admin menu" onClick={() => setMenuOpen(false)} />}
+
+      <div className="admin-main">
+        <header className="admin-topbar">
+          <button className="icon-button lg:hidden" type="button" aria-label="Open admin menu" onClick={() => setMenuOpen(true)}>
+            <Menu size={22} />
+          </button>
+          <div>
+            <p className="eyebrow-dark">Admin Dashboard</p>
+            <h1>{business.name}</h1>
+          </div>
+          <div className="admin-account-pill">
+            <UserCircle size={18} />
+            <span>{session?.email}</span>
+          </div>
+        </header>
+        <main className="admin-content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
