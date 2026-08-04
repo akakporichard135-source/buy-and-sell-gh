@@ -46,6 +46,7 @@ export function ShopPage() {
     ...defaultFilters,
     category: params.get("category") ?? "All",
     newArrival: params.get("newArrival") === "true",
+    popular: params.get("popular") === "true",
   });
   const [sort, setSort] = useState<SortOption>("Newest");
   const [drawerOpen, setDrawerOpen] = useState(false);

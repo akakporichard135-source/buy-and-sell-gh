@@ -18,6 +18,7 @@ import {
 import { Link } from "react-router-dom";
 import { FAQList } from "../components/FAQList";
 import { FormField } from "../components/FormField";
+import { ProductCard } from "../components/ProductCard";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
@@ -25,6 +26,7 @@ import { WhatsAppButton } from "../components/WhatsAppButton";
 import { business } from "../config/business";
 import { categories, products } from "../data/products";
 import { promotions } from "../data/promotions";
+import type { Product } from "../types/product";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 const trust = [
@@ -54,10 +56,17 @@ const categoryIcons = {
 };
 
 export function HomePage() {
-  const featured = products.slice(0, 6);
   const newArrivals = products.filter((product) => product.isNewArrival);
   const popularChoices = products.filter((product) => product.isPopular);
   const activePromotions = promotions.filter((promotion) => promotion.isActive);
+  const desktopNewArrivals = newArrivals.slice(0, 4);
+  const mobileNewArrivals = newArrivals.slice(0, 3);
+  const newArrivalIds = new Set(mobileNewArrivals.map((product) => product.id));
+  const desktopPopularChoices = popularChoices.filter((product) => !desktopNewArrivals.some((arrival) => arrival.id === product.id)).slice(0, 4);
+  const mobilePopularChoices = popularChoices.filter((product) => !newArrivalIds.has(product.id)).slice(0, 3);
+  const usedDesktopIds = new Set([...desktopNewArrivals, ...desktopPopularChoices].map((product) => product.id));
+  const featured = products.filter((product) => !usedDesktopIds.has(product.id)).slice(0, 4);
+  const mobileCategories = categories.filter((category) => ["iPhones", "iPads", "AirPods", "Apple Watches"].includes(category));
 
   return (
     <>
@@ -66,7 +75,7 @@ export function HomePage() {
         100% Original Devices | Trusted Deals | Delivery Available in Accra
       </section>
       <section className="hero-shell">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:px-8 lg:py-24">
+        <div className="home-container home-hero-grid grid items-center gap-10 py-14 lg:grid-cols-[0.96fr_1.04fr] lg:py-20">
           <div>
             <p className="eyebrow">Buy & Sell GH | Accra Gadget Shop</p>
             <h1 className="hero-title mt-4 max-w-4xl font-black text-white">
@@ -79,17 +88,17 @@ export function HomePage() {
             </p>
             <div className="hero-actions mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="btn-primary bg-gold text-black hover:bg-gold-light" to="/shop">
-                Shop Available Devices <ArrowRight size={18} />
+                Shop Devices <ArrowRight size={18} />
               </Link>
               <WhatsAppButton>Chat on WhatsApp</WhatsAppButton>
-              <Link className="btn-glass" to="/sell-or-trade">Sell or Trade Your Phone</Link>
             </div>
+            <Link className="hero-trade-link mt-4 inline-flex text-sm font-black text-gold-light underline-offset-4 hover:underline" to="/sell-or-trade">Sell or Trade Your Phone</Link>
             <p className="mt-6 text-sm font-black uppercase text-white/72">100% Original Devices | Device Inspection | Delivery Available</p>
           </div>
           <HeroDeviceShowcase />
         </div>
       </section>
-      <section className="section">
+      <section className="section home-section">
         <div className="trust-grid grid gap-3 lg:grid-cols-6">
           {trust.map(({ label, description, icon: Icon }) => (
             <div key={label} className="trust-card trust-card-premium">
@@ -103,7 +112,7 @@ export function HomePage() {
         </div>
       </section>
       {activePromotions.length > 0 && (
-        <section className="section">
+        <section className="section home-section home-desktop-detail">
           <div className="grid gap-5">
             {activePromotions.map((promotion) => (
               <article className="promo-banner" key={promotion.id}>
@@ -119,42 +128,25 @@ export function HomePage() {
           </div>
         </section>
       )}
-      <section className="section">
+      <section className="section home-section">
         <div className="section-heading">
           <p className="eyebrow-dark">Recently added</p>
           <h2>New Arrivals</h2>
           <p>Fresh devices and accessories recently added to Buy & Sell GH.</p>
         </div>
-        <ProductGrid products={newArrivals} />
-        <div className="mt-8 flex justify-center">
+        <ProductGrid products={desktopNewArrivals} className="home-desktop-products" />
+        <HomeProductCarousel products={mobileNewArrivals} />
+        <div className="home-product-link mt-8 flex justify-center">
           <Link className="btn-primary" to="/shop?newArrival=true">View All New Arrivals <ArrowRight size={18} /></Link>
         </div>
       </section>
-      <section className="section">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Frequently requested</p>
-          <h2>Popular Choices</h2>
-          <p>Devices customers frequently ask about.</p>
-        </div>
-        <ProductGrid products={popularChoices} />
-      </section>
-      <section className="section">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Featured products</p>
-          <h2>Available Devices</h2>
-          <p>Explore selected iPhones and Apple gadgets currently featured by Buy & Sell GH.</p>
-        </div>
-        <ProductGrid products={featured} />
-        <div className="mt-8 flex justify-center">
-          <Link className="btn-primary" to="/shop">View All Devices <ArrowRight size={18} /></Link>
-        </div>
-      </section>
-      <section className="section">
+
+      <section className="section home-section">
         <div className="section-heading">
           <p className="eyebrow-dark">Shop by category</p>
           <h2>Find the right device faster</h2>
         </div>
-        <div className="category-grid grid gap-4 lg:grid-cols-4">
+        <div className="category-grid category-grid-desktop grid gap-4 lg:grid-cols-4">
           {categories.map((category) => {
             const Icon = categoryIcons[category];
             return (
@@ -166,9 +158,25 @@ export function HomePage() {
             );
           })}
         </div>
+        <div className="category-grid category-grid-mobile grid gap-4">
+          {mobileCategories.map((category) => {
+            const Icon = categoryIcons[category];
+            return (
+              <Link key={category} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(category)}`}>
+                <span className="category-icon"><Icon size={25} /></span>
+                <span>{category}</span>
+                <ArrowRight size={18} />
+              </Link>
+            );
+          })}
+        </div>
+        <div className="mt-5 flex justify-center md:hidden">
+          <Link className="btn-secondary" to="/shop">View All Categories <ArrowRight size={17} /></Link>
+        </div>
       </section>
-      <section className="section grid gap-8 lg:grid-cols-2">
-        <div className="panel-dark">
+
+      <section className="section home-section grid gap-8 lg:grid-cols-2">
+        <div className="panel-dark home-desktop-detail">
           <p className="eyebrow">Why choose Buy & Sell GH</p>
           <h2>Trusted Help for Your Next Upgrade</h2>
           <p>
@@ -192,7 +200,7 @@ export function HomePage() {
           <div>
             <p className="eyebrow-dark">Sell or trade</p>
             <h2>Turn Your Current Phone Into Your Next Upgrade</h2>
-            <p>Sell or swap your current phone and use its value toward your next device. Submit your details and receive guidance before the physical inspection.</p>
+            <p>Sell or swap your current phone and use its value toward your next device. Submit your details and receive guidance before inspection.</p>
             <Link className="btn-primary mt-6" to="/sell-or-trade">Start a Trade-In</Link>
           </div>
           <div className="trade-visual" aria-hidden="true">
@@ -202,7 +210,33 @@ export function HomePage() {
           </div>
         </div>
       </section>
-      <section className="section grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+
+      <section className="section home-section">
+        <div className="section-heading">
+          <p className="eyebrow-dark">Frequently requested</p>
+          <h2>Popular Choices</h2>
+          <p>Devices customers frequently ask about.</p>
+        </div>
+        <ProductGrid products={desktopPopularChoices} className="home-desktop-products" />
+        <HomeProductCarousel products={mobilePopularChoices} />
+        <div className="home-product-link mt-8 flex justify-center">
+          <Link className="btn-primary" to="/shop?popular=true">View All Popular Choices <ArrowRight size={18} /></Link>
+        </div>
+      </section>
+
+      <section className="section home-section home-desktop-detail">
+        <div className="section-heading">
+          <p className="eyebrow-dark">Featured products</p>
+          <h2>Available Devices</h2>
+          <p>Explore selected iPhones and Apple gadgets currently featured by Buy & Sell GH.</p>
+        </div>
+        <ProductGrid products={featured} />
+        <div className="home-product-link mt-8 flex justify-center">
+          <Link className="btn-primary" to="/shop">View All Devices <ArrowRight size={18} /></Link>
+        </div>
+      </section>
+
+      <section className="section home-section home-desktop-device-form grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <p className="eyebrow-dark">Device request</p>
           <h2 className="title-md">Can't Find the Device You Want?</h2>
@@ -219,7 +253,16 @@ export function HomePage() {
           <FormField label="Additional message" name="message" required textarea />
         </SuccessForm>
       </section>
-      <section className="section">
+      <section className="section home-section home-mobile-cta">
+        <div className="panel-dark">
+          <p className="eyebrow">Device request</p>
+          <h2>Can't Find the Device You Want?</h2>
+          <p>Tell us the model, storage, colour and budget. We'll help you check availability.</p>
+          <Link className="btn-primary mt-5 bg-gold text-black hover:bg-gold-light" to="/device-request">Request a Device</Link>
+        </div>
+      </section>
+
+      <section className="section home-section home-desktop-detail">
         <div className="section-heading">
           <p className="eyebrow-dark">Reviews</p>
           <h2>What Customers Say</h2>
@@ -235,7 +278,7 @@ export function HomePage() {
         </div>
         <p className="mt-5 text-center text-sm font-bold text-ink/55">Sample content. Replace with genuine customer feedback before final launch.</p>
       </section>
-      <section className="section grid gap-6 lg:grid-cols-2">
+      <section className="section home-section grid gap-6 lg:grid-cols-2">
         <div className="social-band">
           <p className="eyebrow">Social</p>
           <h2>Follow {business.username}</h2>
@@ -250,10 +293,11 @@ export function HomePage() {
             <p className="eyebrow-dark">FAQ preview</p>
             <h2>Common questions</h2>
           </div>
-          <FAQList />
+          <FAQList limit={4} />
+          <Link className="btn-secondary mt-5" to="/faq">View All FAQs</Link>
         </div>
       </section>
-      <section className="final-cta">
+      <section className="final-cta home-desktop-detail">
         <div>
           <p className="eyebrow">Next upgrade</p>
           <h2>Ready to Get Your Next Device?</h2>
@@ -266,6 +310,16 @@ export function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function HomeProductCarousel({ products }: { products: Product[] }) {
+  return (
+    <div className="home-mobile-carousel" aria-label="Swipe products">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} variant="compact" />
+      ))}
+    </div>
   );
 }
 
