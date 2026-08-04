@@ -1,12 +1,15 @@
-import { Search, X } from "lucide-react";
+import { MessageCircle, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 import { products } from "../data/products";
 import { formatGhs } from "../utils/format";
+import { productWhatsAppUrl } from "../utils/whatsapp";
 
 export function InstantSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const { addItem } = useCart();
 
   useEffect(() => {
     if (!open) return;
@@ -58,14 +61,24 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
         <div className="mt-4 grid gap-3">
           {results.length > 0 ? (
             results.map((product) => (
-              <Link className="instant-search-result" key={product.id} to={`/product/${product.slug}`} onClick={onClose}>
-                <img src={product.images[0].src} alt={product.images[0].alt} loading="lazy" />
-                <span>
-                  <strong>{product.name}</strong>
-                  <small>{product.condition} | {product.storage.join(", ")} | {formatGhs(product.price)}</small>
-                </span>
-                <em>{product.stockStatus}</em>
-              </Link>
+              <article className="instant-search-result" key={product.id}>
+                <Link className="instant-search-product-link" to={`/product/${product.slug}`} onClick={onClose}>
+                  <img src={product.images[0].src} alt={product.images[0].alt} loading="lazy" />
+                  <span>
+                    <strong>{product.name}</strong>
+                    <small>{product.condition} | {product.storage.join(", ")} | {formatGhs(product.price)}</small>
+                  </span>
+                  <em>{product.stockStatus}</em>
+                </Link>
+                <div className="instant-search-actions">
+                  <button type="button" onClick={() => addItem(product)} disabled={product.stockStatus === "Sold Out" || product.stockQuantity < 1}>
+                    <Plus size={15} /> Add
+                  </button>
+                  <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noreferrer">
+                    <MessageCircle size={15} /> WhatsApp
+                  </a>
+                </div>
+              </article>
             ))
           ) : (
             <div className="rounded-lg border border-black/7 bg-white p-5 text-center font-bold text-ink/65">

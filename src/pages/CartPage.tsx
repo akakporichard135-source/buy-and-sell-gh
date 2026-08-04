@@ -27,9 +27,11 @@ export function CartPage() {
           ) : (
             items.map((item) => (
               <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={`${item.product.id}-${item.storage}-${item.color}`}>
-                <ProductVisual product={item.product} />
+                <Link to={`/product/${item.product.slug}`} aria-label={`View ${item.product.name}`}>
+                  <ProductVisual product={item.product} />
+                </Link>
                 <div className="min-w-0">
-                  <h2 className="text-xl font-black">{item.product.name}</h2>
+                  <Link to={`/product/${item.product.slug}`} className="text-xl font-black text-ink hover:text-gold-dark">{item.product.name}</Link>
                   <p className="mt-1 text-sm font-bold text-ink/60">{item.storage} | {item.color}</p>
                   <p className="mt-3 text-lg font-black">{formatGhs(item.product.price)}</p>
                 </div>

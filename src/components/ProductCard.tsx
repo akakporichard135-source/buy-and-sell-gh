@@ -43,11 +43,9 @@ export function ProductCard({ product, variant = "default" }: { product: Product
           <Link className="btn-secondary" to={`/product/${product.slug}`}>
             <Eye size={17} /> View Details
           </Link>
-          {!isCompact && (
-            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" onClick={() => addItem(product)} disabled={isSoldOut}>
-              <Plus size={17} /> {isSoldOut ? "Sold Out" : "Add to Cart"}
-            </button>
-          )}
+          <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" onClick={() => addItem(product, storage, color)} disabled={isSoldOut}>
+            <Plus size={17} /> {isSoldOut ? "Sold Out" : "Add to Cart"}
+          </button>
           <a className="btn-ghost" href={productWhatsAppUrl(product, storage, color)} target="_blank" rel="noreferrer">
             <MessageCircle size={17} /> {isSoldOut ? "Request Restock" : "WhatsApp Enquiry"}
           </a>

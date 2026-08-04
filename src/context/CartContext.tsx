@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { CartItem, Product } from "../types/product";
+import { addCartItem, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (product: Product, storage?: string, color?: string) => void;
+  addItem: (product: Product, storage?: string, color?: string) => boolean;
   removeItem: (productId: string, storage: string, color: string) => void;
   updateQuantity: (productId: string, storage: string, color: string, quantity: number) => void;
   clearCart: () => void;
+  toast: string | null;
+  dismissToast: () => void;
   subtotal: number;
   totalItems: number;
 }
@@ -18,48 +21,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? (JSON.parse(saved) as CartItem[]) : [];
+      return saved ? normalizeCartItems(JSON.parse(saved)) : [];
     } catch {
+      localStorage.removeItem(STORAGE_KEY);
       return [];
     }
   });
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      setToast("Cart could not be saved on this device.");
+    }
   }, [items]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
   const addItem = (product: Product, storage = product.storage[0], color = product.colors[0]) => {
-    setItems((current) => {
-      const existing = current.find(
-        (item) => item.product.id === product.id && item.storage === storage && item.color === color,
-      );
-      if (existing) {
-        return current.map((item) =>
-          item.product.id === product.id && item.storage === storage && item.color === color
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        );
-      }
-      return [...current, { product, storage, color, quantity: 1 }];
-    });
+    if (isSoldOut(product)) {
+      setToast(`${product.name} is currently sold out.`);
+      return false;
+    }
+    setItems((current) => addCartItem(current, product, storage, color));
+    setToast(`${product.name} added to cart.`);
+    return true;
   };
 
   const removeItem = (productId: string, storage: string, color: string) => {
-    setItems((current) =>
-      current.filter((item) => !(item.product.id === productId && item.storage === storage && item.color === color)),
-    );
+    setItems((current) => removeCartItem(current, productId, storage, color));
   };
 
   const updateQuantity = (productId: string, storage: string, color: string, quantity: number) => {
-    if (quantity < 1) {
-      removeItem(productId, storage, color);
-      return;
-    }
-    setItems((current) =>
-      current.map((item) =>
-        item.product.id === productId && item.storage === storage && item.color === color ? { ...item, quantity } : item,
-      ),
-    );
+    setItems((current) => updateCartQuantity(current, productId, storage, color, quantity));
   };
 
   const value = useMemo(
@@ -69,13 +68,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart: () => setItems([]),
-      subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-      totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+      toast,
+      dismissToast: () => setToast(null),
+      subtotal: cartSubtotal(items),
+      totalItems: cartTotalItems(items),
     }),
-    [items],
+    [items, toast],
   );
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      {toast && (
+        <div className="cart-toast" role="status" aria-live="polite">
+          <span>{toast}</span>
+          <button type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>
+            Dismiss
+          </button>
+        </div>
+      )}
+    </CartContext.Provider>
+  );
 }
 
 export const useCart = () => {

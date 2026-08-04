@@ -16,8 +16,8 @@ export function ContactPage() {
       </section>
       <section className="section grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="grid gap-4">
-          <div className="contact-card"><Phone /> <div><strong>{business.phones[0]}</strong><span>Primary phone and WhatsApp</span></div></div>
-          <div className="contact-card"><Phone /> <div><strong>{business.phones[1]}</strong><span>Secondary phone and WhatsApp</span></div></div>
+          <a className="contact-card" href={`tel:${business.whatsapp.primary}`}><Phone /> <div><strong>{business.phones[0]}</strong><span>Primary phone and WhatsApp</span></div></a>
+          <a className="contact-card" href={`tel:${business.whatsapp.secondary}`}><Phone /> <div><strong>{business.phones[1]}</strong><span>Secondary phone and WhatsApp</span></div></a>
           <div className="contact-card"><MapPin /> <div><strong>{business.location}</strong><span>Visit or contact the shop before setting off.</span></div></div>
           <div className="rounded-lg border border-black/7 bg-white p-5 shadow-card">
             <h2 className="text-xl font-black">Opening hours</h2>

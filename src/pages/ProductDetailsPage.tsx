@@ -23,6 +23,7 @@ export function ProductDetailsPage() {
   const [zoomed, setZoomed] = useState(false);
   const [pageUrl, setPageUrl] = useState("");
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
+  const [variantError, setVariantError] = useState("");
 
   const isSoldOut = product?.stockStatus === "Sold Out" || (product?.stockQuantity ?? 0) < 1;
   const related = useMemo(() => products.filter((item) => item.id !== product?.id && item.category === product?.category).slice(0, 3), [product]);
@@ -40,9 +41,16 @@ export function ProductDetailsPage() {
       setQuantity(1);
       setActiveImage(0);
       setZoomed(false);
+      setVariantError("");
       const currentUrl = window.location.href;
       setPageUrl(currentUrl);
-      const saved = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) ?? "[]") as string[];
+      let saved: string[] = [];
+      try {
+        const parsed = JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) ?? "[]");
+        saved = Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === "string") : [];
+      } catch {
+        localStorage.removeItem(RECENTLY_VIEWED_KEY);
+      }
       setRecentSlugs(saved);
       const next = [product.slug, ...saved.filter((item) => item !== product.slug)].slice(0, 8);
       localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
@@ -64,17 +72,30 @@ export function ProductDetailsPage() {
   const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl);
 
   const handleAddToCart = () => {
+    if (product.storage.length > 0 && !storage) {
+      setVariantError("Choose a storage option before adding this device.");
+      return;
+    }
+    if (product.colors.length > 0 && !color) {
+      setVariantError("Choose a colour option before adding this device.");
+      return;
+    }
     for (let index = 0; index < quantity; index += 1) {
       addItem(product, storage, color);
     }
+    setVariantError("");
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({ title: product.name, text: `View ${product.name} at Buy & Sell GH`, url: pageUrl });
-      return;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product.name, text: `View ${product.name} at Buy & Sell GH`, url: pageUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(pageUrl);
+    } catch {
+      setVariantError("Sharing is not available in this browser. Copy the page link from the address bar.");
     }
-    await navigator.clipboard.writeText(pageUrl);
   };
 
   return (
@@ -133,12 +154,13 @@ export function ProductDetailsPage() {
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             <label className="choice-label">Storage
-              <select value={storage} onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
+              <select value={storage} required onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
             </label>
             <label className="choice-label">Colour
-              <select value={color} onChange={(e) => setColor(e.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
+              <select value={color} required onChange={(e) => setColor(e.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
             </label>
           </div>
+          {variantError && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{variantError}</p>}
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <div className="quantity-stepper" aria-label="Quantity selector">

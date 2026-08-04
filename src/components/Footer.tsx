@@ -21,8 +21,8 @@ export function Footer() {
         </div>
         <div>
           <h2 className="footer-heading">Contact</h2>
-          <p className="footer-line"><Phone size={16} /> {business.phones[0]}</p>
-          <p className="footer-line"><Phone size={16} /> {business.phones[1]}</p>
+          <a className="footer-line" href={`tel:${business.whatsapp.primary}`}><Phone size={16} /> {business.phones[0]}</a>
+          <a className="footer-line" href={`tel:${business.whatsapp.secondary}`}><Phone size={16} /> {business.phones[1]}</a>
           <p className="footer-line"><MessageCircle size={16} /> WhatsApp available</p>
           <p className="footer-line"><MapPin size={16} /> {business.location}</p>
         </div>
