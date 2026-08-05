@@ -494,26 +494,16 @@ textarea {
 
 .trade-visual {
   display: grid;
-  grid-template-columns: auto auto auto;
-  align-items: center;
-  gap: 0.7rem;
-  color: var(--color-ink);
+  place-items: center;
+  max-width: min(100%, 480px);
 }
 
-.trade-visual span {
+.trade-visual img {
   display: block;
-  height: 118px;
-  width: 62px;
-  border: 7px solid #0c0c0f;
-  border-radius: 1.5rem;
-  background: linear-gradient(145deg, #fdfdfd, #d8d8d8);
+  width: min(100%, 440px);
+  border-radius: 1.4rem;
+  object-fit: cover;
   box-shadow: var(--shadow-soft);
-}
-
-.trade-visual span:last-child {
-  height: 136px;
-  width: 72px;
-  background: linear-gradient(145deg, #fff8e1, #a97812);
 }
 
 .mini-check,
@@ -1036,6 +1026,16 @@ textarea {
   filter: blur(18px);
 }
 
+.hero-showcase-image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  animation: product-rise 520ms ease both;
+}
+
 .product-visual::after,
 .hero-device-showcase::after,
 .hero-device-showcase .showcase-label,
@@ -1260,7 +1260,7 @@ textarea {
   }
 
   .trade-visual {
-    transform: scale(0.86);
+    width: 100%;
     transform-origin: left center;
   }
 

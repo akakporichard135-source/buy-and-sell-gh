@@ -23,6 +23,8 @@ import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
+import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
+import heroPremium from "../assets/hero/hero-premium.webp";
 import { business } from "../config/business";
 import { categories, products } from "../data/products";
 import { promotions } from "../data/promotions";
@@ -204,9 +206,7 @@ export function HomePage() {
             <Link className="btn-primary mt-6" to="/sell-or-trade">Start a Trade-In</Link>
           </div>
           <div className="trade-visual" aria-hidden="true">
-            <span />
-            <RefreshCcw size={34} />
-            <span />
+            <img src={tradeInUpgradePremium} alt="" loading="lazy" decoding="async" />
           </div>
         </div>
       </section>
@@ -324,17 +324,9 @@ function HomeProductCarousel({ products }: { products: Product[] }) {
 }
 
 function HeroDeviceShowcase() {
-  const iphone16 = products.find((product) => product.slug === "iphone-16-pro-max");
-  const iphone15 = products.find((product) => product.slug === "iphone-15-pro-max");
-  const watch = products.find((product) => product.slug === "apple-watch");
-  const airpods = products.find((product) => product.slug === "airpods-pro");
-
   return (
-    <div className="hero-device-showcase" aria-label="iPhone 16 Pro Max, iPhone 15 Pro Max, AirPods Pro and Apple Watch visual composition">
-      {iphone16 && <img className="showcase-product showcase-product-main" src={iphone16.images[0].src} alt={iphone16.images[0].alt} loading="eager" />}
-      {iphone15 && <img className="showcase-product showcase-product-secondary" src={iphone15.images[0].src} alt={iphone15.images[0].alt} loading="eager" />}
-      {airpods && <img className="showcase-product showcase-product-airpods" src={airpods.images[0].src} alt={airpods.images[0].alt} loading="eager" />}
-      {watch && <img className="showcase-product showcase-product-watch" src={watch.images[0].src} alt={watch.images[0].alt} loading="eager" />}
+    <div className="hero-device-showcase" aria-label="Premium iPhone, AirPods Pro and Apple Watch visual composition">
+      <img className="hero-showcase-image" src={heroPremium} alt="Premium iPhone, AirPods Pro and Apple Watch product composition" loading="eager" decoding="async" />
       <div className="showcase-label">Buy & Sell GH</div>
     </div>
   );

@@ -1,4 +1,4 @@
-import tradeInBanner from "../assets/banners/trade-in-upgrade.png";
+import tradeInBanner from "../assets/banners/trade-in-upgrade-premium.webp";
 
 export interface Promotion {
   id: string;

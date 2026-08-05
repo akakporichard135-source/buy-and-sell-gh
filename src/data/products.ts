@@ -1,14 +1,14 @@
-import airpodsPro from "../assets/products/airpods-pro.png";
-import appleWatch from "../assets/products/apple-watch.png";
-import ipadPro from "../assets/products/ipad-pro.png";
-import iphone11ProMax from "../assets/products/iphone-11-pro-max.png";
-import iphone12ProMax from "../assets/products/iphone-12-pro-max.png";
-import iphone13ProMax from "../assets/products/iphone-13-pro-max.png";
-import iphone14ProMax from "../assets/products/iphone-14-pro-max.png";
-import iphone15 from "../assets/products/iphone-15.png";
-import iphone15ProMax from "../assets/products/iphone-15-pro-max.png";
-import iphone16Pro from "../assets/products/iphone-16-pro.png";
-import iphone16ProMax from "../assets/products/iphone-16-pro-max.png";
+import airpodsPro from "../assets/products/airpods-pro-premium.webp";
+import appleWatch from "../assets/products/apple-watch-premium.webp";
+import ipadPro from "../assets/products/ipad-pro-premium.webp";
+import iphone11ProMax from "../assets/products/iphone-11-pro-max-premium.webp";
+import iphone12ProMax from "../assets/products/iphone-12-pro-max-premium.webp";
+import iphone13ProMax from "../assets/products/iphone-13-pro-max-premium.webp";
+import iphone14ProMax from "../assets/products/iphone-14-pro-max-premium.webp";
+import iphone15 from "../assets/products/iphone-15-premium.webp";
+import iphone15ProMax from "../assets/products/iphone-15-pro-max-premium.webp";
+import iphone16Pro from "../assets/products/iphone-16-pro-premium.webp";
+import iphone16ProMax from "../assets/products/iphone-16-pro-max-premium.webp";
 import type { Product, ProductCategory, ProductCondition } from "../types/product";
 
 export const categories: ProductCategory[] = [
