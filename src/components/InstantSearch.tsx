@@ -2,10 +2,11 @@ import { MessageCircle, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { getPrimaryImage, isProductUnavailable } from "../catalog/productCatalog";
+import { isProductUnavailable } from "../catalog/productCatalog";
 import { useCart } from "../context/CartContext";
 import { formatGhs } from "../utils/format";
 import { normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
+import { resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
 export function InstantSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -66,7 +67,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
         <div className="mt-4 grid gap-3">
           {results.length > 0 ? (
             results.map((product) => {
-              const image = getPrimaryImage(product);
+              const image = resolveProductImage(product);
               const stockLabel = normalizeDisplayBadge(product.stockStatus);
               return (
               <article className="instant-search-result" key={product.id}>

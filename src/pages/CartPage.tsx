@@ -11,6 +11,7 @@ import type { FulfilmentType, OrderCustomerDetails, PaymentMethod, StoredOrderRe
 import { PAYMENT_METHODS } from "../types/order";
 import { formatGhs } from "../utils/format";
 import { buildOrderRequestPayload, buildOrderSubmissionInput, generateSubmissionToken, submitOrderRequest } from "../utils/orders";
+import { resolveProductImage } from "../utils/productImages";
 
 interface OrderFormState {
   fullName: string;
@@ -176,7 +177,11 @@ export function CartPage() {
             <div className="mt-4 grid gap-3">
               {items.map((item) => (
                 <div className="order-summary-line" key={`summary-${item.product.id}-${item.storage}-${item.color}`}>
-                  <img src={item.product.images[0]?.src} alt={item.product.images[0]?.alt ?? item.product.name} loading="lazy" />
+                  {resolveProductImage(item.product) ? (
+                    <img src={resolveProductImage(item.product)?.src} alt={resolveProductImage(item.product)?.alt ?? item.product.name} loading="lazy" />
+                  ) : (
+                    <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>
+                  )}
                   <div>
                     <strong>{item.product.name}</strong>
                     <span>{item.storage} | {item.color} | {item.product.condition}</span>

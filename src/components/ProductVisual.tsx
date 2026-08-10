@@ -1,7 +1,8 @@
 import type { Product } from "../types/product";
+import { resolveProductImage } from "../utils/productImages";
 
 export function ProductVisual({ product, size = "card", priority = false }: { product: Product; size?: "card" | "large"; priority?: boolean }) {
-  const image = product.images?.[0];
+  const image = resolveProductImage(product);
   if (image) {
     return (
       <div

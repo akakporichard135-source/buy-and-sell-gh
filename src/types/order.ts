@@ -1,4 +1,5 @@
 import type { CartItem } from "./product";
+import { resolveProductImage } from "../utils/productImages";
 
 export const ORDER_STATUSES = [
   "Pending",
@@ -80,17 +81,20 @@ export interface OrderSubmissionInput {
 }
 
 export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
-  items.map((item) => ({
-    productId: item.product.id,
-    productSlug: item.product.slug,
-    productName: item.product.name,
-    productImage: item.product.images[0]?.src ?? "",
-    storage: item.storage,
-    colour: item.color,
-    condition: item.product.condition,
-    batteryHealth: item.product.batteryHealth,
-    warranty: item.product.warranty ?? item.product.warrantyInfo,
-    quantity: item.quantity,
-    unitPrice: item.product.price,
-    lineTotal: item.product.price * item.quantity,
-  }));
+  items.map((item) => {
+    const image = resolveProductImage(item.product);
+    return {
+      productId: item.product.id,
+      productSlug: item.product.slug,
+      productName: item.product.name,
+      productImage: image?.src ?? "",
+      storage: item.storage,
+      colour: item.color,
+      condition: item.product.condition,
+      batteryHealth: item.product.batteryHealth,
+      warranty: item.product.warranty ?? item.product.warrantyInfo,
+      quantity: item.quantity,
+      unitPrice: item.product.price,
+      lineTotal: item.product.price * item.quantity,
+    };
+  });

@@ -4,12 +4,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { getPrimaryImage, isProductUnavailable } from "../catalog/productCatalog";
+import { isProductUnavailable } from "../catalog/productCatalog";
 import { business } from "../config/business";
 import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
+import { resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
@@ -85,8 +86,8 @@ export function ProductDetailsPage() {
     );
   }
 
-  const gallery = product.images;
-  const active = gallery[activeImage] ?? getPrimaryImage(product);
+  const gallery = resolveProductGallery(product);
+  const active = gallery[activeImage] ?? resolveProductImage(product);
   const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl);
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
 
@@ -143,7 +144,7 @@ export function ProductDetailsPage() {
           "@context": "https://schema.org",
           "@type": "Product",
           name: product.name,
-          image: product.images.map((image) => image.src),
+          image: gallery.map((image) => image.src),
           brand: { "@type": "Brand", name: "Apple" },
           offers: {
             "@type": "Offer",

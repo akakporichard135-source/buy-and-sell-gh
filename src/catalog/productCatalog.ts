@@ -1,5 +1,6 @@
 import { categories as seedCategories, products as seedProducts } from "../data/products";
 import type { Product, ProductCategory, ProductCondition, StockStatus } from "../types/product";
+import { isValidProductImage, resolveProductImage } from "../utils/productImages";
 
 export const PRODUCT_CATALOG_STORAGE_KEY = "buyandsell-gh-product-catalog";
 
@@ -32,8 +33,7 @@ export const isProductUnavailable = (product: Product) => {
 };
 
 export const getPrimaryImage = (product: Product) => {
-  const index = product.primaryImageIndex ?? 0;
-  return product.images[index] ?? product.images[0];
+  return resolveProductImage(product);
 };
 
 export const normalizeProduct = (product: Product): Product => {
@@ -44,7 +44,7 @@ export const normalizeProduct = (product: Product): Product => {
   const includedItems = product.includedItems ?? product.box;
   const warranty = product.warranty ?? product.warrantyInfo;
   const deliveryInfo = product.deliveryInfo ?? product.deliveryNote;
-  const primaryImage = product.images[product.primaryImageIndex ?? 0] ?? product.images[0];
+  const primaryImage = resolveProductImage(product);
 
   return {
     ...product,
@@ -63,7 +63,7 @@ export const normalizeProduct = (product: Product): Product => {
     isNewArrival: product.newArrival ?? product.isNewArrival ?? false,
     isFeatured: product.featured ?? product.isFeatured ?? false,
     primaryImageIndex: product.primaryImageIndex ?? 0,
-    thumbnail: product.thumbnail ?? primaryImage?.src,
+    thumbnail: isValidProductImage({ src: product.thumbnail ?? "", alt: product.name }) ? product.thumbnail : primaryImage?.src,
     shortDescription: product.shortDescription ?? product.description,
     specifications: specs,
     specs,
