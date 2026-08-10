@@ -167,12 +167,12 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section home-section">
+      <section className="section home-section category-section">
         <div className="section-heading">
           <p className="eyebrow-dark">Shop by category</p>
           <h2>Find the right device faster</h2>
         </div>
-        <div className="category-grid category-grid-desktop grid gap-4 lg:grid-cols-4">
+        <div className="category-grid category-grid-desktop grid gap-4">
           {categories.map((category) => {
             const Icon = categoryIcons[category];
             return (
@@ -182,9 +182,11 @@ export function HomePage() {
                 </span>
                 <span className="category-content">
                   <span className="category-icon"><Icon size={25} /></span>
-                  <span className="category-name">{category}</span>
+                  <span className="category-label-row">
+                    <span className="category-name">{category}</span>
+                    <ArrowRight className="category-arrow" size={18} />
+                  </span>
                 </span>
-                <ArrowRight className="category-arrow" size={18} />
               </Link>
             );
           })}
@@ -199,9 +201,11 @@ export function HomePage() {
                 </span>
                 <span className="category-content">
                   <span className="category-icon"><Icon size={25} /></span>
-                  <span className="category-name">{category}</span>
+                  <span className="category-label-row">
+                    <span className="category-name">{category}</span>
+                    <ArrowRight className="category-arrow" size={18} />
+                  </span>
                 </span>
-                <ArrowRight className="category-arrow" size={18} />
               </Link>
             );
           })}

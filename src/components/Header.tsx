@@ -73,7 +73,7 @@ export function Header() {
           </NavLink>
           <WhatsAppButton className="px-5 py-3 shadow-gold">WhatsApp</WhatsAppButton>
         </div>
-        <button className="icon-button h-11 w-11 shrink-0 lg:hidden" type="button" aria-label="Open menu" onClick={() => setOpen(true)}>
+        <button className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 lg:hidden" type="button" aria-label="Open menu" onClick={() => setOpen(true)}>
           <Menu size={25} />
         </button>
       </div>

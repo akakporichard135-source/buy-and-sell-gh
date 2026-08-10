@@ -451,13 +451,13 @@ textarea {
 .category-card-rich {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(176px, 35%) minmax(0, 65%);
   align-items: stretch;
-  min-height: 190px;
+  block-size: 170px;
+  min-height: 170px;
   overflow: hidden;
   padding: 0;
-  background:
-    radial-gradient(circle at 75% 16%, rgba(243, 199, 93, 0.38), transparent 32%),
-    linear-gradient(135deg, #fffdf6, #f7e7bd);
+  background: linear-gradient(135deg, #fffdf7, #f8edcf);
   isolation: isolate;
   transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
@@ -465,54 +465,69 @@ textarea {
 .category-card-rich::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 auto 0 32%;
   z-index: 1;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 246, 0.22), rgba(255, 248, 230, 0.92)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.08));
+  width: 14%;
+  background: linear-gradient(90deg, #fffdf7 0%, rgba(255, 253, 247, 0.7) 48%, transparent 100%);
   pointer-events: none;
 }
 
 .category-media {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
   z-index: 0;
   display: block;
+  min-width: 0;
   overflow: hidden;
+  background: #f4dfae;
 }
 
 .category-media img {
+  display: block;
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  padding: 0.55rem;
+  object-fit: contain;
   object-position: center;
-  transform: scale(1.01);
+  transform: none;
   transition: transform 220ms ease;
 }
 
 .category-content {
   position: relative;
+  grid-column: 1;
+  grid-row: 1;
   z-index: 2;
   display: grid;
+  min-width: 0;
   min-height: inherit;
   align-content: space-between;
-  gap: 1.4rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.1rem;
+}
+
+.category-label-row {
+  display: block;
+  min-width: 0;
 }
 
 .category-name {
-  max-width: calc(100% - 2.2rem);
+  min-width: 0;
   color: var(--color-ink);
   font-size: clamp(1rem, 1.6vw, 1.16rem);
+  hyphens: none;
   line-height: 1.12;
-  text-wrap: balance;
+  overflow-wrap: normal;
+  text-wrap: pretty;
+  white-space: normal;
+  word-break: normal;
 }
 
 .category-arrow {
   position: absolute;
-  z-index: 2;
-  bottom: 1rem;
-  right: 1rem;
+  top: 1.1rem;
+  right: 1.1rem;
   color: var(--color-ink);
   transition: color 180ms ease, transform 180ms ease;
 }
@@ -540,7 +555,7 @@ textarea {
 }
 
 .category-card-rich:hover .category-media img {
-  transform: scale(1.035);
+  transform: scale(1.015);
 }
 
 .category-card-rich:hover .category-arrow {
@@ -1465,6 +1480,8 @@ textarea {
   }
 
   .category-card-rich {
+    block-size: 150px;
+    grid-template-columns: minmax(0, 50%) minmax(0, 50%);
     min-height: 150px;
   }
 
@@ -1473,17 +1490,13 @@ textarea {
     width: 42px;
   }
 
-  .category-content {
-    padding: 0;
-  }
-
   .category-name {
-    font-size: 0.92rem;
+    font-size: 1rem;
   }
 
   .category-arrow {
-    bottom: 0.9rem;
-    right: 0.75rem;
+    top: 0.85rem;
+    right: 0.85rem;
   }
 
   .trade-visual {
@@ -1794,11 +1807,32 @@ body.instant-search-open .cart-toast {
 }
 
 .trust-card,
-.category-card,
 .contact-card {
   min-width: 0;
   height: 100%;
   overflow-wrap: anywhere;
+}
+
+.category-card {
+  min-width: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.category-section {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.category-grid-desktop {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .category-grid-desktop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .trust-card svg,
@@ -3204,6 +3238,10 @@ input[type="file"]::file-selector-button {
 }
 
 @media (min-width: 1024px) {
+  .mobile-menu-trigger {
+    display: none;
+  }
+
   .home-desktop-products {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: clamp(0.85rem, 1.25vw, 1.15rem);
@@ -3586,6 +3624,10 @@ input[type="file"]::file-selector-button {
     display: grid;
   }
 
+  .category-grid-mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .social-band {
     padding: 1.35rem;
   }
@@ -3654,7 +3696,9 @@ input[type="file"]::file-selector-button {
   }
 
   .category-card-rich {
+    block-size: 138px;
     min-height: 138px;
+    padding: 0;
   }
 
   .home-mobile-carousel .product-card {
