@@ -186,7 +186,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section home-section grid gap-8 lg:grid-cols-2">
+      <section className="section home-section home-upgrade-grid grid gap-8">
         <div className="panel-dark home-desktop-detail">
           <p className="eyebrow">Why choose Buy & Sell GH</p>
           <h2>Trusted Help for Your Next Upgrade</h2>
@@ -208,7 +208,7 @@ export function HomePage() {
           </div>
         </div>
         <div className="panel-gold trade-panel">
-          <div>
+          <div className="trade-content">
             <p className="eyebrow-dark">Sell or trade</p>
             <h2>Turn Your Current Phone Into Your Next Upgrade</h2>
             <p>Sell or swap your current phone and use its value toward your next device. Submit your details and receive guidance before inspection.</p>
