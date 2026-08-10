@@ -18,12 +18,10 @@ import {
 import { Link } from "react-router-dom";
 import { FAQList } from "../components/FAQList";
 import { FormField } from "../components/FormField";
-import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { categories, isProductUnavailable } from "../catalog/productCatalog";
+import { categories } from "../catalog/productCatalog";
 import accessoriesCategory from "../assets/categories/accessories-premium.webp";
 import brandNewDevicesCategory from "../assets/categories/brand-new-devices-premium.webp";
 import iphonesCategory from "../assets/categories/iphones-premium.webp";
@@ -77,15 +75,7 @@ const categoryVisuals = {
 };
 
 export function HomePage() {
-  const { activeProducts: products } = useProductCatalog();
-  const sellableProducts = products.filter((product) => !isProductUnavailable(product));
-  const newArrivals = sellableProducts.filter((product) => product.newArrival || product.isNewArrival);
-  const popularChoices = sellableProducts.filter((product) => product.popular || product.isPopular);
   const activePromotions = promotions.filter((promotion) => promotion.isActive);
-  const desktopNewArrivals = newArrivals.slice(0, 4);
-  const desktopPopularChoices = popularChoices.filter((product) => !desktopNewArrivals.some((arrival) => arrival.id === product.id)).slice(0, 4);
-  const usedDesktopIds = new Set([...desktopNewArrivals, ...desktopPopularChoices].map((product) => product.id));
-  const availableDevices = sellableProducts.filter((product) => !usedDesktopIds.has(product.id)).slice(0, 4);
   const mobileCategories = categories;
 
   return (
@@ -227,18 +217,6 @@ export function HomePage() {
           <div className="trade-visual" aria-hidden="true">
             <img src={tradeInUpgradePremium} alt="" loading="lazy" decoding="async" />
           </div>
-        </div>
-      </section>
-
-      <section className="section home-section home-desktop-detail">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Available now</p>
-          <h2>Available Devices</h2>
-          <p>Explore selected iPhones and Apple gadgets currently available from Buy & Sell GH.</p>
-        </div>
-        <ProductGrid products={availableDevices} />
-        <div className="home-product-link mt-8 flex justify-center">
-          <Link className="btn-primary" to="/shop">View All Devices <ArrowRight size={18} /></Link>
         </div>
       </section>
 
