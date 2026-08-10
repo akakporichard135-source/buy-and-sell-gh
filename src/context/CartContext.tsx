@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import type { CartItem, Product } from "../types/product";
 import { addCartItem, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (product: Product, storage?: string, color?: string) => boolean;
+  addItem: (product: Product, storage?: string, color?: string, quantity?: number) => boolean;
   removeItem: (productId: string, storage: string, color: string) => void;
   updateQuantity: (productId: string, storage: string, color: string, quantity: number) => void;
   clearCart: () => void;
@@ -18,6 +19,7 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 const STORAGE_KEY = "buyandsell-gh-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { getProductBySlug } = useProductCatalog();
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -43,13 +45,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const addItem = (product: Product, storage = product.storage[0], color = product.colors[0]) => {
-    if (isSoldOut(product)) {
-      setToast(`${product.name} is currently sold out.`);
+  const addItem = (product: Product, storage = product.storage[0], color = product.colors[0], quantity = 1) => {
+    const currentProduct = getProductBySlug(product.slug);
+    if (!currentProduct) {
+      setToast(`${product.name} is not available for cart right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, product, storage, color));
-    setToast(`${product.name} added to cart.`);
+    if (isSoldOut(currentProduct)) {
+      setToast(`${currentProduct.name} is not available for cart right now.`);
+      return false;
+    }
+    if (quantity > currentProduct.stockQuantity) {
+      setToast(`Only ${currentProduct.stockQuantity} ${currentProduct.name} available right now.`);
+      return false;
+    }
+    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity));
+    setToast(`${currentProduct.name} added to cart.`);
     return true;
   };
 

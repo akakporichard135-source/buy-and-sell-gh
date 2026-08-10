@@ -5,6 +5,8 @@ export const business = {
   type: "iPhones, iPads and original gadgets",
   sellingPoint: "100% original devices and trusted deals",
   location: "Accra, Dome Pillar 2, No Visa",
+  address: "Dome Pillar 2, No Visa, Accra",
+  email: "",
   phones: ["024 418 2149", "055 197 5451"],
   whatsapp: {
     primary: "233244182149",

@@ -40,17 +40,17 @@ export function Footer() {
         <div>
           <h2 className="footer-heading">Categories</h2>
           <div className="grid gap-2 text-sm text-white/70">
-            <Link to="/shop?category=iPhones">iPhones</Link>
-            <Link to="/shop?category=iPads">iPads</Link>
-            <Link to="/shop?category=AirPods">AirPods</Link>
-            <Link to="/shop?category=Apple%20Watches">Apple Watches</Link>
+            <Link to="/iphones">iPhones</Link>
+            <Link to="/ipads">iPads</Link>
+            <Link to="/airpods">AirPods</Link>
+            <Link to="/apple-watch">Apple Watch</Link>
           </div>
           <h2 className="footer-heading mt-7">Social</h2>
           <a className="footer-line" href={business.social.instagram} target="_blank" rel="noreferrer"><Instagram size={16} /> {business.username}</a>
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-5 text-center text-xs leading-6 text-white/55">
-        <p>© 2026 Buy & Sell GH. All rights reserved.</p>
+        <p>Copyright 2026 Buy & Sell GH. All rights reserved.</p>
         <p>Buy & Sell GH is an independent gadget retailer and is not affiliated with Apple Inc.</p>
       </div>
     </footer>

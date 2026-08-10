@@ -1,15 +1,18 @@
 import { MessageCircle, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { getPrimaryImage, isProductUnavailable } from "../catalog/productCatalog";
 import { useCart } from "../context/CartContext";
-import { products } from "../data/products";
 import { formatGhs } from "../utils/format";
+import { normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
 export function InstantSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { addItem } = useCart();
+  const { activeProducts: products } = useProductCatalog();
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +50,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
         return terms.every((term) => searchable.includes(term));
       })
       .slice(0, 8);
-  }, [query]);
+  }, [products, query]);
 
   if (!open) return null;
 
@@ -62,18 +65,21 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
         </label>
         <div className="mt-4 grid gap-3">
           {results.length > 0 ? (
-            results.map((product) => (
+            results.map((product) => {
+              const image = getPrimaryImage(product);
+              const stockLabel = normalizeDisplayBadge(product.stockStatus);
+              return (
               <article className="instant-search-result" key={product.id}>
                 <Link className="instant-search-product-link" to={`/product/${product.slug}`} onClick={onClose}>
-                  <img src={product.images[0].src} alt={product.images[0].alt} loading="lazy" />
+                  {image ? <img src={image.src} alt={image.alt} loading="lazy" /> : <span className="instant-search-empty-image">No image</span>}
                   <span>
                     <strong>{product.name}</strong>
                     <small>{product.condition} | {product.storage.join(", ")} | {formatGhs(product.price)}</small>
                   </span>
-                  <em>{product.stockStatus}</em>
+                  <em className={productBadgeClass(stockLabel)}>{stockLabel}</em>
                 </Link>
                 <div className="instant-search-actions">
-                  <button type="button" onClick={() => addItem(product)} disabled={product.stockStatus === "Sold Out" || product.stockQuantity < 1}>
+                  <button type="button" onClick={() => addItem(product)} disabled={isProductUnavailable(product)}>
                     <Plus size={15} /> Add
                   </button>
                   <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noreferrer">
@@ -81,7 +87,8 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   </a>
                 </div>
               </article>
-            ))
+              );
+            })
           ) : (
             <div className="rounded-lg border border-black/7 bg-white p-5 text-center font-bold text-ink/65">
               No matching products yet. Try another model, storage, colour or condition.

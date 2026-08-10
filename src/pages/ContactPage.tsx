@@ -1,4 +1,4 @@
-import { MapPin, Phone } from "lucide-react";
+import { ExternalLink, MapPin, Phone } from "lucide-react";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
@@ -32,8 +32,17 @@ export function ContactPage() {
             <FormField label="Subject" name="subject" />
             <FormField label="Message" name="message" textarea required />
           </SuccessForm>
-          <div className="mt-5 grid min-h-64 place-items-center rounded-lg border border-dashed border-black/20 bg-white p-6 text-center text-sm font-bold text-ink/60">
-            Location card for Accra, Dome Pillar 2, No Visa. A Google Maps link can be added after the owner confirms it.
+          <div className="mt-5 rounded-lg border border-black/7 bg-white p-5 shadow-card">
+            <p className="eyebrow-dark">Visit the shop</p>
+            <h2 className="mt-2 text-2xl font-black">Accra, Dome Pillar 2, No Visa</h2>
+            <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Contact Buy & Sell GH before setting off so product availability and pickup timing can be confirmed.</p>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <WhatsAppButton className="sm:w-auto">Confirm Visit</WhatsAppButton>
+              <a className="btn-secondary" href={`tel:${business.whatsapp.primary}`}><Phone size={17} /> Call Shop</a>
+              <a className="btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.location)}`} target="_blank" rel="noreferrer">
+                <ExternalLink size={17} /> Open Map
+              </a>
+            </div>
           </div>
           <p className="mt-4 text-sm font-black text-ink">Social media: {business.username}</p>
         </div>

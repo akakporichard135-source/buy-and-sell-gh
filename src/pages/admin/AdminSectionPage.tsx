@@ -1,7 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-import { products } from "../../data/products";
 import { useAdminAuth } from "../../admin/AdminAuth";
+import { AdminOrdersPage } from "./AdminOrdersPage";
+import { AdminProductManager } from "./AdminProductManager";
 
 type AdminSection =
   | "products"
@@ -18,14 +19,14 @@ const sectionCopy: Record<AdminSection, { title: string; eyebrow: string; descri
   products: {
     eyebrow: "Product Management",
     title: "Products",
-    description: "Product list visibility is available from the current public catalogue. Create, edit, upload and publish controls require Supabase tables and storage.",
-    next: "Next step: connect Supabase products, categories, image storage and RLS policies.",
+    description: "Manage the catalogue source that powers public products, homepage sections, search, filters, cart and product detail pages.",
+    next: "Next step: connect Supabase products, categories, image storage and RLS policies for production persistence.",
   },
   orders: {
     eyebrow: "Order Requests",
     title: "Order Requests",
-    description: "The public cart now prepares order request payloads. Saving, status updates and private customer details require Supabase order_requests and order_request_items.",
-    next: "Next step: connect the cart form to Supabase and render saved order requests here.",
+    description: "Review saved website order requests, customer details, product snapshots, fulfilment choices and status updates.",
+    next: "Next step: create the owner account and run the orders migration in Supabase.",
   },
   "trade-ins": {
     eyebrow: "Trade-In Requests",
@@ -66,14 +67,17 @@ const sectionCopy: Record<AdminSection, { title: string; eyebrow: string; descri
   account: {
     eyebrow: "Admin Account",
     title: "Admin Account",
-    description: "Temporary local access is active. Password reset and real account management require Supabase Authentication.",
-    next: "Next step: replace temporary auth with Supabase email/password sessions.",
+    description: "Production password reset and real account management require Supabase Authentication or another secure backend auth service.",
+    next: "Next step: connect Supabase email/password sessions.",
   },
 };
 
 export function AdminSectionPage({ section }: { section: AdminSection }) {
   const copy = sectionCopy[section];
   const { session } = useAdminAuth();
+
+  if (section === "products") return <AdminProductManager />;
+  if (section === "orders") return <AdminOrdersPage />;
 
   return (
     <div className="admin-page-grid">
@@ -89,39 +93,11 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
         </Link>
       </section>
 
-      {section === "products" && (
-        <section className="admin-panel">
-          <div className="admin-section-title">
-            <div>
-              <p className="eyebrow-dark">Current catalogue</p>
-              <h2>Public product fallback</h2>
-            </div>
-          </div>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td>{product.name}</td>
-                    <td>{product.category}</td>
-                    <td>GHS {product.price.toLocaleString("en-GH")}</td>
-                    <td>{product.stockStatus}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
       {section === "account" && (
         <section className="admin-panel">
           <p className="eyebrow-dark">Signed in as</p>
           <h2>{session?.email}</h2>
-          <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Temporary local session. Real password management is intentionally not implemented until Supabase Authentication is connected.</p>
+          <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Real password management is intentionally not implemented until Supabase Authentication or another secure auth backend is connected.</p>
         </section>
       )}
 

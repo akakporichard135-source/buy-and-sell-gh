@@ -2,7 +2,7 @@ import { LockKeyhole, ShieldCheck } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "../../components/Logo";
-import { useAdminAuth, isSupabaseConfigured } from "../../admin/AdminAuth";
+import { useAdminAuth, isAdminLoginAvailable, isLocalAdminEnabled, isSupabaseConfigured } from "../../admin/AdminAuth";
 
 export function AdminLoginPage() {
   const { login, session } = useAdminAuth();
@@ -36,12 +36,12 @@ export function AdminLoginPage() {
         <div>
           <p className="eyebrow-dark">Admin Login</p>
           <h1>Manage Buy & Sell GH</h1>
-          <p>Temporary dashboard access is enabled because Supabase authentication is not configured yet.</p>
+          <p>Secure sign-in is required before catalogue and customer management can be used in production.</p>
         </div>
 
         <div className="admin-warning">
           <ShieldCheck size={18} />
-          <span>{isSupabaseConfigured() ? "Supabase credentials detected. Real auth can replace temporary access next." : "Supabase is not configured. Use any admin email and a password of 6+ characters for temporary local access."}</span>
+          <span>{getAdminAuthMessage()}</span>
         </div>
 
         <form className="admin-login-form" noValidate onSubmit={handleSubmit}>
@@ -52,7 +52,7 @@ export function AdminLoginPage() {
             <input aria-label="Admin password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6+ characters" />
           </label>
           {error && <p className="form-error rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}
-          <button className="btn-primary w-full" type="submit" disabled={submitting}>
+          <button className="btn-primary w-full" type="submit" disabled={submitting || !isAdminLoginAvailable()}>
             <LockKeyhole size={18} />
             {submitting ? "Opening dashboard..." : "Login to Admin"}
           </button>
@@ -60,4 +60,10 @@ export function AdminLoginPage() {
       </section>
     </main>
   );
+}
+
+function getAdminAuthMessage() {
+  if (isLocalAdminEnabled()) return "Local admin access is enabled for development. Use the configured local admin credentials.";
+  if (isSupabaseConfigured()) return "Supabase environment variables are detected. Install and connect the auth client before enabling production login.";
+  return "Production admin login is locked until a real authentication backend is configured.";
 }

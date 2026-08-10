@@ -1,20 +1,21 @@
 import { AlertTriangle, Package, ShoppingBag, Smartphone, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
-import { products } from "../../data/products";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductUnavailable, normalizeStockStatus } from "../../catalog/productCatalog";
 import { ORDER_STATUSES } from "../../types/order";
 import { isSupabaseConfigured } from "../../admin/AdminAuth";
 
-const productStats = [
-  { label: "Total products", value: products.length },
-  { label: "Published products", value: products.length },
-  { label: "Draft products", value: 0 },
-  { label: "In-stock products", value: products.filter((product) => product.stockStatus !== "Sold Out").length },
-  { label: "Low-stock products", value: products.filter((product) => product.stockStatus === "Low stock" || product.stockStatus === "Limited stock").length },
-  { label: "Sold-out products", value: products.filter((product) => product.stockStatus === "Sold Out").length },
-];
-
 export function AdminDashboardPage() {
-  const recentProducts = products.slice(0, 5);
+  const { products, activeProducts, backendStatus } = useProductCatalog();
+  const productStats = [
+    { label: "Total products", value: products.length },
+    { label: "Published products", value: activeProducts.filter((product) => product.available !== false).length },
+    { label: "Archived products", value: products.filter((product) => product.archived).length },
+    { label: "In-stock products", value: activeProducts.filter((product) => normalizeStockStatus(product) === "In Stock").length },
+    { label: "Low-stock products", value: activeProducts.filter((product) => normalizeStockStatus(product) === "Low Stock").length },
+    { label: "Unavailable products", value: activeProducts.filter(isProductUnavailable).length },
+  ];
+  const recentProducts = activeProducts.slice(0, 5);
 
   return (
     <div className="admin-page-grid">
@@ -22,11 +23,11 @@ export function AdminDashboardPage() {
         <div>
           <p className="eyebrow-dark">Overview</p>
           <h2>Dashboard overview</h2>
-          <p>This Phase 1 dashboard is visible now. Supabase is still required before private customer data, product editing and order storage become real.</p>
+          <p>The dashboard is prepared for real catalogue and order management. Customer order data appears after the orders migration is run and an authorized owner/admin signs in.</p>
         </div>
         <div className="admin-status-pill">
           <AlertTriangle size={18} />
-          {isSupabaseConfigured() ? "Supabase env detected" : "Temporary auth active"}
+          {isSupabaseConfigured() ? "Supabase env detected" : `${backendStatus === "local-catalog" ? "Local catalogue" : "Production auth required"}`}
         </div>
       </section>
 
@@ -48,7 +49,7 @@ export function AdminDashboardPage() {
         </div>
         <div className="admin-request-grid">
           {[
-            ["New order requests", "Requires Supabase order_requests table", ShoppingBag],
+            ["New order requests", "Requires Supabase orders table", ShoppingBag],
             ["New trade-in requests", "Requires Supabase trade_in_requests table", Smartphone],
             ["New device requests", "Requires Supabase device_requests table", Package],
             ["New contact messages", "Requires Supabase contact_messages table", Tag],

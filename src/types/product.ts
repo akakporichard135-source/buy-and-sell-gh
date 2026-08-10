@@ -9,7 +9,7 @@ export type ProductCategory =
   | "Brand New Devices";
 
 export type ProductCondition = "Brand New" | "UK Used" | "Excellent" | "Very Good";
-export type StockStatus = "In stock" | "Limited stock" | "Low stock" | "On request" | "Sold Out";
+export type StockStatus = "In Stock" | "Low Stock" | "Out of Stock" | "Sold";
 
 export interface ProductImage {
   src: string;
@@ -21,13 +21,18 @@ export interface Product {
   name: string;
   slug: string;
   category: ProductCategory;
+  subcategory?: string;
   brand: "Apple";
   model: string;
+  generation?: string;
   price: number;
+  previousPrice?: number;
   oldPrice?: number;
+  priceOnRequest?: boolean;
   storage: string[];
   condition: ProductCondition;
   colors: string[];
+  defaultColor?: string;
   stockStatus: StockStatus;
   stockQuantity: number;
   imageTone: string;
@@ -36,17 +41,31 @@ export interface Product {
   isPopular?: boolean;
   isNewArrival?: boolean;
   isFeatured?: boolean;
+  popular?: boolean;
+  newArrival?: boolean;
+  featured?: boolean;
+  available?: boolean;
   tags?: string[];
   images: ProductImage[];
+  thumbnail?: string;
+  primaryImageIndex?: number;
   batteryHealth?: string;
   faceIdStatus?: string;
   simStatus?: string;
   warrantyInfo?: string;
+  warranty?: string;
   deliveryNote?: string;
+  deliveryInfo?: string;
   conditionReport?: string[];
   description: string;
+  shortDescription?: string;
   specs: string[];
+  specifications?: string[];
   box: string[];
+  includedItems?: string[];
+  archived?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {

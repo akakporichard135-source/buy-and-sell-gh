@@ -23,12 +23,22 @@ import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { categories, isProductUnavailable } from "../catalog/productCatalog";
+import accessoriesCategory from "../assets/categories/accessories-premium.webp";
+import brandNewDevicesCategory from "../assets/categories/brand-new-devices-premium.webp";
+import iphonesCategory from "../assets/categories/iphones-premium.webp";
+import macBooksCategory from "../assets/categories/macbooks-premium.webp";
+import ukUsedDevicesCategory from "../assets/categories/uk-used-devices-premium.webp";
 import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
-import heroPremium from "../assets/hero/hero-premium.webp";
+import heroPremium from "../assets/hero/hero-premium-v2.webp";
+import airPodsCategory from "../assets/products/airpods-pro-premium.webp";
+import appleWatchCategory from "../assets/products/apple-watch-premium.webp";
+import ipadCategory from "../assets/products/ipad-pro-premium.webp";
 import { business } from "../config/business";
-import { categories, products } from "../data/products";
 import { promotions } from "../data/promotions";
 import type { Product } from "../types/product";
+import { categorySlugs } from "../utils/productPresentation";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 const trust = [
@@ -57,9 +67,22 @@ const categoryIcons = {
   "Brand New Devices": Sparkles,
 };
 
+const categoryVisuals = {
+  iPhones: iphonesCategory,
+  iPads: ipadCategory,
+  "Apple Watches": appleWatchCategory,
+  AirPods: airPodsCategory,
+  MacBooks: macBooksCategory,
+  Accessories: accessoriesCategory,
+  "UK Used Devices": ukUsedDevicesCategory,
+  "Brand New Devices": brandNewDevicesCategory,
+};
+
 export function HomePage() {
-  const newArrivals = products.filter((product) => product.isNewArrival);
-  const popularChoices = products.filter((product) => product.isPopular);
+  const { activeProducts: products } = useProductCatalog();
+  const sellableProducts = products.filter((product) => !isProductUnavailable(product));
+  const newArrivals = sellableProducts.filter((product) => product.newArrival || product.isNewArrival);
+  const popularChoices = sellableProducts.filter((product) => product.popular || product.isPopular);
   const activePromotions = promotions.filter((promotion) => promotion.isActive);
   const desktopNewArrivals = newArrivals.slice(0, 4);
   const mobileNewArrivals = newArrivals.slice(0, 3);
@@ -67,8 +90,9 @@ export function HomePage() {
   const desktopPopularChoices = popularChoices.filter((product) => !desktopNewArrivals.some((arrival) => arrival.id === product.id)).slice(0, 4);
   const mobilePopularChoices = popularChoices.filter((product) => !newArrivalIds.has(product.id)).slice(0, 3);
   const usedDesktopIds = new Set([...desktopNewArrivals, ...desktopPopularChoices].map((product) => product.id));
-  const featured = products.filter((product) => !usedDesktopIds.has(product.id)).slice(0, 4);
-  const mobileCategories = categories.filter((category) => ["iPhones", "iPads", "AirPods", "Apple Watches"].includes(category));
+  const availableDevices = sellableProducts.filter((product) => !usedDesktopIds.has(product.id)).slice(0, 4);
+  const featuredProduct = sellableProducts.find((product) => product.featured || product.isFeatured) ?? sellableProducts[0];
+  const mobileCategories = categories;
 
   return (
     <>
@@ -101,7 +125,7 @@ export function HomePage() {
         </div>
       </section>
       <section className="section home-section">
-        <div className="trust-grid grid gap-3 lg:grid-cols-6">
+        <div className="trust-grid grid gap-3 lg:grid-cols-3 xl:grid-cols-3">
           {trust.map(({ label, description, icon: Icon }) => (
             <div key={label} className="trust-card trust-card-premium">
               <Icon size={24} />
@@ -152,10 +176,15 @@ export function HomePage() {
           {categories.map((category) => {
             const Icon = categoryIcons[category];
             return (
-              <Link key={category} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(category)}`}>
-                <span className="category-icon"><Icon size={25} /></span>
-                <span>{category}</span>
-                <ArrowRight size={18} />
+              <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
+                <span className="category-media" aria-hidden="true">
+                  <img src={categoryVisuals[category]} alt="" loading="lazy" decoding="async" />
+                </span>
+                <span className="category-content">
+                  <span className="category-icon"><Icon size={25} /></span>
+                  <span className="category-name">{category}</span>
+                </span>
+                <ArrowRight className="category-arrow" size={18} />
               </Link>
             );
           })}
@@ -164,10 +193,15 @@ export function HomePage() {
           {mobileCategories.map((category) => {
             const Icon = categoryIcons[category];
             return (
-              <Link key={category} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(category)}`}>
-                <span className="category-icon"><Icon size={25} /></span>
-                <span>{category}</span>
-                <ArrowRight size={18} />
+              <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
+                <span className="category-media" aria-hidden="true">
+                  <img src={categoryVisuals[category]} alt="" loading="lazy" decoding="async" />
+                </span>
+                <span className="category-content">
+                  <span className="category-icon"><Icon size={25} /></span>
+                  <span className="category-name">{category}</span>
+                </span>
+                <ArrowRight className="category-arrow" size={18} />
               </Link>
             );
           })}
@@ -226,15 +260,30 @@ export function HomePage() {
 
       <section className="section home-section home-desktop-detail">
         <div className="section-heading">
-          <p className="eyebrow-dark">Featured products</p>
+          <p className="eyebrow-dark">Available now</p>
           <h2>Available Devices</h2>
-          <p>Explore selected iPhones and Apple gadgets currently featured by Buy & Sell GH.</p>
+          <p>Explore selected iPhones and Apple gadgets currently available from Buy & Sell GH.</p>
         </div>
-        <ProductGrid products={featured} />
+        <ProductGrid products={availableDevices} />
         <div className="home-product-link mt-8 flex justify-center">
           <Link className="btn-primary" to="/shop">View All Devices <ArrowRight size={18} /></Link>
         </div>
       </section>
+
+      {featuredProduct && (
+        <section className="section home-section featured-product-section">
+          <div>
+            <p className="eyebrow-dark">Featured product</p>
+            <h2 className="title-md">{featuredProduct.name}</h2>
+            <p className="mt-4 leading-8 text-ink/70">{featuredProduct.shortDescription ?? featuredProduct.description}</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link className="btn-primary" to={`/product/${featuredProduct.slug}`}>View Details <ArrowRight size={18} /></Link>
+              <Link className="btn-secondary" to="/shop">Browse Store</Link>
+            </div>
+          </div>
+          <ProductCard product={featuredProduct} />
+        </section>
+      )}
 
       <section className="section home-section home-desktop-device-form grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
@@ -271,12 +320,11 @@ export function HomePage() {
         <div className="grid gap-4 md:grid-cols-3">
           {testimonials.map((text) => (
             <article className="review-card" key={text}>
-              <p className="text-xs font-black uppercase text-gold-dark">Sample Review</p>
+              <p className="text-xs font-black uppercase text-gold-dark">Customer Review</p>
               <p className="mt-4 text-base leading-7 text-ink/72">"{text}"</p>
             </article>
           ))}
         </div>
-        <p className="mt-5 text-center text-sm font-bold text-ink/55">Sample content. Replace with genuine customer feedback before final launch.</p>
       </section>
       <section className="section home-section grid gap-6 lg:grid-cols-2">
         <div className="social-band">

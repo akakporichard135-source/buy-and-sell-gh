@@ -32,25 +32,35 @@ export const productWhatsAppUrl = (product: Product, storage: string, color: str
 export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
   const lines = order.items.map(
     (item, index) =>
-      `${index + 1}. ${item.productName} - ${item.storage}, ${item.colour}, ${item.condition} x${item.quantity} (${formatGhs(
+      `${index + 1}. ${item.quantity}x ${item.productName} - ${item.storage}, ${item.colour}, ${item.condition} (${formatGhs(
         item.lineTotal,
       )})`,
   );
+  const location = order.customer.fulfilmentType === "delivery"
+    ? [order.customer.region, order.customer.city, order.customer.deliveryAddress, order.customer.landmark].filter(Boolean).join(", ")
+    : "Store Pickup";
 
   return whatsappUrl(
     [
-      "Hello Buy & Sell GH, I would like to send this order request:",
-      `Order reference: ${order.referenceNumber}`,
-      `Customer name: ${order.customer.fullName}`,
+      "Hello Buy & Sell GH,",
+      "I just placed an order on your website.",
+      "",
+      `Reference: ${order.referenceNumber}`,
+      `Name: ${order.customer.fullName}`,
       `Phone: ${order.customer.phone}`,
+      `WhatsApp: ${order.customer.whatsapp}`,
       order.customer.email ? `Email: ${order.customer.email}` : "",
+      "",
+      "Items:",
       ...lines,
-      `Total: ${formatGhs(order.total)}`,
-      `Delivery or pickup: ${order.customer.fulfilmentType === "delivery" ? "Delivery" : "Pickup"}`,
-      order.customer.deliveryLocation ? `Delivery location: ${order.customer.deliveryLocation}` : "",
-      `Preferred payment method: ${order.customer.preferredPaymentMethod}`,
+      "",
+      `Order total: ${formatGhs(order.total)}`,
+      `Delivery method: ${order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"}`,
+      `Location: ${location || "To confirm"}`,
+      `Payment preference: ${order.customer.preferredPaymentMethod}`,
       order.customer.additionalNote ? `Additional note: ${order.customer.additionalNote}` : "Additional note: None",
-      "Please verify product availability, price, payment and delivery details.",
+      "",
+      "Please confirm availability and payment details.",
     ].filter(Boolean).join("\n"),
   );
 };
