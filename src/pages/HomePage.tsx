@@ -18,7 +18,6 @@ import {
 import { Link } from "react-router-dom";
 import { FAQList } from "../components/FAQList";
 import { FormField } from "../components/FormField";
-import { ProductCard } from "../components/ProductCard";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
@@ -37,7 +36,6 @@ import appleWatchCategory from "../assets/products/apple-watch-premium.webp";
 import ipadCategory from "../assets/products/ipad-pro-premium.webp";
 import { business } from "../config/business";
 import { promotions } from "../data/promotions";
-import type { Product } from "../types/product";
 import { categorySlugs } from "../utils/productPresentation";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
@@ -85,13 +83,9 @@ export function HomePage() {
   const popularChoices = sellableProducts.filter((product) => product.popular || product.isPopular);
   const activePromotions = promotions.filter((promotion) => promotion.isActive);
   const desktopNewArrivals = newArrivals.slice(0, 4);
-  const mobileNewArrivals = newArrivals.slice(0, 3);
-  const newArrivalIds = new Set(mobileNewArrivals.map((product) => product.id));
   const desktopPopularChoices = popularChoices.filter((product) => !desktopNewArrivals.some((arrival) => arrival.id === product.id)).slice(0, 4);
-  const mobilePopularChoices = popularChoices.filter((product) => !newArrivalIds.has(product.id)).slice(0, 3);
   const usedDesktopIds = new Set([...desktopNewArrivals, ...desktopPopularChoices].map((product) => product.id));
   const availableDevices = sellableProducts.filter((product) => !usedDesktopIds.has(product.id)).slice(0, 4);
-  const featuredProduct = sellableProducts.find((product) => product.featured || product.isFeatured) ?? sellableProducts[0];
   const mobileCategories = categories;
 
   return (
@@ -154,19 +148,6 @@ export function HomePage() {
           </div>
         </section>
       )}
-      <section className="section home-section">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Recently added</p>
-          <h2>New Arrivals</h2>
-          <p>Fresh devices and accessories recently added to Buy & Sell GH.</p>
-        </div>
-        <ProductGrid products={desktopNewArrivals} className="home-desktop-products" />
-        <HomeProductCarousel products={mobileNewArrivals} />
-        <div className="home-product-link mt-8 flex justify-center">
-          <Link className="btn-primary" to="/shop?newArrival=true">View All New Arrivals <ArrowRight size={18} /></Link>
-        </div>
-      </section>
-
       <section className="section home-section category-section">
         <div className="section-heading">
           <p className="eyebrow-dark">Shop by category</p>
@@ -249,19 +230,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section home-section">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Frequently requested</p>
-          <h2>Popular Choices</h2>
-          <p>Devices customers frequently ask about.</p>
-        </div>
-        <ProductGrid products={desktopPopularChoices} className="home-desktop-products" />
-        <HomeProductCarousel products={mobilePopularChoices} />
-        <div className="home-product-link mt-8 flex justify-center">
-          <Link className="btn-primary" to="/shop?popular=true">View All Popular Choices <ArrowRight size={18} /></Link>
-        </div>
-      </section>
-
       <section className="section home-section home-desktop-detail">
         <div className="section-heading">
           <p className="eyebrow-dark">Available now</p>
@@ -273,21 +241,6 @@ export function HomePage() {
           <Link className="btn-primary" to="/shop">View All Devices <ArrowRight size={18} /></Link>
         </div>
       </section>
-
-      {featuredProduct && (
-        <section className="section home-section featured-product-section">
-          <div>
-            <p className="eyebrow-dark">Featured product</p>
-            <h2 className="title-md">{featuredProduct.name}</h2>
-            <p className="mt-4 leading-8 text-ink/70">{featuredProduct.shortDescription ?? featuredProduct.description}</p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link className="btn-primary" to={`/product/${featuredProduct.slug}`}>View Details <ArrowRight size={18} /></Link>
-              <Link className="btn-secondary" to="/shop">Browse Store</Link>
-            </div>
-          </div>
-          <ProductCard product={featuredProduct} />
-        </section>
-      )}
 
       <section className="section home-section home-desktop-device-form grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
@@ -362,16 +315,6 @@ export function HomePage() {
         </div>
       </section>
     </>
-  );
-}
-
-function HomeProductCarousel({ products }: { products: Product[] }) {
-  return (
-    <div className="home-mobile-carousel" aria-label="Swipe products">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} variant="compact" />
-      ))}
-    </div>
   );
 }
 
