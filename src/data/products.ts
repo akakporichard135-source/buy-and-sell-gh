@@ -1,5 +1,15 @@
 import airpodsPro from "../assets/products/airpods-pro-premium.webp";
 import appleWatch from "../assets/products/apple-watch-premium.webp";
+import appleWatchSe2 from "../assets/products/apple-watch-se-2-premium.webp";
+import appleWatchSe3 from "../assets/products/apple-watch-se-3-premium.webp";
+import appleWatchSeries7 from "../assets/products/apple-watch-series-7-premium.webp";
+import appleWatchSeries8 from "../assets/products/apple-watch-series-8-premium.webp";
+import appleWatchSeries9 from "../assets/products/apple-watch-series-9-premium.webp";
+import appleWatchSeries10 from "../assets/products/apple-watch-series-10-premium.webp";
+import appleWatchSeries11 from "../assets/products/apple-watch-series-11-premium.webp";
+import appleWatchUltra from "../assets/products/apple-watch-ultra-premium.webp";
+import appleWatchUltra2 from "../assets/products/apple-watch-ultra-2-premium.webp";
+import appleWatchUltra3 from "../assets/products/apple-watch-ultra-3-premium.webp";
 import ipad10thGeneration from "../assets/products/ipad-10th-generation-premium.webp";
 import ipad11thGeneration from "../assets/products/ipad-11th-generation-premium.webp";
 import ipadAir5 from "../assets/products/ipad-air-5-premium.webp";
@@ -137,6 +147,48 @@ const createCatalogueIpad = ({ slug, name, generation, subcategory, image, stora
   deliveryNote: "Availability, price, condition, pickup and delivery details must be confirmed before payment.",
   conditionReport: ["Condition to be confirmed", "Stock to be confirmed", "Final unit details are verified before payment"],
   description: `${name} catalogue listing with verified Apple storage, colour and hardware details. Contact Buy & Sell GH to confirm current inventory, condition and price.`,
+  specs,
+  box: includedItems,
+});
+
+interface CatalogueWatchInput {
+  slug: string;
+  name: string;
+  generation: string;
+  subcategory: "Apple Watch SE" | "Apple Watch Series" | "Apple Watch Ultra";
+  image: string;
+  connectivity: string[];
+  colors: string[];
+  specs: string[];
+  includedItems: string[];
+}
+
+const createCatalogueWatch = ({ slug, name, generation, subcategory, image, connectivity, colors, specs, includedItems }: CatalogueWatchInput): Product => ({
+  id: slug,
+  slug,
+  name,
+  category: "Apple Watches",
+  subcategory,
+  brand: "Apple",
+  model: name,
+  generation,
+  price: 0,
+  priceOnRequest: true,
+  storage: connectivity,
+  condition: "To Confirm",
+  colors,
+  defaultColor: colors[0],
+  stockStatus: "Out of Stock",
+  stockQuantity: 0,
+  available: true,
+  imageTone: "from-stone-100 via-white to-yellow-100",
+  badges: [],
+  tags: ["apple watch", subcategory.toLowerCase(), name.toLowerCase(), generation.toLowerCase(), "contact for price"],
+  images: [{ src: image, alt: `${name} premium product image for Buy & Sell GH` }],
+  warrantyInfo: "Warranty terms are confirmed when inventory is configured.",
+  deliveryNote: "Availability, price, condition, pickup and delivery details must be confirmed before payment.",
+  conditionReport: ["Condition to be confirmed", "Stock to be confirmed", "Final unit details are verified before payment"],
+  description: `${name} catalogue listing with verified Apple case, connectivity, finish and hardware details. Contact Buy & Sell GH to confirm current inventory, condition and price.`,
   specs,
   box: includedItems,
 });
@@ -614,6 +666,66 @@ export const products: Product[] = [
     specs: ["Liquid Retina display", "Apple Pencil support", "USB-C charging", "Wi-Fi options"],
     box: ["iPad", "Charging cable where available"],
   },
+  createCatalogueWatch({
+    slug: "apple-watch-ultra-3", name: "Apple Watch Ultra 3", generation: "Apple Watch Ultra 3", subcategory: "Apple Watch Ultra", image: appleWatchUltra3,
+    connectivity: ["GPS + Cellular"], colors: ["Natural Titanium", "Black Titanium"],
+    specs: ["49mm titanium case", "S10 chip with 64GB capacity", "Always-On Retina LTPO3 OLED display", "100m water resistance"],
+    includedItems: ["Apple Watch Ultra 3", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-series-11", name: "Apple Watch Series 11", generation: "Apple Watch Series 11", subcategory: "Apple Watch Series", image: appleWatchSeries11,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Rose Gold", "Silver", "Space Gray", "Jet Black", "Gold", "Natural", "Slate"],
+    specs: ["42mm or 46mm case", "S10 chip with 64GB capacity", "Always-On wide-angle OLED LTPO3 display", "50m water resistance and IP6X dust resistance"],
+    includedItems: ["Apple Watch Series 11", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-se-3", name: "Apple Watch SE 3", generation: "Apple Watch SE 3", subcategory: "Apple Watch SE", image: appleWatchSe3,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Starlight", "Midnight"],
+    specs: ["40mm or 44mm aluminum case", "S10 chip with 64GB capacity", "Always-On Retina OLED display", "50m water resistance"],
+    includedItems: ["Apple Watch SE 3", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-series-10", name: "Apple Watch Series 10", generation: "Apple Watch Series 10", subcategory: "Apple Watch Series", image: appleWatchSeries10,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Jet Black", "Rose Gold", "Silver", "Slate", "Gold", "Natural"],
+    specs: ["42mm or 46mm case", "S10 chip with 64GB capacity", "Always-On wide-angle OLED LTPO3 display", "50m water resistance"],
+    includedItems: ["Apple Watch Series 10", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-ultra-2", name: "Apple Watch Ultra 2", generation: "Apple Watch Ultra 2", subcategory: "Apple Watch Ultra", image: appleWatchUltra2,
+    connectivity: ["GPS + Cellular"], colors: ["Natural Titanium", "Black Titanium"],
+    specs: ["49mm titanium case", "S9 chip with 64GB capacity", "Always-On Retina LTPO2 OLED display up to 3000 nits", "100m water resistance"],
+    includedItems: ["Apple Watch Ultra 2", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-series-9", name: "Apple Watch Series 9", generation: "Apple Watch Series 9", subcategory: "Apple Watch Series", image: appleWatchSeries9,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Pink", "Midnight", "Starlight", "Silver", "(PRODUCT)RED", "Gold", "Graphite"],
+    specs: ["41mm or 45mm case", "S9 chip with 64GB capacity", "Always-On Retina LTPO OLED display up to 2000 nits", "50m water resistance"],
+    includedItems: ["Apple Watch Series 9", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-series-8", name: "Apple Watch Series 8", generation: "Apple Watch Series 8", subcategory: "Apple Watch Series", image: appleWatchSeries8,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Midnight", "Starlight", "Silver", "(PRODUCT)RED", "Graphite", "Gold"],
+    specs: ["41mm or 45mm case", "S8 chip with 32GB capacity", "Always-On Retina LTPO OLED display", "50m water resistance and IP6X dust resistance"],
+    includedItems: ["Apple Watch Series 8", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-ultra", name: "Apple Watch Ultra", generation: "Apple Watch Ultra", subcategory: "Apple Watch Ultra", image: appleWatchUltra,
+    connectivity: ["GPS + Cellular"], colors: ["Natural Titanium"],
+    specs: ["49mm titanium case", "S8 chip with 32GB capacity", "Always-On Retina LTPO2 OLED display up to 2000 nits", "100m water resistance"],
+    includedItems: ["Apple Watch Ultra", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-series-7", name: "Apple Watch Series 7", generation: "Apple Watch Series 7", subcategory: "Apple Watch Series", image: appleWatchSeries7,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Midnight", "Starlight", "Green", "Blue", "(PRODUCT)RED", "Graphite", "Silver", "Gold", "Titanium", "Space Black"],
+    specs: ["41mm or 45mm case", "S7 chip with 32GB capacity", "Always-On Retina LTPO OLED display", "50m water resistance"],
+    includedItems: ["Apple Watch Series 7", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
+  createCatalogueWatch({
+    slug: "apple-watch-se-2", name: "Apple Watch SE (2nd generation)", generation: "Apple Watch SE 2", subcategory: "Apple Watch SE", image: appleWatchSe2,
+    connectivity: ["GPS", "GPS + Cellular"], colors: ["Midnight", "Starlight", "Silver"],
+    specs: ["40mm or 44mm aluminum case", "S8 chip with 32GB capacity", "Retina LTPO OLED display up to 1000 nits", "50m water resistance"],
+    includedItems: ["Apple Watch SE (2nd generation)", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+  }),
   {
     id: "apple-watch",
     name: "Apple Watch",

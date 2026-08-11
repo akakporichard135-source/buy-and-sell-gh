@@ -92,6 +92,7 @@ export function ProductDetailsPage() {
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
   const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
+  const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : "Storage";
 
   const handleAddToCart = () => {
     if (product.storage.length > 0 && !storage) {
@@ -193,7 +194,7 @@ export function ProductDetailsPage() {
           </div>
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
-            <label className="choice-label">Storage
+            <label className="choice-label">{primaryOptionLabel}
               <select value={storage} required onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
             </label>
             <label className="choice-label">Colour

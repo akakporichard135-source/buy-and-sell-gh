@@ -1,5 +1,15 @@
 import airpodsProPremium from "../assets/products/airpods-pro-premium.webp";
 import appleWatchPremium from "../assets/products/apple-watch-premium.webp";
+import appleWatchSe2Premium from "../assets/products/apple-watch-se-2-premium.webp";
+import appleWatchSe3Premium from "../assets/products/apple-watch-se-3-premium.webp";
+import appleWatchSeries7Premium from "../assets/products/apple-watch-series-7-premium.webp";
+import appleWatchSeries8Premium from "../assets/products/apple-watch-series-8-premium.webp";
+import appleWatchSeries9Premium from "../assets/products/apple-watch-series-9-premium.webp";
+import appleWatchSeries10Premium from "../assets/products/apple-watch-series-10-premium.webp";
+import appleWatchSeries11Premium from "../assets/products/apple-watch-series-11-premium.webp";
+import appleWatchUltraPremium from "../assets/products/apple-watch-ultra-premium.webp";
+import appleWatchUltra2Premium from "../assets/products/apple-watch-ultra-2-premium.webp";
+import appleWatchUltra3Premium from "../assets/products/apple-watch-ultra-3-premium.webp";
 import ipad10thGenerationPremium from "../assets/products/ipad-10th-generation-premium.webp";
 import ipad11thGenerationPremium from "../assets/products/ipad-11th-generation-premium.webp";
 import ipadAir5Premium from "../assets/products/ipad-air-5-premium.webp";
@@ -91,6 +101,16 @@ const localPremiumImageBySlug: Record<string, string> = {
   "ipad-pro-11-inch-m5": ipadPro11M5Premium,
   "ipad-pro-13-inch-m5": ipadPro13M5Premium,
   "ipad-pro": ipadProPremium,
+  "apple-watch-se-2": appleWatchSe2Premium,
+  "apple-watch-se-3": appleWatchSe3Premium,
+  "apple-watch-series-7": appleWatchSeries7Premium,
+  "apple-watch-series-8": appleWatchSeries8Premium,
+  "apple-watch-series-9": appleWatchSeries9Premium,
+  "apple-watch-series-10": appleWatchSeries10Premium,
+  "apple-watch-series-11": appleWatchSeries11Premium,
+  "apple-watch-ultra": appleWatchUltraPremium,
+  "apple-watch-ultra-2": appleWatchUltra2Premium,
+  "apple-watch-ultra-3": appleWatchUltra3Premium,
   "apple-watch": appleWatchPremium,
   "airpods-pro": airpodsProPremium,
 };

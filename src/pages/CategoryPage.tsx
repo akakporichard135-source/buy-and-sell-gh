@@ -8,11 +8,14 @@ import { SEO } from "../components/SEO";
 import {
   compareIphonesNewest,
   compareIpadsNewest,
+  compareWatchesNewest,
   getIpadFamily,
   getIphoneGeneration,
+  getWatchFamily,
   ipadFamilyOptions,
   iphoneGenerationOptions,
   productMatchesCategorySlug,
+  watchFamilyOptions,
 } from "../utils/productPresentation";
 
 const categoryCopy: Record<string, { title: string; eyebrow: string; description: string }> = {
@@ -63,13 +66,15 @@ export function CategoryPage() {
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const [generation, setGeneration] = useState("All");
   const [ipadFamily, setIpadFamily] = useState("All");
+  const [watchFamily, setWatchFamily] = useState("All");
   const copy = categoryCopy[categorySlug];
   const products = activeProducts
     .filter((product) => productMatchesCategorySlug(product, categorySlug))
-    .filter((product) => categorySlug === "iphones" || categorySlug === "ipads" || !isProductUnavailable(product))
+    .filter((product) => ["iphones", "ipads", "apple-watch"].includes(categorySlug) || !isProductUnavailable(product))
     .filter((product) => categorySlug !== "iphones" || generation === "All" || getIphoneGeneration(product) === generation)
     .filter((product) => categorySlug !== "ipads" || ipadFamily === "All" || getIpadFamily(product) === ipadFamily)
-    .sort(categorySlug === "iphones" ? compareIphonesNewest : categorySlug === "ipads" ? compareIpadsNewest : () => 0);
+    .filter((product) => categorySlug !== "apple-watch" || watchFamily === "All" || getWatchFamily(product) === watchFamily)
+    .sort(categorySlug === "iphones" ? compareIphonesNewest : categorySlug === "ipads" ? compareIpadsNewest : categorySlug === "apple-watch" ? compareWatchesNewest : () => 0);
 
   if (!copy) {
     return (
@@ -103,9 +108,9 @@ export function CategoryPage() {
       </section>
       <section className="section category-results-section">
         <div className="section-heading">
-          <p className="eyebrow-dark">{products.length} {categorySlug === "iphones" || categorySlug === "ipads" ? "models" : "available"}</p>
+          <p className="eyebrow-dark">{products.length} {["iphones", "ipads", "apple-watch"].includes(categorySlug) ? "models" : "available"}</p>
           <h2>{copy.eyebrow}</h2>
-          <p>{categorySlug === "iphones" || categorySlug === "ipads" ? "Browse every listed model. Devices awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
+          <p>{["iphones", "ipads", "apple-watch"].includes(categorySlug) ? "Browse every listed model. Devices awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
         </div>
         {categorySlug === "iphones" && (
           <label className="choice-label mb-6 max-w-xs">Generation
@@ -120,6 +125,14 @@ export function CategoryPage() {
             <select value={ipadFamily} onChange={(event) => setIpadFamily(event.target.value)}>
               <option>All</option>
               {ipadFamilyOptions.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+        )}
+        {categorySlug === "apple-watch" && (
+          <label className="choice-label mb-6 max-w-xs">Apple Watch family
+            <select value={watchFamily} onChange={(event) => setWatchFamily(event.target.value)}>
+              <option>All</option>
+              {watchFamilyOptions.map((item) => <option key={item}>{item}</option>)}
             </select>
           </label>
         )}

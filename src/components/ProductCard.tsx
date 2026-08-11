@@ -21,6 +21,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
   const storageSummary = isCompact ? storage : product.storage.slice(0, 3).join(" \u2022 ");
   const colourSummary = product.colors.length === 1 ? product.colors[0] : `${product.colors.length} available`;
+  const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : "Storage";
 
   return (
     <article className={`product-card ${isCompact ? "compact-product-card" : ""} group flex h-full min-w-0 flex-col rounded-lg border border-black/7 bg-white p-3 shadow-card transition hover:-translate-y-1 hover:shadow-xl`}>
@@ -40,7 +41,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
           {!isPriceOnRequest && product.oldPrice && <span>{formatGhs(product.oldPrice)}</span>}
         </div>
         <div className="product-card-meta">
-          <span>Storage: {storageSummary}</span>
+          <span>{primaryOptionLabel}: {storageSummary}</span>
           {!isCompact && <span>Colours: {colourSummary}</span>}
           <span className={productBadgeClass(displayStockLabel)}>{displayStockLabel}</span>
         </div>

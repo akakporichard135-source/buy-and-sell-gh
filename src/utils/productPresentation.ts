@@ -91,6 +91,32 @@ export function compareIpadsNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
+export const watchFamilyOptions = ["Apple Watch SE", "Apple Watch Series", "Apple Watch Ultra"] as const;
+
+const watchNewestOrder = [
+  "apple-watch-ultra-3", "apple-watch-series-11", "apple-watch-se-3",
+  "apple-watch-series-10", "apple-watch-ultra-2", "apple-watch-series-9",
+  "apple-watch-series-8", "apple-watch-ultra", "apple-watch-series-7",
+  "apple-watch-se-2", "apple-watch",
+];
+
+export function getWatchFamily(product: Product) {
+  const searchable = [product.subcategory, product.name, product.model].filter(Boolean).join(" ").toLowerCase();
+  if (searchable.includes("watch ultra")) return "Apple Watch Ultra";
+  if (searchable.includes("watch series")) return "Apple Watch Series";
+  if (searchable.includes("watch se")) return "Apple Watch SE";
+  return "";
+}
+
+export function compareWatchesNewest(a: Product, b: Product) {
+  const aIndex = watchNewestOrder.indexOf(a.slug);
+  const bIndex = watchNewestOrder.indexOf(b.slug);
+  if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
+}
+
 export function getProductBadges(product: Product, limit = 3) {
   const explicitPromotions = (product.badges ?? [])
     .map(normalizeDisplayBadge)
