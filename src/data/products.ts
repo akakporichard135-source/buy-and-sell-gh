@@ -1,5 +1,22 @@
 import airpodsPro from "../assets/products/airpods-pro-premium.webp";
 import appleWatch from "../assets/products/apple-watch-premium.webp";
+import ipad10thGeneration from "../assets/products/ipad-10th-generation-premium.webp";
+import ipad11thGeneration from "../assets/products/ipad-11th-generation-premium.webp";
+import ipadAir5 from "../assets/products/ipad-air-5-premium.webp";
+import ipadAir11M2 from "../assets/products/ipad-air-11-inch-m2-premium.webp";
+import ipadAir11M3 from "../assets/products/ipad-air-11-inch-m3-premium.webp";
+import ipadAir11M4 from "../assets/products/ipad-air-11-inch-m4-premium.webp";
+import ipadAir13M2 from "../assets/products/ipad-air-13-inch-m2-premium.webp";
+import ipadAir13M3 from "../assets/products/ipad-air-13-inch-m3-premium.webp";
+import ipadAir13M4 from "../assets/products/ipad-air-13-inch-m4-premium.webp";
+import ipadMini6 from "../assets/products/ipad-mini-6-premium.webp";
+import ipadMini7 from "../assets/products/ipad-mini-7-premium.webp";
+import ipadPro11M2 from "../assets/products/ipad-pro-11-inch-m2-premium.webp";
+import ipadPro11M4 from "../assets/products/ipad-pro-11-inch-m4-premium.webp";
+import ipadPro11M5 from "../assets/products/ipad-pro-11-inch-m5-premium.webp";
+import ipadPro129M2 from "../assets/products/ipad-pro-12-9-inch-m2-premium.webp";
+import ipadPro13M4 from "../assets/products/ipad-pro-13-inch-m4-premium.webp";
+import ipadPro13M5 from "../assets/products/ipad-pro-13-inch-m5-premium.webp";
 import ipadPro from "../assets/products/ipad-pro-premium.webp";
 import iphone11ProMax from "../assets/products/iphone-11-pro-max-premium.webp";
 import iphone12Mini from "../assets/products/iphone-12-mini-premium.webp";
@@ -78,6 +95,48 @@ const createCatalogueIphone = ({ slug, name, generation, image, storage, colors,
   deliveryNote: "Availability, price, condition, pickup and delivery details must be confirmed before payment.",
   conditionReport: ["Condition to be confirmed", "Stock to be confirmed", "Final unit details are verified before payment"],
   description: `${name} catalogue listing with verified Apple storage and colour options. Contact Buy & Sell GH to confirm current inventory, condition and price.`,
+  specs,
+  box: includedItems,
+});
+
+interface CatalogueIpadInput {
+  slug: string;
+  name: string;
+  generation: string;
+  subcategory: "iPad" | "iPad mini" | "iPad Air" | "iPad Pro";
+  image: string;
+  storage: string[];
+  colors: string[];
+  specs: string[];
+  includedItems: string[];
+}
+
+const createCatalogueIpad = ({ slug, name, generation, subcategory, image, storage, colors, specs, includedItems }: CatalogueIpadInput): Product => ({
+  id: slug,
+  slug,
+  name,
+  category: "iPads",
+  subcategory,
+  brand: "Apple",
+  model: name,
+  generation,
+  price: 0,
+  priceOnRequest: true,
+  storage,
+  condition: "To Confirm",
+  colors,
+  defaultColor: colors[0],
+  stockStatus: "Out of Stock",
+  stockQuantity: 0,
+  available: true,
+  imageTone: "from-stone-100 via-white to-yellow-100",
+  badges: [],
+  tags: ["ipad", subcategory.toLowerCase(), name.toLowerCase(), generation.toLowerCase(), "contact for price"],
+  images: [{ src: image, alt: `${name} premium product image for Buy & Sell GH` }],
+  warrantyInfo: "Warranty terms are confirmed when inventory is configured.",
+  deliveryNote: "Availability, price, condition, pickup and delivery details must be confirmed before payment.",
+  conditionReport: ["Condition to be confirmed", "Stock to be confirmed", "Final unit details are verified before payment"],
+  description: `${name} catalogue listing with verified Apple storage, colour and hardware details. Contact Buy & Sell GH to confirm current inventory, condition and price.`,
   specs,
   box: includedItems,
 });
@@ -427,6 +486,108 @@ export const products: Product[] = [
     specs: ["6.5-inch Super Retina XDR display", "A13 Bionic chip", "Triple camera system", "Face ID"],
     box: ["Device"],
   },
+  createCatalogueIpad({
+    slug: "ipad-10th-generation", name: "iPad (10th generation)", generation: "iPad 10th generation", subcategory: "iPad", image: ipad10thGeneration,
+    storage: ["64GB", "256GB"], colors: ["Silver", "Blue", "Pink", "Yellow"],
+    specs: ["10.9-inch Liquid Retina display", "A14 Bionic chip", "Touch ID in the top button", "USB-C connector"],
+    includedItems: ["iPad (10th generation)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-a16", name: "iPad (A16)", generation: "iPad (A16)", subcategory: "iPad", image: ipad11thGeneration,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Silver", "Blue", "Pink", "Yellow"],
+    specs: ["10.86-inch Liquid Retina display", "A16 chip", "Touch ID in the top button", "USB-C connector"],
+    includedItems: ["iPad (A16)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-mini-6", name: "iPad mini (6th generation)", generation: "iPad mini 6", subcategory: "iPad mini", image: ipadMini6,
+    storage: ["64GB", "256GB"], colors: ["Space Gray", "Pink", "Purple", "Starlight"],
+    specs: ["8.3-inch Liquid Retina display", "A15 Bionic chip", "Touch ID in the top button", "USB-C connector"],
+    includedItems: ["iPad mini (6th generation)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-mini-a17-pro", name: "iPad mini (A17 Pro)", generation: "iPad mini 7", subcategory: "iPad mini", image: ipadMini7,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["8.3-inch Liquid Retina display", "A17 Pro chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad mini (A17 Pro)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-5", name: "iPad Air (5th generation)", generation: "iPad Air 5", subcategory: "iPad Air", image: ipadAir5,
+    storage: ["64GB", "256GB"], colors: ["Space Gray", "Starlight", "Pink", "Purple", "Blue"],
+    specs: ["10.9-inch Liquid Retina display", "Apple M1 chip", "Apple Pencil (2nd generation) support", "USB-C connector"],
+    includedItems: ["iPad Air (5th generation)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-11-inch-m2", name: "iPad Air 11-inch (M2)", generation: "iPad Air M2", subcategory: "iPad Air", image: ipadAir11M2,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["11-inch Liquid Retina display", "Apple M2 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 11-inch (M2)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-13-inch-m2", name: "iPad Air 13-inch (M2)", generation: "iPad Air M2", subcategory: "iPad Air", image: ipadAir13M2,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["13-inch Liquid Retina display", "Apple M2 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 13-inch (M2)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-11-inch-m3", name: "iPad Air 11-inch (M3)", generation: "iPad Air M3", subcategory: "iPad Air", image: ipadAir11M3,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["11-inch Liquid Retina display", "Apple M3 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 11-inch (M3)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-13-inch-m3", name: "iPad Air 13-inch (M3)", generation: "iPad Air M3", subcategory: "iPad Air", image: ipadAir13M3,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["13-inch Liquid Retina display", "Apple M3 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 13-inch (M3)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-11-inch-m4", name: "iPad Air 11-inch (M4)", generation: "iPad Air M4", subcategory: "iPad Air", image: ipadAir11M4,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["11-inch Liquid Retina display", "Apple M4 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 11-inch (M4)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-air-13-inch-m4", name: "iPad Air 13-inch (M4)", generation: "iPad Air M4", subcategory: "iPad Air", image: ipadAir13M4,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Blue", "Purple", "Starlight", "Space Gray"],
+    specs: ["13-inch Liquid Retina display", "Apple M4 chip", "Apple Pencil Pro support", "USB-C connector"],
+    includedItems: ["iPad Air 13-inch (M4)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-11-inch-m2", name: "iPad Pro 11-inch (M2)", generation: "iPad Pro M2", subcategory: "iPad Pro", image: ipadPro11M2,
+    storage: ["128GB", "256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Gray"],
+    specs: ["11-inch Liquid Retina display with ProMotion", "Apple M2 chip", "Dual rear cameras with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 11-inch (M2)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-12-9-inch-m2", name: "iPad Pro 12.9-inch (M2)", generation: "iPad Pro M2", subcategory: "iPad Pro", image: ipadPro129M2,
+    storage: ["128GB", "256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Gray"],
+    specs: ["12.9-inch Liquid Retina XDR display with ProMotion", "Apple M2 chip", "Dual rear cameras with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 12.9-inch (M2)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-11-inch-m4", name: "iPad Pro 11-inch (M4)", generation: "iPad Pro M4", subcategory: "iPad Pro", image: ipadPro11M4,
+    storage: ["256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Black"],
+    specs: ["11.1-inch Ultra Retina XDR display with ProMotion", "Apple M4 chip", "12MP Wide camera with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 11-inch (M4)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-13-inch-m4", name: "iPad Pro 13-inch (M4)", generation: "iPad Pro M4", subcategory: "iPad Pro", image: ipadPro13M4,
+    storage: ["256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Black"],
+    specs: ["13-inch Ultra Retina XDR display with ProMotion", "Apple M4 chip", "12MP Wide camera with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 13-inch (M4)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-11-inch-m5", name: "iPad Pro 11-inch (M5)", generation: "iPad Pro M5", subcategory: "iPad Pro", image: ipadPro11M5,
+    storage: ["256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Black"],
+    specs: ["11.1-inch Ultra Retina XDR display with ProMotion", "Apple M5 chip", "12MP Wide camera with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 11-inch (M5)", "USB-C Charge Cable"],
+  }),
+  createCatalogueIpad({
+    slug: "ipad-pro-13-inch-m5", name: "iPad Pro 13-inch (M5)", generation: "iPad Pro M5", subcategory: "iPad Pro", image: ipadPro13M5,
+    storage: ["256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Space Black"],
+    specs: ["13-inch Ultra Retina XDR display with ProMotion", "Apple M5 chip", "12MP Wide camera with LiDAR Scanner", "Thunderbolt / USB 4 connector"],
+    includedItems: ["iPad Pro 13-inch (M5)", "USB-C Charge Cable"],
+  }),
   {
     id: "ipad-pro",
     name: "iPad Pro",

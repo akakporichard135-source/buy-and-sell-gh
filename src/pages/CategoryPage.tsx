@@ -5,7 +5,15 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
-import { compareIphonesNewest, getIphoneGeneration, iphoneGenerationOptions, productMatchesCategorySlug } from "../utils/productPresentation";
+import {
+  compareIphonesNewest,
+  compareIpadsNewest,
+  getIpadFamily,
+  getIphoneGeneration,
+  ipadFamilyOptions,
+  iphoneGenerationOptions,
+  productMatchesCategorySlug,
+} from "../utils/productPresentation";
 
 const categoryCopy: Record<string, { title: string; eyebrow: string; description: string }> = {
   iphones: {
@@ -54,12 +62,14 @@ export function CategoryPage() {
   const { categorySlug = "" } = useParams();
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const [generation, setGeneration] = useState("All");
+  const [ipadFamily, setIpadFamily] = useState("All");
   const copy = categoryCopy[categorySlug];
   const products = activeProducts
     .filter((product) => productMatchesCategorySlug(product, categorySlug))
-    .filter((product) => categorySlug === "iphones" || !isProductUnavailable(product))
+    .filter((product) => categorySlug === "iphones" || categorySlug === "ipads" || !isProductUnavailable(product))
     .filter((product) => categorySlug !== "iphones" || generation === "All" || getIphoneGeneration(product) === generation)
-    .sort(categorySlug === "iphones" ? compareIphonesNewest : () => 0);
+    .filter((product) => categorySlug !== "ipads" || ipadFamily === "All" || getIpadFamily(product) === ipadFamily)
+    .sort(categorySlug === "iphones" ? compareIphonesNewest : categorySlug === "ipads" ? compareIpadsNewest : () => 0);
 
   if (!copy) {
     return (
@@ -93,15 +103,23 @@ export function CategoryPage() {
       </section>
       <section className="section category-results-section">
         <div className="section-heading">
-          <p className="eyebrow-dark">{products.length} {categorySlug === "iphones" ? "models" : "available"}</p>
+          <p className="eyebrow-dark">{products.length} {categorySlug === "iphones" || categorySlug === "ipads" ? "models" : "available"}</p>
           <h2>{copy.eyebrow}</h2>
-          <p>{categorySlug === "iphones" ? "Browse every listed generation. Models awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
+          <p>{categorySlug === "iphones" || categorySlug === "ipads" ? "Browse every listed model. Devices awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
         </div>
         {categorySlug === "iphones" && (
           <label className="choice-label mb-6 max-w-xs">Generation
             <select value={generation} onChange={(event) => setGeneration(event.target.value)}>
               <option>All</option>
               {iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+        )}
+        {categorySlug === "ipads" && (
+          <label className="choice-label mb-6 max-w-xs">iPad family
+            <select value={ipadFamily} onChange={(event) => setIpadFamily(event.target.value)}>
+              <option>All</option>
+              {ipadFamilyOptions.map((item) => <option key={item}>{item}</option>)}
             </select>
           </label>
         )}

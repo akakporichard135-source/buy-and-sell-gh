@@ -61,6 +61,36 @@ export function compareIphonesNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
+export const ipadFamilyOptions = ["iPad", "iPad mini", "iPad Air", "iPad Pro"] as const;
+
+const ipadNewestOrder = [
+  "ipad-pro-13-inch-m5", "ipad-pro-11-inch-m5",
+  "ipad-air-13-inch-m4", "ipad-air-11-inch-m4",
+  "ipad-air-13-inch-m3", "ipad-air-11-inch-m3",
+  "ipad-pro-13-inch-m4", "ipad-pro-11-inch-m4",
+  "ipad-air-13-inch-m2", "ipad-air-11-inch-m2",
+  "ipad-mini-a17-pro", "ipad-a16",
+  "ipad-pro-12-9-inch-m2", "ipad-pro-11-inch-m2",
+  "ipad-air-5", "ipad-10th-generation", "ipad-mini-6", "ipad-pro",
+];
+
+export function getIpadFamily(product: Product) {
+  const searchable = [product.subcategory, product.name, product.model].filter(Boolean).join(" ").toLowerCase();
+  if (searchable.includes("ipad mini")) return "iPad mini";
+  if (searchable.includes("ipad air")) return "iPad Air";
+  if (searchable.includes("ipad pro")) return "iPad Pro";
+  return searchable.includes("ipad") ? "iPad" : "";
+}
+
+export function compareIpadsNewest(a: Product, b: Product) {
+  const aIndex = ipadNewestOrder.indexOf(a.slug);
+  const bIndex = ipadNewestOrder.indexOf(b.slug);
+  if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
+}
+
 export function getProductBadges(product: Product, limit = 3) {
   const explicitPromotions = (product.badges ?? [])
     .map(normalizeDisplayBadge)

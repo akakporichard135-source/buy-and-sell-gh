@@ -1,5 +1,22 @@
 import airpodsProPremium from "../assets/products/airpods-pro-premium.webp";
 import appleWatchPremium from "../assets/products/apple-watch-premium.webp";
+import ipad10thGenerationPremium from "../assets/products/ipad-10th-generation-premium.webp";
+import ipad11thGenerationPremium from "../assets/products/ipad-11th-generation-premium.webp";
+import ipadAir5Premium from "../assets/products/ipad-air-5-premium.webp";
+import ipadAir11M2Premium from "../assets/products/ipad-air-11-inch-m2-premium.webp";
+import ipadAir11M3Premium from "../assets/products/ipad-air-11-inch-m3-premium.webp";
+import ipadAir11M4Premium from "../assets/products/ipad-air-11-inch-m4-premium.webp";
+import ipadAir13M2Premium from "../assets/products/ipad-air-13-inch-m2-premium.webp";
+import ipadAir13M3Premium from "../assets/products/ipad-air-13-inch-m3-premium.webp";
+import ipadAir13M4Premium from "../assets/products/ipad-air-13-inch-m4-premium.webp";
+import ipadMini6Premium from "../assets/products/ipad-mini-6-premium.webp";
+import ipadMini7Premium from "../assets/products/ipad-mini-7-premium.webp";
+import ipadPro11M2Premium from "../assets/products/ipad-pro-11-inch-m2-premium.webp";
+import ipadPro11M4Premium from "../assets/products/ipad-pro-11-inch-m4-premium.webp";
+import ipadPro11M5Premium from "../assets/products/ipad-pro-11-inch-m5-premium.webp";
+import ipadPro129M2Premium from "../assets/products/ipad-pro-12-9-inch-m2-premium.webp";
+import ipadPro13M4Premium from "../assets/products/ipad-pro-13-inch-m4-premium.webp";
+import ipadPro13M5Premium from "../assets/products/ipad-pro-13-inch-m5-premium.webp";
 import ipadProPremium from "../assets/products/ipad-pro-premium.webp";
 import iphone11ProMaxPremium from "../assets/products/iphone-11-pro-max-premium.webp";
 import iphone12MiniPremium from "../assets/products/iphone-12-mini-premium.webp";
@@ -56,6 +73,23 @@ const localPremiumImageBySlug: Record<string, string> = {
   "iphone-12-pro": iphone12ProPremium,
   "iphone-12-pro-max": iphone12ProMaxPremium,
   "iphone-11-pro-max": iphone11ProMaxPremium,
+  "ipad-10th-generation": ipad10thGenerationPremium,
+  "ipad-a16": ipad11thGenerationPremium,
+  "ipad-mini-6": ipadMini6Premium,
+  "ipad-mini-a17-pro": ipadMini7Premium,
+  "ipad-air-5": ipadAir5Premium,
+  "ipad-air-11-inch-m2": ipadAir11M2Premium,
+  "ipad-air-13-inch-m2": ipadAir13M2Premium,
+  "ipad-air-11-inch-m3": ipadAir11M3Premium,
+  "ipad-air-13-inch-m3": ipadAir13M3Premium,
+  "ipad-air-11-inch-m4": ipadAir11M4Premium,
+  "ipad-air-13-inch-m4": ipadAir13M4Premium,
+  "ipad-pro-11-inch-m2": ipadPro11M2Premium,
+  "ipad-pro-12-9-inch-m2": ipadPro129M2Premium,
+  "ipad-pro-11-inch-m4": ipadPro11M4Premium,
+  "ipad-pro-13-inch-m4": ipadPro13M4Premium,
+  "ipad-pro-11-inch-m5": ipadPro11M5Premium,
+  "ipad-pro-13-inch-m5": ipadPro13M5Premium,
   "ipad-pro": ipadProPremium,
   "apple-watch": appleWatchPremium,
   "airpods-pro": airpodsProPremium,
