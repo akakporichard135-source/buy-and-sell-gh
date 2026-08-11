@@ -90,6 +90,8 @@ export function ProductDetailsPage() {
   const active = gallery[activeImage] ?? resolveProductImage(product);
   const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl);
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
+  const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
+  const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
 
   const handleAddToCart = () => {
     if (product.storage.length > 0 && !storage) {
@@ -146,12 +148,12 @@ export function ProductDetailsPage() {
           name: product.name,
           image: gallery.map((image) => image.src),
           brand: { "@type": "Brand", name: "Apple" },
-          offers: {
+          ...(isPriceOnRequest ? {} : { offers: {
             "@type": "Offer",
             priceCurrency: "GHS",
             price: product.price,
             availability: isSoldOut ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
-          },
+          } }),
         })}
       </script>
       <section className="section product-detail-layout">
@@ -176,14 +178,14 @@ export function ProductDetailsPage() {
           <p className="eyebrow-dark mt-5">{product.category}</p>
           <h1 className="mt-3 text-4xl font-black text-ink sm:text-5xl">{product.name}</h1>
           <div className="mt-5 flex flex-wrap items-end gap-3">
-            <p className="text-4xl font-black">{formatGhs(product.price)}</p>
-            {product.oldPrice && <p className="pb-1 font-bold text-ink/40 line-through">{formatGhs(product.oldPrice)}</p>}
+            <p className="text-4xl font-black">{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</p>
+            {!isPriceOnRequest && product.oldPrice && <p className="pb-1 font-bold text-ink/40 line-through">{formatGhs(product.oldPrice)}</p>}
           </div>
           <p className="mt-2 text-sm font-bold text-ink/58">Confirm availability and final details before payment.</p>
 
           <div className="mt-6 grid gap-2 text-sm font-bold text-ink/75 sm:grid-cols-2">
             <span><CheckCircle2 size={17} /> Condition: {product.condition}</span>
-            <span><CheckCircle2 size={17} /> Stock: {stockLabel}</span>
+            <span><CheckCircle2 size={17} /> Stock: {displayStockLabel}</span>
             <span><CheckCircle2 size={17} /> Battery health: {product.batteryHealth ?? "Confirm selected unit"}</span>
             <span><CheckCircle2 size={17} /> Face ID: {product.faceIdStatus ?? "Confirm selected unit"}</span>
             <span><CheckCircle2 size={17} /> SIM: {product.simStatus ?? "Confirm selected unit"}</span>
@@ -202,12 +204,12 @@ export function ProductDetailsPage() {
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <div className="quantity-stepper" aria-label="Quantity selector">
-              <button type="button" aria-label="Decrease quantity" onClick={() => setQuantity((value) => Math.max(1, value - 1))}><Minus size={17} /></button>
+              <button type="button" aria-label="Decrease quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.max(1, value - 1))}><Minus size={17} /></button>
               <span>{quantity}</span>
-              <button type="button" aria-label="Increase quantity" onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}><Plus size={17} /></button>
+              <button type="button" aria-label="Increase quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}><Plus size={17} /></button>
             </div>
-            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> Add to Cart</button>
-            <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>Buy Now</button>
+            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Contact for Price" : "Add to Cart"}</button>
+            <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Inventory Pending" : "Buy Now"}</button>
             <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> Confirm Availability</a>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -240,8 +242,8 @@ export function ProductDetailsPage() {
       <div className="product-sticky-spacer" aria-hidden="true" />
       <div className="sticky-product-actions">
         <div className="sticky-product-price">
-          <span>{formatGhs(product.price)}</span>
-          <small>{stockLabel}</small>
+          <span>{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</span>
+          <small>{displayStockLabel}</small>
         </div>
         <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={17} /> WhatsApp</a>
       </div>

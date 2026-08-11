@@ -1,10 +1,11 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
-import { productMatchesCategorySlug } from "../utils/productPresentation";
+import { compareIphonesNewest, getIphoneGeneration, iphoneGenerationOptions, productMatchesCategorySlug } from "../utils/productPresentation";
 
 const categoryCopy: Record<string, { title: string; eyebrow: string; description: string }> = {
   iphones: {
@@ -52,10 +53,13 @@ const categoryCopy: Record<string, { title: string; eyebrow: string; description
 export function CategoryPage() {
   const { categorySlug = "" } = useParams();
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
+  const [generation, setGeneration] = useState("All");
   const copy = categoryCopy[categorySlug];
   const products = activeProducts
-    .filter((product) => !isProductUnavailable(product))
-    .filter((product) => productMatchesCategorySlug(product, categorySlug));
+    .filter((product) => productMatchesCategorySlug(product, categorySlug))
+    .filter((product) => categorySlug === "iphones" || !isProductUnavailable(product))
+    .filter((product) => categorySlug !== "iphones" || generation === "All" || getIphoneGeneration(product) === generation)
+    .sort(categorySlug === "iphones" ? compareIphonesNewest : () => 0);
 
   if (!copy) {
     return (
@@ -89,10 +93,18 @@ export function CategoryPage() {
       </section>
       <section className="section category-results-section">
         <div className="section-heading">
-          <p className="eyebrow-dark">{products.length} available</p>
+          <p className="eyebrow-dark">{products.length} {categorySlug === "iphones" ? "models" : "available"}</p>
           <h2>{copy.eyebrow}</h2>
-          <p>Only matching products are shown here. Sold or unavailable products are excluded from this selling section.</p>
+          <p>{categorySlug === "iphones" ? "Browse every listed generation. Models awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
         </div>
+        {categorySlug === "iphones" && (
+          <label className="choice-label mb-6 max-w-xs">Generation
+            <select value={generation} onChange={(event) => setGeneration(event.target.value)}>
+              <option>All</option>
+              {iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+        )}
         {loading ? (
           <div className="rounded-lg border border-black/7 bg-white p-8 text-center font-black text-ink/70">Loading products...</div>
         ) : error ? (

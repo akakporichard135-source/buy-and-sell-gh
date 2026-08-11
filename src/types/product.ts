@@ -8,7 +8,7 @@ export type ProductCategory =
   | "UK Used Devices"
   | "Brand New Devices";
 
-export type ProductCondition = "Brand New" | "UK Used" | "Excellent" | "Very Good";
+export type ProductCondition = "Brand New" | "UK Used" | "Excellent" | "Very Good" | "To Confirm";
 export type StockStatus = "In Stock" | "Low Stock" | "Out of Stock" | "Sold";
 
 export interface ProductImage {

@@ -23,7 +23,7 @@ export const productWhatsAppUrl = (product: Product, storage: string, color: str
     [
       `Hello Buy & Sell GH, I'm interested in the ${product.name}, ${storage}, ${color}.`,
       `Condition: ${product.condition}.`,
-      `Listed price: ${formatGhs(product.price)}.`,
+      product.priceOnRequest || product.price <= 0 ? "Price: Please confirm the current price." : `Listed price: ${formatGhs(product.price)}.`,
       pageUrl ? `Product page: ${pageUrl}` : "",
       "Please confirm availability and final details.",
     ].filter(Boolean).join(" "),

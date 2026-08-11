@@ -29,7 +29,36 @@ export function productBadgeClass(label: string) {
   if (normalized === "UK Used") return "product-badge product-badge-uk-used";
   if (normalized === "Excellent") return "product-badge product-badge-excellent";
   if (normalized === "Very Good") return "product-badge product-badge-very-good";
+  if (normalized === "To Confirm") return "product-badge product-badge-urgent";
   return "product-badge";
+}
+
+export const iphoneGenerationOptions = ["iPhone 17", "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11"];
+
+const iphoneNewestOrder = [
+  "iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-17",
+  "iphone-16-pro-max", "iphone-16-pro", "iphone-16-plus", "iphone-16", "iphone-16e",
+  "iphone-15-pro-max", "iphone-15-pro", "iphone-15-plus", "iphone-15",
+  "iphone-14-pro-max", "iphone-14-pro", "iphone-14-plus", "iphone-14",
+  "iphone-13-pro-max", "iphone-13-pro", "iphone-13", "iphone-13-mini",
+  "iphone-12-pro-max", "iphone-12-pro", "iphone-12", "iphone-12-mini",
+  "iphone-11-pro-max",
+];
+
+export function getIphoneGeneration(product: Product) {
+  if (product.generation?.startsWith("iPhone ")) return product.generation;
+  if (product.slug === "iphone-air") return "iPhone 17";
+  const match = product.model.match(/iPhone\s+(1[1-7])/i);
+  return match ? `iPhone ${match[1]}` : "";
+}
+
+export function compareIphonesNewest(a: Product, b: Product) {
+  const aIndex = iphoneNewestOrder.indexOf(a.slug);
+  const bIndex = iphoneNewestOrder.indexOf(b.slug);
+  if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
 }
 
 export function getProductBadges(product: Product, limit = 3) {

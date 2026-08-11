@@ -5,7 +5,7 @@ import { isValidProductImage, resolveProductImage } from "../utils/productImages
 export const PRODUCT_CATALOG_STORAGE_KEY = "buyandsell-gh-product-catalog";
 
 export const stockStatuses: StockStatus[] = ["In Stock", "Low Stock", "Out of Stock", "Sold"];
-export const productConditions: ProductCondition[] = ["Brand New", "UK Used", "Excellent", "Very Good"];
+export const productConditions: ProductCondition[] = ["Brand New", "UK Used", "Excellent", "Very Good", "To Confirm"];
 
 export const categories: ProductCategory[] = seedCategories;
 export const conditions = productConditions;
@@ -29,7 +29,7 @@ export const normalizeCondition = (condition: Product["condition"] | "New" | "Re
 
 export const isProductUnavailable = (product: Product) => {
   const status = normalizeStockStatus(product);
-  return status === "Sold" || status === "Out of Stock" || product.archived === true || product.available === false;
+  return status === "Sold" || status === "Out of Stock" || product.priceOnRequest === true || product.price <= 0 || product.archived === true || product.available === false;
 };
 
 export const getPrimaryImage = (product: Product) => {

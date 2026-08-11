@@ -2,13 +2,31 @@ import airpodsPro from "../assets/products/airpods-pro-premium.webp";
 import appleWatch from "../assets/products/apple-watch-premium.webp";
 import ipadPro from "../assets/products/ipad-pro-premium.webp";
 import iphone11ProMax from "../assets/products/iphone-11-pro-max-premium.webp";
+import iphone12Mini from "../assets/products/iphone-12-mini-premium.webp";
+import iphone12 from "../assets/products/iphone-12-premium.webp";
+import iphone12Pro from "../assets/products/iphone-12-pro-premium.webp";
 import iphone12ProMax from "../assets/products/iphone-12-pro-max-premium.webp";
+import iphone13Mini from "../assets/products/iphone-13-mini-premium.webp";
+import iphone13 from "../assets/products/iphone-13-premium.webp";
+import iphone13Pro from "../assets/products/iphone-13-pro-premium.webp";
 import iphone13ProMax from "../assets/products/iphone-13-pro-max-premium.webp";
+import iphone14 from "../assets/products/iphone-14-premium.webp";
+import iphone14Plus from "../assets/products/iphone-14-plus-premium.webp";
+import iphone14Pro from "../assets/products/iphone-14-pro-premium.webp";
 import iphone14ProMax from "../assets/products/iphone-14-pro-max-premium.webp";
 import iphone15 from "../assets/products/iphone-15-premium.webp";
+import iphone15Plus from "../assets/products/iphone-15-plus-premium.webp";
+import iphone15Pro from "../assets/products/iphone-15-pro-premium.webp";
 import iphone15ProMax from "../assets/products/iphone-15-pro-max-premium.webp";
+import iphone16e from "../assets/products/iphone-16e-premium.webp";
+import iphone16 from "../assets/products/iphone-16-premium.webp";
+import iphone16Plus from "../assets/products/iphone-16-plus-premium.webp";
 import iphone16Pro from "../assets/products/iphone-16-pro-premium.webp";
 import iphone16ProMax from "../assets/products/iphone-16-pro-max-premium.webp";
+import iphone17 from "../assets/products/iphone-17-premium.webp";
+import iphoneAir from "../assets/products/iphone-air-premium.webp";
+import iphone17Pro from "../assets/products/iphone-17-pro-premium.webp";
+import iphone17ProMax from "../assets/products/iphone-17-pro-max-premium.webp";
 import type { Product, ProductCategory, ProductCondition } from "../types/product";
 
 export const categories: ProductCategory[] = [
@@ -22,17 +40,166 @@ export const categories: ProductCategory[] = [
   "Brand New Devices",
 ];
 
-export const conditions: ProductCondition[] = ["Brand New", "UK Used", "Excellent", "Very Good"];
+export const conditions: ProductCondition[] = ["Brand New", "UK Used", "Excellent", "Very Good", "To Confirm"];
+
+interface CatalogueIphoneInput {
+  slug: string;
+  name: string;
+  generation: string;
+  image: string;
+  storage: string[];
+  colors: string[];
+  specs: string[];
+  includedItems: string[];
+}
+
+const createCatalogueIphone = ({ slug, name, generation, image, storage, colors, specs, includedItems }: CatalogueIphoneInput): Product => ({
+  id: slug,
+  slug,
+  name,
+  category: "iPhones",
+  brand: "Apple",
+  model: name,
+  generation,
+  price: 0,
+  priceOnRequest: true,
+  storage,
+  condition: "To Confirm",
+  colors,
+  defaultColor: colors[0],
+  stockStatus: "Out of Stock",
+  stockQuantity: 0,
+  available: true,
+  imageTone: "from-stone-100 via-white to-yellow-100",
+  badges: [],
+  tags: ["iphone", name.toLowerCase(), generation.toLowerCase(), "contact for price"],
+  images: [{ src: image, alt: `${name} premium product image for Buy & Sell GH` }],
+  warrantyInfo: "Warranty terms are confirmed when inventory is configured.",
+  deliveryNote: "Availability, price, condition, pickup and delivery details must be confirmed before payment.",
+  conditionReport: ["Condition to be confirmed", "Stock to be confirmed", "Final unit details are verified before payment"],
+  description: `${name} catalogue listing with verified Apple storage and colour options. Contact Buy & Sell GH to confirm current inventory, condition and price.`,
+  specs,
+  box: includedItems,
+});
 
 // Draft catalogue values are intentionally centralized here so the owner can replace prices and product details later.
 export const products: Product[] = [
+  createCatalogueIphone({
+    slug: "iphone-17-pro-max", name: "iPhone 17 Pro Max", generation: "iPhone 17", image: iphone17ProMax,
+    storage: ["256GB", "512GB", "1TB", "2TB"], colors: ["Silver", "Cosmic Orange", "Deep Blue"],
+    specs: ["6.9-inch Super Retina XDR display", "A19 Pro chip", "Triple 48MP Fusion camera system", "USB-C charging"],
+    includedItems: ["iPhone 17 Pro Max", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-17-pro", name: "iPhone 17 Pro", generation: "iPhone 17", image: iphone17Pro,
+    storage: ["256GB", "512GB", "1TB"], colors: ["Silver", "Cosmic Orange", "Deep Blue"],
+    specs: ["6.3-inch Super Retina XDR display", "A19 Pro chip", "Triple 48MP Fusion camera system", "USB-C charging"],
+    includedItems: ["iPhone 17 Pro", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-air", name: "iPhone Air", generation: "iPhone 17", image: iphoneAir,
+    storage: ["256GB", "512GB", "1TB"], colors: ["Space Black", "Cloud White", "Light Gold", "Sky Blue"],
+    specs: ["6.5-inch Super Retina XDR display", "A19 Pro chip", "48MP Fusion camera", "USB-C charging"],
+    includedItems: ["iPhone Air", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-17", name: "iPhone 17", generation: "iPhone 17", image: iphone17,
+    storage: ["256GB", "512GB"], colors: ["Black", "White", "Mist Blue", "Sage", "Lavender"],
+    specs: ["6.3-inch Super Retina XDR display", "A19 chip", "Dual Fusion camera system", "USB-C charging"],
+    includedItems: ["iPhone 17", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-16-plus", name: "iPhone 16 Plus", generation: "iPhone 16", image: iphone16Plus,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Black", "White", "Pink", "Teal", "Ultramarine"],
+    specs: ["6.7-inch Super Retina XDR display", "A18 chip", "Dual camera system", "USB-C charging"],
+    includedItems: ["iPhone 16 Plus", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-16", name: "iPhone 16", generation: "iPhone 16", image: iphone16,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Black", "White", "Pink", "Teal", "Ultramarine"],
+    specs: ["6.1-inch Super Retina XDR display", "A18 chip", "Dual camera system", "USB-C charging"],
+    includedItems: ["iPhone 16", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-16e", name: "iPhone 16e", generation: "iPhone 16", image: iphone16e,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Black", "White"],
+    specs: ["6.1-inch Super Retina XDR display", "A18 chip", "48MP Fusion camera", "USB-C charging"],
+    includedItems: ["iPhone 16e", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-15-pro", name: "iPhone 15 Pro", generation: "iPhone 15", image: iphone15Pro,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Black Titanium", "White Titanium", "Blue Titanium", "Natural Titanium"],
+    specs: ["6.1-inch Super Retina XDR display", "A17 Pro chip", "Pro camera system", "USB-C charging"],
+    includedItems: ["iPhone 15 Pro", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-15-plus", name: "iPhone 15 Plus", generation: "iPhone 15", image: iphone15Plus,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Black", "Blue", "Green", "Yellow", "Pink"],
+    specs: ["6.7-inch Super Retina XDR display", "A16 Bionic chip", "Dual camera system", "USB-C charging"],
+    includedItems: ["iPhone 15 Plus", "USB-C cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-14-pro", name: "iPhone 14 Pro", generation: "iPhone 14", image: iphone14Pro,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Space Black", "Silver", "Gold", "Deep Purple"],
+    specs: ["6.1-inch Super Retina XDR display", "A16 Bionic chip", "Pro camera system", "Lightning connector"],
+    includedItems: ["iPhone 14 Pro", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-14-plus", name: "iPhone 14 Plus", generation: "iPhone 14", image: iphone14Plus,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Midnight", "Purple", "Starlight", "Red", "Blue", "Yellow"],
+    specs: ["6.7-inch Super Retina XDR display", "A15 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 14 Plus", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-14", name: "iPhone 14", generation: "iPhone 14", image: iphone14,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Midnight", "Purple", "Starlight", "Red", "Blue", "Yellow"],
+    specs: ["6.1-inch Super Retina XDR display", "A15 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 14", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-13-pro", name: "iPhone 13 Pro", generation: "iPhone 13", image: iphone13Pro,
+    storage: ["128GB", "256GB", "512GB", "1TB"], colors: ["Graphite", "Gold", "Silver", "Sierra Blue", "Alpine Green"],
+    specs: ["6.1-inch Super Retina XDR display", "A15 Bionic chip", "Pro camera system", "Lightning connector"],
+    includedItems: ["iPhone 13 Pro", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-13", name: "iPhone 13", generation: "iPhone 13", image: iphone13,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Pink", "Blue", "Midnight", "Starlight", "Red", "Green"],
+    specs: ["6.1-inch Super Retina XDR display", "A15 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 13", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-13-mini", name: "iPhone 13 mini", generation: "iPhone 13", image: iphone13Mini,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Pink", "Blue", "Midnight", "Starlight", "Red", "Green"],
+    specs: ["5.4-inch Super Retina XDR display", "A15 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 13 mini", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-12-pro", name: "iPhone 12 Pro", generation: "iPhone 12", image: iphone12Pro,
+    storage: ["128GB", "256GB", "512GB"], colors: ["Silver", "Graphite", "Gold", "Pacific Blue"],
+    specs: ["6.1-inch Super Retina XDR display", "A14 Bionic chip", "Pro camera system", "Lightning connector"],
+    includedItems: ["iPhone 12 Pro", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-12", name: "iPhone 12", generation: "iPhone 12", image: iphone12,
+    storage: ["64GB", "128GB", "256GB"], colors: ["Black", "White", "Red", "Green", "Blue", "Purple"],
+    specs: ["6.1-inch Super Retina XDR display", "A14 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 12", "USB-C to Lightning cable", "Documentation"],
+  }),
+  createCatalogueIphone({
+    slug: "iphone-12-mini", name: "iPhone 12 mini", generation: "iPhone 12", image: iphone12Mini,
+    storage: ["64GB", "128GB", "256GB"], colors: ["Black", "White", "Red", "Green", "Blue", "Purple"],
+    specs: ["5.4-inch Super Retina XDR display", "A14 Bionic chip", "Dual camera system", "Lightning connector"],
+    includedItems: ["iPhone 12 mini", "USB-C to Lightning cable", "Documentation"],
+  }),
   {
     id: "iphone-16-pro-max",
     name: "iPhone 16 Pro Max",
     slug: "iphone-16-pro-max",
-    category: "Brand New Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 16 Pro Max",
+    generation: "iPhone 16",
     price: 20500,
     oldPrice: 21800,
     storage: ["256GB", "512GB", "1TB"],
@@ -61,9 +228,10 @@ export const products: Product[] = [
     id: "iphone-16-pro",
     name: "iPhone 16 Pro",
     slug: "iphone-16-pro",
-    category: "Brand New Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 16 Pro",
+    generation: "iPhone 16",
     price: 17800,
     storage: ["128GB", "256GB", "512GB"],
     condition: "Brand New",
@@ -92,6 +260,7 @@ export const products: Product[] = [
     category: "iPhones",
     brand: "Apple",
     model: "iPhone 15 Pro Max",
+    generation: "iPhone 15",
     price: 14500,
     oldPrice: 15500,
     storage: ["256GB", "512GB"],
@@ -122,6 +291,7 @@ export const products: Product[] = [
     category: "iPhones",
     brand: "Apple",
     model: "iPhone 15",
+    generation: "iPhone 15",
     price: 9800,
     storage: ["128GB", "256GB"],
     condition: "Excellent",
@@ -147,9 +317,10 @@ export const products: Product[] = [
     id: "iphone-14-pro-max",
     name: "iPhone 14 Pro Max",
     slug: "iphone-14-pro-max",
-    category: "UK Used Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 14 Pro Max",
+    generation: "iPhone 14",
     price: 11200,
     storage: ["128GB", "256GB", "512GB"],
     condition: "UK Used",
@@ -175,9 +346,10 @@ export const products: Product[] = [
     id: "iphone-13-pro-max",
     name: "iPhone 13 Pro Max",
     slug: "iphone-13-pro-max",
-    category: "UK Used Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 13 Pro Max",
+    generation: "iPhone 13",
     price: 8200,
     storage: ["128GB", "256GB"],
     condition: "Very Good",
@@ -203,9 +375,10 @@ export const products: Product[] = [
     id: "iphone-12-pro-max",
     name: "iPhone 12 Pro Max",
     slug: "iphone-12-pro-max",
-    category: "UK Used Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 12 Pro Max",
+    generation: "iPhone 12",
     price: 6400,
     storage: ["128GB", "256GB"],
     condition: "Very Good",
@@ -230,9 +403,10 @@ export const products: Product[] = [
     id: "iphone-11-pro-max",
     name: "iPhone 11 Pro Max",
     slug: "iphone-11-pro-max",
-    category: "UK Used Devices",
+    category: "iPhones",
     brand: "Apple",
     model: "iPhone 11 Pro Max",
+    generation: "iPhone 11",
     price: 4700,
     storage: ["64GB", "256GB"],
     condition: "Very Good",

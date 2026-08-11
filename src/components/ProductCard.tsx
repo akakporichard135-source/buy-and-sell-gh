@@ -13,10 +13,12 @@ export function ProductCard({ product, variant = "default" }: { product: Product
   const storage = product.storage[0];
   const color = product.colors[0];
   const isSoldOut = isProductUnavailable(product);
+  const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const isCompact = variant === "compact";
   const badges = getProductBadges(product, 1);
   const conditionLabel = normalizeDisplayBadge(product.condition);
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
+  const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
   const storageSummary = isCompact ? storage : product.storage.slice(0, 3).join(" \u2022 ");
   const colourSummary = product.colors.length === 1 ? product.colors[0] : `${product.colors.length} available`;
 
@@ -34,24 +36,24 @@ export function ProductCard({ product, variant = "default" }: { product: Product
           <h3>{product.name}</h3>
         </div>
         <div className="product-card-price-row">
-          <p>{formatGhs(product.price)}</p>
-          {product.oldPrice && <span>{formatGhs(product.oldPrice)}</span>}
+          <p>{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</p>
+          {!isPriceOnRequest && product.oldPrice && <span>{formatGhs(product.oldPrice)}</span>}
         </div>
         <div className="product-card-meta">
           <span>Storage: {storageSummary}</span>
           {!isCompact && <span>Colours: {colourSummary}</span>}
-          <span className={productBadgeClass(stockLabel)}>{stockLabel}</span>
+          <span className={productBadgeClass(displayStockLabel)}>{displayStockLabel}</span>
         </div>
         <div className="product-card-actions">
           <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" onClick={() => addItem(product, storage, color)} disabled={isSoldOut}>
-            <Plus size={17} /> {isSoldOut ? stockLabel : "Add to Cart"}
+            <Plus size={17} /> {isPriceOnRequest ? "Contact for Price" : isSoldOut ? stockLabel : "Add to Cart"}
           </button>
           <div className="product-card-secondary-actions">
             <Link className="btn-secondary" to={`/product/${product.slug}`}>
               <Eye size={17} /> View Details
             </Link>
             <a className="btn-ghost" href={productWhatsAppUrl(product, storage, color)} target="_blank" rel="noreferrer">
-              <MessageCircle size={17} /> {isSoldOut ? "Request Restock" : "WhatsApp"}
+              <MessageCircle size={17} /> {isPriceOnRequest ? "Ask on WhatsApp" : isSoldOut ? "Request Restock" : "WhatsApp"}
             </a>
           </div>
         </div>

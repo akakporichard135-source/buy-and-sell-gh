@@ -6,7 +6,7 @@ import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { categories, conditions, stockStatuses } from "../catalog/productCatalog";
-import { categorySlugs, productMatchesCategorySlug } from "../utils/productPresentation";
+import { categorySlugs, compareIphonesNewest, getIphoneGeneration, iphoneGenerationOptions, productMatchesCategorySlug } from "../utils/productPresentation";
 import type { Product, ProductCategory } from "../types/product";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
@@ -16,6 +16,7 @@ interface FiltersState {
   search: string;
   category: string;
   model: string;
+  generation: string;
   maxPrice: number;
   storage: string;
   condition: string;
@@ -30,6 +31,7 @@ const defaultFilters: FiltersState = {
   search: "",
   category: "All",
   model: "",
+  generation: "All",
   maxPrice: maxCataloguePrice,
   storage: "All",
   condition: "All",
@@ -81,6 +83,7 @@ export function ShopPage() {
         const searchable = [
           product.name,
           product.model,
+          product.generation ?? "",
           product.category,
           product.condition,
           product.stockStatus,
@@ -92,6 +95,7 @@ export function ShopPage() {
         return terms.every((term) => searchable.includes(term));
       })
       .filter((product) => product.model.toLowerCase().includes(filters.model.toLowerCase()))
+      .filter((product) => filters.generation === "All" || getIphoneGeneration(product) === filters.generation)
       .filter((product) => product.colors.join(" ").toLowerCase().includes(filters.color.toLowerCase()))
       .filter((product) => matchesShopCategory(product, filters.category))
       .filter((product) => filters.condition === "All" || product.condition === filters.condition)
@@ -102,12 +106,16 @@ export function ShopPage() {
       .filter((product) => !filters.popular || product.popular || product.isPopular);
 
     return [...list].sort((a, b) => {
+      const aPriceOnRequest = a.priceOnRequest || a.price <= 0;
+      const bPriceOnRequest = b.priceOnRequest || b.price <= 0;
+      if ((sort === "Price: Low to High" || sort === "Price: High to Low") && aPriceOnRequest !== bPriceOnRequest) return aPriceOnRequest ? 1 : -1;
       if (sort === "Price: Low to High") return a.price - b.price;
       if (sort === "Price: High to Low") return b.price - a.price;
       if (sort === "Popular") {
         const popularScore = Number(Boolean(b.popular || b.isPopular)) - Number(Boolean(a.popular || a.isPopular));
         if (popularScore !== 0) return popularScore;
       }
+      if (productMatchesCategorySlug(a, "iphones") && productMatchesCategorySlug(b, "iphones")) return compareIphonesNewest(a, b);
       return new Date(b.createdAt ?? "").getTime() - new Date(a.createdAt ?? "").getTime();
     });
   }, [filters, products, sort]);
@@ -218,6 +226,7 @@ function FilterControls({
         <label className="filter-label">Search<input value={filters.search} onChange={(e) => updateFilter("search", e.target.value)} placeholder="iPhone 15, AirPods..." /></label>
         <label className="filter-label">Category<select value={filters.category} onChange={(e) => updateFilter("category", e.target.value)}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Model<input value={filters.model} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>
+        <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
       </div>
       <div className="filter-group">
         <label className="filter-label">Price: up to GHS {filters.maxPrice.toLocaleString()}<input type="range" min="2000" max={maxCataloguePrice} step="500" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", Number(e.target.value))} /></label>
@@ -308,6 +317,7 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
   if (filters.search) active.push({ key: "search", label: `Search: ${filters.search}` });
   if (filters.category !== "All") active.push({ key: "category", label: filters.category });
   if (filters.model) active.push({ key: "model", label: `Model: ${filters.model}` });
+  if (filters.generation !== "All") active.push({ key: "generation", label: filters.generation });
   if (filters.maxPrice !== defaultFilters.maxPrice) active.push({ key: "maxPrice", label: `Up to GHS ${filters.maxPrice.toLocaleString()}` });
   if (filters.condition !== "All") active.push({ key: "condition", label: filters.condition });
   if (filters.storage !== "All") active.push({ key: "storage", label: filters.storage });
