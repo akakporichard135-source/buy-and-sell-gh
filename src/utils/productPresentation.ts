@@ -201,12 +201,11 @@ export function getProductBadges(product: Product, limit = 3) {
 }
 
 export function productMatchesCategorySlug(product: Product, slug: string) {
-  const searchable = [product.name, product.model, product.category, product.subcategory, ...(product.tags ?? [])].join(" ").toLowerCase();
-  if (slug === "iphones") return searchable.includes("iphone");
-  if (slug === "ipads") return searchable.includes("ipad");
-  if (slug === "macbooks") return searchable.includes("macbook");
-  if (slug === "apple-watch") return product.category === "Apple Watches" || searchable.includes("watch");
-  if (slug === "airpods") return product.category === "AirPods" || searchable.includes("airpods");
+  if (slug === "iphones") return product.category === "iPhones";
+  if (slug === "ipads") return product.category === "iPads";
+  if (slug === "macbooks") return product.category === "MacBooks";
+  if (slug === "apple-watch") return product.category === "Apple Watches";
+  if (slug === "airpods") return product.category === "AirPods";
   if (slug === "accessories") return product.category === "Accessories";
   if (slug === "uk-used-devices") return product.condition === "UK Used";
   if (slug === "brand-new-devices") return product.condition === "Brand New";
