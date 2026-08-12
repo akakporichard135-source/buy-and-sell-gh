@@ -55,6 +55,7 @@ import iphoneAir from "../assets/products/iphone-air-premium.webp";
 import iphone17Pro from "../assets/products/iphone-17-pro-premium.webp";
 import iphone17ProMax from "../assets/products/iphone-17-pro-max-premium.webp";
 import type { Product, ProductCategory, ProductCondition } from "../types/product";
+import { accessoryProducts } from "./accessoryProducts";
 import { airpodsProducts } from "./airpodsProducts";
 import { macbookProducts } from "./macbookProducts";
 
@@ -781,6 +782,7 @@ export const products: Product[] = [
   },
   ...airpodsProducts,
   ...macbookProducts,
+  ...accessoryProducts,
 ];
 
 export const getProductBySlug = (slug: string) => products.find((product) => product.slug === slug);

@@ -178,7 +178,8 @@ export const uploadProductImage = async (file: File, productId: string, onProgre
 
   onProgress?.(10);
   const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-  const path = `${productId}/${Date.now()}-${safeName}`;
+  const safeProductId = productId.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || "product";
+  const path = `${safeProductId}/${Date.now()}-${safeName}`;
   const { error } = await client.storage.from(productImagesBucket).upload(path, file, {
     cacheControl: "31536000",
     upsert: false,
@@ -199,4 +200,3 @@ export const removeProductImage = async (publicUrlOrPath: string) => {
   const { error } = await client.storage.from(productImagesBucket).remove([path]);
   if (error) throw error;
 };
-

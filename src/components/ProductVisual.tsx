@@ -1,5 +1,6 @@
+import { ImageOff } from "lucide-react";
 import type { Product } from "../types/product";
-import { resolveProductImage } from "../utils/productImages";
+import { requiresRealProductPhotos, resolveProductImage } from "../utils/productImages";
 
 export function ProductVisual({ product, size = "card", priority = false }: { product: Product; size?: "card" | "large"; priority?: boolean }) {
   const image = resolveProductImage(product);
@@ -17,6 +18,20 @@ export function ProductVisual({ product, size = "card", priority = false }: { pr
           decoding="async"
           className="product-render-image"
         />
+      </div>
+    );
+  }
+
+  if (requiresRealProductPhotos(product)) {
+    return (
+      <div
+        className={`product-visual product-photo-placeholder relative grid min-w-0 overflow-hidden rounded-2xl ${
+          size === "large" ? "min-h-[360px]" : "min-h-[230px]"
+        } place-items-center`}
+        role="img"
+        aria-label={`Real photos of ${product.name} are coming soon`}
+      >
+        <span><ImageOff size={28} /> Real photos coming soon</span>
       </div>
     );
   }

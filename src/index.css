@@ -964,6 +964,23 @@ textarea {
   font-weight: 950;
 }
 
+.product-photo-placeholder {
+  border: 1px dashed rgba(12, 12, 15, 0.18);
+  background: #f3f1eb;
+  color: rgba(12, 12, 15, 0.62);
+}
+
+.product-photo-placeholder span {
+  display: grid;
+  max-width: 220px;
+  place-items: center;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
 .product-main-image.is-zoomed img {
   transform: scale(1.22);
 }
@@ -2327,6 +2344,43 @@ input[type="file"]::file-selector-button {
   line-height: 1.65;
 }
 
+.sell-trade-hero {
+  padding-bottom: 0.75rem;
+}
+
+.sell-trade-layout {
+  display: grid;
+  align-items: start;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  padding-top: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.sell-trade-main,
+.sell-trade-whatsapp {
+  min-width: 0;
+}
+
+.sell-trade-whatsapp {
+  align-self: start;
+  height: auto;
+  min-height: 0;
+}
+
+.sell-trade-upload span {
+  display: block;
+  margin-top: 0.6rem;
+  color: rgba(12, 12, 15, 0.62);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+@media (min-width: 1024px) {
+  .sell-trade-layout {
+    grid-template-columns: minmax(0, 2.7fr) minmax(260px, 1fr);
+  }
+}
+
 .floating-whatsapp {
   right: max(1rem, env(safe-area-inset-right, 0px));
   bottom: max(1rem, env(safe-area-inset-bottom, 0px));
@@ -2794,6 +2848,33 @@ input[type="file"]::file-selector-button {
   min-width: 0;
   flex-wrap: wrap;
   gap: 0.65rem;
+}
+
+.admin-photo-requirement {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.3rem;
+  border: 1px solid rgba(185, 28, 28, 0.24);
+  border-radius: 0.65rem;
+  background: #fff1f2;
+  padding: 0.85rem;
+  color: #991b1b;
+}
+
+.admin-photo-requirement.is-ready {
+  border-color: rgba(21, 128, 61, 0.22);
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.admin-photo-requirement strong,
+.admin-photo-requirement span {
+  display: block;
+}
+
+.admin-photo-requirement span {
+  font-size: 0.8rem;
+  font-weight: 750;
 }
 
 .admin-product-toolbar {

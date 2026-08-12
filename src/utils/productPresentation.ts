@@ -182,6 +182,12 @@ export function compareAirpodsNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
+export const accessoryFamilyOptions = ["Charging & Power", "Cables", "iPhone Accessories", "iPad Accessories", "Mac Accessories", "Watch Accessories"] as const;
+
+export function getAccessoryFamily(product: Product) {
+  return product.category === "Accessories" ? product.subcategory?.trim() ?? "" : "";
+}
+
 export function getProductBadges(product: Product, limit = 3) {
   const explicitPromotions = (product.badges ?? [])
     .map(normalizeDisplayBadge)

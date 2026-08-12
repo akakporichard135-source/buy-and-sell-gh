@@ -9,6 +9,29 @@ import airpodsPro3Premium from "../assets/products/airpods-pro-3-premium.webp";
 import airpodsMaxLightningPremium from "../assets/products/airpods-max-lightning-premium.webp";
 import airpodsMaxUsbCPremium from "../assets/products/airpods-max-usb-c-premium.webp";
 import airpodsMax2Premium from "../assets/products/airpods-max-2-premium.webp";
+import adapter20WPremium from "../assets/products/apple-20w-usb-c-power-adapter-premium.webp";
+import adapter30WPremium from "../assets/products/apple-30w-usb-c-power-adapter-premium.webp";
+import adapter35WDualPremium from "../assets/products/apple-35w-dual-usb-c-power-adapter-premium.webp";
+import adapter70WPremium from "../assets/products/apple-70w-usb-c-power-adapter-premium.webp";
+import adapter96WPremium from "../assets/products/apple-96w-usb-c-power-adapter-premium.webp";
+import adapter140WPremium from "../assets/products/apple-140w-usb-c-power-adapter-premium.webp";
+import magsafeChargerPremium from "../assets/products/apple-magsafe-charger-premium.webp";
+import usbCChargeCablePremium from "../assets/products/apple-usb-c-charge-cable-premium.webp";
+import usbCToLightningPremium from "../assets/products/apple-usb-c-to-lightning-cable-premium.webp";
+import cable60WPremium from "../assets/products/apple-60w-usb-c-charge-cable-premium.webp";
+import cable240WPremium from "../assets/products/apple-240w-usb-c-charge-cable-premium.webp";
+import magsafe3CablePremium from "../assets/products/apple-usb-c-to-magsafe-3-cable-premium.webp";
+import magsafeIphoneCasePremium from "../assets/products/apple-magsafe-iphone-case-premium.webp";
+import clearIphoneCasePremium from "../assets/products/apple-clear-iphone-case-magsafe-premium.webp";
+import pencilUsbCPremium from "../assets/products/apple-pencil-usb-c-premium.webp";
+import pencilProPremium from "../assets/products/apple-pencil-pro-premium.webp";
+import magicKeyboardIpadPremium from "../assets/products/apple-magic-keyboard-ipad-premium.webp";
+import magicKeyboardFolioPremium from "../assets/products/apple-magic-keyboard-folio-premium.webp";
+import magicMousePremium from "../assets/products/apple-magic-mouse-premium.webp";
+import magicTrackpadPremium from "../assets/products/apple-magic-trackpad-premium.webp";
+import magicKeyboardPremium from "../assets/products/apple-magic-keyboard-premium.webp";
+import magicKeyboardTouchIdPremium from "../assets/products/apple-magic-keyboard-touch-id-premium.webp";
+import watchFastChargerPremium from "../assets/products/apple-watch-fast-charger-usb-c-premium.webp";
 import appleWatchPremium from "../assets/products/apple-watch-premium.webp";
 import appleWatchSe2Premium from "../assets/products/apple-watch-se-2-premium.webp";
 import appleWatchSe3Premium from "../assets/products/apple-watch-se-3-premium.webp";
@@ -91,6 +114,29 @@ import macbookPro16M5Premium from "../assets/products/macbook-pro-16-inch-m5-pro
 import type { Product, ProductImage } from "../types/product";
 
 const localPremiumImageBySlug: Record<string, string> = {
+  "apple-20w-usb-c-power-adapter": adapter20WPremium,
+  "apple-30w-usb-c-power-adapter": adapter30WPremium,
+  "apple-35w-dual-usb-c-power-adapter": adapter35WDualPremium,
+  "apple-70w-usb-c-power-adapter": adapter70WPremium,
+  "apple-96w-usb-c-power-adapter": adapter96WPremium,
+  "apple-140w-usb-c-power-adapter": adapter140WPremium,
+  "apple-magsafe-charger": magsafeChargerPremium,
+  "apple-usb-c-charge-cable": usbCChargeCablePremium,
+  "apple-usb-c-to-lightning-cable": usbCToLightningPremium,
+  "apple-60w-usb-c-charge-cable": cable60WPremium,
+  "apple-240w-usb-c-charge-cable": cable240WPremium,
+  "apple-usb-c-to-magsafe-3-cable": magsafe3CablePremium,
+  "apple-magsafe-iphone-case": magsafeIphoneCasePremium,
+  "apple-clear-iphone-case-magsafe": clearIphoneCasePremium,
+  "apple-pencil-usb-c": pencilUsbCPremium,
+  "apple-pencil-pro": pencilProPremium,
+  "apple-magic-keyboard-ipad": magicKeyboardIpadPremium,
+  "apple-magic-keyboard-folio": magicKeyboardFolioPremium,
+  "apple-magic-mouse": magicMousePremium,
+  "apple-magic-trackpad": magicTrackpadPremium,
+  "apple-magic-keyboard": magicKeyboardPremium,
+  "apple-magic-keyboard-touch-id": magicKeyboardTouchIdPremium,
+  "apple-watch-magnetic-fast-charger-usb-c": watchFastChargerPremium,
   "iphone-16-pro-max": iphone16ProMaxPremium,
   "iphone-16-pro": iphone16ProPremium,
   "iphone-16-plus": iphone16PlusPremium,
@@ -194,6 +240,23 @@ export function isValidProductImage(image?: ProductImage | null): image is Produ
   return lower !== "null" && lower !== "undefined" && lower !== "about:blank" && lower !== "#";
 }
 
+export function isUsedProductCondition(condition: Product["condition"]) {
+  return condition === "UK Used" || condition === "Excellent" || condition === "Very Good";
+}
+
+export function isOwnerUploadedProductImage(image?: ProductImage | null) {
+  if (!isValidProductImage(image)) return false;
+  return /\/storage\/v1\/object\/(?:public|sign)\/product-images\//i.test(image.src) || /\/product-images\//i.test(image.src);
+}
+
+export function hasOwnerUploadedProductImages(product: Pick<Product, "images">) {
+  return (product.images ?? []).some(isOwnerUploadedProductImage);
+}
+
+export function requiresRealProductPhotos(product: Pick<Product, "condition" | "images">) {
+  return isUsedProductCondition(product.condition) && !hasOwnerUploadedProductImages(product);
+}
+
 export function getLocalPremiumImage(product: Pick<Product, "slug" | "name">): ProductImage | undefined {
   const src = localPremiumImageBySlug[product.slug];
   if (!src) return undefined;
@@ -208,15 +271,25 @@ export function resolveProductGallery(product: Product): ProductImage[] {
   const primaryIndex = Math.max(0, product.primaryImageIndex ?? 0);
   const primaryImage = images[primaryIndex];
   const validImages = images.filter(isValidProductImage);
+  const ownerImages = images.filter(isOwnerUploadedProductImage);
+
+  if (isOwnerUploadedProductImage(primaryImage)) {
+    return [primaryImage, ...ownerImages.filter((image) => image.src !== primaryImage.src)];
+  }
+
+  if (ownerImages.length > 0) return ownerImages;
+
+  if (isUsedProductCondition(product.condition)) return [];
+
+  const localImage = getLocalPremiumImage(product);
+  if (localImage) return [localImage];
 
   if (isValidProductImage(primaryImage)) {
     return [primaryImage, ...validImages.filter((image) => image.src !== primaryImage.src)];
   }
 
   if (validImages.length > 0) return validImages;
-
-  const localImage = getLocalPremiumImage(product);
-  return localImage ? [localImage] : [];
+  return [];
 }
 
 export function resolveProductImage(product: Product): ProductImage | undefined {

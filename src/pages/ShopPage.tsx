@@ -7,11 +7,13 @@ import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { categories, conditions, stockStatuses } from "../catalog/productCatalog";
 import {
+  accessoryFamilyOptions,
   airpodsGenerationOptions,
   categorySlugs,
   compareAirpodsNewest,
   compareIphonesNewest,
   compareMacbooksNewest,
+  getAccessoryFamily,
   getAirpodsGeneration,
   getIphoneGeneration,
   getMacbookGeneration,
@@ -29,6 +31,7 @@ interface FiltersState {
   category: string;
   model: string;
   generation: string;
+  accessoryFamily: string;
   maxPrice: number;
   storage: string;
   condition: string;
@@ -44,6 +47,7 @@ const defaultFilters: FiltersState = {
   category: "All",
   model: "",
   generation: "All",
+  accessoryFamily: "All",
   maxPrice: maxCataloguePrice,
   storage: "All",
   condition: "All",
@@ -114,6 +118,7 @@ export function ShopPage() {
         if (filters.category === "iPhones") return getIphoneGeneration(product) === filters.generation;
         return true;
       })
+      .filter((product) => filters.category !== "Accessories" || filters.accessoryFamily === "All" || getAccessoryFamily(product) === filters.accessoryFamily)
       .filter((product) => product.colors.join(" ").toLowerCase().includes(filters.color.toLowerCase()))
       .filter((product) => matchesShopCategory(product, filters.category))
       .filter((product) => filters.condition === "All" || product.condition === filters.condition)
@@ -247,21 +252,23 @@ function FilterControls({
         <label className="filter-label">Category<select value={filters.category} onChange={(e) => {
           updateFilter("category", e.target.value);
           updateFilter("generation", "All");
+          updateFilter("accessoryFamily", "All");
         }}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Model<input value={filters.model} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>
+        {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
         {filters.category === "iPhones" && <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "MacBooks" && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "AirPods" && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Accessories" && <label className="filter-label">Accessory Family<select value={filters.accessoryFamily} onChange={(e) => updateFilter("accessoryFamily", e.target.value)}><option value="All">All Accessories</option>{accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
       </div>
       <div className="filter-group">
         <label className="filter-label">Price: up to GHS {filters.maxPrice.toLocaleString()}<input type="range" min="2000" max={maxCataloguePrice} step="500" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", Number(e.target.value))} /></label>
         <label className="filter-label">Condition<select value={filters.condition} onChange={(e) => updateFilter("condition", e.target.value)}><option>All</option>{conditions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Stock<select value={filters.availability} onChange={(e) => updateFilter("availability", e.target.value)}><option>All</option>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
       </div>
-      <div className="filter-group">
+      {filters.category !== "Accessories" && <div className="filter-group">
         <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{storageOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Colour<input value={filters.color} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
-      </div>
+      </div>}
       <div className="filter-group filter-check-grid">
         <FilterCheck label="New Arrivals" checked={filters.newArrival} onChange={(checked) => updateFilter("newArrival", checked)} />
         <FilterCheck label="Popular Choices" checked={filters.popular} onChange={(checked) => updateFilter("popular", checked)} />
@@ -343,6 +350,7 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
   if (filters.category !== "All") active.push({ key: "category", label: filters.category });
   if (filters.model) active.push({ key: "model", label: `Model: ${filters.model}` });
   if (filters.generation !== "All") active.push({ key: "generation", label: filters.generation });
+  if (filters.accessoryFamily !== "All") active.push({ key: "accessoryFamily", label: filters.accessoryFamily });
   if (filters.maxPrice !== defaultFilters.maxPrice) active.push({ key: "maxPrice", label: `Up to GHS ${filters.maxPrice.toLocaleString()}` });
   if (filters.condition !== "All") active.push({ key: "condition", label: filters.condition });
   if (filters.storage !== "All") active.push({ key: "storage", label: filters.storage });

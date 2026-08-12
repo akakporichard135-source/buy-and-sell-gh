@@ -10,7 +10,7 @@ import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
-import { resolveProductGallery, resolveProductImage } from "../utils/productImages";
+import { requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
@@ -88,14 +88,26 @@ export function ProductDetailsPage() {
 
   const gallery = resolveProductGallery(product);
   const active = gallery[activeImage] ?? resolveProductImage(product);
+  const realPhotosPending = requiresRealProductPhotos(product);
   const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl);
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
   const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
-  const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : product.category === "AirPods" ? "Case / Connector" : "Storage";
+  const primaryOptionLabel = product.category === "Apple Watches"
+    ? "Connectivity"
+    : product.category === "AirPods"
+      ? "Case / Connector"
+      : product.category === "Accessories"
+        ? "Connector / Option"
+        : "Storage";
   const isMacbook = product.category === "MacBooks";
   const isAirpods = product.category === "AirPods";
+  const isAccessory = product.category === "Accessories";
   const macbookMemory = (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim();
+  const accessorySpecifications = product.specifications ?? product.specs;
+  const accessoryConnector = accessorySpecifications.find((item) => item.startsWith("Connector:"))?.replace("Connector:", "").trim();
+  const accessoryPower = accessorySpecifications.find((item) => item.startsWith("Wattage:"))?.replace("Wattage:", "").trim();
+  const accessoryCompatibility = accessorySpecifications.find((item) => item.startsWith("Compatibility:"))?.replace("Compatibility:", "").trim();
 
   const handleAddToCart = () => {
     if (product.storage.length > 0 && !storage) {
@@ -163,7 +175,7 @@ export function ProductDetailsPage() {
       <section className="section product-detail-layout">
         <div className="product-gallery">
           <button className={`product-main-image ${zoomed ? "is-zoomed" : ""}`} type="button" onClick={() => setZoomed((current) => !current)} aria-label="Zoom product image">
-            {active ? <img src={active.src} alt={active.alt} loading="eager" /> : <span className="product-gallery-empty">Product image unavailable</span>}
+            {active ? <img src={active.src} alt={active.alt} loading="eager" /> : <span className="product-gallery-empty">{realPhotosPending ? "Real photos of this exact device are coming soon" : "Product image unavailable"}</span>}
           </button>
           <div className="product-thumbnails" aria-label="Product image thumbnails">
             {gallery.map((image, index) => (
@@ -201,6 +213,13 @@ export function ProductDetailsPage() {
                 <span><CheckCircle2 size={17} /> Model: {product.generation ?? "Generation not specified"}</span>
                 <span><CheckCircle2 size={17} /> Case / Connector: {storage || product.storage[0] || "Confirm configuration"}</span>
                 <span><CheckCircle2 size={17} /> Audio features: See verified specifications below</span>
+              </>
+            ) : isAccessory ? (
+              <>
+                <span><CheckCircle2 size={17} /> Accessory family: {product.subcategory ?? "Apple Accessories"}</span>
+                <span><CheckCircle2 size={17} /> Connector: {accessoryConnector ?? storage ?? product.storage[0] ?? "Confirm option"}</span>
+                {accessoryPower && <span><CheckCircle2 size={17} /> Power: {accessoryPower}</span>}
+                <span><CheckCircle2 size={17} /> Compatibility: {accessoryCompatibility ?? "Confirm before payment"}</span>
               </>
             ) : (
               <>
@@ -243,7 +262,7 @@ export function ProductDetailsPage() {
       <section className="section grid gap-5 lg:grid-cols-3">
         <InfoBlock title="Product description" items={[product.description]} />
         <InfoBlock title="Key specifications" items={product.specifications ?? product.specs} />
-        <InfoBlock title="Device condition report" items={product.conditionReport ?? ["Condition details are confirmed before payment."]} />
+        <InfoBlock title={isAccessory ? "Condition and compatibility" : "Device condition report"} items={product.conditionReport ?? ["Condition details are confirmed before payment."]} />
         <InfoBlock title="What is included" items={product.includedItems ?? product.box} />
         <InfoBlock title="Warranty information" items={[product.warranty ?? product.warrantyInfo ?? "Contact the shop to confirm warranty for this device."]} />
         <InfoBlock title="Delivery and pickup" items={[product.deliveryInfo ?? product.deliveryNote ?? `Pickup at ${business.location}. Delivery options are confirmed on WhatsApp.`]} />

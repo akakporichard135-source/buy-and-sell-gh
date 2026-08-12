@@ -5,6 +5,7 @@ import { categories, createProductSlug, getPrimaryImage, normalizeProduct, produ
 import { removeProductImage, uploadProductImage } from "../../catalog/supabaseProductRepository";
 import type { Product, ProductImage } from "../../types/product";
 import { formatGhs } from "../../utils/format";
+import { hasOwnerUploadedProductImages, isUsedProductCondition } from "../../utils/productImages";
 
 const listToText = (items?: string[]) => (items ?? []).join("\n");
 const textToList = (value: string) => value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
@@ -125,6 +126,10 @@ export function AdminProductManager() {
     event.preventDefault();
     if (!editing) return;
     const normalized = formToProduct(editing, products);
+    if (normalized.available && !normalized.archived && isUsedProductCondition(normalized.condition) && !hasOwnerUploadedProductImages(normalized)) {
+      setActionError("Upload real photos of this exact device to Supabase Storage before publishing it.");
+      return;
+    }
     setSaving(true);
     setActionError("");
     try {
@@ -211,7 +216,13 @@ function ProductForm({ form, setForm, onSubmit, products, backendStatus, saving,
   const updateImage = (index: number, field: keyof ProductImage, value: string) => update("images", form.images.map((image, itemIndex) => (itemIndex === index ? { ...image, [field]: value } : image)));
   const removeImage = async (index: number) => {
     const image = form.images[index];
-    update("images", form.images.filter((_, itemIndex) => itemIndex !== index));
+    const images = form.images.filter((_, itemIndex) => itemIndex !== index);
+    const primaryImageIndex = index < form.primaryImageIndex
+      ? form.primaryImageIndex - 1
+      : index === form.primaryImageIndex
+        ? Math.min(index, Math.max(0, images.length - 1))
+        : form.primaryImageIndex;
+    setForm({ ...form, images, primaryImageIndex });
     if (backendStatus === "supabase" && image?.src.includes("/product-images/")) {
       try {
         await removeProductImage(image.src);
@@ -225,8 +236,12 @@ function ProductForm({ form, setForm, onSubmit, products, backendStatus, saving,
     if (nextIndex < 0 || nextIndex >= form.images.length) return;
     const next = [...form.images];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-    update("images", next);
-    update("primaryImageIndex", Math.max(0, Math.min(next.length - 1, form.primaryImageIndex)));
+    const primaryImageIndex = form.primaryImageIndex === index
+      ? nextIndex
+      : form.primaryImageIndex === nextIndex
+        ? index
+        : form.primaryImageIndex;
+    setForm({ ...form, images: next, primaryImageIndex });
   };
 
   const handleFileUpload = async (files: FileList | null) => {
@@ -294,6 +309,12 @@ function ProductForm({ form, setForm, onSubmit, products, backendStatus, saving,
       </AdminFieldset>
 
       <AdminFieldset title="Images">
+        {isUsedProductCondition(form.condition) && (
+          <div className={`admin-photo-requirement ${hasOwnerUploadedProductImages(form) ? "is-ready" : ""}`}>
+            <strong>{hasOwnerUploadedProductImages(form) ? "Real product photos uploaded" : "Real product photos required"}</strong>
+            <span>{hasOwnerUploadedProductImages(form) ? "Uploaded photos will appear before catalogue reference images." : "Upload real photos of this exact device before publishing. Premium catalogue renders are not shown publicly for used-condition products."}</span>
+          </div>
+        )}
         <div className="admin-image-list">
           {form.images.map((image, index) => (
             <div className="admin-image-row" key={`${image.src}-${index}`}>
@@ -317,7 +338,7 @@ function ProductForm({ form, setForm, onSubmit, products, backendStatus, saving,
         <label className="admin-check"><input type="checkbox" checked={form.featured} onChange={(event) => update("featured", event.target.checked)} /> Featured</label>
         <label className="admin-check"><input type="checkbox" checked={form.newArrival} onChange={(event) => update("newArrival", event.target.checked)} /> New Arrival</label>
         <label className="admin-check"><input type="checkbox" checked={form.popular} onChange={(event) => update("popular", event.target.checked)} /> Popular Choice</label>
-        <label className="admin-check"><input type="checkbox" checked={form.available} onChange={(event) => update("available", event.target.checked)} /> Available Device</label>
+        <label className="admin-check"><input type="checkbox" checked={form.available} onChange={(event) => update("available", event.target.checked)} /> Visible in public catalogue</label>
         <label className="admin-check"><input type="checkbox" checked={form.archived} onChange={(event) => update("archived", event.target.checked)} /> Archived</label>
       </AdminFieldset>
 
@@ -351,6 +372,9 @@ function formToProduct(form: ProductFormState, products: Product[]): Product {
   const stockStatus = form.stockStatus === "Sold" ? "Sold" : quantity === 0 ? "Out of Stock" : form.stockStatus;
   const specifications = textToList(form.specifications);
   const includedItems = textToList(form.includedItems);
+  const validImages = form.images.filter((image) => image.src.trim());
+  const selectedPrimaryImage = form.images[form.primaryImageIndex];
+  const primaryImageIndex = Math.max(0, selectedPrimaryImage ? validImages.indexOf(selectedPrimaryImage) : 0);
 
   return normalizeProduct({
     ...(existing ?? {}),
@@ -380,8 +404,8 @@ function formToProduct(form: ProductFormState, products: Product[]): Product {
     box: includedItems,
     deliveryInfo: form.deliveryInfo,
     deliveryNote: form.deliveryInfo,
-    images: form.images.filter((image) => image.src.trim()),
-    primaryImageIndex: Math.max(0, Math.min(form.primaryImageIndex, form.images.length - 1)),
+    images: validImages,
+    primaryImageIndex,
     stockQuantity: quantity,
     stockStatus,
     imageTone: existing?.imageTone ?? "from-white via-zinc-100 to-yellow-100",
@@ -389,7 +413,7 @@ function formToProduct(form: ProductFormState, products: Product[]): Product {
     featured: form.featured,
     newArrival: form.newArrival,
     popular: form.popular,
-    available: form.available && stockStatus !== "Sold" && stockStatus !== "Out of Stock",
+    available: form.available && stockStatus !== "Sold",
     archived: form.archived,
     tags: textToList(`${form.name},${form.model},${form.category},${form.storage},${form.colors}`),
     createdAt: form.createdAt ?? new Date().toISOString(),

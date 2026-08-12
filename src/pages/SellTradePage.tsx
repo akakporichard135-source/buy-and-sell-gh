@@ -8,13 +8,13 @@ export function SellTradePage() {
   return (
     <>
       <SEO title="Sell or Trade In Your Phone" description="Submit your iPhone or gadget trade-in details to Buy & Sell GH. Final price is confirmed after inspection." />
-      <section className="page-hero">
+      <section className="page-hero sell-trade-hero">
         <p className="eyebrow-dark">Sell or Trade In</p>
         <h1>Turn your current phone into your next upgrade</h1>
         <p>Final price is confirmed only after physical inspection at Buy & Sell GH.</p>
       </section>
-      <section className="section grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="grid gap-4">
+      <section className="section sell-trade-layout">
+        <div className="sell-trade-main grid gap-4">
           <div className="trade-inspection-note">
             <ClipboardCheck size={22} />
             <div>
@@ -42,11 +42,21 @@ export function SellTradePage() {
             <FormField label="Desired action" name="action" options={["Sell", "Swap"]} />
             <FormField label="Desired replacement phone" name="replacement" />
             <FormField label="Expected price" name="expected" />
-            <FormField label="Upload device photos" name="images" type="file" />
+            <label className="sell-trade-upload block text-sm font-black text-ink">
+              Upload device photos
+              <input
+                className="mt-2 w-full rounded-lg border border-black/10 bg-white px-4 py-3.5 text-base font-semibold text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15"
+                name="images"
+                type="file"
+                accept="image/*"
+                multiple
+              />
+              <span>Upload clear photos of the front, back, sides and screen. You can select multiple photos.</span>
+            </label>
             <FormField label="Additional details" name="details" textarea />
           </SuccessForm>
         </div>
-        <aside className="rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">
+        <aside className="sell-trade-whatsapp rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">
           <MessageCircle className="text-gold" />
           <h2 className="mt-4 text-2xl font-black">Prefer WhatsApp?</h2>
           <p className="mt-3 text-sm leading-7 text-white/70">Send your device details and photos directly. The inspection note still applies.</p>

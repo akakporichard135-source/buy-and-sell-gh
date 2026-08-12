@@ -8,6 +8,7 @@ import { SEO } from "../components/SEO";
 import {
   airpodsFamilyOptions,
   airpodsGenerationOptions,
+  accessoryFamilyOptions,
   compareAirpodsNewest,
   compareIphonesNewest,
   compareIpadsNewest,
@@ -15,6 +16,7 @@ import {
   compareWatchesNewest,
   getAirpodsFamily,
   getAirpodsGeneration,
+  getAccessoryFamily,
   getIpadFamily,
   getIphoneGeneration,
   getMacbookFamily,
@@ -81,10 +83,11 @@ export function CategoryPage() {
   const [macbookGeneration, setMacbookGeneration] = useState("All");
   const [airpodsFamily, setAirpodsFamily] = useState("All");
   const [airpodsGeneration, setAirpodsGeneration] = useState("All");
+  const [accessoryFamily, setAccessoryFamily] = useState("All");
   const copy = categoryCopy[categorySlug];
   const products = activeProducts
     .filter((product) => productMatchesCategorySlug(product, categorySlug))
-    .filter((product) => ["iphones", "ipads", "apple-watch", "macbooks", "airpods"].includes(categorySlug) || !isProductUnavailable(product))
+    .filter((product) => ["iphones", "ipads", "apple-watch", "macbooks", "airpods", "accessories"].includes(categorySlug) || !isProductUnavailable(product))
     .filter((product) => categorySlug !== "iphones" || generation === "All" || getIphoneGeneration(product) === generation)
     .filter((product) => categorySlug !== "ipads" || ipadFamily === "All" || getIpadFamily(product) === ipadFamily)
     .filter((product) => categorySlug !== "apple-watch" || watchFamily === "All" || getWatchFamily(product) === watchFamily)
@@ -92,6 +95,7 @@ export function CategoryPage() {
     .filter((product) => categorySlug !== "macbooks" || macbookGeneration === "All" || getMacbookGeneration(product) === macbookGeneration)
     .filter((product) => categorySlug !== "airpods" || airpodsFamily === "All" || getAirpodsFamily(product) === airpodsFamily)
     .filter((product) => categorySlug !== "airpods" || airpodsGeneration === "All" || getAirpodsGeneration(product) === airpodsGeneration)
+    .filter((product) => categorySlug !== "accessories" || accessoryFamily === "All" || getAccessoryFamily(product) === accessoryFamily)
     .sort(categorySlug === "iphones" ? compareIphonesNewest : categorySlug === "ipads" ? compareIpadsNewest : categorySlug === "apple-watch" ? compareWatchesNewest : categorySlug === "macbooks" ? compareMacbooksNewest : categorySlug === "airpods" ? compareAirpodsNewest : () => 0);
 
   if (!copy) {
@@ -126,9 +130,9 @@ export function CategoryPage() {
       </section>
       <section className="section category-results-section">
         <div className="section-heading">
-          <p className="eyebrow-dark">{products.length} {["iphones", "ipads", "apple-watch", "macbooks", "airpods"].includes(categorySlug) ? "models" : "available"}</p>
+          <p className="eyebrow-dark">{products.length} {["iphones", "ipads", "apple-watch", "macbooks", "airpods", "accessories"].includes(categorySlug) ? "products" : "available"}</p>
           <h2>{copy.eyebrow}</h2>
-          <p>{["iphones", "ipads", "apple-watch", "macbooks", "airpods"].includes(categorySlug) ? "Browse every listed model. Devices awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
+          <p>{["iphones", "ipads", "apple-watch", "macbooks", "airpods", "accessories"].includes(categorySlug) ? "Browse every listed product. Items awaiting confirmed inventory remain enquiry-only." : "Only matching products are shown here. Sold or unavailable products are excluded from this selling section."}</p>
         </div>
         {categorySlug === "iphones" && (
           <label className="choice-label mb-6 max-w-xs">Generation
@@ -185,6 +189,14 @@ export function CategoryPage() {
               </select>
             </label>
           </div>
+        )}
+        {categorySlug === "accessories" && (
+          <label className="choice-label mb-6 max-w-xs">Accessory family
+            <select value={accessoryFamily} onChange={(event) => setAccessoryFamily(event.target.value)}>
+              <option>All</option>
+              {accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
         )}
         {loading ? (
           <div className="rounded-lg border border-black/7 bg-white p-8 text-center font-black text-ink/70">Loading products...</div>
