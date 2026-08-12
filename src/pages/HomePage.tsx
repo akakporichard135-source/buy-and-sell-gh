@@ -7,9 +7,7 @@ import {
   Laptop,
   MapPin,
   PackageCheck,
-  RefreshCcw,
   ShieldCheck,
-  Sparkles,
   Tablet,
   Truck,
   Watch,
@@ -18,15 +16,14 @@ import {
 import { Link } from "react-router-dom";
 import { FAQList } from "../components/FAQList";
 import { FormField } from "../components/FormField";
+import { ProductCard } from "../components/ProductCard";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import { categories } from "../catalog/productCatalog";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import accessoriesCategory from "../assets/categories/accessories-premium.webp";
-import brandNewDevicesCategory from "../assets/categories/brand-new-devices-premium.webp";
 import iphonesCategory from "../assets/categories/iphones-premium.webp";
 import macBooksCategory from "../assets/categories/macbooks-premium.webp";
-import ukUsedDevicesCategory from "../assets/categories/uk-used-devices-premium.webp";
 import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
 import heroPremium from "../assets/hero/hero-premium-v2.webp";
 import airPodsCategory from "../assets/products/airpods-pro-premium.webp";
@@ -59,8 +56,6 @@ const categoryIcons = {
   AirPods: Headphones,
   MacBooks: Laptop,
   Accessories: Cable,
-  "UK Used Devices": RefreshCcw,
-  "Brand New Devices": Sparkles,
 };
 
 const categoryVisuals = {
@@ -70,13 +65,15 @@ const categoryVisuals = {
   AirPods: airPodsCategory,
   MacBooks: macBooksCategory,
   Accessories: accessoriesCategory,
-  "UK Used Devices": ukUsedDevicesCategory,
-  "Brand New Devices": brandNewDevicesCategory,
 };
 
+const homepageCategories = ["iPhones", "iPads", "Apple Watches", "AirPods", "MacBooks", "Accessories"] as const;
+const usedConditions = new Set(["UK Used", "Excellent", "Very Good"]);
+
 export function HomePage() {
+  const { activeProducts, loading: catalogueLoading } = useProductCatalog();
   const activePromotions = promotions.filter((promotion) => promotion.isActive);
-  const mobileCategories = categories;
+  const usedProducts = activeProducts.filter((product) => usedConditions.has(product.condition));
 
   return (
     <>
@@ -144,7 +141,7 @@ export function HomePage() {
           <h2>Find the right device faster</h2>
         </div>
         <div className="category-grid category-grid-desktop grid gap-4">
-          {categories.map((category) => {
+          {homepageCategories.map((category) => {
             const Icon = categoryIcons[category];
             return (
               <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
@@ -163,7 +160,7 @@ export function HomePage() {
           })}
         </div>
         <div className="category-grid category-grid-mobile grid gap-4">
-          {mobileCategories.map((category) => {
+          {homepageCategories.map((category) => {
             const Icon = categoryIcons[category];
             return (
               <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
@@ -184,6 +181,29 @@ export function HomePage() {
         <div className="mt-5 flex justify-center md:hidden">
           <Link className="btn-secondary" to="/shop">View All Categories <ArrowRight size={17} /></Link>
         </div>
+      </section>
+
+      <section className="section home-section used-devices-section" aria-labelledby="used-devices-title">
+        <div className="used-devices-heading">
+          <div>
+            <p className="eyebrow-dark">Used devices</p>
+            <h2 id="used-devices-title">Inspected devices ready for another chapter</h2>
+            <p>Browse current UK Used, Excellent and Very Good inventory managed by Buy & Sell GH.</p>
+          </div>
+        </div>
+        {catalogueLoading ? (
+          <div className="used-devices-empty">Checking current used inventory...</div>
+        ) : usedProducts.length > 0 ? (
+          <div className="used-devices-carousel" aria-label="Used devices">
+            {usedProducts.map((product) => <ProductCard key={product.id} product={product} variant="compact" />)}
+          </div>
+        ) : (
+          <div className="used-devices-empty">
+            <strong>No used devices available right now.</strong>
+            <span>Check back soon or request a device on WhatsApp.</span>
+            <WhatsAppButton intent="request">Request on WhatsApp</WhatsAppButton>
+          </div>
+        )}
       </section>
 
       <section className="section home-section home-upgrade-grid grid gap-8">
