@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
-import { getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
+import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 import { ProductVisual } from "./ProductVisual";
 
@@ -22,6 +22,10 @@ export function ProductCard({ product, variant = "default" }: { product: Product
   const storageSummary = isCompact ? storage : product.storage.slice(0, 3).join(" \u2022 ");
   const colourSummary = product.colors.length === 1 ? product.colors[0] : `${product.colors.length} available`;
   const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : "Storage";
+  const macbookChip = product.category === "MacBooks" ? getMacbookGeneration(product) : "";
+  const macbookMemory = product.category === "MacBooks"
+    ? (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim()
+    : "";
 
   return (
     <article className={`product-card ${isCompact ? "compact-product-card" : ""} group flex h-full min-w-0 flex-col rounded-lg border border-black/7 bg-white p-3 shadow-card transition hover:-translate-y-1 hover:shadow-xl`}>
@@ -41,6 +45,8 @@ export function ProductCard({ product, variant = "default" }: { product: Product
           {!isPriceOnRequest && product.oldPrice && <span>{formatGhs(product.oldPrice)}</span>}
         </div>
         <div className="product-card-meta">
+          {macbookChip && <span>Chip: {macbookChip}</span>}
+          {!isCompact && macbookMemory && <span>Memory: {macbookMemory}</span>}
           <span>{primaryOptionLabel}: {storageSummary}</span>
           {!isCompact && <span>Colours: {colourSummary}</span>}
           <span className={productBadgeClass(displayStockLabel)}>{displayStockLabel}</span>

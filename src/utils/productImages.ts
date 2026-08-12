@@ -54,6 +54,30 @@ import iphone17Premium from "../assets/products/iphone-17-premium.webp";
 import iphoneAirPremium from "../assets/products/iphone-air-premium.webp";
 import iphone17ProPremium from "../assets/products/iphone-17-pro-premium.webp";
 import iphone17ProMaxPremium from "../assets/products/iphone-17-pro-max-premium.webp";
+import macbookAir13M1Premium from "../assets/products/macbook-air-13-inch-m1-premium.webp";
+import macbookAir13M2Premium from "../assets/products/macbook-air-13-inch-m2-premium.webp";
+import macbookAir15M2Premium from "../assets/products/macbook-air-15-inch-m2-premium.webp";
+import macbookAir13M3Premium from "../assets/products/macbook-air-13-inch-m3-premium.webp";
+import macbookAir15M3Premium from "../assets/products/macbook-air-15-inch-m3-premium.webp";
+import macbookAir13M4Premium from "../assets/products/macbook-air-13-inch-m4-premium.webp";
+import macbookAir15M4Premium from "../assets/products/macbook-air-15-inch-m4-premium.webp";
+import macbookAir13M5Premium from "../assets/products/macbook-air-13-inch-m5-premium.webp";
+import macbookAir15M5Premium from "../assets/products/macbook-air-15-inch-m5-premium.webp";
+import macbookPro13M1Premium from "../assets/products/macbook-pro-13-inch-m1-premium.webp";
+import macbookPro14M1Premium from "../assets/products/macbook-pro-14-inch-m1-pro-max-premium.webp";
+import macbookPro16M1Premium from "../assets/products/macbook-pro-16-inch-m1-pro-max-premium.webp";
+import macbookPro13M2Premium from "../assets/products/macbook-pro-13-inch-m2-premium.webp";
+import macbookPro14M2Premium from "../assets/products/macbook-pro-14-inch-m2-pro-max-premium.webp";
+import macbookPro16M2Premium from "../assets/products/macbook-pro-16-inch-m2-pro-max-premium.webp";
+import macbookPro14M3Premium from "../assets/products/macbook-pro-14-inch-m3-premium.webp";
+import macbookPro14M3ProMaxPremium from "../assets/products/macbook-pro-14-inch-m3-pro-max-premium.webp";
+import macbookPro16M3Premium from "../assets/products/macbook-pro-16-inch-m3-pro-max-premium.webp";
+import macbookPro14M4Premium from "../assets/products/macbook-pro-14-inch-m4-premium.webp";
+import macbookPro14M4ProMaxPremium from "../assets/products/macbook-pro-14-inch-m4-pro-max-premium.webp";
+import macbookPro16M4Premium from "../assets/products/macbook-pro-16-inch-m4-pro-max-premium.webp";
+import macbookPro14M5Premium from "../assets/products/macbook-pro-14-inch-m5-premium.webp";
+import macbookPro14M5ProMaxPremium from "../assets/products/macbook-pro-14-inch-m5-pro-max-premium.webp";
+import macbookPro16M5Premium from "../assets/products/macbook-pro-16-inch-m5-pro-max-premium.webp";
 import type { Product, ProductImage } from "../types/product";
 
 const localPremiumImageBySlug: Record<string, string> = {
@@ -113,6 +137,30 @@ const localPremiumImageBySlug: Record<string, string> = {
   "apple-watch-ultra-3": appleWatchUltra3Premium,
   "apple-watch": appleWatchPremium,
   "airpods-pro": airpodsProPremium,
+  "macbook-air-13-m1": macbookAir13M1Premium,
+  "macbook-air-13-m2": macbookAir13M2Premium,
+  "macbook-air-15-m2": macbookAir15M2Premium,
+  "macbook-air-13-m3": macbookAir13M3Premium,
+  "macbook-air-15-m3": macbookAir15M3Premium,
+  "macbook-air-13-m4": macbookAir13M4Premium,
+  "macbook-air-15-m4": macbookAir15M4Premium,
+  "macbook-air-13-m5": macbookAir13M5Premium,
+  "macbook-air-15-m5": macbookAir15M5Premium,
+  "macbook-pro-13-m1": macbookPro13M1Premium,
+  "macbook-pro-14-m1-pro-max": macbookPro14M1Premium,
+  "macbook-pro-16-m1-pro-max": macbookPro16M1Premium,
+  "macbook-pro-13-m2": macbookPro13M2Premium,
+  "macbook-pro-14-m2-pro-max": macbookPro14M2Premium,
+  "macbook-pro-16-m2-pro-max": macbookPro16M2Premium,
+  "macbook-pro-14-m3": macbookPro14M3Premium,
+  "macbook-pro-14-m3-pro-max": macbookPro14M3ProMaxPremium,
+  "macbook-pro-16-m3-pro-max": macbookPro16M3Premium,
+  "macbook-pro-14-m4": macbookPro14M4Premium,
+  "macbook-pro-14-m4-pro-max": macbookPro14M4ProMaxPremium,
+  "macbook-pro-16-m4-pro-max": macbookPro16M4Premium,
+  "macbook-pro-14-m5": macbookPro14M5Premium,
+  "macbook-pro-14-m5-pro-max": macbookPro14M5ProMaxPremium,
+  "macbook-pro-16-m5-pro-max": macbookPro16M5Premium,
 };
 
 export function hasLocalPremiumImage(slug: string) {

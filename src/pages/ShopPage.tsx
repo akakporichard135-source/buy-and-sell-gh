@@ -6,7 +6,16 @@ import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { categories, conditions, stockStatuses } from "../catalog/productCatalog";
-import { categorySlugs, compareIphonesNewest, getIphoneGeneration, iphoneGenerationOptions, productMatchesCategorySlug } from "../utils/productPresentation";
+import {
+  categorySlugs,
+  compareIphonesNewest,
+  compareMacbooksNewest,
+  getIphoneGeneration,
+  getMacbookGeneration,
+  iphoneGenerationOptions,
+  macbookGenerationOptions,
+  productMatchesCategorySlug,
+} from "../utils/productPresentation";
 import type { Product, ProductCategory } from "../types/product";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
@@ -41,7 +50,7 @@ const defaultFilters: FiltersState = {
   popular: false,
 };
 
-const storageOptions = ["64GB", "128GB", "256GB", "512GB", "1TB", "GPS", "GPS + Cellular", "USB-C Case"];
+const storageOptions = ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB", "GPS", "GPS + Cellular", "USB-C Case"];
 const deviceCategories = categories.filter((category) => category !== "UK Used Devices" && category !== "Brand New Devices");
 
 export function ShopPage() {
@@ -95,7 +104,12 @@ export function ShopPage() {
         return terms.every((term) => searchable.includes(term));
       })
       .filter((product) => product.model.toLowerCase().includes(filters.model.toLowerCase()))
-      .filter((product) => filters.generation === "All" || getIphoneGeneration(product) === filters.generation)
+      .filter((product) => {
+        if (filters.generation === "All") return true;
+        if (filters.category === "MacBooks") return getMacbookGeneration(product) === filters.generation;
+        if (filters.category === "iPhones") return getIphoneGeneration(product) === filters.generation;
+        return true;
+      })
       .filter((product) => product.colors.join(" ").toLowerCase().includes(filters.color.toLowerCase()))
       .filter((product) => matchesShopCategory(product, filters.category))
       .filter((product) => filters.condition === "All" || product.condition === filters.condition)
@@ -116,6 +130,7 @@ export function ShopPage() {
         if (popularScore !== 0) return popularScore;
       }
       if (productMatchesCategorySlug(a, "iphones") && productMatchesCategorySlug(b, "iphones")) return compareIphonesNewest(a, b);
+      if (productMatchesCategorySlug(a, "macbooks") && productMatchesCategorySlug(b, "macbooks")) return compareMacbooksNewest(a, b);
       return new Date(b.createdAt ?? "").getTime() - new Date(a.createdAt ?? "").getTime();
     });
   }, [filters, products, sort]);
@@ -224,9 +239,13 @@ function FilterControls({
       </div>
       <div className="filter-group">
         <label className="filter-label">Search<input value={filters.search} onChange={(e) => updateFilter("search", e.target.value)} placeholder="iPhone 15, AirPods..." /></label>
-        <label className="filter-label">Category<select value={filters.category} onChange={(e) => updateFilter("category", e.target.value)}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className="filter-label">Category<select value={filters.category} onChange={(e) => {
+          updateFilter("category", e.target.value);
+          updateFilter("generation", "All");
+        }}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Model<input value={filters.model} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>
-        <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+        {filters.category === "iPhones" && <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "MacBooks" && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
       </div>
       <div className="filter-group">
         <label className="filter-label">Price: up to GHS {filters.maxPrice.toLocaleString()}<input type="range" min="2000" max={maxCataloguePrice} step="500" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", Number(e.target.value))} /></label>

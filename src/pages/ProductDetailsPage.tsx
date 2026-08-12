@@ -9,7 +9,7 @@ import { business } from "../config/business";
 import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
-import { getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
+import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
@@ -93,6 +93,8 @@ export function ProductDetailsPage() {
   const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
   const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : "Storage";
+  const isMacbook = product.category === "MacBooks";
+  const macbookMemory = (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim();
 
   const handleAddToCart = () => {
     if (product.storage.length > 0 && !storage) {
@@ -187,9 +189,19 @@ export function ProductDetailsPage() {
           <div className="mt-6 grid gap-2 text-sm font-bold text-ink/75 sm:grid-cols-2">
             <span><CheckCircle2 size={17} /> Condition: {product.condition}</span>
             <span><CheckCircle2 size={17} /> Stock: {displayStockLabel}</span>
-            <span><CheckCircle2 size={17} /> Battery health: {product.batteryHealth ?? "Confirm selected unit"}</span>
-            <span><CheckCircle2 size={17} /> Face ID: {product.faceIdStatus ?? "Confirm selected unit"}</span>
-            <span><CheckCircle2 size={17} /> SIM: {product.simStatus ?? "Confirm selected unit"}</span>
+            {isMacbook ? (
+              <>
+                <span><CheckCircle2 size={17} /> Chip: {getMacbookGeneration(product)}</span>
+                <span><CheckCircle2 size={17} /> Memory: {macbookMemory ?? "Confirm configuration"}</span>
+                <span><CheckCircle2 size={17} /> Configuration: Confirm before payment</span>
+              </>
+            ) : (
+              <>
+                <span><CheckCircle2 size={17} /> Battery health: {product.batteryHealth ?? "Confirm selected unit"}</span>
+                <span><CheckCircle2 size={17} /> Face ID: {product.faceIdStatus ?? "Confirm selected unit"}</span>
+                <span><CheckCircle2 size={17} /> SIM: {product.simStatus ?? "Confirm selected unit"}</span>
+              </>
+            )}
             <span><CheckCircle2 size={17} /> Pickup: {business.location}</span>
           </div>
 

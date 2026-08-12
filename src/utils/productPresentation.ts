@@ -117,6 +117,42 @@ export function compareWatchesNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
+export const macbookFamilyOptions = ["MacBook Air", "MacBook Pro"] as const;
+export const macbookGenerationOptions = ["M5", "M4", "M3", "M2", "M1"] as const;
+
+const macbookNewestOrder = [
+  "macbook-air-13-m5", "macbook-air-15-m5",
+  "macbook-pro-14-m5", "macbook-pro-14-m5-pro-max", "macbook-pro-16-m5-pro-max",
+  "macbook-air-13-m4", "macbook-air-15-m4",
+  "macbook-pro-14-m4", "macbook-pro-14-m4-pro-max", "macbook-pro-16-m4-pro-max",
+  "macbook-air-13-m3", "macbook-air-15-m3",
+  "macbook-pro-14-m3", "macbook-pro-14-m3-pro-max", "macbook-pro-16-m3-pro-max",
+  "macbook-air-13-m2", "macbook-air-15-m2",
+  "macbook-pro-13-m2", "macbook-pro-14-m2-pro-max", "macbook-pro-16-m2-pro-max",
+  "macbook-air-13-m1", "macbook-pro-13-m1", "macbook-pro-14-m1-pro-max", "macbook-pro-16-m1-pro-max",
+];
+
+export function getMacbookFamily(product: Product) {
+  const searchable = [product.subcategory, product.name, product.model].filter(Boolean).join(" ").toLowerCase();
+  if (searchable.includes("macbook air")) return "MacBook Air";
+  if (searchable.includes("macbook pro")) return "MacBook Pro";
+  return "";
+}
+
+export function getMacbookGeneration(product: Product) {
+  const searchable = [product.generation, product.name, product.model].filter(Boolean).join(" ");
+  return searchable.match(/\bM[1-5]\b/i)?.[0].toUpperCase() ?? "";
+}
+
+export function compareMacbooksNewest(a: Product, b: Product) {
+  const aIndex = macbookNewestOrder.indexOf(a.slug);
+  const bIndex = macbookNewestOrder.indexOf(b.slug);
+  if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
+}
+
 export function getProductBadges(product: Product, limit = 3) {
   const explicitPromotions = (product.badges ?? [])
     .map(normalizeDisplayBadge)
