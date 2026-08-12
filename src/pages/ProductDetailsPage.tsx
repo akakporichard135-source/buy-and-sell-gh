@@ -92,8 +92,9 @@ export function ProductDetailsPage() {
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
   const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
-  const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : "Storage";
+  const primaryOptionLabel = product.category === "Apple Watches" ? "Connectivity" : product.category === "AirPods" ? "Case / Connector" : "Storage";
   const isMacbook = product.category === "MacBooks";
+  const isAirpods = product.category === "AirPods";
   const macbookMemory = (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim();
 
   const handleAddToCart = () => {
@@ -194,6 +195,12 @@ export function ProductDetailsPage() {
                 <span><CheckCircle2 size={17} /> Chip: {getMacbookGeneration(product)}</span>
                 <span><CheckCircle2 size={17} /> Memory: {macbookMemory ?? "Confirm configuration"}</span>
                 <span><CheckCircle2 size={17} /> Configuration: Confirm before payment</span>
+              </>
+            ) : isAirpods ? (
+              <>
+                <span><CheckCircle2 size={17} /> Model: {product.generation ?? "Generation not specified"}</span>
+                <span><CheckCircle2 size={17} /> Case / Connector: {storage || product.storage[0] || "Confirm configuration"}</span>
+                <span><CheckCircle2 size={17} /> Audio features: See verified specifications below</span>
               </>
             ) : (
               <>

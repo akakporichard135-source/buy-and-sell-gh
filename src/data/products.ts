@@ -55,6 +55,7 @@ import iphoneAir from "../assets/products/iphone-air-premium.webp";
 import iphone17Pro from "../assets/products/iphone-17-pro-premium.webp";
 import iphone17ProMax from "../assets/products/iphone-17-pro-max-premium.webp";
 import type { Product, ProductCategory, ProductCondition } from "../types/product";
+import { airpodsProducts } from "./airpodsProducts";
 import { macbookProducts } from "./macbookProducts";
 
 export const categories: ProductCategory[] = [
@@ -778,6 +779,7 @@ export const products: Product[] = [
     specs: ["Active Noise Cancellation", "Transparency mode", "USB-C case", "Spatial audio support"],
     box: ["AirPods Pro", "Charging case", "Ear tips", "Cable"],
   },
+  ...airpodsProducts,
   ...macbookProducts,
 ];
 

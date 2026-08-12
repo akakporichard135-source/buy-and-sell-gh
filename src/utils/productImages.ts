@@ -1,4 +1,14 @@
 import airpodsProPremium from "../assets/products/airpods-pro-premium.webp";
+import airpods2Premium from "../assets/products/airpods-2nd-generation-premium.webp";
+import airpods3Premium from "../assets/products/airpods-3rd-generation-premium.webp";
+import airpods4Premium from "../assets/products/airpods-4-premium.webp";
+import airpods4AncPremium from "../assets/products/airpods-4-anc-premium.webp";
+import airpodsPro1Premium from "../assets/products/airpods-pro-1-premium.webp";
+import airpodsPro2Premium from "../assets/products/airpods-pro-2-premium.webp";
+import airpodsPro3Premium from "../assets/products/airpods-pro-3-premium.webp";
+import airpodsMaxLightningPremium from "../assets/products/airpods-max-lightning-premium.webp";
+import airpodsMaxUsbCPremium from "../assets/products/airpods-max-usb-c-premium.webp";
+import airpodsMax2Premium from "../assets/products/airpods-max-2-premium.webp";
 import appleWatchPremium from "../assets/products/apple-watch-premium.webp";
 import appleWatchSe2Premium from "../assets/products/apple-watch-se-2-premium.webp";
 import appleWatchSe3Premium from "../assets/products/apple-watch-se-3-premium.webp";
@@ -137,6 +147,16 @@ const localPremiumImageBySlug: Record<string, string> = {
   "apple-watch-ultra-3": appleWatchUltra3Premium,
   "apple-watch": appleWatchPremium,
   "airpods-pro": airpodsProPremium,
+  "airpods-2nd-generation": airpods2Premium,
+  "airpods-3rd-generation": airpods3Premium,
+  "airpods-4": airpods4Premium,
+  "airpods-4-anc": airpods4AncPremium,
+  "airpods-pro-1": airpodsPro1Premium,
+  "airpods-pro-2": airpodsPro2Premium,
+  "airpods-pro-3": airpodsPro3Premium,
+  "airpods-max-lightning": airpodsMaxLightningPremium,
+  "airpods-max-usb-c": airpodsMaxUsbCPremium,
+  "airpods-max-2": airpodsMax2Premium,
   "macbook-air-13-m1": macbookAir13M1Premium,
   "macbook-air-13-m2": macbookAir13M2Premium,
   "macbook-air-15-m2": macbookAir15M2Premium,

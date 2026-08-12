@@ -153,6 +153,35 @@ export function compareMacbooksNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
+export const airpodsFamilyOptions = ["AirPods", "AirPods Pro", "AirPods Max"] as const;
+export const airpodsGenerationOptions = ["4th generation", "3rd generation", "2nd generation", "1st generation", "Unspecified"] as const;
+
+const airpodsNewestOrder = [
+  "airpods-max-2", "airpods-pro-3", "airpods-4-anc", "airpods-4",
+  "airpods-pro-2", "airpods-max-usb-c", "airpods-3rd-generation",
+  "airpods-2nd-generation", "airpods-pro-1", "airpods-max-lightning", "airpods-pro",
+];
+
+export function getAirpodsFamily(product: Product) {
+  const searchable = [product.subcategory, product.name, product.model].filter(Boolean).join(" ").toLowerCase();
+  if (searchable.includes("airpods max")) return "AirPods Max";
+  if (searchable.includes("airpods pro")) return "AirPods Pro";
+  return searchable.includes("airpods") ? "AirPods" : "";
+}
+
+export function getAirpodsGeneration(product: Product) {
+  return product.generation?.trim() || "Unspecified";
+}
+
+export function compareAirpodsNewest(a: Product, b: Product) {
+  const aIndex = airpodsNewestOrder.indexOf(a.slug);
+  const bIndex = airpodsNewestOrder.indexOf(b.slug);
+  if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+  if (aIndex === -1) return 1;
+  if (bIndex === -1) return -1;
+  return aIndex - bIndex;
+}
+
 export function getProductBadges(product: Product, limit = 3) {
   const explicitPromotions = (product.badges ?? [])
     .map(normalizeDisplayBadge)
