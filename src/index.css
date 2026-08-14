@@ -3927,6 +3927,10 @@ input[type="file"]::file-selector-button {
 }
 
 @media (max-width: 430px) {
+  .product-card .product-visual {
+    min-height: 0;
+  }
+
   .section {
     width: min(100% - 1rem, 1280px);
   }
