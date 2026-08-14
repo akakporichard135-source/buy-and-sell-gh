@@ -119,7 +119,7 @@ export function CategoryPage() {
           <p>{copy.description}</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link className="btn-primary" to="/shop">Search Store <ArrowRight size={18} /></Link>
-            <Link className="btn-secondary" to="/device-request">Request a Device</Link>
+            <Link className="btn-secondary" to="/pre-order">Pre-Order a Device</Link>
           </div>
         </div>
         <div className="category-trust-panel" aria-label="Buy & Sell GH category trust points">

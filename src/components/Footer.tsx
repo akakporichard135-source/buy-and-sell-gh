@@ -15,7 +15,7 @@ export function Footer() {
             <div className="text-lg font-black uppercase">Buy & Sell GH</div>
           </div>
           <p className="max-w-md text-sm leading-7 text-white/70">
-            Independent Accra gadget retailer for original iPhones, iPads, Apple accessories, trade-ins and device requests.
+            Independent Accra gadget retailer for original iPhones, iPads, Apple accessories, trade-ins and pre-orders.
           </p>
           <WhatsAppButton className="mt-5">Chat on WhatsApp</WhatsAppButton>
         </div>
@@ -32,7 +32,7 @@ export function Footer() {
             <Link to="/">Home</Link>
             <Link to="/shop">Shop devices</Link>
             <Link to="/sell-or-trade">Sell or trade</Link>
-            <Link to="/device-request">Device request</Link>
+            <Link to="/pre-order">Pre-Order</Link>
             <Link to="/contact">Contact</Link>
             <Link to="/faq">FAQ</Link>
           </div>

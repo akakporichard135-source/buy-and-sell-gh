@@ -317,7 +317,7 @@ function ShortResultsCta() {
         <p>Send the model, storage, colour and budget you want. Availability can change quickly.</p>
       </div>
       <div className="catalogue-continuation-actions">
-        <Link className="btn-primary" to="/device-request">Request a Device</Link>
+        <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
         <WhatsAppButton className="catalogue-whatsapp">Chat on WhatsApp</WhatsAppButton>
       </div>
     </section>
@@ -329,10 +329,10 @@ function NoResultsState({ clearFilters }: { clearFilters: () => void }) {
     <section className="catalogue-empty-state">
       <Search size={28} />
       <h2>No devices match these filters.</h2>
-      <p>Try removing a filter or request the exact Apple device you want.</p>
+      <p>Try removing a filter or pre-order an Apple device that is not currently available.</p>
       <div>
         <button className="btn-secondary" type="button" onClick={clearFilters}>Clear Filters</button>
-        <Link className="btn-primary" to="/device-request">Request a Device</Link>
+        <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
         <a className="btn-ghost" href={intentWhatsAppUrl("request")} target="_blank" rel="noreferrer"><MessageCircle size={17} /> WhatsApp</a>
       </div>
     </section>

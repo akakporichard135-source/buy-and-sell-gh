@@ -11,7 +11,7 @@ const navItems = [
   { label: "Home", to: "/" },
   { label: "Shop", to: "/shop" },
   { label: "Sell or Trade", to: "/sell-or-trade" },
-  { label: "Device Request", to: "/device-request" },
+  { label: "Pre-Order", to: "/pre-order" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];

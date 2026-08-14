@@ -77,7 +77,7 @@ export function HomePage() {
 
   return (
     <>
-      <SEO title="Original iPhones and Gadgets in Accra" description="Buy original iPhones, iPads and Apple gadgets in Accra from Buy & Sell GH. Shop, trade in, request devices and contact through WhatsApp." />
+      <SEO title="Original iPhones and Gadgets in Accra" description="Buy original iPhones, iPads and Apple gadgets in Accra from Buy & Sell GH. Shop, trade in, pre-order unavailable devices and contact through WhatsApp." />
       <section className="bg-ink px-4 py-2.5 text-center text-xs font-black uppercase text-gold sm:text-sm">
         100% Original Devices | Trusted Deals | Delivery Available in Accra
       </section>
@@ -91,7 +91,7 @@ export function HomePage() {
               <span>Better Prices.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
-              Shop original iPhones, iPads and Apple gadgets with confidence. Buy, sell, swap or request the device you want from a trusted gadget shop in Accra.
+              Shop original iPhones, iPads and Apple gadgets with confidence. Buy, sell, swap or pre-order an unavailable device from a trusted gadget shop in Accra.
             </p>
             <div className="hero-actions mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="btn-primary bg-gold text-black hover:bg-gold-light" to="/shop">
@@ -200,8 +200,8 @@ export function HomePage() {
         ) : (
           <div className="used-devices-empty">
             <strong>No used devices available right now.</strong>
-            <span>Check back soon or request a device on WhatsApp.</span>
-            <WhatsAppButton intent="request">Request on WhatsApp</WhatsAppButton>
+            <span>Check back soon or pre-order a device on WhatsApp.</span>
+            <WhatsAppButton intent="request">Pre-Order on WhatsApp</WhatsAppButton>
           </div>
         )}
       </section>
@@ -242,11 +242,11 @@ export function HomePage() {
 
       <section className="section home-section home-desktop-device-form grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
-          <p className="eyebrow-dark">Device request</p>
+          <p className="eyebrow-dark">Pre-Order</p>
           <h2 className="title-md">Can't Find the Device You Want?</h2>
-          <p className="mt-4 leading-8 text-ink/70">Tell us the model, storage, colour, condition and budget you prefer. We'll help you check availability.</p>
+          <p className="mt-4 leading-8 text-ink/70">Use this form when the device you want is not currently available. Tell us the model, storage, colour, condition and budget so we can help source it.</p>
         </div>
-        <SuccessForm buttonLabel="Send device request" successActionHref={intentWhatsAppUrl("request")}>
+        <SuccessForm buttonLabel="Submit Pre-Order" successActionHref={intentWhatsAppUrl("request")}>
           <FormField label="Customer name" name="name" required />
           <FormField label="Phone number" name="phone" required />
           <FormField label="Device model" name="model" required placeholder="iPhone 15 Pro Max" />
@@ -259,10 +259,10 @@ export function HomePage() {
       </section>
       <section className="section home-section home-mobile-cta">
         <div className="panel-dark">
-          <p className="eyebrow">Device request</p>
+          <p className="eyebrow">Pre-Order</p>
           <h2>Can't Find the Device You Want?</h2>
-          <p>Tell us the model, storage, colour and budget. We'll help you check availability.</p>
-          <Link className="btn-primary mt-5 bg-gold text-black hover:bg-gold-light" to="/device-request">Request a Device</Link>
+          <p>Use this when the device you want is not currently available. Tell us the model, storage, colour and budget so we can help source it.</p>
+          <Link className="btn-primary mt-5 bg-gold text-black hover:bg-gold-light" to="/pre-order">Pre-Order a Device</Link>
         </div>
       </section>
 

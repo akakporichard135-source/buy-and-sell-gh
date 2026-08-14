@@ -20,8 +20,8 @@ export const faqs = [
     a: "Contact the shop to confirm the warranty available for a specific device before purchase.",
   },
   {
-    q: "Can I request a specific iPhone model?",
-    a: "Yes. The Device Request page collects the preferred model, storage, colour, condition and budget.",
+    q: "Can I pre-order a specific iPhone model?",
+    a: "Yes. Use the Pre-Order page when the model is not currently available. It collects your preferred model, storage, colour, condition and budget.",
   },
   {
     q: "What payment methods do you accept?",

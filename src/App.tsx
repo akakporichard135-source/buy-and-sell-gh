@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminAuthProvider } from "./admin/AdminAuth";
 import { ProtectedAdminRoute } from "./admin/ProtectedAdminRoute";
 import { Footer } from "./components/Footer";
@@ -63,7 +63,8 @@ function PublicShell() {
           <Route path="/:categorySlug" element={<CategoryPage />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/sell-or-trade" element={<SellTradePage />} />
-          <Route path="/device-request" element={<DeviceRequestPage />} />
+          <Route path="/pre-order" element={<DeviceRequestPage />} />
+          <Route path="/device-request" element={<Navigate to="/pre-order" replace />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/faq" element={<FAQPage />} />

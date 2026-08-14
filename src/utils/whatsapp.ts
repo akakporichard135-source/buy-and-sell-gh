@@ -9,7 +9,7 @@ const defaultMessages: Record<WhatsAppIntent, string> = {
   general: "Hello Buy & Sell GH, I would like to make an enquiry about your original devices.",
   product: "Hello Buy & Sell GH, I am interested in a device. Please confirm availability and price.",
   trade: "Hello Buy & Sell GH, I would like to sell or trade in my phone. Please assist me.",
-  request: "Hello Buy & Sell GH, I would like to request a device that is not currently listed.",
+  request: "Hello Buy & Sell GH, I would like to pre-order a device that is not currently available on the website.",
   delivery: "Hello Buy & Sell GH, please tell me more about delivery and pickup options.",
 };
 
