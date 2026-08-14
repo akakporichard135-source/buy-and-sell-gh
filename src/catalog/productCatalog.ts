@@ -27,10 +27,18 @@ export const normalizeCondition = (condition: Product["condition"] | "New" | "Re
   return condition;
 };
 
-export const isProductUnavailable = (product: Product) => {
+export const isProductPurchasable = (product: Product) => {
   const status = normalizeStockStatus(product);
-  return status === "Sold" || status === "Out of Stock" || product.priceOnRequest === true || product.price <= 0 || product.archived === true || product.available === false;
+  return Number.isFinite(product.price) &&
+    product.price > 0 &&
+    product.priceOnRequest !== true &&
+    product.stockQuantity > 0 &&
+    (status === "In Stock" || status === "Low Stock") &&
+    product.archived !== true &&
+    product.available !== false;
 };
+
+export const isProductUnavailable = (product: Product) => !isProductPurchasable(product);
 
 export const getPrimaryImage = (product: Product) => {
   return resolveProductImage(product);
@@ -109,7 +117,7 @@ export const createEmptyProduct = (existingProducts: Product[]): Product =>
     model: "",
     generation: "",
     price: 0,
-    priceOnRequest: false,
+    priceOnRequest: true,
     storage: [],
     condition: "Brand New",
     colors: [],

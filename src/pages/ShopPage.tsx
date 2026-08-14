@@ -10,9 +10,6 @@ import {
   accessoryFamilyOptions,
   airpodsGenerationOptions,
   categorySlugs,
-  compareAirpodsNewest,
-  compareIphonesNewest,
-  compareMacbooksNewest,
   getAccessoryFamily,
   getAirpodsGeneration,
   getIphoneGeneration,
@@ -22,9 +19,10 @@ import {
   productMatchesCategorySlug,
 } from "../utils/productPresentation";
 import type { Product, ProductCategory } from "../types/product";
+import { compareProductsNewest, mixProductsDeterministically } from "../utils/shopOrdering";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
-type SortOption = "Newest" | "Price: Low to High" | "Price: High to Low" | "Popular";
+type SortOption = "Recommended" | "Newest" | "Price: Low to High" | "Price: High to Low" | "Popular";
 
 interface FiltersState {
   search: string;
@@ -71,7 +69,7 @@ export function ShopPage() {
     newArrival: params.get("newArrival") === "true",
     popular: params.get("popular") === "true",
   });
-  const [sort, setSort] = useState<SortOption>("Newest");
+  const [sort, setSort] = useState<SortOption>("Recommended");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -128,6 +126,8 @@ export function ShopPage() {
       .filter((product) => !filters.newArrival || product.newArrival || product.isNewArrival)
       .filter((product) => !filters.popular || product.popular || product.isPopular);
 
+    if (sort === "Recommended") return mixProductsDeterministically(list);
+
     return [...list].sort((a, b) => {
       const aPriceOnRequest = a.priceOnRequest || a.price <= 0;
       const bPriceOnRequest = b.priceOnRequest || b.price <= 0;
@@ -138,10 +138,7 @@ export function ShopPage() {
         const popularScore = Number(Boolean(b.popular || b.isPopular)) - Number(Boolean(a.popular || a.isPopular));
         if (popularScore !== 0) return popularScore;
       }
-      if (productMatchesCategorySlug(a, "iphones") && productMatchesCategorySlug(b, "iphones")) return compareIphonesNewest(a, b);
-      if (productMatchesCategorySlug(a, "macbooks") && productMatchesCategorySlug(b, "macbooks")) return compareMacbooksNewest(a, b);
-      if (productMatchesCategorySlug(a, "airpods") && productMatchesCategorySlug(b, "airpods")) return compareAirpodsNewest(a, b);
-      return new Date(b.createdAt ?? "").getTime() - new Date(a.createdAt ?? "").getTime();
+      return compareProductsNewest(a, b);
     });
   }, [filters, products, sort]);
 
@@ -181,6 +178,7 @@ export function ShopPage() {
               </button>
               <label className="catalogue-sort">Sort
                 <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+                  <option>Recommended</option>
                   <option>Newest</option>
                   <option>Price: Low to High</option>
                   <option>Price: High to Low</option>
