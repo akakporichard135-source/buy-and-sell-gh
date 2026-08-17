@@ -1,4 +1,5 @@
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
+import { assertAdminAal2 } from "../admin/adminAuthorization";
 import type { OrderCustomerDetails, OrderRequestItem, OrderSubmissionInput, StoredOrderRequest } from "../types/order";
 
 interface OrderRpcItem {
@@ -195,6 +196,7 @@ export const fetchAdminOrderById = async (orderId: string) => {
 };
 
 export const updateAdminOrderStatus = async (orderId: string, status: StoredOrderRequest["status"]) => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const { data, error } = await client
     .from("orders")

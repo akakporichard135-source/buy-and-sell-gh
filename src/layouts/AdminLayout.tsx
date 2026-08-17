@@ -1,4 +1,4 @@
-import { BarChart3, Bell, LogOut, Menu, Package, Settings, ShoppingBag, Star, Tag, UserCircle, X } from "lucide-react";
+import { BarChart3, Bell, LogOut, Menu, Package, Settings, ShieldCheck, ShoppingBag, Star, Tag, UserCircle, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { business } from "../config/business";
@@ -23,8 +23,8 @@ export function AdminLayout() {
   const { logout, session } = useAdminAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/admin/login", { replace: true });
   };
 
@@ -54,7 +54,7 @@ export function AdminLayout() {
             );
           })}
         </nav>
-        <button className="admin-logout" type="button" onClick={handleLogout}>
+        <button className="admin-logout" type="button" onClick={() => void handleLogout()}>
           <LogOut size={18} />
           Logout
         </button>
@@ -72,8 +72,8 @@ export function AdminLayout() {
             <h1>{business.name}</h1>
           </div>
           <div className="admin-account-pill">
-            <UserCircle size={18} />
-            <span>{session?.email}</span>
+            <ShieldCheck size={18} />
+            <span>{session?.email} | MFA</span>
           </div>
         </header>
         <main className="admin-content">

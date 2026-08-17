@@ -74,6 +74,7 @@ export function CartPage() {
   const validate = () => {
     const next: Partial<Record<keyof OrderFormState | "cart" | "submit", string>> = {};
     if (!hasItems) next.cart = "Add at least one device before submitting an order.";
+    else if (items.length > 25) next.cart = "Submit no more than 25 product lines at a time.";
     if (!form.fullName.trim()) next.fullName = "Enter your full name.";
     else if (form.fullName.trim().length > 120) next.fullName = "Full name must be 120 characters or fewer.";
     if (!phonePattern.test(cleanPhone(form.phone))) next.phone = "Enter a valid Ghana phone number.";
@@ -94,6 +95,10 @@ export function CartPage() {
     if (form.additionalNote.trim().length > 2000) next.additionalNote = "Additional note must be 2,000 characters or fewer.";
 
     for (const item of items) {
+      if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 999) {
+        next.cart = "Choose a quantity between 1 and 999 for each product.";
+        break;
+      }
       const currentProduct = getProductBySlug(item.product.slug);
       if (!currentProduct || isProductUnavailable(currentProduct)) {
         next.cart = `${item.product.name} is no longer available. Remove it from cart before submitting.`;

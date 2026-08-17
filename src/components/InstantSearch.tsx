@@ -61,7 +61,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
       <div className="instant-search-panel">
         <label className="instant-search-input">
           <Search size={20} />
-          <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search iPhone 15, 256GB, Black, UK Used..." />
+          <input ref={inputRef} value={query} maxLength={100} onChange={(event) => setQuery(event.target.value)} placeholder="Search iPhone 15, 256GB, Black, UK Used..." />
           {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><X size={20} /></button>}
         </label>
         <div className="mt-4 grid gap-3">

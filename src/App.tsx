@@ -10,6 +10,8 @@ import { AdminLayout } from "./layouts/AdminLayout";
 const AboutPage = lazy(() => import("./pages/AboutPage").then((module) => ({ default: module.AboutPage })));
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
 const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
+const AdminMfaPage = lazy(() => import("./pages/admin/AdminMfaPage").then((module) => ({ default: module.AdminMfaPage })));
+const AdminResetPasswordPage = lazy(() => import("./pages/admin/AdminResetPasswordPage").then((module) => ({ default: module.AdminResetPasswordPage })));
 const AdminSectionPage = lazy(() => import("./pages/admin/AdminSectionPage").then((module) => ({ default: module.AdminSectionPage })));
 const AdminOrderDetailPage = lazy(() => import("./pages/admin/AdminOrderDetailPage").then((module) => ({ default: module.AdminOrderDetailPage })));
 const CartPage = lazy(() => import("./pages/CartPage").then((module) => ({ default: module.CartPage })));
@@ -31,6 +33,8 @@ export default function App() {
       <Suspense fallback={<RouteLoading />}>
         <Routes>
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/mfa" element={<AdminMfaPage />} />
+          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
           <Route element={<ProtectedAdminRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />

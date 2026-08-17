@@ -67,8 +67,8 @@ const sectionCopy: Record<AdminSection, { title: string; eyebrow: string; descri
   account: {
     eyebrow: "Admin Account",
     title: "Admin Account",
-    description: "View the email address attached to the current authenticated admin session.",
-    availability: "Password and role changes are managed securely through Supabase Authentication.",
+    description: "Review the current protected session and authenticator status.",
+    availability: "Password recovery uses Supabase Auth. Privileged access requires an authorized profile and AAL2.",
   },
 };
 
@@ -97,7 +97,8 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
         <section className="admin-panel">
           <p className="eyebrow-dark">Signed in as</p>
           <h2>{session?.email}</h2>
-          <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Password and access changes should be completed through the secure Supabase Authentication account controls.</p>
+          <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Role: {session?.role}. Assurance level: {session?.assuranceLevel}. Verified authenticator factors: {session?.verifiedTotpFactors.length ?? 0}.</p>
+          <Link className="btn-secondary mt-5" to="/admin/mfa?manage=1">Manage Authenticator MFA</Link>
         </section>
       )}
 

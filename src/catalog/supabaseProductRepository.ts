@@ -1,4 +1,5 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
+import { assertAdminAal2 } from "../admin/adminAuthorization";
 import type { Product, ProductImage } from "../types/product";
 import { normalizeProduct } from "./productCatalog";
 
@@ -146,6 +147,7 @@ export const fetchProductBySlug = async (slug: string) => {
 };
 
 export const upsertProduct = async (product: Product) => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const row = productToRow(product);
   const { data, error } = await client.from("products").upsert(row, { onConflict: "id" }).select(productSelect).single();
@@ -154,6 +156,7 @@ export const upsertProduct = async (product: Product) => {
 };
 
 export const updateProductFields = async (productId: string, fields: Partial<ProductRow>) => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const { data, error } = await client.from("products").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", productId).select(productSelect).single();
   if (error) throw error;
@@ -162,6 +165,7 @@ export const updateProductFields = async (productId: string, fields: Partial<Pro
 
 export const archiveProductById = (productId: string) => updateProductFields(productId, { archived: true, available: false });
 export const deleteProductById = async (productId: string) => {
+  await assertAdminAal2("owner");
   const client = getSupabaseOrThrow();
   const { error } = await client.from("products").delete().eq("id", productId);
   if (error) throw error;
@@ -170,14 +174,18 @@ export const markProductSoldById = (productId: string) => updateProductFields(pr
 export const markProductOutOfStockById = (productId: string) => updateProductFields(productId, { stock_status: "Out of Stock", stock_quantity: 0, available: false });
 
 export const uploadProductImage = async (file: File, productId: string, onProgress?: (progress: number) => void): Promise<ProductImage> => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
   const maxBytes = 5 * 1024 * 1024;
   if (!allowedTypes.includes(file.type)) throw new Error("Use JPEG, PNG, WebP or AVIF product images only.");
   if (file.size > maxBytes) throw new Error("Product image must be 5MB or smaller.");
+  if (!(await hasValidImageSignature(file))) throw new Error("The selected file does not contain a valid supported image.");
 
   onProgress?.(10);
-  const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+  const extension = imageExtensions[file.type as keyof typeof imageExtensions];
+  const safeBaseName = file.name.toLowerCase().replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "product-image";
+  const safeName = `${safeBaseName}.${extension}`;
   const safeProductId = productId.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || "product";
   const path = `${safeProductId}/${Date.now()}-${safeName}`;
   const { error } = await client.storage.from(productImagesBucket).upload(path, file, {
@@ -189,10 +197,22 @@ export const uploadProductImage = async (file: File, productId: string, onProgre
   onProgress?.(90);
   const { data } = client.storage.from(productImagesBucket).getPublicUrl(path);
   onProgress?.(100);
-  return { src: data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "") };
+  return { src: data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) || "Product image" };
+};
+
+const imageExtensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" } as const;
+
+const hasValidImageSignature = async (file: File) => {
+  const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  if (file.type === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (file.type === "image/png") return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value);
+  if (file.type === "image/webp") return String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
+  if (file.type === "image/avif") return String.fromCharCode(...bytes.slice(4, 8)) === "ftyp" && ["avif", "avis"].includes(String.fromCharCode(...bytes.slice(8, 12)));
+  return false;
 };
 
 export const removeProductImage = async (publicUrlOrPath: string) => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const marker = `/${productImagesBucket}/`;
   const path = publicUrlOrPath.includes(marker) ? publicUrlOrPath.split(marker)[1] : publicUrlOrPath;

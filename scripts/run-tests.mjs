@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -33,6 +33,7 @@ try {
   const whatsapp = await bundle(path.join(projectRoot, "src/utils/whatsapp.ts"), path.join(outdir, "whatsapp.mjs"));
   const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
   const shopOrdering = await bundle(path.join(projectRoot, "src/utils/shopOrdering.ts"), path.join(outdir, "shopOrdering.mjs"));
+  const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
 
   const product = {
     id: "iphone-15-pro-max",
@@ -124,6 +125,29 @@ try {
   const secondMix = shopOrdering.mixProductsDeterministically(mixedProducts);
   assert.deepEqual(firstMix.map((item) => item.id), secondMix.map((item) => item.id), "Recommended ordering is stable");
   assert.deepEqual(firstMix.slice(0, 4).map((item) => item.category), ["iPhones", "MacBooks", "AirPods", "iPads"], "Recommended ordering interleaves categories");
+
+  assert.equal(adminSecurity.normalizeTotpCode("12a 34-56"), "123456", "TOTP input keeps six digits only");
+  assert.equal(adminSecurity.isValidTotpCode("123456"), true, "Six-digit TOTP code is accepted");
+  assert.equal(adminSecurity.isValidTotpCode("12345"), false, "Short TOTP code is rejected");
+  assert.ok(adminSecurity.passwordStrengthError("short"), "Weak password is rejected");
+  assert.equal(adminSecurity.passwordStrengthError("Strong-Admin-Password-2026"), "", "Strong password is accepted");
+  assert.equal(adminSecurity.safeAdminRedirect("https://evil.example"), "/admin", "External admin redirect is rejected");
+  assert.equal(adminSecurity.safeAdminRedirect("/admin/orders"), "/admin/orders", "Internal admin redirect is accepted");
+  assert.equal(adminSecurity.safeAdminRedirect("/admin/reset-password"), "/admin/reset-password", "MFA can return to password recovery");
+  assert.equal(adminSecurity.loginBackoffMs(2), 0, "First login failures do not create a lockout");
+  assert.equal(adminSecurity.loginBackoffMs(8), 60000, "Login backoff is capped at one minute");
+
+  const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
+  assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");
+  assert.match(migration012, /private\.order_request_rate_limits/, "Order rate limits are stored outside the Data API schema");
+  assert.match(migration012, /jsonb_array_length\(items_payload\)\s*>\s*25/, "Order RPC wrapper enforces 25 cart lines");
+  assert.doesNotMatch(migration012, /(?:delete\s+from|update)\s+public\.(?:products|orders|admin_profiles)/i, "MFA migration does not mutate commercial or admin data");
+
+  const vercelConfig = JSON.parse(await readFile(path.join(projectRoot, "vercel.json"), "utf8"));
+  const globalHeaders = vercelConfig.headers.find((entry) => entry.source === "/(.*)").headers;
+  const headerMap = Object.fromEntries(globalHeaders.map((header) => [header.key, header.value]));
+  assert.match(headerMap["Content-Security-Policy"], /frame-ancestors 'none'/, "CSP blocks framing");
+  assert.match(headerMap["Strict-Transport-Security"], /max-age=63072000/, "HSTS is configured for two years");
 
   console.log("All tests passed");
 } finally {

@@ -2642,6 +2642,83 @@ input[type="file"]::file-selector-button {
   outline: none;
 }
 
+.admin-login-form input:focus-visible {
+  border-color: var(--color-gold-dark);
+  box-shadow: 0 0 0 4px rgba(214, 160, 37, 0.16);
+}
+
+.admin-mfa-card {
+  width: min(100%, 520px);
+}
+
+.admin-mfa-enrollment,
+.admin-security-summary {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid rgba(12, 12, 15, 0.08);
+  border-radius: 0.75rem;
+  background: var(--color-page);
+  padding: 1rem;
+}
+
+.admin-mfa-enrollment {
+  justify-items: center;
+  text-align: center;
+}
+
+.admin-mfa-qr {
+  width: min(100%, 240px);
+  aspect-ratio: 1;
+  border-radius: 0.55rem;
+  background: white;
+  object-fit: contain;
+  padding: 0.65rem;
+}
+
+.admin-mfa-secret {
+  width: 100%;
+  overflow-wrap: anywhere;
+  border-radius: 0.55rem;
+  background: #fff;
+  padding: 0.8rem;
+  color: var(--color-ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.admin-security-summary {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+
+.admin-security-summary svg {
+  color: #166534;
+}
+
+.admin-security-summary strong,
+.admin-security-summary span {
+  display: block;
+}
+
+.admin-security-summary span {
+  margin-top: 0.3rem;
+  color: rgba(12, 12, 15, 0.62);
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.admin-security-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.admin-security-actions > * {
+  flex: 1 1 150px;
+}
+
 .admin-shell {
   display: grid;
   min-height: 100dvh;

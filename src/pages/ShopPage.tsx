@@ -170,7 +170,7 @@ export function ShopPage() {
               <p className="catalogue-count">{filtered.length} {filtered.length === 1 ? "product" : "products"}</p>
               <label className="search-inline catalogue-search">
                 <Search size={18} />
-                <input value={filters.search} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search iPhone 15, 256GB, Black..." />
+                <input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search iPhone 15, 256GB, Black..." />
                 {filters.search && <button type="button" aria-label="Clear search" onClick={() => updateFilter("search", "")}><X size={18} /></button>}
               </label>
               <button className="btn-secondary catalogue-filter-button lg:hidden" type="button" onClick={() => setDrawerOpen(true)}>
@@ -246,13 +246,13 @@ function FilterControls({
         {activeFilterCount > 0 && <button type="button" onClick={clearFilters}>Clear All</button>}
       </div>
       <div className="filter-group">
-        <label className="filter-label">Search<input value={filters.search} onChange={(e) => updateFilter("search", e.target.value)} placeholder="iPhone 15, AirPods..." /></label>
+        <label className="filter-label">Search<input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="iPhone 15, AirPods..." /></label>
         <label className="filter-label">Category<select value={filters.category} onChange={(e) => {
           updateFilter("category", e.target.value);
           updateFilter("generation", "All");
           updateFilter("accessoryFamily", "All");
         }}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
+        {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
         {filters.category === "iPhones" && <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "MacBooks" && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "AirPods" && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
@@ -265,7 +265,7 @@ function FilterControls({
       </div>
       {filters.category !== "Accessories" && <div className="filter-group">
         <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{storageOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Colour<input value={filters.color} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
+        <label className="filter-label">Colour<input value={filters.color} maxLength={80} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
       </div>}
       <div className="filter-group filter-check-grid">
         <FilterCheck label="New Arrivals" checked={filters.newArrival} onChange={(checked) => updateFilter("newArrival", checked)} />

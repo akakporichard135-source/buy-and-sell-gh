@@ -48,7 +48,7 @@ export function SellTradePage() {
                 className="mt-2 w-full rounded-lg border border-black/10 bg-white px-4 py-3.5 text-base font-semibold text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15"
                 name="images"
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/avif"
                 multiple
               />
               <span>Upload clear photos of the front, back, sides and screen. You can select multiple photos.</span>

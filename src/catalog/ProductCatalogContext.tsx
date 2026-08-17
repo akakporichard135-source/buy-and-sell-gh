@@ -47,6 +47,15 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     void loadProducts();
   }, []);
 
+  useEffect(() => {
+    const clearAdminCatalogue = () => {
+      setProducts([]);
+      void loadProducts();
+    };
+    window.addEventListener("buyandsell-gh:admin-session-cleared", clearAdminCatalogue);
+    return () => window.removeEventListener("buyandsell-gh:admin-session-cleared", clearAdminCatalogue);
+  }, []);
+
   const persistLocal = (nextProducts: Product[]) => {
     const normalized = nextProducts.map(normalizeProduct);
     setProducts(normalized);

@@ -33,6 +33,12 @@ export function SuccessForm({
           form.reportValidity();
           return;
         }
+        const fileError = formFileValidationError(form);
+        if (fileError) {
+          setSubmitted(false);
+          setError(fileError);
+          return;
+        }
         setError("");
         setSubmitting(true);
         const formData = new FormData(form);
@@ -79,7 +85,7 @@ function formRequestWhatsAppUrl(formData: FormData, intent: WhatsAppIntent, requ
       if (value.size > 0) selectedPhotos += 1;
       continue;
     }
-    const cleanValue = value.trim();
+    const cleanValue = sanitizeMessageValue(value);
     if (cleanValue) lines.push(`${formatFieldName(name)}: ${cleanValue}`);
   }
 
@@ -87,6 +93,23 @@ function formRequestWhatsAppUrl(formData: FormData, intent: WhatsAppIntent, requ
   lines.push("", "Please confirm the next steps.");
   return whatsappUrl(lines.join("\n"));
 }
+
+function formFileValidationError(form: HTMLFormElement) {
+  const files = Array.from(form.querySelectorAll<HTMLInputElement>('input[type="file"]')).flatMap((input) => Array.from(input.files ?? []));
+  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+  const maxFileBytes = 5 * 1024 * 1024;
+  const maxTotalBytes = 20 * 1024 * 1024;
+
+  if (files.length > 6) return "Select no more than 6 device photos.";
+  if (files.some((file) => !allowedTypes.has(file.type))) return "Use JPEG, PNG, WebP or AVIF device photos only.";
+  if (files.some((file) => file.size > maxFileBytes)) return "Each device photo must be 5MB or smaller.";
+  if (files.reduce((total, file) => total + file.size, 0) > maxTotalBytes) return "Selected device photos must total 20MB or less.";
+  return "";
+}
+
+export const sanitizeMessageValue = (value: string) => value
+  .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, " ")
+  .trim();
 
 function formatFieldName(name: string) {
   return name

@@ -1,5 +1,6 @@
 import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, RotateCcw, Save, Search, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { categories, createProductSlug, getPrimaryImage, normalizeProduct, productConditions, stockStatuses } from "../../catalog/productCatalog";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -81,6 +82,7 @@ const productToForm = (product: Product): ProductFormState => ({
 });
 
 export function AdminProductManager() {
+  const { session } = useAdminAuth();
   const { products, saveProduct, archiveProduct, deleteProduct, markSold, markOutOfStock, resetToSeedCatalog, createDraftProduct, backendStatus, loading, error } = useProductCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -214,7 +216,7 @@ export function AdminProductManager() {
                   <button type="button" onClick={() => window.confirm(`Mark ${product.name} as sold?`) && void runAction(() => markSold(product.id), `${product.name} marked sold.`)}>Sold</button>
                   <button type="button" onClick={() => window.confirm(`Mark ${product.name} out of stock?`) && void runAction(() => markOutOfStock(product.id), `${product.name} marked out of stock.`)}>Out</button>
                   <button type="button" onClick={() => window.confirm(`Archive ${product.name}? It will disappear from public catalogue views.`) && void runAction(() => archiveProduct(product.id), `${product.name} archived.`)}><Archive size={15} /> Archive</button>
-                  <button className="danger" type="button" onClick={() => window.confirm(`Permanently delete ${product.name}?`) && void runAction(() => deleteProduct(product.id), `${product.name} deleted.`)}><Trash2 size={15} /> Delete</button>
+                  {session?.role === "owner" && <button className="danger" type="button" onClick={() => window.confirm(`Permanently delete ${product.name}?`) && void runAction(() => deleteProduct(product.id), `${product.name} deleted.`)}><Trash2 size={15} /> Delete</button>}
                 </div>
               </article>
             );
