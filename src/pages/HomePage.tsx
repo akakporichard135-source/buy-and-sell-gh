@@ -25,7 +25,8 @@ import accessoriesCategory from "../assets/categories/accessories-premium.webp";
 import iphonesCategory from "../assets/categories/iphones-premium.webp";
 import macBooksCategory from "../assets/categories/macbooks-premium.webp";
 import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
-import heroPremium from "../assets/hero/hero-premium-v2.webp";
+import heroCinematic from "../assets/hero/hero-cinematic-ecosystem-v3.webp";
+import heroCinematicMobile from "../assets/hero/hero-cinematic-ecosystem-mobile-v3.webp";
 import airPodsCategory from "../assets/products/airpods-pro-premium.webp";
 import appleWatchCategory from "../assets/products/apple-watch-premium.webp";
 import ipadCategory from "../assets/products/ipad-pro-premium.webp";
@@ -296,9 +297,21 @@ export function HomePage() {
 
 function HeroDeviceShowcase() {
   return (
-    <div className="hero-device-showcase" aria-label="Premium iPhone, AirPods Pro and Apple Watch visual composition">
-      <img className="hero-showcase-image" src={heroPremium} alt="Premium iPhone, AirPods Pro and Apple Watch product composition" loading="eager" decoding="async" />
-      <div className="showcase-label">Buy & Sell GH</div>
+    <div className="hero-device-showcase" aria-label="Premium iPhone, MacBook, iPad, Apple Watch and AirPods studio composition">
+      <div className="hero-scene-glow" aria-hidden="true" />
+      <picture className="hero-showcase-picture">
+        <source media="(max-width: 640px)" srcSet={heroCinematicMobile} />
+        <img
+          className="hero-showcase-image"
+          src={heroCinematic}
+          alt="Flagship iPhone with MacBook, iPad, Apple Watch and AirPods in a black and gold studio"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+        />
+      </picture>
+      <div className="hero-light-sweep" aria-hidden="true" />
+      <div className="showcase-label">Phones | iPads | MacBooks | Watch | AirPods</div>
     </div>
   );
 }
