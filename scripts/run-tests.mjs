@@ -34,6 +34,7 @@ try {
   const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
   const shopOrdering = await bundle(path.join(projectRoot, "src/utils/shopOrdering.ts"), path.join(outdir, "shopOrdering.mjs"));
   const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
+  const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
   const product = {
     id: "iphone-15-pro-max",
@@ -136,6 +137,29 @@ try {
   assert.equal(adminSecurity.safeAdminRedirect("/admin/reset-password"), "/admin/reset-password", "MFA can return to password recovery");
   assert.equal(adminSecurity.loginBackoffMs(2), 0, "First login failures do not create a lockout");
   assert.equal(adminSecurity.loginBackoffMs(8), 60000, "Login backoff is capped at one minute");
+
+  const notificationStorageData = new Map();
+  const notificationStorage = {
+    getItem: (key) => notificationStorageData.get(key) ?? null,
+    setItem: (key, value) => notificationStorageData.set(key, value),
+  };
+  assert.equal(adminOrderNotifications.getOrderSoundPreference(notificationStorage), true, "Order sounds default to enabled");
+  adminOrderNotifications.saveOrderSoundPreference(notificationStorage, false);
+  assert.equal(adminOrderNotifications.getOrderSoundPreference(notificationStorage), false, "Order sound preference persists locally");
+  adminOrderNotifications.saveUnreadOrderIds(notificationStorage, "admin-1", ["order-1", "order-1", "order-2"]);
+  assert.deepEqual(adminOrderNotifications.readUnreadOrderIds(notificationStorage, "admin-1"), ["order-1", "order-2"], "Unread order IDs are deduplicated without storing customer data");
+  const seenOrderIds = new Set(["order-1"]);
+  const unseenOrders = adminOrderNotifications.collectUnseenOrders([
+    { id: "order-1", referenceNumber: "BSG-1", customerName: "Existing", createdAt: "2026-01-01" },
+    { id: "order-2", referenceNumber: "BSG-2", customerName: "New", createdAt: "2026-01-02" },
+    { id: "order-2", referenceNumber: "BSG-2", customerName: "New", createdAt: "2026-01-02" },
+  ], seenOrderIds);
+  assert.deepEqual(unseenOrders.map((order) => order.id), ["order-2"], "Each genuinely new order produces one notification");
+
+  const productManagerSource = await readFile(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), "utf8");
+  assert.match(productManagerSource, /useLayoutEffect[\s\S]*scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/, "Product editing scrolls only after the editor is rendered");
+  const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
+  assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
   assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");

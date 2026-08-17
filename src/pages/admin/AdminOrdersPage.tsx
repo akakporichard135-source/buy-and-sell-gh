@@ -1,6 +1,7 @@
 import { Eye, RefreshCw, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ADMIN_NEW_ORDER_EVENT } from "../../admin/AdminOrderNotifications";
 import { fetchAdminOrders } from "../../orders/supabaseOrderRepository";
 import { ORDER_STATUSES, type OrderStatus, type StoredOrderRequest } from "../../types/order";
 import { formatGhs } from "../../utils/format";
@@ -32,6 +33,12 @@ export function AdminOrdersPage() {
       active = false;
     };
   }, [loadVersion]);
+
+  useEffect(() => {
+    const refreshOrders = () => setLoadVersion((value) => value + 1);
+    window.addEventListener(ADMIN_NEW_ORDER_EVENT, refreshOrders);
+    return () => window.removeEventListener(ADMIN_NEW_ORDER_EVENT, refreshOrders);
+  }, []);
 
   const filtered = useMemo(() => {
     const search = query.trim().toLowerCase();

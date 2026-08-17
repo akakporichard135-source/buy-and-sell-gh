@@ -65,6 +65,20 @@ interface OrderRow {
   order_items?: OrderRpcItem[];
 }
 
+export interface AdminOrderNotificationRecord {
+  id: string;
+  referenceNumber: string;
+  customerName: string;
+  createdAt: string;
+}
+
+interface AdminOrderNotificationRow {
+  id: string;
+  reference_number: string;
+  customer_name: string;
+  created_at: string;
+}
+
 const orderSelect = `
   id,
   reference_number,
@@ -186,6 +200,60 @@ export const fetchAdminOrders = async () => {
   const { data, error } = await client.from("orders").select(orderSelect).order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((row) => orderFromResponse(row as OrderRow));
+};
+
+export const fetchAdminOrderNotifications = async (): Promise<AdminOrderNotificationRecord[]> => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data, error } = await client
+    .from("orders")
+    .select("id, reference_number, customer_name, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((row) => {
+    const order = row as AdminOrderNotificationRow;
+    return {
+      id: order.id,
+      referenceNumber: order.reference_number,
+      customerName: order.customer_name,
+      createdAt: order.created_at,
+    };
+  });
+};
+
+export const subscribeToNewAdminOrders = (
+  onOrder: (order: AdminOrderNotificationRecord) => void,
+  onStatus: (status: "connected" | "disconnected") => void,
+) => {
+  const client = getSupabaseOrThrow();
+  const channel = client
+    .channel(`admin-order-notifications-${Date.now()}`)
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "orders" },
+      (payload) => {
+        const row = payload.new as Partial<AdminOrderNotificationRow>;
+        if (
+          typeof row.id !== "string" ||
+          typeof row.reference_number !== "string" ||
+          typeof row.customer_name !== "string" ||
+          typeof row.created_at !== "string"
+        ) return;
+        onOrder({
+          id: row.id,
+          referenceNumber: row.reference_number,
+          customerName: row.customer_name,
+          createdAt: row.created_at,
+        });
+      },
+    )
+    .subscribe((status) => {
+      onStatus(status === "SUBSCRIBED" ? "connected" : "disconnected");
+    });
+
+  return () => {
+    void client.removeChannel(channel);
+  };
 };
 
 export const fetchAdminOrderById = async (orderId: string) => {

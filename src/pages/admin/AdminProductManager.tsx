@@ -1,5 +1,5 @@
 import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, RotateCcw, Save, Search, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { categories, createProductSlug, getPrimaryImage, normalizeProduct, productConditions, stockStatuses } from "../../catalog/productCatalog";
@@ -90,7 +90,7 @@ export function AdminProductManager() {
   const [stock, setStock] = useState("All");
   const [availability, setAvailability] = useState("All");
   const [editing, setEditing] = useState<ProductFormState | null>(null);
-  const [editorFocusRequest, setEditorFocusRequest] = useState(0);
+  const [pendingEditorTarget, setPendingEditorTarget] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [actionError, setActionError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -112,31 +112,35 @@ export function AdminProductManager() {
     });
   }, [availability, category, condition, products, query, stock]);
 
-  useEffect(() => {
-    if (!editing || editorFocusRequest === 0) return;
+  useLayoutEffect(() => {
+    if (!editing || pendingEditorTarget !== editing.id || !editorRef.current) return;
     let focusTimer = 0;
     const animationFrame = window.requestAnimationFrame(() => {
       editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      focusTimer = window.setTimeout(() => productNameRef.current?.focus({ preventScroll: true }), 450);
+      focusTimer = window.setTimeout(() => {
+        productNameRef.current?.focus({ preventScroll: true });
+        setPendingEditorTarget(null);
+      }, 400);
     });
     return () => {
       window.cancelAnimationFrame(animationFrame);
       window.clearTimeout(focusTimer);
     };
-  }, [editorFocusRequest]);
+  }, [editing, pendingEditorTarget]);
 
   const startAdd = () => {
     setMessage("");
     setActionError("");
-    setEditing(productToForm(createDraftProduct()));
-    setEditorFocusRequest((request) => request + 1);
+    const draft = productToForm(createDraftProduct());
+    setEditing(draft);
+    setPendingEditorTarget(draft.id);
   };
 
   const startEdit = (product: Product) => {
     setMessage("");
     setActionError("");
     setEditing(productToForm(product));
-    setEditorFocusRequest((request) => request + 1);
+    setPendingEditorTarget(product.id);
   };
 
   const runAction = async (action: () => Promise<void>, success: string) => {
