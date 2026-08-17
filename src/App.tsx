@@ -23,6 +23,7 @@ const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage").then((mod
 const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage").then((module) => ({ default: module.ProductDetailsPage })));
 const SellTradePage = lazy(() => import("./pages/SellTradePage").then((module) => ({ default: module.SellTradePage })));
 const ShopPage = lazy(() => import("./pages/ShopPage").then((module) => ({ default: module.ShopPage })));
+const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPage").then((module) => ({ default: module.ShoppingInformationPage })));
 
 export default function App() {
   return (
@@ -68,6 +69,7 @@ function PublicShell() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/shopping-information" element={<ShoppingInformationPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order-success/:reference" element={<OrderSuccessPage />} />
           <Route path="*" element={<NotFoundPage />} />

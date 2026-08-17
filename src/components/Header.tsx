@@ -1,5 +1,5 @@
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -19,6 +19,7 @@ const navItems = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const { totalItems } = useCart();
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `rounded-full px-2 py-2 text-sm font-extrabold transition ${
@@ -49,6 +50,7 @@ export function Header() {
       document.body.classList.remove("mobile-menu-open");
       window.scrollTo(0, scrollY);
       window.removeEventListener("keydown", onKeyDown);
+      menuTriggerRef.current?.focus({ preventScroll: true });
     };
   }, [open]);
 
@@ -73,7 +75,7 @@ export function Header() {
           </NavLink>
           <WhatsAppButton className="px-5 py-3 shadow-gold">WhatsApp</WhatsAppButton>
         </div>
-        <button className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 lg:hidden" type="button" aria-label="Open menu" onClick={() => setOpen(true)}>
+        <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 lg:hidden" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
           <Menu size={25} />
         </button>
       </div>
@@ -100,7 +102,7 @@ function MobileMenuOverlay({ totalItems, onClose, onSearch }: { totalItems: numb
       <div className="mobile-menu-panel">
         <div className="mobile-menu-header">
           <Logo />
-          <button className="icon-button h-12 w-12" type="button" aria-label="Close menu" onClick={onClose}>
+          <button autoFocus className="icon-button h-12 w-12" type="button" aria-label="Close menu" onClick={onClose}>
             <X size={22} />
           </button>
         </div>

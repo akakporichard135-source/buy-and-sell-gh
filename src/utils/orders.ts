@@ -67,7 +67,18 @@ export const submitOrderRequest = async (
     return {
       status: "failed",
       order,
-      message: failure instanceof Error ? failure.message : "Order request could not be saved. Please try again.",
+      message: orderSubmissionMessage(failure),
     };
   }
 };
+
+function orderSubmissionMessage(failure: unknown) {
+  const message = failure instanceof Error ? failure.message.toLowerCase() : "";
+  if (message.includes("stock") || message.includes("sold") || message.includes("available")) {
+    return "One or more products are no longer available in the selected quantity. Review your cart or contact Buy & Sell GH.";
+  }
+  if (message.includes("storage") || message.includes("colour") || message.includes("color") || message.includes("variant")) {
+    return "A selected product option is no longer available. Return to the product page and choose an available option.";
+  }
+  return "Your order request could not be submitted right now. Check your connection and try again. Your cart has not been cleared.";
+}

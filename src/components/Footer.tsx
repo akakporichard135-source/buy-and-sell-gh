@@ -34,7 +34,9 @@ export function Footer() {
             <Link to="/sell-or-trade">Sell or trade</Link>
             <Link to="/pre-order">Pre-Order</Link>
             <Link to="/contact">Contact</Link>
+            <Link to="/about">About</Link>
             <Link to="/faq">FAQ</Link>
+            <Link to="/shopping-information">Shopping information</Link>
           </div>
         </div>
         <div>
@@ -44,6 +46,8 @@ export function Footer() {
             <Link to="/ipads">iPads</Link>
             <Link to="/airpods">AirPods</Link>
             <Link to="/apple-watch">Apple Watch</Link>
+            <Link to="/macbooks">MacBooks</Link>
+            <Link to="/accessories">Accessories</Link>
           </div>
           <h2 className="footer-heading mt-7">Social</h2>
           <a className="footer-line" href={business.social.instagram} target="_blank" rel="noreferrer"><Instagram size={16} /> {business.username}</a>

@@ -1,89 +1,131 @@
-import { AlertTriangle, Package, ShoppingBag, Smartphone, Tag } from "lucide-react";
+import { AlertCircle, Image, MessageCircle, PackageSearch, ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { isProductUnavailable, normalizeStockStatus } from "../../catalog/productCatalog";
-import { ORDER_STATUSES } from "../../types/order";
-import { isSupabaseConfigured } from "../../admin/AdminAuth";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { fetchAdminOrders } from "../../orders/supabaseOrderRepository";
+import type { StoredOrderRequest } from "../../types/order";
+import { formatGhs } from "../../utils/format";
+import { requiresRealProductPhotos } from "../../utils/productImages";
 
 export function AdminDashboardPage() {
   const { products, activeProducts, backendStatus } = useProductCatalog();
+  const [orders, setOrders] = useState<StoredOrderRequest[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    fetchAdminOrders()
+      .then((data) => {
+        if (active) setOrders(data);
+      })
+      .catch(() => {
+        if (active) setOrdersError("Order summaries could not be loaded. Open Orders to try again.");
+      })
+      .finally(() => {
+        if (active) setOrdersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const lowStockCount = activeProducts.filter((product) => normalizeStockStatus(product) === "Low Stock").length;
+  const outOfStockCount = activeProducts.filter((product) => ["Out of Stock", "Sold"].includes(normalizeStockStatus(product))).length;
+  const enquiryOnlyCount = activeProducts.filter((product) => product.priceOnRequest || product.price <= 0).length;
+  const photosNeededCount = activeProducts.filter(requiresRealProductPhotos).length;
+  const pendingOrders = orders.filter((order) => order.status === "Pending").length;
+  const recentProducts = [...activeProducts]
+    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt ?? "").getTime() - new Date(a.updatedAt ?? a.createdAt ?? "").getTime())
+    .slice(0, 5);
+  const recentOrders = orders.slice(0, 5);
+
   const productStats = [
-    { label: "Total products", value: products.length },
-    { label: "Published products", value: activeProducts.filter((product) => product.available !== false).length },
-    { label: "Archived products", value: products.filter((product) => product.archived).length },
-    { label: "In-stock products", value: activeProducts.filter((product) => normalizeStockStatus(product) === "In Stock").length },
-    { label: "Low-stock products", value: activeProducts.filter((product) => normalizeStockStatus(product) === "Low Stock").length },
-    { label: "Unavailable products", value: activeProducts.filter(isProductUnavailable).length },
+    { label: "Published products", value: activeProducts.length, note: `${products.length - activeProducts.length} hidden or archived`, to: "/admin/products" },
+    { label: "Low-stock products", value: lowStockCount, note: "Review quantities", to: "/admin/products" },
+    { label: "Out of stock or sold", value: outOfStockCount, note: "Not purchasable", to: "/admin/products" },
+    { label: "Enquiry-only products", value: enquiryOnlyCount, note: "Contact for Price", to: "/admin/products" },
+    { label: "Used photos needed", value: photosNeededCount, note: "Real photos pending", to: "/admin/products" },
+    { label: "Pending orders", value: ordersLoading ? "..." : pendingOrders, note: ordersError ? "Orders unavailable" : `${orders.length} total order requests`, to: "/admin/orders" },
   ];
-  const recentProducts = activeProducts.slice(0, 5);
 
   return (
     <div className="admin-page-grid">
       <section className="admin-panel admin-panel-hero">
         <div>
           <p className="eyebrow-dark">Overview</p>
-          <h2>Dashboard overview</h2>
-          <p>The dashboard is prepared for real catalogue and order management. Customer order data appears after the orders migration is run and an authorized owner/admin signs in.</p>
+          <h2>Business dashboard</h2>
+          <p>Review catalogue health, products needing attention and recent customer order requests.</p>
         </div>
-        <div className="admin-status-pill">
-          <AlertTriangle size={18} />
-          {isSupabaseConfigured() ? "Supabase env detected" : `${backendStatus === "local-catalog" ? "Local catalogue" : "Production auth required"}`}
+        <div className={`admin-status-pill ${backendStatus === "supabase" ? "is-ready" : ""}`}>
+          <PackageSearch size={18} />
+          {backendStatus === "supabase" ? "Live catalogue connected" : "Catalogue connection needs attention"}
         </div>
       </section>
 
-      <section className="admin-stat-grid">
+      <section className="admin-stat-grid" aria-label="Business summaries">
         {productStats.map((stat) => (
-          <article className="admin-stat-card" key={stat.label}>
+          <Link className="admin-stat-card" key={stat.label} to={stat.to}>
             <span>{stat.label}</span>
             <strong>{stat.value}</strong>
-          </article>
+            <small>{stat.note}</small>
+          </Link>
         ))}
       </section>
 
+      {ordersError && <div className="admin-warning" role="alert"><AlertCircle size={18} /> {ordersError}</div>}
+
       <section className="admin-panel">
         <div className="admin-section-title">
           <div>
-            <p className="eyebrow-dark">Requests</p>
-            <h2>Customer request readiness</h2>
+            <p className="eyebrow-dark">Order requests</p>
+            <h2>Recent orders</h2>
           </div>
+          <Link className="btn-secondary" to="/admin/orders"><ShoppingBag size={17} /> View Orders</Link>
         </div>
-        <div className="admin-request-grid">
-          {[
-            ["New order requests", "Requires Supabase orders table", ShoppingBag],
-            ["New trade-in requests", "Requires Supabase trade_in_requests table", Smartphone],
-            ["New device requests", "Requires Supabase device_requests table", Package],
-            ["New contact messages", "Requires Supabase contact_messages table", Tag],
-          ].map(([label, note, Icon]) => (
-            <article className="admin-request-card" key={label as string}>
-              <Icon size={20} />
-              <strong>0</strong>
-              <span>{label as string}</span>
-              <small>{note as string}</small>
-            </article>
-          ))}
-        </div>
+        {ordersLoading ? (
+          <p className="admin-empty-copy">Loading current order requests...</p>
+        ) : recentOrders.length > 0 ? (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Reference</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {recentOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td><Link to={`/admin/orders/${order.id}`}>{order.referenceNumber}</Link></td>
+                    <td>{order.customer.fullName}<br /><span className="text-xs text-ink/55">{order.customer.phone}</span></td>
+                    <td>{formatGhs(order.total)}</td>
+                    <td>{order.status}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString("en-GH")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="admin-empty-state"><ShoppingBag size={22} /><strong>No order requests yet</strong><span>New website order requests will appear here.</span></div>
+        )}
       </section>
 
       <section className="admin-panel">
         <div className="admin-section-title">
           <div>
-            <p className="eyebrow-dark">Products</p>
-            <h2>Recent products</h2>
+            <p className="eyebrow-dark">Catalogue</p>
+            <h2>Recently updated products</h2>
           </div>
           <Link className="btn-secondary" to="/admin/products">View Products</Link>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table">
-            <thead>
-              <tr><th>Name</th><th>Price</th><th>Condition</th><th>Stock</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>Price</th><th>Condition</th><th>Stock</th></tr></thead>
             <tbody>
               {recentProducts.map((product) => (
                 <tr key={product.id}>
                   <td>{product.name}</td>
-                  <td>GHS {product.price.toLocaleString("en-GH")}</td>
+                  <td>{product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</td>
                   <td>{product.condition}</td>
-                  <td>{product.stockStatus}</td>
+                  <td>{normalizeStockStatus(product)}</td>
                 </tr>
               ))}
             </tbody>
@@ -91,16 +133,10 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="admin-panel">
-        <div className="admin-section-title">
-          <div>
-            <p className="eyebrow-dark">Order status model</p>
-            <h2>Prepared for future order management</h2>
-          </div>
-        </div>
-        <div className="admin-status-grid">
-          {ORDER_STATUSES.map((status) => <span key={status}>{status}</span>)}
-        </div>
+      <section className="admin-attention-grid">
+        <Link className="admin-request-card" to="/admin/products"><Image size={20} /><strong>{photosNeededCount}</strong><span>Used products need real photos</span><small>Upload exact-device photos before publishing.</small></Link>
+        <Link className="admin-request-card" to="/admin/products"><MessageCircle size={20} /><strong>{enquiryOnlyCount}</strong><span>Products are enquiry-only</span><small>Add a confirmed price and valid stock when ready.</small></Link>
+        <Link className="admin-request-card" to="/admin/products"><AlertCircle size={20} /><strong>{activeProducts.filter(isProductUnavailable).length}</strong><span>Products cannot enter cart</span><small>Review price, stock and published availability.</small></Link>
       </section>
     </div>
   );

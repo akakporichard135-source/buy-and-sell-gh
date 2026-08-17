@@ -32,21 +32,14 @@ import ipadCategory from "../assets/products/ipad-pro-premium.webp";
 import { business } from "../config/business";
 import { promotions } from "../data/promotions";
 import { categorySlugs } from "../utils/productPresentation";
-import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 const trust = [
   { label: "100% Original Devices", description: "Carefully sourced and inspected.", icon: ShieldCheck },
   { label: "Trusted Deals", description: "Clear prices and honest descriptions.", icon: CheckCircle2 },
   { label: "Device Inspection", description: "Check your device before purchase.", icon: PackageCheck },
-  { label: "Secure Payments", description: "Safe and convenient payment options.", icon: CreditCard },
+  { label: "Payment Confirmation", description: "Payment instructions confirmed after review.", icon: CreditCard },
   { label: "Delivery Available", description: "Delivery and pickup in Accra.", icon: Truck },
   { label: "Customer Support", description: "Help before and after your purchase.", icon: Headphones },
-];
-
-const testimonials = [
-  "The device options were clearly explained, and the buying process was simple.",
-  "I received helpful guidance when choosing the right iPhone for my budget.",
-  "The phone condition and features were explained before purchase.",
 ];
 
 const categoryIcons = {
@@ -246,7 +239,7 @@ export function HomePage() {
           <h2 className="title-md">Can't Find the Device You Want?</h2>
           <p className="mt-4 leading-8 text-ink/70">Use this form when the device you want is not currently available. Tell us the model, storage, colour, condition and budget so we can help source it.</p>
         </div>
-        <SuccessForm buttonLabel="Submit Pre-Order" successActionHref={intentWhatsAppUrl("request")}>
+        <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
           <FormField label="Customer name" name="name" required />
           <FormField label="Phone number" name="phone" required />
           <FormField label="Device model" name="model" required placeholder="iPhone 15 Pro Max" />
@@ -266,21 +259,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="section home-section home-desktop-detail">
-        <div className="section-heading">
-          <p className="eyebrow-dark">Reviews</p>
-          <h2>What Customers Say</h2>
-          <p>Real customer experiences will be displayed here as the business collects verified reviews.</p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {testimonials.map((text) => (
-            <article className="review-card" key={text}>
-              <p className="text-xs font-black uppercase text-gold-dark">Customer Review</p>
-              <p className="mt-4 text-base leading-7 text-ink/72">"{text}"</p>
-            </article>
-          ))}
-        </div>
-      </section>
       <section className="section home-section grid gap-6 lg:grid-cols-2">
         <div className="social-band">
           <p className="eyebrow">Social</p>

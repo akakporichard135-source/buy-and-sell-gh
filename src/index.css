@@ -4273,3 +4273,127 @@ input[type="file"]::file-selector-button {
     width: 100%;
   }
 }
+
+.product-purchase-assurance {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgba(12, 12, 15, 0.08);
+  padding-top: 1rem;
+  color: rgba(12, 12, 15, 0.68);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.product-purchase-assurance span {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.product-purchase-assurance svg {
+  flex: 0 0 auto;
+  color: var(--color-gold-dark);
+}
+
+.shopping-information-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.shopping-information-item {
+  min-width: 0;
+  border-bottom: 1px solid rgba(12, 12, 15, 0.1);
+  padding: clamp(1rem, 3vw, 1.5rem) 0;
+}
+
+.shopping-information-item svg {
+  color: var(--color-gold-dark);
+}
+
+.shopping-information-item h2 {
+  margin-top: 0.8rem;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 950;
+}
+
+.shopping-information-item p {
+  margin-top: 0.65rem;
+  max-width: 62ch;
+  color: rgba(12, 12, 15, 0.68);
+  font-weight: 700;
+  line-height: 1.75;
+}
+
+.admin-status-pill.is-ready {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.admin-stat-card,
+.admin-request-card {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.admin-stat-card:hover,
+.admin-request-card:hover {
+  border-color: rgba(181, 126, 0, 0.34);
+  box-shadow: 0 14px 30px rgba(12, 12, 15, 0.09);
+  transform: translateY(-2px);
+}
+
+.admin-stat-card small {
+  display: block;
+  margin-top: 0.45rem;
+  color: rgba(12, 12, 15, 0.54);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.admin-attention-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-empty-copy {
+  border: 1px solid rgba(12, 12, 15, 0.07);
+  border-radius: 0.65rem;
+  background: var(--color-page);
+  padding: 1rem;
+}
+
+.admin-empty-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.45rem;
+  border: 1px dashed rgba(12, 12, 15, 0.16);
+  border-radius: 0.75rem;
+  padding: 1.2rem;
+  color: rgba(12, 12, 15, 0.6);
+}
+
+.admin-empty-state strong {
+  color: var(--color-ink);
+}
+
+.admin-error .btn-secondary {
+  margin-left: 0.75rem;
+  min-height: 40px;
+}
+
+@media (max-width: 760px) {
+  .shopping-information-grid,
+  .admin-attention-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-error .btn-secondary {
+    width: 100%;
+    margin: 0.75rem 0 0;
+  }
+}

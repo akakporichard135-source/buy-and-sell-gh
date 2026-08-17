@@ -13,7 +13,7 @@ export function DeviceRequestPage() {
         <p>Use this form when the device you want is not currently available on the website. Tell us the exact Apple device you're looking for and Buy & Sell GH will help you source it.</p>
       </section>
       <section className="section device-request-layout grid gap-8">
-        <SuccessForm buttonLabel="Submit Pre-Order">
+        <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
           <FormField label="Device model" name="model" required />
           <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
           <FormField label="Colour" name="color" />

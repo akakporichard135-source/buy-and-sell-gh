@@ -10,7 +10,7 @@ import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
-import { requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
+import { hasOwnerUploadedProductImages, requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
@@ -247,14 +247,18 @@ export function ProductDetailsPage() {
               <span>{quantity}</span>
               <button type="button" aria-label="Increase quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}><Plus size={17} /></button>
             </div>
-            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Contact for Price" : "Add to Cart"}</button>
-            <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Inventory Pending" : "Buy Now"}</button>
-            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> Confirm Availability</a>
+            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Add to Cart unavailable" : "Add to Cart"}</button>
+            <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Buy Now unavailable" : "Buy Now"}</button>
+            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
           </div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={18} /> WhatsApp Enquiry</a>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <a className="btn-secondary" href={`tel:${business.whatsapp.primary}`}><Phone size={18} /> Call Shop</a>
             <button className="btn-secondary" type="button" onClick={handleShare}><Share2 size={18} /> Share Product</button>
+          </div>
+          <div className="product-purchase-assurance" aria-label="Ordering reassurance">
+            <span><CheckCircle2 size={16} /> Order request reviewed before payment</span>
+            <span><MessageCircle size={16} /> WhatsApp support for final details</span>
+            {hasOwnerUploadedProductImages(product) && <span><CheckCircle2 size={16} /> Photos show the listed device</span>}
           </div>
         </div>
       </section>

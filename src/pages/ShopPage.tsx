@@ -153,7 +153,7 @@ export function ShopPage() {
 
   return (
     <>
-      <SEO title="Shop Original iPhones in Ghana" description="Browse original iPhones, iPads, Apple Watches, AirPods and Apple gadgets from Buy & Sell GH in Accra." />
+      <SEO title="Shop Apple Devices in Ghana" description="Browse original iPhones, iPads, MacBooks, Apple Watches, AirPods and accessories from Buy & Sell GH in Accra." />
       <section className="page-hero shop-hero">
         <p className="eyebrow-dark">Shop</p>
         <h1>Original devices catalogue</h1>
@@ -214,7 +214,7 @@ export function ShopPage() {
                 <p className="text-lg font-black text-ink">Filters</p>
                 <p className="text-sm font-bold text-ink/60">{activeFilterCount} active</p>
               </div>
-              <button className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
+              <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
             </div>
             <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} />
             <div className="filter-drawer-actions">

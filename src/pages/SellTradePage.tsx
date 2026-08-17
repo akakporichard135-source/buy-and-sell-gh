@@ -22,7 +22,7 @@ export function SellTradePage() {
               <p>Photos and form details help with an estimate. The final trade-in value is confirmed only after Buy & Sell GH physically checks the device, battery, Face ID, screen, body, repairs and accessories.</p>
             </div>
           </div>
-          <SuccessForm buttonLabel="Submit trade-in details">
+          <SuccessForm buttonLabel="Prepare trade-in details" successIntent="trade">
             <FormField label="Customer name" name="name" required />
             <FormField label="Phone number" name="phone" required />
             <FormField label="Email (optional)" name="email" type="email" />

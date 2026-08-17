@@ -59,7 +59,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
         </div>
         <div className="product-card-actions">
           <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" onClick={() => addItem(product, storage, color)} disabled={isSoldOut}>
-            <Plus size={17} /> {isPriceOnRequest ? "Contact for Price" : isSoldOut ? stockLabel : "Add to Cart"}
+            <Plus size={17} /> {isPriceOnRequest ? "Enquiry only" : isSoldOut ? stockLabel : "Add to Cart"}
           </button>
           <div className="product-card-secondary-actions">
             <Link className="btn-secondary" to={`/product/${product.slug}`}>

@@ -7,8 +7,11 @@ export function NotFoundPage() {
       <SEO title="Page not found" description="The requested Buy & Sell GH page could not be found." />
       <section className="page-hero">
         <h1>Page not found</h1>
-        <p>This route does not exist yet.</p>
-        <Link className="btn-primary mt-6" to="/">Go home</Link>
+        <p>The page may have moved. Continue to the catalogue or return to the homepage.</p>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <Link className="btn-primary" to="/shop">Browse Catalogue</Link>
+          <Link className="btn-secondary" to="/">Go Home</Link>
+        </div>
       </section>
     </>
   );

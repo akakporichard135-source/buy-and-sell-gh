@@ -26,7 +26,7 @@ export function ContactPage() {
           <WhatsAppButton className="w-full">Open WhatsApp</WhatsAppButton>
         </div>
         <div>
-          <SuccessForm buttonLabel="Send contact message">
+          <SuccessForm buttonLabel="Prepare contact message" successIntent="general">
             <FormField label="Name" name="name" required />
             <FormField label="Phone number" name="phone" required />
             <FormField label="Subject" name="subject" />
