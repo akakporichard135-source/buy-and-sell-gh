@@ -23,25 +23,25 @@ export function SellTradePage() {
             </div>
           </div>
           <SuccessForm buttonLabel="Prepare trade-in details" successIntent="trade">
-            <FormField label="Customer name" name="name" required />
-            <FormField label="Phone number" name="phone" required />
-            <FormField label="Email (optional)" name="email" type="email" />
-            <FormField label="Device brand" name="brand" required />
-            <FormField label="Device model" name="model" required />
+            <FormField label="Customer name" name="name" required maxLength={120} />
+            <FormField label="Phone number" name="phone" required maxLength={32} />
+            <FormField label="Email (optional)" name="email" type="email" maxLength={254} />
+            <FormField label="Device brand" name="brand" required maxLength={80} />
+            <FormField label="Device model" name="model" required maxLength={160} />
             <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
-            <FormField label="Colour" name="color" />
+            <FormField label="Colour" name="color" maxLength={80} />
             <FormField label="Condition" name="condition" options={["Excellent", "Very Good", "Good", "Faulty"]} />
-            <FormField label="Battery health" name="battery" placeholder="Example: 88%" />
+            <FormField label="Battery health" name="battery" placeholder="Example: 88%" maxLength={20} />
             <FormField label="Face ID status" name="faceId" options={["Working", "Not working", "Not applicable"]} />
             <FormField label="Screen condition" name="screen" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
             <FormField label="Back-glass condition" name="back" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
             <FormField label="Camera condition" name="camera" options={["Working", "Faulty"]} />
-            <FormField label="Repair history" name="repair" />
+            <FormField label="Repair history" name="repair" maxLength={500} />
             <FormField label="Network status" name="network" options={["Unlocked", "Locked", "Not sure"]} />
-            <FormField label="Accessories included" name="accessories" />
+            <FormField label="Accessories included" name="accessories" maxLength={500} />
             <FormField label="Desired action" name="action" options={["Sell", "Swap"]} />
-            <FormField label="Desired replacement phone" name="replacement" />
-            <FormField label="Expected price" name="expected" />
+            <FormField label="Desired replacement phone" name="replacement" maxLength={160} />
+            <FormField label="Expected price" name="expected" maxLength={80} />
             <label className="sell-trade-upload block text-sm font-black text-ink">
               Upload device photos
               <input
@@ -53,7 +53,7 @@ export function SellTradePage() {
               />
               <span>Upload clear photos of the front, back, sides and screen. You can select multiple photos.</span>
             </label>
-            <FormField label="Additional details" name="details" textarea />
+            <FormField label="Additional details" name="details" textarea maxLength={2000} />
           </SuccessForm>
         </div>
         <aside className="sell-trade-whatsapp rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">

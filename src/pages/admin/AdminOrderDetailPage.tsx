@@ -109,7 +109,7 @@ export function AdminOrderDetailPage() {
             <Detail label="Total" value={formatGhs(order.total)} />
           </dl>
           {order.customer.additionalNote && <p className="mt-4 rounded-lg bg-page p-3 text-sm font-bold leading-6 text-ink/65">{order.customer.additionalNote}</p>}
-          <a className="btn-primary mt-5 w-full" href={orderRequestWhatsAppUrl(order)} target="_blank" rel="noreferrer">Contact on WhatsApp</a>
+          <a className="btn-primary mt-5 w-full" href={orderRequestWhatsAppUrl(order)} target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
         </aside>
       </section>
 

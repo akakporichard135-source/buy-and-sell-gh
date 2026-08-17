@@ -75,15 +75,23 @@ export function CartPage() {
     const next: Partial<Record<keyof OrderFormState | "cart" | "submit", string>> = {};
     if (!hasItems) next.cart = "Add at least one device before submitting an order.";
     if (!form.fullName.trim()) next.fullName = "Enter your full name.";
+    else if (form.fullName.trim().length > 120) next.fullName = "Full name must be 120 characters or fewer.";
     if (!phonePattern.test(cleanPhone(form.phone))) next.phone = "Enter a valid Ghana phone number.";
     if (!phonePattern.test(cleanPhone(form.whatsapp))) next.whatsapp = "Enter a valid Ghana WhatsApp number.";
     if (form.email.trim() && !emailPattern.test(form.email.trim())) next.email = "Enter a valid email address.";
+    else if (form.email.trim().length > 254) next.email = "Email must be 254 characters or fewer.";
     if (!form.preferredPaymentMethod) next.preferredPaymentMethod = "Choose a payment preference.";
     if (form.fulfilmentType === "delivery") {
       if (!form.region.trim()) next.region = "Enter your region.";
+      else if (form.region.trim().length > 100) next.region = "Region must be 100 characters or fewer.";
       if (!form.city.trim()) next.city = "Enter your city or area.";
+      else if (form.city.trim().length > 120) next.city = "City or area must be 120 characters or fewer.";
       if (!form.deliveryAddress.trim()) next.deliveryAddress = "Enter your delivery address.";
+      else if (form.deliveryAddress.trim().length > 500) next.deliveryAddress = "Delivery address must be 500 characters or fewer.";
     }
+    if (form.landmark.trim().length > 200) next.landmark = "Landmark must be 200 characters or fewer.";
+    if (form.deliveryNotes.trim().length > 2000) next.deliveryNotes = "Delivery notes must be 2,000 characters or fewer.";
+    if (form.additionalNote.trim().length > 2000) next.additionalNote = "Additional note must be 2,000 characters or fewer.";
 
     for (const item of items) {
       const currentProduct = getProductBySlug(item.product.slug);
@@ -201,10 +209,10 @@ export function CartPage() {
 
           <form className="mt-5 grid gap-5" noValidate onSubmit={handleSubmit}>
             <CheckoutSection icon={<UserRound size={18} />} title="Customer information">
-              <OrderInput label="Full name" value={form.fullName} error={errors.fullName} autoComplete="name" onChange={(value) => updateField("fullName", value)} />
-              <OrderInput label="Phone number" value={form.phone} error={errors.phone} inputMode="tel" autoComplete="tel" onChange={(value) => updateField("phone", value)} />
-              <OrderInput label="WhatsApp number" value={form.whatsapp} error={errors.whatsapp} inputMode="tel" autoComplete="tel" onChange={(value) => updateField("whatsapp", value)} />
-              <OrderInput label="Email, optional" type="email" value={form.email} error={errors.email} autoComplete="email" onChange={(value) => updateField("email", value)} />
+              <OrderInput label="Full name" value={form.fullName} error={errors.fullName} maxLength={120} autoComplete="name" onChange={(value) => updateField("fullName", value)} />
+              <OrderInput label="Phone number" value={form.phone} error={errors.phone} maxLength={32} inputMode="tel" autoComplete="tel" onChange={(value) => updateField("phone", value)} />
+              <OrderInput label="WhatsApp number" value={form.whatsapp} error={errors.whatsapp} maxLength={32} inputMode="tel" autoComplete="tel" onChange={(value) => updateField("whatsapp", value)} />
+              <OrderInput label="Email, optional" type="email" value={form.email} error={errors.email} maxLength={254} autoComplete="email" onChange={(value) => updateField("email", value)} />
             </CheckoutSection>
 
             <CheckoutSection icon={<MapPin size={18} />} title="Fulfilment">
@@ -216,11 +224,11 @@ export function CartPage() {
               </label>
               {form.fulfilmentType === "delivery" && (
                 <>
-                  <OrderInput label="Region" value={form.region} error={errors.region} onChange={(value) => updateField("region", value)} />
-                  <OrderInput label="City / Area" value={form.city} error={errors.city} onChange={(value) => updateField("city", value)} />
-                  <OrderInput label="Delivery address" value={form.deliveryAddress} error={errors.deliveryAddress} onChange={(value) => updateField("deliveryAddress", value)} />
-                  <OrderInput label="Landmark" value={form.landmark} onChange={(value) => updateField("landmark", value)} />
-                  <OrderTextarea label="Delivery notes" value={form.deliveryNotes} onChange={(value) => updateField("deliveryNotes", value)} />
+                  <OrderInput label="Region" value={form.region} error={errors.region} maxLength={100} onChange={(value) => updateField("region", value)} />
+                  <OrderInput label="City / Area" value={form.city} error={errors.city} maxLength={120} onChange={(value) => updateField("city", value)} />
+                  <OrderInput label="Delivery address" value={form.deliveryAddress} error={errors.deliveryAddress} maxLength={500} onChange={(value) => updateField("deliveryAddress", value)} />
+                  <OrderInput label="Landmark" value={form.landmark} error={errors.landmark} maxLength={200} onChange={(value) => updateField("landmark", value)} />
+                  <OrderTextarea label="Delivery notes" value={form.deliveryNotes} error={errors.deliveryNotes} maxLength={2000} onChange={(value) => updateField("deliveryNotes", value)} />
                 </>
               )}
             </CheckoutSection>
@@ -234,7 +242,7 @@ export function CartPage() {
                 {errors.preferredPaymentMethod && <span className="form-error text-sm font-bold text-red-700">{errors.preferredPaymentMethod}</span>}
               </label>
               <p className="rounded-lg border border-gold/20 bg-warm p-3 text-sm font-bold leading-6 text-ink/70">Payment instructions will be confirmed by Buy & Sell GH after your order is reviewed.</p>
-              <OrderTextarea label="Additional note" value={form.additionalNote} onChange={(value) => updateField("additionalNote", value)} />
+              <OrderTextarea label="Additional note" value={form.additionalNote} error={errors.additionalNote} maxLength={2000} onChange={(value) => updateField("additionalNote", value)} />
             </CheckoutSection>
 
             {errors.cart && <p className="form-error rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{errors.cart}</p>}
@@ -313,6 +321,7 @@ function OrderInput({
   type = "text",
   inputMode,
   autoComplete,
+  maxLength,
   onChange,
 }: {
   label: string;
@@ -321,20 +330,22 @@ function OrderInput({
   type?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   autoComplete?: string;
+  maxLength?: number;
   onChange: (value: string) => void;
 }) {
   return (
     <label className="choice-label">{label}
-      <input aria-label={label} className="rounded-lg border border-black/10 bg-white p-3 text-base font-bold outline-none" type={type} inputMode={inputMode} autoComplete={autoComplete} value={value} onChange={(event) => onChange(event.target.value)} />
+      <input aria-label={label} className="rounded-lg border border-black/10 bg-white p-3 text-base font-bold outline-none" type={type} inputMode={inputMode} autoComplete={autoComplete} maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} />
       {error && <span className="form-error text-sm font-bold text-red-700">{error}</span>}
     </label>
   );
 }
 
-function OrderTextarea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function OrderTextarea({ label, value, error, maxLength, onChange }: { label: string; value: string; error?: string; maxLength?: number; onChange: (value: string) => void }) {
   return (
     <label className="choice-label">{label}
-      <textarea aria-label={label} className="min-h-24 resize-y rounded-lg border border-black/10 bg-white p-3 text-base font-bold outline-none" value={value} onChange={(event) => onChange(event.target.value)} />
+      <textarea aria-label={label} className="min-h-24 resize-y rounded-lg border border-black/10 bg-white p-3 text-base font-bold outline-none" maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} />
+      {error && <span className="form-error text-sm font-bold text-red-700">{error}</span>}
     </label>
   );
 }

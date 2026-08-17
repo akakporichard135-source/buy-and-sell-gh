@@ -14,16 +14,16 @@ export function DeviceRequestPage() {
       </section>
       <section className="section device-request-layout grid gap-8">
         <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
-          <FormField label="Device model" name="model" required />
+          <FormField label="Device model" name="model" required maxLength={160} />
           <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
-          <FormField label="Colour" name="color" />
+          <FormField label="Colour" name="color" maxLength={80} />
           <FormField label="Preferred condition" name="condition" options={["Brand New", "UK Used", "Either"]} />
-          <FormField label="Budget" name="budget" required />
+          <FormField label="Budget" name="budget" required maxLength={80} />
           <FormField label="Preferred payment method" name="payment" options={["Cash", "Mobile Money", "Bank transfer", "To confirm"]} />
-          <FormField label="Delivery location" name="delivery" />
-          <FormField label="Customer name" name="name" required />
-          <FormField label="Phone number" name="phone" required />
-          <FormField label="Additional information" name="info" textarea />
+          <FormField label="Delivery location" name="delivery" maxLength={500} />
+          <FormField label="Customer name" name="name" required maxLength={120} />
+          <FormField label="Phone number" name="phone" required maxLength={32} />
+          <FormField label="Additional information" name="info" textarea maxLength={2000} />
         </SuccessForm>
         <aside className="panel-gold device-request-assist">
           <h2>Need a fast reply?</h2>

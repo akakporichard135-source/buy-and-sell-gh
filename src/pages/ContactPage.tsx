@@ -27,10 +27,10 @@ export function ContactPage() {
         </div>
         <div>
           <SuccessForm buttonLabel="Prepare contact message" successIntent="general">
-            <FormField label="Name" name="name" required />
-            <FormField label="Phone number" name="phone" required />
-            <FormField label="Subject" name="subject" />
-            <FormField label="Message" name="message" textarea required />
+            <FormField label="Name" name="name" required maxLength={120} />
+            <FormField label="Phone number" name="phone" required maxLength={32} />
+            <FormField label="Subject" name="subject" maxLength={160} />
+            <FormField label="Message" name="message" textarea required maxLength={2000} />
           </SuccessForm>
           <div className="mt-5 rounded-lg border border-black/7 bg-white p-5 shadow-card">
             <p className="eyebrow-dark">Visit the shop</p>
@@ -39,7 +39,7 @@ export function ContactPage() {
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="sm:w-auto">Confirm Visit</WhatsAppButton>
               <a className="btn-secondary" href={`tel:${business.whatsapp.primary}`}><Phone size={17} /> Call Shop</a>
-              <a className="btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.location)}`} target="_blank" rel="noreferrer">
+              <a className="btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.location)}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={17} /> Open Map
               </a>
             </div>

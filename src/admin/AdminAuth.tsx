@@ -52,6 +52,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const { data: listener } = supabase.auth.onAuthStateChange((_event, next) => {
         void sessionToAdminSession(next).then((adminSession) => {
           if (active) setSession(adminSession);
+        }).catch(() => {
+          if (active) setSession(null);
         });
       });
       return () => {
@@ -87,12 +89,17 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           return { ok: false, message: "Production admin authentication is not configured yet. Connect Supabase Auth or enable local admin only in development." };
         }
         if (supabase) {
-          const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
-          if (error) return { ok: false, message: "Invalid admin credentials or inactive account." };
-          const nextSession = await sessionToAdminSession(data.session);
-          if (!nextSession) return { ok: false, message: "This account is not authorized for admin access." };
-          setSession(nextSession);
-          return { ok: true };
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
+            if (error) return { ok: false, message: "Invalid admin credentials or inactive account." };
+            const nextSession = await sessionToAdminSession(data.session);
+            if (!nextSession) return { ok: false, message: "This account is not authorized for admin access." };
+            setSession(nextSession);
+            return { ok: true };
+          } catch {
+            await supabase.auth.signOut();
+            return { ok: false, message: "Admin sign-in could not be verified. Check your connection and try again." };
+          }
         }
         if (!LOCAL_ADMIN_ENABLED) {
           return { ok: false, message: "Supabase environment variables are detected, but the frontend auth client is not installed yet." };

@@ -265,7 +265,7 @@ export function HomePage() {
           <h2>Follow {business.username}</h2>
           <p>See fresh arrivals, device updates, available deals and customer content from Buy & Sell GH.</p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <a className="btn-glass" href={business.social.tiktok} target="_blank" rel="noreferrer">Follow on TikTok</a>
+            <a className="btn-glass" href={business.social.tiktok} target="_blank" rel="noopener noreferrer">Follow on TikTok</a>
             <WhatsAppButton>Chat on WhatsApp</WhatsAppButton>
           </div>
         </div>

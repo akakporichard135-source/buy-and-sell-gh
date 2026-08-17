@@ -83,7 +83,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   <button type="button" onClick={() => addItem(product)} disabled={isProductUnavailable(product)}>
                     <Plus size={15} /> Add
                   </button>
-                  <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noreferrer">
+                  <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noopener noreferrer">
                     <MessageCircle size={15} /> WhatsApp
                   </a>
                 </div>

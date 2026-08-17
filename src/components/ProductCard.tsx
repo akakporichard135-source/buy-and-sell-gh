@@ -65,7 +65,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
             <Link className="btn-secondary" to={`/product/${product.slug}`}>
               <Eye size={17} /> View Details
             </Link>
-            <a className="btn-ghost" href={productWhatsAppUrl(product, storage, color)} target="_blank" rel="noreferrer">
+            <a className="btn-ghost" href={productWhatsAppUrl(product, storage, color)} target="_blank" rel="noopener noreferrer">
               <MessageCircle size={17} /> {isPriceOnRequest ? "Ask on WhatsApp" : isSoldOut ? "Request Restock" : "WhatsApp"}
             </a>
           </div>

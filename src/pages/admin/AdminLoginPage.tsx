@@ -46,10 +46,10 @@ export function AdminLoginPage() {
 
         <form className="admin-login-form" noValidate onSubmit={handleSubmit}>
           <label>Email
-            <input aria-label="Admin email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@example.com" />
+            <input aria-label="Admin email" type="email" required maxLength={254} autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@example.com" />
           </label>
           <label>Password
-            <input aria-label="Admin password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6+ characters" />
+            <input aria-label="Admin password" type="password" required maxLength={1024} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="6+ characters" />
           </label>
           {error && <p className="form-error rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}
           <button className="btn-primary w-full" type="submit" disabled={submitting || !isAdminLoginAvailable()}>
@@ -64,6 +64,6 @@ export function AdminLoginPage() {
 
 function getAdminAuthMessage() {
   if (isLocalAdminEnabled()) return "Local admin access is enabled for development. Use the configured local admin credentials.";
-  if (isSupabaseConfigured()) return "Supabase environment variables are detected. Install and connect the auth client before enabling production login.";
+  if (isSupabaseConfigured()) return "Supabase Auth is connected. Sign in with an authorized owner or admin account.";
   return "Production admin login is locked until a real authentication backend is configured.";
 }

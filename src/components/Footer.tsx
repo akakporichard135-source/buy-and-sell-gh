@@ -50,7 +50,7 @@ export function Footer() {
             <Link to="/accessories">Accessories</Link>
           </div>
           <h2 className="footer-heading mt-7">Social</h2>
-          <a className="footer-line" href={business.social.instagram} target="_blank" rel="noreferrer"><Instagram size={16} /> {business.username}</a>
+          <a className="footer-line" href={business.social.instagram} target="_blank" rel="noopener noreferrer"><Instagram size={16} /> {business.username}</a>
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-5 text-center text-xs leading-6 text-white/55">

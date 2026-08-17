@@ -331,7 +331,7 @@ function NoResultsState({ clearFilters }: { clearFilters: () => void }) {
       <div>
         <button className="btn-secondary" type="button" onClick={clearFilters}>Clear Filters</button>
         <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
-        <a className="btn-ghost" href={intentWhatsAppUrl("request")} target="_blank" rel="noreferrer"><MessageCircle size={17} /> WhatsApp</a>
+        <a className="btn-ghost" href={intentWhatsAppUrl("request")} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> WhatsApp</a>
       </div>
     </section>
   );

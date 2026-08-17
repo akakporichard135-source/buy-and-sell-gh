@@ -6,9 +6,10 @@ interface FormFieldProps {
   placeholder?: string;
   options?: string[];
   textarea?: boolean;
+  maxLength?: number;
 }
 
-export function FormField({ label, name, type = "text", required, placeholder, options, textarea }: FormFieldProps) {
+export function FormField({ label, name, type = "text", required, placeholder, options, textarea, maxLength }: FormFieldProps) {
   const inputClass = "mt-2 w-full rounded-lg border border-black/10 bg-white px-4 py-3.5 text-base font-semibold text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15";
 
   return (
@@ -26,9 +27,9 @@ export function FormField({ label, name, type = "text", required, placeholder, o
           ))}
         </select>
       ) : textarea ? (
-        <textarea name={name} required={required} placeholder={placeholder} className={`${inputClass} min-h-32 resize-y`} />
+        <textarea name={name} required={required} placeholder={placeholder} maxLength={maxLength} className={`${inputClass} min-h-32 resize-y`} />
       ) : (
-        <input name={name} type={type} required={required} placeholder={placeholder} className={inputClass} />
+        <input name={name} type={type} required={required} placeholder={placeholder} maxLength={maxLength} className={inputClass} />
       )}
     </label>
   );

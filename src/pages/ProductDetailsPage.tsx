@@ -249,7 +249,7 @@ export function ProductDetailsPage() {
             </div>
             <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Add to Cart unavailable" : "Add to Cart"}</button>
             <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Buy Now unavailable" : "Buy Now"}</button>
-            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
+            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <a className="btn-secondary" href={`tel:${business.whatsapp.primary}`}><Phone size={18} /> Call Shop</a>
@@ -288,7 +288,7 @@ export function ProductDetailsPage() {
           <span>{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</span>
           <small>{displayStockLabel}</small>
         </div>
-        <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={17} /> WhatsApp</a>
+        <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> WhatsApp</a>
       </div>
     </>
   );

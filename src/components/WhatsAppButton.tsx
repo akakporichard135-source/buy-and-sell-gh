@@ -14,7 +14,7 @@ export function WhatsAppButton({ intent = "general", href, children = "WhatsApp"
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-extrabold text-white shadow-soft transition hover:-translate-y-0.5 hover:bg-emerald-700 ${className}`}
       href={href ?? intentWhatsAppUrl(intent)}
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
     >
       <MessageCircle size={18} />
       {children}

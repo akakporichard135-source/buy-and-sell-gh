@@ -52,7 +52,7 @@ export function SuccessForm({
         <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-base font-bold text-emerald-800" role="status" aria-live="polite">
           Your details are ready but have not been sent yet. Continue on WhatsApp so Buy & Sell GH can receive the request and confirm next steps.
           {preparedHref && (
-            <a className="mt-4 inline-flex rounded-full bg-emerald-700 px-5 py-3 text-sm font-black text-white" href={preparedHref} target="_blank" rel="noreferrer">
+            <a className="mt-4 inline-flex rounded-full bg-emerald-700 px-5 py-3 text-sm font-black text-white" href={preparedHref} target="_blank" rel="noopener noreferrer">
               {successActionLabel}
             </a>
           )}

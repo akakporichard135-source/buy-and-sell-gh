@@ -25,7 +25,7 @@ export function OrderSuccessPage() {
           <h1>{referenceLabel}</h1>
           <p>Your order request was submitted. Buy & Sell GH will confirm availability, final delivery details and payment instructions before any payment is completed.</p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <a className="btn-primary" href={fallbackWhatsAppHref} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
+            <a className="btn-primary" href={fallbackWhatsAppHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
             <Link className="btn-secondary" to="/shop">View Store</Link>
             <Link className="btn-secondary" to="/cart">Back to Cart</Link>
           </div>
@@ -86,7 +86,7 @@ export function OrderSuccessPage() {
             <SummaryDetail label="Total" value={formatGhs(order.total)} />
           </dl>
           <div className="mt-6 grid gap-3">
-            <a className="btn-primary" href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
+            <a className="btn-primary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
             <Link className="btn-secondary" to="/shop"><ShoppingBag size={17} /> Continue Shopping</Link>
             <Link className="btn-ghost" to="/"><Store size={17} /> View Store</Link>
           </div>
