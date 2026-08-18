@@ -10,14 +10,18 @@ import { WhatsAppButton } from "./WhatsAppButton";
 const navItems = [
   { label: "Store", to: "/shop" },
   { label: "iPhone", to: "/iphones" },
-  { label: "Tablets", to: "/ipads" },
+  { label: "Samsung", to: "/shop?brand=Samsung" },
+  { label: "iPad", to: "/ipads" },
   { label: "Laptops", to: "/macbooks" },
-  { label: "Game Consoles", to: "/shop?category=Game%20Consoles" },
+  { label: "Gaming", to: "/shop?category=Game%20Consoles" },
   { label: "Audio", to: "/shop?category=Audio" },
   { label: "Accessories", to: "/accessories" },
-  { label: "Trade-In", to: "/sell-or-trade" },
-  { label: "Pre-Order", to: "/pre-order" },
   { label: "Support", to: "/contact" },
+];
+
+const mobileUtilityItems = [
+  { label: "Sell or Trade", to: "/sell-or-trade" },
+  { label: "Pre-Order", to: "/pre-order" },
 ];
 
 export function Header() {
@@ -32,10 +36,7 @@ export function Header() {
     if (to === "/shop") return location.pathname === "/shop" && !location.search;
     return location.pathname === to;
   };
-  const linkClass = (isActive: boolean) =>
-    `rounded-full px-2 py-2 text-sm font-extrabold transition ${
-      isActive ? "bg-warm text-gold-dark" : "text-ink/75 hover:bg-black/5 hover:text-ink"
-    }`;
+  const linkClass = (isActive: boolean) => `site-nav-link ${isActive ? "is-active" : ""}`;
 
   useEffect(() => {
     if (!open) return;
@@ -139,6 +140,11 @@ function MobileMenuOverlay({
         </div>
         <nav className="mobile-menu-nav" aria-label="Mobile navigation">
           {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} className={`mobile-menu-link ${isNavItemActive(item.to) ? "is-active" : ""}`} onClick={onClose}>
+              {item.label}
+            </NavLink>
+          ))}
+          {mobileUtilityItems.map((item) => (
             <NavLink key={item.to} to={item.to} className={`mobile-menu-link ${isNavItemActive(item.to) ? "is-active" : ""}`} onClick={onClose}>
               {item.label}
             </NavLink>
