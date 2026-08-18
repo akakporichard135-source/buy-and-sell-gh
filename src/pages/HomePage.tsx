@@ -21,6 +21,7 @@ import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { supportedBrands } from "../catalog/storefrontTaxonomy";
 import accessoriesCategory from "../assets/categories/accessories-premium.webp";
 import audioCategory from "../assets/categories/audio-premium.webp";
 import gameConsolesCategory from "../assets/categories/game-consoles-premium.webp";
@@ -97,6 +98,20 @@ export function HomePage() {
                 <p>{description}</p>
               </div>
             </div>
+          ))}
+        </div>
+      </section>
+      <section className="section home-section brand-showcase" aria-labelledby="brand-showcase-title">
+        <div className="brand-showcase-heading">
+          <p className="eyebrow">Brands in focus</p>
+          <h2 id="brand-showcase-title">Shop by brand</h2>
+        </div>
+        <div className="brand-strip" role="list" aria-label="Browse products by brand">
+          {supportedBrands.map((brand) => (
+            <Link className="brand-strip-link" key={brand} role="listitem" to={`/shop?brand=${encodeURIComponent(brand)}`}>
+              <span>{brand}</span>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
           ))}
         </div>
       </section>

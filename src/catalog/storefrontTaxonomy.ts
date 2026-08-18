@@ -12,7 +12,7 @@ export const storefrontCategories = [
 
 export type StorefrontCategory = (typeof storefrontCategories)[number];
 
-export const supportedBrands: ProductBrand[] = ["Apple", "Samsung", "LG", "Sony", "JBL", "Bose"];
+export const supportedBrands: ProductBrand[] = ["Apple", "Samsung", "LG", "Bose", "JBL", "Sony"];
 
 const legacyCategoryAliases: Record<string, StorefrontCategory> = {
   iPhones: "Phones",

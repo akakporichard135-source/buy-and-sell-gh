@@ -6149,3 +6149,111 @@ footer a:hover {
     max-width: 34ch;
   }
 }
+
+/* Compact brand rail mirrors the physical shop signage without implying stock. */
+.brand-showcase {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.24fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.4rem);
+  margin-top: 0.8rem;
+  border: 1px solid rgba(216, 167, 45, 0.25);
+  border-radius: 0.5rem;
+  background: #111114;
+  padding: 0.85rem clamp(0.85rem, 2vw, 1.25rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--brand-shadow-sm);
+}
+
+.brand-showcase-heading {
+  min-width: 0;
+}
+
+.brand-showcase-heading .eyebrow {
+  margin: 0 0 0.22rem;
+  color: var(--brand-gold-soft);
+  font-size: 0.68rem;
+}
+
+.brand-showcase-heading h2 {
+  margin: 0;
+  color: var(--brand-surface-raised);
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  line-height: 1.15;
+}
+
+.brand-strip {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.brand-strip-link {
+  display: flex;
+  min-width: 0;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.38rem;
+  background: var(--brand-charcoal-soft);
+  color: rgba(255, 253, 248, 0.88);
+  padding: 0.65rem 0.55rem;
+  font-size: clamp(0.76rem, 1vw, 0.9rem);
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.brand-strip-link svg {
+  flex: 0 0 auto;
+  color: var(--brand-gold);
+  opacity: 0.78;
+}
+
+.brand-strip-link:hover,
+.brand-strip-link:focus-visible {
+  border-color: rgba(216, 167, 45, 0.72);
+  background: rgba(216, 167, 45, 0.12);
+  color: var(--brand-gold-soft);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 760px) {
+  .brand-showcase {
+    display: block;
+    width: calc(100% - 1rem);
+    padding: 0.8rem 0;
+    overflow: hidden;
+  }
+
+  .brand-showcase-heading {
+    padding-inline: 0.85rem;
+  }
+
+  .brand-strip {
+    display: flex;
+    gap: 0.55rem;
+    margin-top: 0.7rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: 0 0.85rem 0.2rem;
+    scroll-padding-inline: 0.85rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(216, 167, 45, 0.55) transparent;
+  }
+
+  .brand-strip-link {
+    flex: 0 0 112px;
+    min-height: 50px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-strip-link {
+    transition: none;
+  }
+}
