@@ -5677,3 +5677,309 @@ footer a:hover {
     transition: none;
   }
 }
+
+/* Final homepage polish: restrained gold detail and consistent rhythm */
+.home-section {
+  padding-block: clamp(1.65rem, 3.2vw, 2.5rem);
+}
+
+.home-section + .home-section {
+  padding-top: clamp(1.65rem, 3.2vw, 2.5rem);
+}
+
+.home-section :where(.eyebrow, .eyebrow-dark),
+.page-hero :where(.eyebrow, .eyebrow-dark) {
+  letter-spacing: 0;
+}
+
+.section-heading {
+  margin-bottom: clamp(1.15rem, 2.4vw, 1.65rem);
+}
+
+.section-heading h2,
+.used-devices-heading h2 {
+  letter-spacing: 0;
+}
+
+.home-section :where(.btn-primary, .btn-secondary, .btn-ghost, .whatsapp-button) {
+  min-height: 44px;
+}
+
+/* Used Devices remains real-photo-first, with a stronger sales hierarchy. */
+.used-devices-section {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--brand-border-strong);
+  border-radius: 0.5rem;
+  background: linear-gradient(180deg, rgba(251, 242, 217, 0.72), rgba(255, 250, 240, 0.96));
+  padding-inline: clamp(0.75rem, 2.4vw, 1.35rem);
+  box-shadow: inset 0 3px 0 rgba(216, 167, 45, 0.72), var(--brand-shadow-sm);
+}
+
+.used-devices-heading {
+  margin-bottom: clamp(1.1rem, 2.4vw, 1.55rem);
+  padding-top: 0.15rem;
+}
+
+.used-devices-heading .eyebrow-dark {
+  color: var(--brand-gold-strong);
+}
+
+.used-devices-carousel {
+  gap: clamp(0.9rem, 1.8vw, 1.2rem);
+  padding: 0.25rem 0.1rem 1rem;
+}
+
+.used-devices-carousel .product-card {
+  border-color: rgba(177, 125, 18, 0.38);
+  box-shadow: 0 14px 34px rgba(10, 10, 12, 0.1);
+}
+
+.used-devices-carousel .product-card:hover,
+.used-devices-carousel .product-card:focus-within {
+  border-color: var(--brand-gold);
+  box-shadow: 0 20px 44px rgba(82, 60, 12, 0.16);
+}
+
+.used-devices-carousel .product-visual {
+  border: 1px solid rgba(177, 125, 18, 0.2);
+  background: linear-gradient(145deg, #eee7d8, #fffaf0);
+}
+
+.used-devices-carousel .product-photo-placeholder {
+  border: 1px dashed rgba(177, 125, 18, 0.5);
+  background:
+    linear-gradient(135deg, rgba(216, 167, 45, 0.08), transparent 55%),
+    var(--brand-surface-muted);
+  color: #655b48;
+}
+
+.used-devices-carousel .product-photo-placeholder span {
+  border: 1px solid rgba(177, 125, 18, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.92);
+  padding: 0.7rem 0.9rem;
+}
+
+.used-devices-carousel .product-card-price-row {
+  border-top: 1px solid rgba(177, 125, 18, 0.16);
+  padding-top: 0.65rem;
+}
+
+.used-devices-carousel .product-card-price-row p {
+  color: #5f430b;
+}
+
+.used-devices-carousel .product-card-meta .product-badge {
+  align-self: flex-start;
+}
+
+.used-devices-carousel .product-card-actions {
+  padding-top: 0.85rem;
+}
+
+.used-devices-carousel .product-card-actions .btn-primary {
+  border-color: rgba(216, 167, 45, 0.58);
+}
+
+.used-devices-carousel .product-card-actions .btn-ghost {
+  border-color: rgba(177, 125, 18, 0.36);
+  background: #fff8e8;
+}
+
+/* Product cards use gold as a detail, never as the dominant surface. */
+.product-card {
+  border-color: rgba(177, 125, 18, 0.28);
+  box-shadow: inset 0 2px 0 rgba(216, 167, 45, 0.16), var(--brand-shadow-sm);
+}
+
+.product-card:hover,
+.product-card:focus-within {
+  border-color: rgba(216, 167, 45, 0.78);
+  box-shadow: inset 0 2px 0 rgba(216, 167, 45, 0.42), var(--brand-shadow-md);
+}
+
+.product-card .product-visual {
+  border: 1px solid rgba(177, 125, 18, 0.16);
+}
+
+.product-card-badges {
+  min-height: 1.75rem;
+}
+
+.product-card-heading {
+  border-top: 1px solid rgba(177, 125, 18, 0.12);
+  padding-top: 0.55rem;
+}
+
+.product-card-price-row p {
+  color: #5f430b;
+}
+
+.product-card-actions {
+  border-top-color: rgba(177, 125, 18, 0.24);
+}
+
+.product-card :where(a, button):focus-visible {
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 2px;
+}
+
+/* Pre-Order forms share one compact, premium surface. */
+.device-request-layout > form,
+.home-desktop-device-form > form {
+  border-color: rgba(177, 125, 18, 0.42);
+  background: #fff9ea;
+  padding: clamp(1.25rem, 2.4vw, 1.8rem);
+  box-shadow: inset 0 2px 0 rgba(216, 167, 45, 0.2), 0 16px 38px rgba(10, 10, 12, 0.1);
+}
+
+.device-request-layout > form > .grid,
+.home-desktop-device-form > form > .grid {
+  gap: clamp(1rem, 2vw, 1.35rem);
+}
+
+.device-request-layout > form label,
+.home-desktop-device-form > form label {
+  color: #302d27;
+}
+
+.device-request-layout > form :where(input, select, textarea),
+.home-desktop-device-form > form :where(input, select, textarea) {
+  border-color: rgba(112, 83, 18, 0.24);
+  background: var(--brand-surface-raised);
+}
+
+.device-request-layout > form :where(input, select, textarea):focus-visible,
+.home-desktop-device-form > form :where(input, select, textarea):focus-visible {
+  border-color: var(--brand-gold-strong);
+  box-shadow: 0 0 0 4px rgba(216, 167, 45, 0.26);
+}
+
+.device-request-layout > form > .btn-primary,
+.home-desktop-device-form > form > .btn-primary {
+  border-color: rgba(216, 167, 45, 0.62);
+  background: var(--brand-black);
+  color: var(--brand-surface-raised);
+}
+
+/* FAQ cards gain a clear, keyboard-visible active state. */
+.faq-item {
+  margin-block: 0.18rem;
+  border-color: rgba(177, 125, 18, 0.24);
+  padding: clamp(1rem, 2vw, 1.25rem);
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(216, 167, 45, 0.62);
+  box-shadow: 0 12px 28px rgba(82, 60, 12, 0.1);
+}
+
+.faq-item[open] {
+  border-color: var(--brand-gold);
+  background: #fff9e9;
+  box-shadow: inset 3px 0 0 var(--brand-gold), var(--brand-shadow-sm);
+}
+
+.faq-item summary {
+  border-radius: 0.25rem;
+  line-height: 1.45;
+  outline-offset: 5px;
+}
+
+.faq-item summary:focus-visible {
+  outline: 3px solid var(--brand-gold);
+}
+
+.faq-item[open] summary {
+  color: #5f430b;
+}
+
+.faq-item[open] p {
+  padding-top: 0.1rem;
+}
+
+/* The paired upgrade cards retain their layout with equal visual weight. */
+.home-upgrade-grid > .panel-dark,
+.home-upgrade-grid > .trade-panel {
+  height: 100%;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 2px 0 rgba(216, 167, 45, 0.38), var(--brand-shadow-md);
+}
+
+.home-upgrade-grid > .panel-dark {
+  border-color: rgba(216, 167, 45, 0.34);
+}
+
+.home-upgrade-grid > .trade-panel {
+  border-color: rgba(177, 125, 18, 0.44);
+}
+
+.home-upgrade-grid :where(h2, p) {
+  letter-spacing: 0;
+}
+
+/* Six category cards retain equal frames and restrained image movement. */
+.category-card-rich {
+  border-color: rgba(177, 125, 18, 0.28);
+  box-shadow: inset 0 2px 0 rgba(216, 167, 45, 0.14), var(--brand-shadow-sm);
+}
+
+.category-media img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.category-card-rich:focus-visible {
+  border-color: var(--brand-gold);
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .home-section,
+  .home-section + .home-section {
+    padding-block: 1.55rem;
+  }
+
+  .used-devices-section {
+    padding-inline: 0.65rem;
+  }
+
+  .used-devices-carousel {
+    scroll-padding-inline: 0.1rem;
+  }
+
+  .used-devices-carousel .product-card {
+    flex-basis: min(80vw, 315px);
+  }
+
+  .device-request-layout > form,
+  .home-desktop-device-form > form {
+    padding: 1rem;
+  }
+
+  .faq-item {
+    margin-block: 0.12rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .used-devices-carousel .product-card {
+    flex-basis: min(79vw, 290px);
+  }
+
+  .used-devices-carousel .product-photo-placeholder span {
+    border-radius: 0.5rem;
+    padding: 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .faq-item,
+  .category-card-rich {
+    transition: none;
+  }
+}
