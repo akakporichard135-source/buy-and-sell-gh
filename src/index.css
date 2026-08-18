@@ -7285,6 +7285,41 @@ body {
   filter: drop-shadow(0 20px 34px rgba(0, 0, 0, 0.18));
 }
 
+.apple-duo-wide {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  min-height: clamp(520px, 48vw, 680px);
+  justify-items: stretch;
+  text-align: left;
+}
+
+.apple-duo-wide > div:first-child {
+  justify-self: start;
+  max-width: 38rem;
+}
+
+.apple-duo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+.apple-duo-actions .apple-link {
+  margin-top: 0;
+}
+
+.apple-duo-wide img {
+  justify-self: end;
+  width: min(100%, 760px);
+  max-height: 430px;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  padding: 0;
+}
+
 .apple-link,
 .apple-support-section a {
   display: inline-flex;
@@ -7443,9 +7478,14 @@ body {
   .apple-hero-copy h1,
   .apple-story-copy h2,
   .apple-final-section h2 {
-    max-width: 12ch;
-    font-size: clamp(2.55rem, 13.6vw, 4.1rem);
-    line-height: 0.98;
+    width: 100%;
+    max-width: min(100%, 9.5ch);
+    font-size: clamp(2.12rem, 10.8vw, 3.55rem);
+    line-height: 1;
+  }
+
+  .apple-hero-copy h1 {
+    max-width: min(100%, 8.2ch);
   }
 
   .apple-hero-copy p,
@@ -7460,19 +7500,26 @@ body {
     min-height: 48px;
   }
 
+  .apple-hero-points {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
   .apple-hero-points span {
-    flex: 1 1 calc(50% - 0.6rem);
+    min-width: 0;
     text-align: center;
   }
 
   .apple-hero-art {
-    min-height: 340px;
+    min-height: 320px;
     margin-top: 1.25rem;
+    overflow: hidden;
   }
 
   .apple-hero-device-art {
-    width: min(100%, 430px);
-    max-height: 380px;
+    width: min(88vw, 330px);
+    max-height: 350px;
   }
 
   .apple-hero-logo-art {
@@ -7518,6 +7565,28 @@ body {
 
   .apple-duo-panel img {
     max-height: 260px;
+  }
+
+  .apple-duo-wide {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    text-align: center;
+  }
+
+  .apple-duo-wide > div:first-child {
+    justify-self: center;
+  }
+
+  .apple-duo-actions {
+    justify-content: center;
+  }
+
+  .apple-duo-wide img {
+    justify-self: center;
+    max-height: 310px;
+    aspect-ratio: auto;
+    object-fit: contain;
+    padding: 0.75rem;
   }
 
   .apple-support-section article {

@@ -2,14 +2,14 @@ import { ArrowRight, MapPin, MessageCircle, Search, ShoppingBag } from "lucide-r
 import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import audioCategory from "../assets/categories/audio-premium.webp";
-import gameConsolesCategory from "../assets/categories/game-consoles-premium.webp";
-import iphonesCategory from "../assets/categories/iphones-premium.webp";
-import macBooksCategory from "../assets/categories/macbooks-premium.webp";
-import logoSceneArtwork from "../assets/brand/buy-sell-gh-logo-scene.webp";
 import repairsSalesArtwork from "../assets/brand/repairs-sales.webp";
-import sellOldIphoneArtwork from "../assets/brand/sell-old-iphone-cash.webp";
-import ipadCategory from "../assets/products/ipad-pro-premium.webp";
+import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
+import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
+import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
+import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
+import samsungStory from "../assets/homepage/homepage-samsung-story.jpg";
+import tradeInStory from "../assets/homepage/homepage-trade-in-story.jpg";
+import upgradeValueStory from "../assets/homepage/homepage-upgrade-value-story.jpg";
 import { business } from "../config/business";
 
 const heroPoints = ["Original devices", "Trade-ins", "Pre-orders", "Accra support"];
@@ -22,8 +22,8 @@ const storySections = [
     title: "iPhone, checked and ready.",
     description:
       "Browse current iPhone listings, compare condition labels and confirm final availability before payment.",
-    image: iphonesCategory,
-    imageAlt: "Premium iPhone category artwork",
+    image: iphoneStory,
+    imageAlt: "Premium smartphone studio artwork for iPhone shopping",
     primaryLabel: "Shop iPhone",
     primaryTo: "/iphones",
     secondaryLabel: "Contact us",
@@ -35,8 +35,8 @@ const storySections = [
     title: "Galaxy requests welcome.",
     description:
       "Buy & Sell GH also supports Samsung customers. Check available listings or request the exact Galaxy device you want.",
-    image: logoSceneArtwork,
-    imageAlt: "Buy & Sell GH brand artwork",
+    image: samsungStory,
+    imageAlt: "Premium Android smartphone studio artwork for Samsung requests",
     primaryLabel: "Check Samsung",
     primaryTo: "/shop?brand=Samsung",
     secondaryLabel: "Request a device",
@@ -48,12 +48,25 @@ const storySections = [
     title: "Turn your current phone into your next upgrade.",
     description:
       "Sell or swap your device, then use its value toward another phone, tablet, laptop or accessory after inspection.",
-    image: sellOldIphoneArtwork,
-    imageAlt: "Sell your old iPhone for cash artwork",
+    image: tradeInStory,
+    imageAlt: "Premium counter artwork showing a phone trade-in",
     primaryLabel: "Start Trade-In",
     primaryTo: "/sell-or-trade",
     secondaryLabel: "How it works",
     secondaryTo: "/sell-or-trade",
+  },
+  {
+    theme: "light",
+    eyebrow: "Upgrade Value",
+    title: "Turn device value into buying power.",
+    description:
+      "Use your device value toward another upgrade, or ask the team to help you compare the smartest next move.",
+    image: upgradeValueStory,
+    imageAlt: "Premium phone and value card artwork for upgrade value",
+    primaryLabel: "Sell or Trade",
+    primaryTo: "/sell-or-trade",
+    secondaryLabel: "Request help",
+    secondaryTo: "/pre-order",
   },
   {
     theme: "dark",
@@ -61,8 +74,8 @@ const storySections = [
     title: "Console support for serious play.",
     description:
       "Explore game consoles and gaming requests with the same clear confirmation flow used across the store.",
-    image: gameConsolesCategory,
-    imageAlt: "Game console category artwork",
+    image: gamingStory,
+    imageAlt: "Premium game console and controller studio artwork",
     primaryLabel: "View Gaming",
     primaryTo: "/shop?category=Game%20Consoles",
     secondaryLabel: "Chat on WhatsApp",
@@ -75,8 +88,8 @@ const storySections = [
     title: "AirPods, speakers and clean sound.",
     description:
       "Find AirPods and audio accessories, then confirm the exact model, connector and availability before pickup or delivery.",
-    image: audioCategory,
-    imageAlt: "Audio category artwork",
+    image: audioAccessoriesStory,
+    imageAlt: "Premium earbuds, headphones and accessory studio artwork",
     primaryLabel: "Shop Audio",
     primaryTo: "/shop?category=Audio",
     secondaryLabel: "Accessories",
@@ -126,7 +139,6 @@ export function HomePage() {
               decoding="async"
               fetchPriority="high"
             />
-            <img className="apple-hero-logo-art" src={logoSceneArtwork} alt="" loading="eager" decoding="async" />
             <div className="apple-hero-sweep" aria-hidden="true" />
           </div>
         </section>
@@ -168,28 +180,21 @@ export function HomePage() {
         ))}
 
         <section className="apple-duo-section" aria-label="Laptops and tablets">
-          <article className="apple-duo-panel apple-duo-dark">
+          <article className="apple-duo-panel apple-duo-wide apple-duo-dark">
             <div>
               <p className="apple-eyebrow">Laptops</p>
-              <h2>MacBooks and premium laptops.</h2>
-              <p>Portable machines for school, work and creative upgrades.</p>
-              <Link className="apple-link" to="/macbooks">
-                Shop laptops <ArrowRight size={16} />
-              </Link>
+              <h2>MacBooks and premium laptops for work, school and creative upgrades.</h2>
+              <p>Compare laptop and tablet options with clear support before pickup, delivery or pre-order.</p>
+              <div className="apple-duo-actions">
+                <Link className="apple-link" to="/macbooks">
+                  Shop laptops <ArrowRight size={16} />
+                </Link>
+                <Link className="apple-link" to="/ipads">
+                  Shop iPads <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
-            <img src={macBooksCategory} alt="Premium laptop category artwork" loading="lazy" decoding="async" />
-          </article>
-
-          <article className="apple-duo-panel apple-duo-light">
-            <div>
-              <p className="apple-eyebrow">iPad</p>
-              <h2>Tablets for work, class and play.</h2>
-              <p>Compare iPad models or request the storage and colour you want.</p>
-              <Link className="apple-link" to="/ipads">
-                Shop iPads <ArrowRight size={16} />
-              </Link>
-            </div>
-            <img src={ipadCategory} alt="Premium iPad artwork" loading="lazy" decoding="async" />
+            <img src={laptopTabletStory} alt="Premium laptop and tablet studio artwork" loading="lazy" decoding="async" />
           </article>
         </section>
 
