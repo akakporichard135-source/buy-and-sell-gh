@@ -27,9 +27,10 @@ import audioCategory from "../assets/categories/audio-premium.webp";
 import gameConsolesCategory from "../assets/categories/game-consoles-premium.webp";
 import iphonesCategory from "../assets/categories/iphones-premium.webp";
 import macBooksCategory from "../assets/categories/macbooks-premium.webp";
-import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
-import heroCinematic from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
-import heroCinematicMobile from "../assets/hero/hero-cinematic-ecosystem-mobile-17-16-v4.webp";
+import logoSceneArtwork from "../assets/brand/buy-sell-gh-logo-scene.webp";
+import repairsSalesArtwork from "../assets/brand/repairs-sales.webp";
+import sellOldIphoneArtwork from "../assets/brand/sell-old-iphone-cash.webp";
+import upgradeSaveArtwork from "../assets/brand/upgrade-save-tall.webp";
 import ipadCategory from "../assets/products/ipad-pro-premium.webp";
 import { business } from "../config/business";
 import { promotions } from "../data/promotions";
@@ -44,14 +45,66 @@ const trust = [
 ];
 
 const homepageCategories = [
-  { label: "Phones", icon: Smartphone, visual: iphonesCategory },
-  { label: "Tablets", icon: Tablet, visual: ipadCategory },
-  { label: "Laptops", icon: Laptop, visual: macBooksCategory },
-  { label: "Game Consoles", icon: Gamepad2, visual: gameConsolesCategory },
-  { label: "Accessories", icon: Cable, visual: accessoriesCategory },
-  { label: "Audio", icon: Headphones, visual: audioCategory },
+  { label: "iPhones", icon: Smartphone, visual: iphonesCategory, to: "/iphones" },
+  { label: "Tablets", icon: Tablet, visual: ipadCategory, to: "/ipads" },
+  { label: "Laptops", icon: Laptop, visual: macBooksCategory, to: "/macbooks" },
+  { label: "Game Consoles", icon: Gamepad2, visual: gameConsolesCategory, to: "/shop?category=Game%20Consoles" },
+  { label: "Accessories", icon: Cable, visual: accessoriesCategory, to: "/accessories" },
+  { label: "Audio", icon: Headphones, visual: audioCategory, to: "/shop?category=Audio" },
 ] as const;
+const homepageBrands = supportedBrands.filter((brand) => brand !== "Apple");
 const usedConditions = new Set(["UK Used", "Excellent", "Very Good"]);
+
+const productStories = [
+  {
+    eyebrow: "iPhone",
+    title: "Flagship phones, clear conditions.",
+    description: "Browse brand new, UK used and enquiry-only iPhone listings with availability confirmed before payment.",
+    image: upgradeSaveArtwork,
+    to: "/iphones",
+    action: "View iPhones",
+  },
+  {
+    eyebrow: "Tablets",
+    title: "iPads for work, school and creativity.",
+    description: "Compare tablet options and request the exact storage, colour and condition you need.",
+    image: ipadCategory,
+    to: "/ipads",
+    action: "Browse Tablets",
+  },
+  {
+    eyebrow: "Laptops",
+    title: "MacBooks and premium laptops.",
+    description: "Find portable machines for business, study and creative work, with final details confirmed by the shop.",
+    image: macBooksCategory,
+    to: "/macbooks",
+    action: "Explore Laptops",
+  },
+  {
+    eyebrow: "Gaming",
+    title: "Console support for serious play.",
+    description: "Browse gaming and device-support requests through one clean store experience.",
+    image: repairsSalesArtwork,
+    to: "/shop?category=Game%20Consoles",
+    action: "View Gaming",
+  },
+  {
+    eyebrow: "Audio",
+    title: "AirPods, headphones and speakers.",
+    description: "Shop audio categories with WhatsApp support for current availability and model guidance.",
+    image: audioCategory,
+    to: "/shop?category=Audio",
+    action: "Shop Audio",
+  },
+  {
+    eyebrow: "Accessories",
+    title: "Chargers, cases and setup essentials.",
+    description: "Choose accessories by compatibility, connector and device family before confirming pickup or delivery.",
+    image: accessoriesCategory,
+    to: "/accessories",
+    action: "View Accessories",
+  },
+] as const;
 
 export function HomePage() {
   const { activeProducts, loading: catalogueLoading } = useProductCatalog();
@@ -69,12 +122,11 @@ export function HomePage() {
           <div>
             <p className="eyebrow">Buy & Sell GH | Accra Gadget Shop</p>
             <h1 className="hero-title mt-4 max-w-4xl font-black text-white">
-              <span>Original iPhones.</span>
+              <span>Premium Devices.</span>
               <span>Trusted Deals.</span>
-              <span>Better Prices.</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
-              Shop original iPhones, iPads and Apple gadgets with confidence. Buy, sell, swap or pre-order an unavailable device from a trusted gadget shop in Accra.
+              Shop original phones, tablets, laptops, game consoles, audio and accessories with a trusted Accra gadget team. Buy, sell, swap or pre-order with clear availability checks before payment.
             </p>
             <div className="hero-actions mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link className="btn-primary bg-gold text-black hover:bg-gold-light" to="/shop">
@@ -107,7 +159,7 @@ export function HomePage() {
           <h2 id="brand-showcase-title">Shop by brand</h2>
         </div>
         <div className="brand-strip" role="list" aria-label="Browse products by brand">
-          {supportedBrands.map((brand) => (
+          {homepageBrands.map((brand) => (
             <Link className="brand-strip-link" key={brand} role="listitem" to={`/shop?brand=${encodeURIComponent(brand)}`}>
               <span>{brand}</span>
               <ArrowRight size={15} aria-hidden="true" />
@@ -132,16 +184,38 @@ export function HomePage() {
           </div>
         </section>
       )}
+      <section className="section home-section home-story-section" aria-labelledby="home-story-title">
+        <div className="section-heading">
+          <p className="eyebrow-dark">Store highlights</p>
+          <h2 id="home-story-title">Everything your next setup needs</h2>
+          <p>Browse by device family, then confirm availability, final details and pickup or delivery on WhatsApp before payment.</p>
+        </div>
+        <div className="home-story-grid">
+          {productStories.map((story) => (
+            <Link className="home-story-card" key={story.title} to={story.to}>
+              <span className="home-story-media">
+                <img src={story.image} alt="" loading="lazy" decoding="async" />
+              </span>
+              <span className="home-story-copy">
+                <span className="eyebrow">{story.eyebrow}</span>
+                <span className="home-story-title">{story.title}</span>
+                <span className="home-story-description">{story.description}</span>
+                <span className="home-story-action">{story.action} <ArrowRight size={16} /></span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
       <section className="section home-section category-section">
         <div className="section-heading">
           <p className="eyebrow-dark">Shop by category</p>
           <h2>Find the right device faster</h2>
-          <p className="category-range-line">Phones | Tablets | Laptops | Game Consoles | Accessories</p>
+          <p className="category-range-line">iPhones | Tablets | Laptops | Game Consoles | Audio | Accessories</p>
         </div>
         <div className="category-grid category-grid-desktop grid gap-4">
-          {homepageCategories.map(({ label, icon: Icon, visual }) => {
+          {homepageCategories.map(({ label, icon: Icon, visual, to }) => {
             return (
-              <Link key={label} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(label)}`}>
+              <Link key={label} className="category-card category-card-rich" to={to}>
                 <span className="category-media" aria-hidden="true">
                   <img src={visual} alt="" loading="lazy" decoding="async" />
                 </span>
@@ -157,9 +231,9 @@ export function HomePage() {
           })}
         </div>
         <div className="category-grid category-grid-mobile grid gap-4">
-          {homepageCategories.map(({ label, icon: Icon, visual }) => {
+          {homepageCategories.map(({ label, icon: Icon, visual, to }) => {
             return (
-              <Link key={label} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(label)}`}>
+              <Link key={label} className="category-card category-card-rich" to={to}>
                 <span className="category-media" aria-hidden="true">
                   <img src={visual} alt="" loading="lazy" decoding="async" />
                 </span>
@@ -231,7 +305,7 @@ export function HomePage() {
             <Link className="btn-primary mt-6" to="/sell-or-trade">Start a Trade-In</Link>
           </div>
           <div className="trade-visual" aria-hidden="true">
-            <img src={tradeInUpgradePremium} alt="" loading="lazy" decoding="async" />
+            <img src={upgradeSaveArtwork} alt="" loading="eager" decoding="async" />
           </div>
         </div>
       </section>
@@ -299,21 +373,21 @@ export function HomePage() {
 
 function HeroDeviceShowcase() {
   return (
-    <div className="hero-device-showcase" aria-label="Premium iPhone 17 Pro Max, iPhone 16 Pro Max, MacBook, Apple Watch and AirPods studio composition">
+    <div className="hero-device-showcase owner-hero-showcase" aria-label="Buy & Sell GH premium phones, laptops, tablets, watches and gaming artwork">
       <div className="hero-scene-glow" aria-hidden="true" />
-      <picture className="hero-showcase-picture">
-        <source media="(max-width: 640px)" srcSet={heroCinematicMobile} />
+      <picture className="hero-showcase-picture owner-hero-picture">
         <img
           className="hero-showcase-image"
-          src={heroCinematic}
-          alt="iPhone 17 Pro Max and iPhone 16 Pro Max with MacBook, Apple Watch and AirPods in a black and gold studio"
+          src={repairsSalesArtwork}
+          alt="Buy & Sell GH phones, laptop, tablet, watch and game console artwork"
           loading="eager"
           decoding="async"
           fetchPriority="high"
         />
       </picture>
+      <img className="owner-hero-brand-mark" src={logoSceneArtwork} alt="" loading="eager" decoding="async" />
       <div className="hero-light-sweep" aria-hidden="true" />
-      <div className="showcase-label">Phones | Tablets | Laptops | Audio | Accessories</div>
+      <div className="showcase-label">Phones | Tablets | Laptops | Gaming | Audio</div>
     </div>
   );
 }

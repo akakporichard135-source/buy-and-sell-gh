@@ -3,15 +3,20 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
+import sellOldIphoneArtwork from "../assets/brand/sell-old-iphone-cash.webp";
+import upgradeSaveArtwork from "../assets/brand/upgrade-save-tall.webp";
 
 export function SellTradePage() {
   return (
     <>
       <SEO title="Sell or Trade In Your Phone" description="Submit your iPhone or gadget trade-in details to Buy & Sell GH. Final price is confirmed after inspection." />
       <section className="page-hero sell-trade-hero">
-        <p className="eyebrow-dark">Sell or Trade In</p>
-        <h1>Turn your current phone into your next upgrade</h1>
-        <p>Final price is confirmed only after physical inspection at Buy & Sell GH.</p>
+        <div>
+          <p className="eyebrow-dark">Sell or Trade In</p>
+          <h1>Turn your current phone into your next upgrade</h1>
+          <p>Final price is confirmed only after physical inspection at Buy & Sell GH.</p>
+        </div>
+        <img src={sellOldIphoneArtwork} alt="Buy & Sell GH trade-in artwork" loading="eager" decoding="async" />
       </section>
       <section className="section sell-trade-layout">
         <div className="sell-trade-main grid gap-4">
@@ -57,6 +62,7 @@ export function SellTradePage() {
           </SuccessForm>
         </div>
         <aside className="sell-trade-whatsapp rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">
+          <img className="sell-trade-aside-art" src={upgradeSaveArtwork} alt="" loading="lazy" decoding="async" />
           <MessageCircle className="text-gold" />
           <h2 className="mt-4 text-2xl font-black">Prefer WhatsApp?</h2>
           <p className="mt-3 text-sm leading-7 text-white/70">Send your device details and photos directly. The inspection note still applies.</p>

@@ -1,19 +1,23 @@
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
 import { WhatsAppButton } from "./WhatsAppButton";
 
 const navItems = [
-  { label: "Home", to: "/" },
-  { label: "Shop", to: "/shop" },
-  { label: "Sell or Trade", to: "/sell-or-trade" },
+  { label: "Store", to: "/shop" },
+  { label: "iPhone", to: "/iphones" },
+  { label: "Tablets", to: "/ipads" },
+  { label: "Laptops", to: "/macbooks" },
+  { label: "Game Consoles", to: "/shop?category=Game%20Consoles" },
+  { label: "Audio", to: "/shop?category=Audio" },
+  { label: "Accessories", to: "/accessories" },
+  { label: "Trade-In", to: "/sell-or-trade" },
   { label: "Pre-Order", to: "/pre-order" },
-  { label: "About", to: "/about" },
-  { label: "Contact", to: "/contact" },
+  { label: "Support", to: "/contact" },
 ];
 
 export function Header() {
@@ -21,7 +25,14 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const { totalItems } = useCart();
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
+  const location = useLocation();
+  const currentRoute = `${location.pathname}${location.search}`;
+  const isNavItemActive = (to: string) => {
+    if (to.includes("?")) return currentRoute === to;
+    if (to === "/shop") return location.pathname === "/shop" && !location.search;
+    return location.pathname === to;
+  };
+  const linkClass = (isActive: boolean) =>
     `rounded-full px-2 py-2 text-sm font-extrabold transition ${
       isActive ? "bg-warm text-gold-dark" : "text-ink/75 hover:bg-black/5 hover:text-ink"
     }`;
@@ -60,7 +71,7 @@ export function Header() {
         <Logo />
         <nav className="hidden items-center gap-2 xl:gap-4 lg:flex" aria-label="Main navigation">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={linkClass}>
+            <NavLink key={item.to} to={item.to} className={linkClass(isNavItemActive(item.to))}>
               {item.label}
             </NavLink>
           ))}
@@ -83,6 +94,8 @@ export function Header() {
       {open && createPortal(
         <MobileMenuOverlay
           totalItems={totalItems}
+          currentRoute={currentRoute}
+          pathname={location.pathname}
           onClose={() => setOpen(false)}
           onSearch={() => {
             setOpen(false);
@@ -96,7 +109,25 @@ export function Header() {
   );
 }
 
-function MobileMenuOverlay({ totalItems, onClose, onSearch }: { totalItems: number; onClose: () => void; onSearch: () => void }) {
+function MobileMenuOverlay({
+  totalItems,
+  currentRoute,
+  pathname,
+  onClose,
+  onSearch,
+}: {
+  totalItems: number;
+  currentRoute: string;
+  pathname: string;
+  onClose: () => void;
+  onSearch: () => void;
+}) {
+  const isNavItemActive = (to: string) => {
+    if (to.includes("?")) return currentRoute === to;
+    if (to === "/shop") return pathname === "/shop" && !currentRoute.includes("?");
+    return pathname === to;
+  };
+
   return (
     <div className="mobile-menu-overlay lg:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
       <div className="mobile-menu-panel">
@@ -108,7 +139,7 @@ function MobileMenuOverlay({ totalItems, onClose, onSearch }: { totalItems: numb
         </div>
         <nav className="mobile-menu-nav" aria-label="Mobile navigation">
           {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => `mobile-menu-link ${isActive ? "is-active" : ""}`} onClick={onClose}>
+            <NavLink key={item.to} to={item.to} className={`mobile-menu-link ${isNavItemActive(item.to) ? "is-active" : ""}`} onClick={onClose}>
               {item.label}
             </NavLink>
           ))}

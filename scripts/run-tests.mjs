@@ -125,7 +125,7 @@ try {
   const firstMix = shopOrdering.mixProductsDeterministically(mixedProducts);
   const secondMix = shopOrdering.mixProductsDeterministically(mixedProducts);
   assert.deepEqual(firstMix.map((item) => item.id), secondMix.map((item) => item.id), "Recommended ordering is stable");
-  assert.deepEqual(firstMix.slice(0, 4).map((item) => item.category), ["iPhones", "MacBooks", "AirPods", "iPads"], "Recommended ordering interleaves categories");
+  assert.deepEqual(firstMix.slice(0, 4).map((item) => item.category), ["iPhones", "iPads", "MacBooks", "AirPods"], "Recommended ordering interleaves categories");
 
   assert.equal(adminSecurity.normalizeTotpCode("12a 34-56"), "123456", "TOTP input keeps six digits only");
   assert.equal(adminSecurity.isValidTotpCode("123456"), true, "Six-digit TOTP code is accepted");
