@@ -5983,3 +5983,169 @@ footer a:hover {
     transition: none;
   }
 }
+
+/* Physical shop-board alignment: charcoal foundations with restrained gold details. */
+.site-header {
+  border-bottom-color: rgba(216, 167, 45, 0.28);
+  background: rgba(10, 10, 12, 0.97);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+}
+
+.site-header .site-logo-text span:first-child {
+  color: var(--brand-surface-raised);
+}
+
+.site-header .site-logo-text span:last-child {
+  color: var(--brand-gold-soft);
+}
+
+.site-header nav a:not([aria-current="page"]) {
+  color: rgba(255, 253, 248, 0.76);
+}
+
+.site-header nav a:hover,
+.site-header nav a[aria-current="page"] {
+  background: rgba(216, 167, 45, 0.16);
+  color: var(--brand-gold-soft);
+}
+
+.site-header .icon-button {
+  border-color: rgba(216, 167, 45, 0.26);
+  background: var(--brand-charcoal-soft);
+  color: var(--brand-surface-raised);
+}
+
+.mobile-menu-header .site-logo-text span:first-child {
+  color: var(--brand-black);
+}
+
+.mobile-menu-header .site-logo-text span:last-child {
+  color: var(--brand-gold-strong);
+}
+
+.mobile-menu-header .icon-button {
+  border-color: var(--brand-border);
+  background: var(--brand-surface-raised);
+  color: var(--brand-black);
+}
+
+.hero-shell + .home-section,
+.category-section,
+.used-devices-section,
+.home-desktop-device-form {
+  border: 1px solid rgba(216, 167, 45, 0.2);
+  border-radius: 0.5rem;
+  background: var(--brand-charcoal);
+  padding-inline: clamp(1rem, 2.5vw, 2rem);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 38px rgba(10, 10, 12, 0.1);
+}
+
+.hero-shell + .home-section {
+  margin-top: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.category-section .section-heading h2,
+.used-devices-section h2,
+.home-desktop-device-form > div h2 {
+  color: var(--brand-surface-raised);
+}
+
+.category-section .section-heading > .eyebrow-dark,
+.used-devices-section .eyebrow-dark,
+.home-desktop-device-form > div .eyebrow-dark {
+  color: var(--brand-gold-soft);
+}
+
+.category-range-line {
+  max-width: 720px;
+  color: rgba(255, 253, 248, 0.68) !important;
+  font-size: clamp(0.78rem, 1.4vw, 0.92rem);
+  font-weight: 850;
+  line-height: 1.7;
+}
+
+.category-card-rich {
+  border-color: rgba(216, 167, 45, 0.28);
+  background: #111114;
+  color: var(--brand-surface-raised);
+}
+
+.category-card-rich::after {
+  background: linear-gradient(90deg, transparent, rgba(216, 167, 45, 0.24), transparent);
+}
+
+.category-card-rich .category-media {
+  background: #0b0b0d;
+}
+
+.category-card-rich .category-name {
+  color: var(--brand-surface-raised);
+}
+
+.category-card-rich .category-icon,
+.category-card-rich .category-arrow {
+  color: var(--brand-gold-soft);
+}
+
+.used-devices-heading p,
+.home-desktop-device-form > div > p:last-child {
+  color: rgba(255, 253, 248, 0.7);
+}
+
+.used-devices-empty {
+  border-color: rgba(216, 167, 45, 0.25);
+  background: var(--brand-charcoal-soft);
+  color: rgba(255, 253, 248, 0.78);
+}
+
+.shop-hero {
+  margin-top: clamp(1rem, 2.5vw, 2rem);
+  border: 1px solid rgba(216, 167, 45, 0.22);
+  border-radius: 0.5rem;
+  background: var(--brand-charcoal);
+  padding-inline: clamp(1rem, 3vw, 2rem);
+}
+
+.shop-hero h1 {
+  color: var(--brand-surface-raised);
+}
+
+.shop-hero > p:not(.eyebrow-dark) {
+  color: rgba(255, 253, 248, 0.7);
+}
+
+.shop-hero .shop-trust-line {
+  border-color: rgba(216, 167, 45, 0.32);
+  background: rgba(216, 167, 45, 0.12);
+  color: var(--brand-gold-soft);
+}
+
+.admin-topbar {
+  border-bottom-color: rgba(216, 167, 45, 0.22);
+  background: rgba(25, 25, 29, 0.97);
+  box-shadow: 0 8px 24px rgba(10, 10, 12, 0.16);
+}
+
+.admin-topbar h1,
+.admin-topbar .admin-role {
+  color: var(--brand-surface-raised);
+}
+
+.public-shell > footer {
+  border-top: 1px solid rgba(216, 167, 45, 0.3);
+}
+
+@media (max-width: 760px) {
+  .hero-shell + .home-section,
+  .category-section,
+  .used-devices-section,
+  .home-desktop-device-form,
+  .shop-hero {
+    width: calc(100% - 1rem);
+    padding-inline: 0.85rem;
+  }
+
+  .category-range-line {
+    max-width: 34ch;
+  }
+}

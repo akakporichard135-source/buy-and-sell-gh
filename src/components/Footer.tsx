@@ -15,7 +15,7 @@ export function Footer() {
             <div className="text-lg font-black uppercase">Buy & Sell GH</div>
           </div>
           <p className="max-w-md text-sm leading-7 text-white/70">
-            Independent Accra gadget retailer for original iPhones, iPads, Apple accessories, trade-ins and pre-orders.
+            Independent Accra electronics retailer for phones, tablets, laptops, game consoles, audio and accessories, plus trade-ins and pre-orders.
           </p>
           <WhatsAppButton className="mt-5">Chat on WhatsApp</WhatsAppButton>
         </div>
@@ -42,12 +42,13 @@ export function Footer() {
         <div>
           <h2 className="footer-heading">Categories</h2>
           <div className="grid gap-2 text-sm text-white/70">
-            <Link to="/iphones">iPhones</Link>
-            <Link to="/ipads">iPads</Link>
-            <Link to="/airpods">AirPods</Link>
-            <Link to="/apple-watch">Apple Watch</Link>
-            <Link to="/macbooks">MacBooks</Link>
-            <Link to="/accessories">Accessories</Link>
+            <Link to="/shop?category=Phones">Phones</Link>
+            <Link to="/shop?category=Tablets">Tablets</Link>
+            <Link to="/shop?category=Laptops">Laptops</Link>
+            <Link to="/shop?category=Watches">Watches</Link>
+            <Link to="/shop?category=Game%20Consoles">Game Consoles</Link>
+            <Link to="/shop?category=Accessories">Accessories</Link>
+            <Link to="/shop?category=Audio">Audio</Link>
           </div>
           <h2 className="footer-heading mt-7">Social</h2>
           <a className="footer-line" href={business.social.instagram} target="_blank" rel="noopener noreferrer"><Instagram size={16} /> {business.username}</a>
@@ -55,7 +56,7 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10 px-4 py-5 text-center text-xs leading-6 text-white/55">
         <p>Copyright 2026 Buy & Sell GH. All rights reserved.</p>
-        <p>Buy & Sell GH is an independent gadget retailer and is not affiliated with Apple Inc.</p>
+        <p>Buy & Sell GH is an independent gadget retailer. Product names and trademarks belong to their respective owners.</p>
       </div>
     </footer>
   );

@@ -7,7 +7,7 @@ interface ProductRow {
   id: string;
   slug: string;
   name: string;
-  brand: "Apple";
+  brand: Product["brand"];
   category: Product["category"];
   subcategory: string | null;
   model: string;

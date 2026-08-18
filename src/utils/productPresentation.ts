@@ -1,6 +1,6 @@
 import type { Product, ProductCategory, StockStatus } from "../types/product";
 
-export const categorySlugs: Record<ProductCategory, string> = {
+export const categorySlugs: Partial<Record<ProductCategory, string>> = {
   iPhones: "iphones",
   iPads: "ipads",
   "Apple Watches": "apple-watch",

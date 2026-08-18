@@ -3,6 +3,7 @@ import {
   Cable,
   CheckCircle2,
   CreditCard,
+  Gamepad2,
   Headphones,
   Laptop,
   MapPin,
@@ -10,7 +11,6 @@ import {
   ShieldCheck,
   Tablet,
   Truck,
-  Watch,
   Smartphone,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -22,17 +22,16 @@ import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import accessoriesCategory from "../assets/categories/accessories-premium.webp";
+import audioCategory from "../assets/categories/audio-premium.webp";
+import gameConsolesCategory from "../assets/categories/game-consoles-premium.webp";
 import iphonesCategory from "../assets/categories/iphones-premium.webp";
 import macBooksCategory from "../assets/categories/macbooks-premium.webp";
 import tradeInUpgradePremium from "../assets/banners/trade-in-upgrade-premium.webp";
 import heroCinematic from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
 import heroCinematicMobile from "../assets/hero/hero-cinematic-ecosystem-mobile-17-16-v4.webp";
-import airPodsCategory from "../assets/products/airpods-pro-premium.webp";
-import appleWatchCategory from "../assets/products/apple-watch-premium.webp";
 import ipadCategory from "../assets/products/ipad-pro-premium.webp";
 import { business } from "../config/business";
 import { promotions } from "../data/promotions";
-import { categorySlugs } from "../utils/productPresentation";
 
 const trust = [
   { label: "100% Original Devices", description: "Carefully sourced and inspected.", icon: ShieldCheck },
@@ -43,25 +42,14 @@ const trust = [
   { label: "Customer Support", description: "Help before and after your purchase.", icon: Headphones },
 ];
 
-const categoryIcons = {
-  iPhones: Smartphone,
-  iPads: Tablet,
-  "Apple Watches": Watch,
-  AirPods: Headphones,
-  MacBooks: Laptop,
-  Accessories: Cable,
-};
-
-const categoryVisuals = {
-  iPhones: iphonesCategory,
-  iPads: ipadCategory,
-  "Apple Watches": appleWatchCategory,
-  AirPods: airPodsCategory,
-  MacBooks: macBooksCategory,
-  Accessories: accessoriesCategory,
-};
-
-const homepageCategories = ["iPhones", "iPads", "Apple Watches", "AirPods", "MacBooks", "Accessories"] as const;
+const homepageCategories = [
+  { label: "Phones", icon: Smartphone, visual: iphonesCategory },
+  { label: "Tablets", icon: Tablet, visual: ipadCategory },
+  { label: "Laptops", icon: Laptop, visual: macBooksCategory },
+  { label: "Game Consoles", icon: Gamepad2, visual: gameConsolesCategory },
+  { label: "Accessories", icon: Cable, visual: accessoriesCategory },
+  { label: "Audio", icon: Headphones, visual: audioCategory },
+] as const;
 const usedConditions = new Set(["UK Used", "Excellent", "Very Good"]);
 
 export function HomePage() {
@@ -133,19 +121,19 @@ export function HomePage() {
         <div className="section-heading">
           <p className="eyebrow-dark">Shop by category</p>
           <h2>Find the right device faster</h2>
+          <p className="category-range-line">Phones | Tablets | Laptops | Game Consoles | Accessories</p>
         </div>
         <div className="category-grid category-grid-desktop grid gap-4">
-          {homepageCategories.map((category) => {
-            const Icon = categoryIcons[category];
+          {homepageCategories.map(({ label, icon: Icon, visual }) => {
             return (
-              <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
+              <Link key={label} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(label)}`}>
                 <span className="category-media" aria-hidden="true">
-                  <img src={categoryVisuals[category]} alt="" loading="lazy" decoding="async" />
+                  <img src={visual} alt="" loading="lazy" decoding="async" />
                 </span>
                 <span className="category-content">
                   <span className="category-icon"><Icon size={25} /></span>
                   <span className="category-label-row">
-                    <span className="category-name">{category}</span>
+                    <span className="category-name">{label}</span>
                     <ArrowRight className="category-arrow" size={18} />
                   </span>
                 </span>
@@ -154,17 +142,16 @@ export function HomePage() {
           })}
         </div>
         <div className="category-grid category-grid-mobile grid gap-4">
-          {homepageCategories.map((category) => {
-            const Icon = categoryIcons[category];
+          {homepageCategories.map(({ label, icon: Icon, visual }) => {
             return (
-              <Link key={category} className="category-card category-card-rich" to={`/${categorySlugs[category]}`}>
+              <Link key={label} className="category-card category-card-rich" to={`/shop?category=${encodeURIComponent(label)}`}>
                 <span className="category-media" aria-hidden="true">
-                  <img src={categoryVisuals[category]} alt="" loading="lazy" decoding="async" />
+                  <img src={visual} alt="" loading="lazy" decoding="async" />
                 </span>
                 <span className="category-content">
                   <span className="category-icon"><Icon size={25} /></span>
                   <span className="category-label-row">
-                    <span className="category-name">{category}</span>
+                    <span className="category-name">{label}</span>
                     <ArrowRight className="category-arrow" size={18} />
                   </span>
                 </span>
@@ -311,7 +298,7 @@ function HeroDeviceShowcase() {
         />
       </picture>
       <div className="hero-light-sweep" aria-hidden="true" />
-      <div className="showcase-label">Phones | iPads | MacBooks | Watch | AirPods</div>
+      <div className="showcase-label">Phones | Tablets | Laptops | Audio | Accessories</div>
     </div>
   );
 }

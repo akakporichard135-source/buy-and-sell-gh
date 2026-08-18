@@ -42,6 +42,8 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
           product.name,
           product.model,
           product.category,
+          product.subcategory ?? "",
+          product.brand,
           product.condition,
           product.stockStatus,
           ...product.storage,
@@ -61,7 +63,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
       <div className="instant-search-panel">
         <label className="instant-search-input">
           <Search size={20} />
-          <input ref={inputRef} value={query} maxLength={100} onChange={(event) => setQuery(event.target.value)} placeholder="Search iPhone 15, 256GB, Black, UK Used..." />
+          <input ref={inputRef} value={query} maxLength={100} onChange={(event) => setQuery(event.target.value)} placeholder="Search product, brand, model, colour..." />
           {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><X size={20} /></button>}
         </label>
         <div className="mt-4 grid gap-3">
@@ -75,7 +77,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   {image ? <img src={image.src} alt={image.alt} loading="lazy" /> : <span className="instant-search-empty-image">No image</span>}
                   <span>
                     <strong>{product.name}</strong>
-                    <small>{product.condition} | {product.storage.join(", ")} | {formatGhs(product.price)}</small>
+                    <small>{product.brand} | {product.condition} | {product.storage.join(", ")} | {product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</small>
                   </span>
                   <em className={productBadgeClass(stockLabel)}>{stockLabel}</em>
                 </Link>

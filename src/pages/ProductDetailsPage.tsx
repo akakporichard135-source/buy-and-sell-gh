@@ -93,16 +93,19 @@ export function ProductDetailsPage() {
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
   const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
-  const primaryOptionLabel = product.category === "Apple Watches"
+  const primaryOptionLabel = product.category === "Apple Watches" || product.category === "Watches"
     ? "Connectivity"
-    : product.category === "AirPods"
+    : product.category === "AirPods" || product.category === "Audio"
       ? "Case / Connector"
       : product.category === "Accessories"
         ? "Connector / Option"
+        : product.category === "Game Consoles"
+          ? "Edition / Storage"
         : "Storage";
-  const isMacbook = product.category === "MacBooks";
+  const isMacbook = product.category === "MacBooks" || product.category === "Laptops";
   const isAirpods = product.category === "AirPods";
   const isAccessory = product.category === "Accessories";
+  const isApplePhone = product.brand === "Apple" && (product.category === "iPhones" || product.category === "Phones");
   const macbookMemory = (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim();
   const accessorySpecifications = product.specifications ?? product.specs;
   const accessoryConnector = accessorySpecifications.find((item) => item.startsWith("Connector:"))?.replace("Connector:", "").trim();
@@ -163,7 +166,7 @@ export function ProductDetailsPage() {
           "@type": "Product",
           name: product.name,
           image: gallery.map((image) => image.src),
-          brand: { "@type": "Brand", name: "Apple" },
+          brand: { "@type": "Brand", name: product.brand },
           ...(isPriceOnRequest ? {} : { offers: {
             "@type": "Offer",
             priceCurrency: "GHS",
@@ -221,11 +224,17 @@ export function ProductDetailsPage() {
                 {accessoryPower && <span><CheckCircle2 size={17} /> Power: {accessoryPower}</span>}
                 <span><CheckCircle2 size={17} /> Compatibility: {accessoryCompatibility ?? "Confirm before payment"}</span>
               </>
-            ) : (
+            ) : isApplePhone ? (
               <>
                 <span><CheckCircle2 size={17} /> Battery health: {product.batteryHealth ?? "Confirm selected unit"}</span>
                 <span><CheckCircle2 size={17} /> Face ID: {product.faceIdStatus ?? "Confirm selected unit"}</span>
                 <span><CheckCircle2 size={17} /> SIM: {product.simStatus ?? "Confirm selected unit"}</span>
+              </>
+            ) : (
+              <>
+                <span><CheckCircle2 size={17} /> Brand: {product.brand}</span>
+                <span><CheckCircle2 size={17} /> Model: {product.model}</span>
+                <span><CheckCircle2 size={17} /> Configuration: {storage || product.storage[0] || "Confirm before payment"}</span>
               </>
             )}
             <span><CheckCircle2 size={17} /> Pickup: {business.location}</span>

@@ -2,11 +2,17 @@ import type { Product, ProductCategory } from "../types/product";
 import { compareAirpodsNewest, compareIphonesNewest, compareMacbooksNewest, productMatchesCategorySlug } from "./productPresentation";
 
 const mixedCategoryOrder: ProductCategory[] = [
+  "Phones",
   "iPhones",
-  "MacBooks",
-  "AirPods",
+  "Tablets",
   "iPads",
+  "Laptops",
+  "MacBooks",
+  "Watches",
   "Apple Watches",
+  "Audio",
+  "AirPods",
+  "Game Consoles",
   "Accessories",
   "UK Used Devices",
   "Brand New Devices",

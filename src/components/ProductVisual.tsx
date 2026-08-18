@@ -22,16 +22,18 @@ export function ProductVisual({ product, size = "card", priority = false }: { pr
     );
   }
 
-  if (requiresRealProductPhotos(product)) {
+  const supportsDeviceIllustration = ["iPhones", "iPads", "MacBooks", "Apple Watches", "AirPods"].includes(product.category);
+
+  if (requiresRealProductPhotos(product) || !supportsDeviceIllustration) {
     return (
       <div
         className={`product-visual product-photo-placeholder relative grid min-w-0 overflow-hidden rounded-2xl ${
           size === "large" ? "min-h-[360px]" : "min-h-[230px]"
         } place-items-center`}
         role="img"
-        aria-label={`Real photos of ${product.name} are coming soon`}
+        aria-label={`${product.name} photos are coming soon`}
       >
-        <span><ImageOff size={28} /> Real photos coming soon</span>
+        <span><ImageOff size={28} /> {requiresRealProductPhotos(product) ? "Real photos coming soon" : "Product photos coming soon"}</span>
       </div>
     );
   }

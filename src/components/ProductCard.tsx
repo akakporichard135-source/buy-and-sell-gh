@@ -21,15 +21,18 @@ export function ProductCard({ product, variant = "default" }: { product: Product
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
   const storageSummary = isCompact ? storage : product.storage.slice(0, 3).join(" \u2022 ");
   const colourSummary = product.colors.length === 1 ? product.colors[0] : `${product.colors.length} available`;
-  const primaryOptionLabel = product.category === "Apple Watches"
+  const primaryOptionLabel = product.category === "Apple Watches" || product.category === "Watches"
     ? "Connectivity"
-    : product.category === "AirPods"
+    : product.category === "AirPods" || product.category === "Audio"
       ? "Case / Connector"
-      : product.category === "Accessories"
+    : product.category === "Accessories"
         ? "Connector / Option"
+        : product.category === "Game Consoles"
+          ? "Edition / Storage"
         : "Storage";
-  const macbookChip = product.category === "MacBooks" ? getMacbookGeneration(product) : "";
-  const macbookMemory = product.category === "MacBooks"
+  const isLaptop = product.category === "MacBooks" || product.category === "Laptops";
+  const macbookChip = isLaptop ? getMacbookGeneration(product) : "";
+  const macbookMemory = isLaptop
     ? (product.specifications ?? product.specs).find((item) => item.startsWith("Memory options:"))?.replace("Memory options:", "").trim()
     : "";
 

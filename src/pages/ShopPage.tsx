@@ -5,20 +5,25 @@ import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { categories, conditions, stockStatuses } from "../catalog/productCatalog";
+import { conditions, stockStatuses } from "../catalog/productCatalog";
+import {
+  categorySupportsStorage,
+  normalizeStorefrontCategory,
+  productMatchesStorefrontCategory,
+  storefrontCategories,
+  supportedBrands,
+} from "../catalog/storefrontTaxonomy";
 import {
   accessoryFamilyOptions,
   airpodsGenerationOptions,
-  categorySlugs,
   getAccessoryFamily,
   getAirpodsGeneration,
   getIphoneGeneration,
   getMacbookGeneration,
   iphoneGenerationOptions,
   macbookGenerationOptions,
-  productMatchesCategorySlug,
 } from "../utils/productPresentation";
-import type { Product, ProductCategory } from "../types/product";
+import type { Product } from "../types/product";
 import { compareProductsNewest, mixProductsDeterministically } from "../utils/shopOrdering";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
@@ -27,6 +32,7 @@ type SortOption = "Recommended" | "Newest" | "Price: Low to High" | "Price: High
 interface FiltersState {
   search: string;
   category: string;
+  brand: string;
   model: string;
   generation: string;
   accessoryFamily: string;
@@ -43,6 +49,7 @@ const maxCataloguePrice = 50000;
 const defaultFilters: FiltersState = {
   search: "",
   category: "All",
+  brand: "All",
   model: "",
   generation: "All",
   accessoryFamily: "All",
@@ -56,15 +63,14 @@ const defaultFilters: FiltersState = {
 };
 
 const storageOptions = ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB", "GPS", "GPS + Cellular", "USB-C Case"];
-const deviceCategories = categories.filter((category) => category !== "UK Used Devices" && category !== "Brand New Devices");
-
 export function ShopPage() {
   const { activeProducts: products, loading, error, refreshProducts } = useProductCatalog();
   const [params] = useSearchParams();
   const initialCategory = params.get("category") ?? "All";
   const [filters, setFilters] = useState<FiltersState>({
     ...defaultFilters,
-    category: deviceCategories.includes(initialCategory as (typeof deviceCategories)[number]) ? initialCategory : "All",
+    category: normalizeStorefrontCategory(initialCategory),
+    brand: supportedBrands.includes(params.get("brand") as Product["brand"]) ? params.get("brand")! : "All",
     condition: initialCategory === "UK Used Devices" ? "UK Used" : initialCategory === "Brand New Devices" ? "Brand New" : "All",
     newArrival: params.get("newArrival") === "true",
     popular: params.get("popular") === "true",
@@ -99,6 +105,8 @@ export function ShopPage() {
           product.model,
           product.generation ?? "",
           product.category,
+          product.subcategory ?? "",
+          product.brand,
           product.condition,
           product.stockStatus,
           ...product.storage,
@@ -108,12 +116,13 @@ export function ShopPage() {
         ].join(" ").toLowerCase();
         return terms.every((term) => searchable.includes(term));
       })
+      .filter((product) => filters.brand === "All" || product.brand === filters.brand)
       .filter((product) => product.model.toLowerCase().includes(filters.model.toLowerCase()))
       .filter((product) => {
         if (filters.generation === "All") return true;
-        if (filters.category === "MacBooks") return getMacbookGeneration(product) === filters.generation;
-        if (filters.category === "AirPods") return getAirpodsGeneration(product) === filters.generation;
-        if (filters.category === "iPhones") return getIphoneGeneration(product) === filters.generation;
+        if (filters.category === "Laptops") return getMacbookGeneration(product) === filters.generation;
+        if (filters.category === "Audio") return getAirpodsGeneration(product) === filters.generation;
+        if (filters.category === "Phones") return getIphoneGeneration(product) === filters.generation;
         return true;
       })
       .filter((product) => filters.category !== "Accessories" || filters.accessoryFamily === "All" || getAccessoryFamily(product) === filters.accessoryFamily)
@@ -153,11 +162,11 @@ export function ShopPage() {
 
   return (
     <>
-      <SEO title="Shop Apple Devices in Ghana" description="Browse original iPhones, iPads, MacBooks, Apple Watches, AirPods and accessories from Buy & Sell GH in Accra." />
+      <SEO title="Shop Phones, Tablets, Laptops and Accessories in Ghana" description="Browse confirmed phones, tablets, laptops, watches, audio and accessories from Buy & Sell GH in Accra." />
       <section className="page-hero shop-hero">
         <p className="eyebrow-dark">Shop</p>
         <h1>Original devices catalogue</h1>
-        <p>Search, filter and compare available Apple devices. Buy & Sell GH confirms availability, final details and payment instructions before payment.</p>
+        <p>Search and compare confirmed phones, tablets, laptops, watches, audio and accessories. Buy & Sell GH verifies availability, final details and payment instructions before payment.</p>
         <div className="shop-trust-line">Inspected devices | Clear condition labels | WhatsApp support</div>
       </section>
       <section className="section shop-section">
@@ -170,7 +179,7 @@ export function ShopPage() {
               <p className="catalogue-count">{filtered.length} {filtered.length === 1 ? "product" : "products"}</p>
               <label className="search-inline catalogue-search">
                 <Search size={18} />
-                <input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search iPhone 15, 256GB, Black..." />
+                <input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search product, brand, model or colour..." />
                 {filters.search && <button type="button" aria-label="Clear search" onClick={() => updateFilter("search", "")}><X size={18} /></button>}
               </label>
               <button className="btn-secondary catalogue-filter-button lg:hidden" type="button" onClick={() => setDrawerOpen(true)}>
@@ -246,16 +255,21 @@ function FilterControls({
         {activeFilterCount > 0 && <button type="button" onClick={clearFilters}>Clear All</button>}
       </div>
       <div className="filter-group">
-        <label className="filter-label">Search<input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="iPhone 15, AirPods..." /></label>
-        <label className="filter-label">Category<select value={filters.category} onChange={(e) => {
+        <label className="filter-label">Search<input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Product, brand or model..." /></label>
+        <label className="filter-label">Product type<select value={filters.category} onChange={(e) => {
           updateFilter("category", e.target.value);
           updateFilter("generation", "All");
           updateFilter("accessoryFamily", "All");
-        }}><option>All</option>{deviceCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
+          updateFilter("storage", "All");
+        }}><option>All</option>{storefrontCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className="filter-label">Brand<select value={filters.brand} onChange={(e) => {
+          updateFilter("brand", e.target.value);
+          updateFilter("generation", "All");
+        }}><option>All</option>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
         {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
-        {filters.category === "iPhones" && <label className="filter-label">iPhone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "MacBooks" && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "AirPods" && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Audio" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Accessories" && <label className="filter-label">Accessory Family<select value={filters.accessoryFamily} onChange={(e) => updateFilter("accessoryFamily", e.target.value)}><option value="All">All Accessories</option>{accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
       </div>
       <div className="filter-group">
@@ -263,7 +277,7 @@ function FilterControls({
         <label className="filter-label">Condition<select value={filters.condition} onChange={(e) => updateFilter("condition", e.target.value)}><option>All</option>{conditions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Stock<select value={filters.availability} onChange={(e) => updateFilter("availability", e.target.value)}><option>All</option>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
       </div>
-      {filters.category !== "Accessories" && <div className="filter-group">
+      {categorySupportsStorage(filters.category) && <div className="filter-group">
         <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{storageOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Colour<input value={filters.color} maxLength={80} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
       </div>}
@@ -327,7 +341,7 @@ function NoResultsState({ clearFilters }: { clearFilters: () => void }) {
     <section className="catalogue-empty-state">
       <Search size={28} />
       <h2>No devices match these filters.</h2>
-      <p>Try removing a filter or pre-order an Apple device that is not currently available.</p>
+      <p>Try removing a filter or pre-order the exact device that is not currently available.</p>
       <div>
         <button className="btn-secondary" type="button" onClick={clearFilters}>Clear Filters</button>
         <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
@@ -346,6 +360,7 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
   const active: ActiveFilter[] = [];
   if (filters.search) active.push({ key: "search", label: `Search: ${filters.search}` });
   if (filters.category !== "All") active.push({ key: "category", label: filters.category });
+  if (filters.brand !== "All") active.push({ key: "brand", label: filters.brand });
   if (filters.model) active.push({ key: "model", label: `Model: ${filters.model}` });
   if (filters.generation !== "All") active.push({ key: "generation", label: filters.generation });
   if (filters.accessoryFamily !== "All") active.push({ key: "accessoryFamily", label: filters.accessoryFamily });
@@ -360,7 +375,5 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
 }
 
 function matchesShopCategory(product: Product, category: string) {
-  if (category === "All") return true;
-  const slug = categorySlugs[category as ProductCategory];
-  return slug ? productMatchesCategorySlug(product, slug) : product.category === category;
+  return productMatchesStorefrontCategory(product, category);
 }

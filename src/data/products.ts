@@ -60,11 +60,17 @@ import { airpodsProducts } from "./airpodsProducts";
 import { macbookProducts } from "./macbookProducts";
 
 export const categories: ProductCategory[] = [
+  "Phones",
   "iPhones",
+  "Tablets",
   "iPads",
+  "Watches",
   "Apple Watches",
+  "Audio",
   "AirPods",
+  "Laptops",
   "MacBooks",
+  "Game Consoles",
   "Accessories",
   "UK Used Devices",
   "Brand New Devices",

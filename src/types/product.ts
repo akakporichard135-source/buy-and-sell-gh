@@ -1,12 +1,20 @@
 export type ProductCategory =
+  | "Phones"
   | "iPhones"
+  | "Tablets"
   | "iPads"
+  | "Watches"
   | "Apple Watches"
+  | "Audio"
   | "AirPods"
+  | "Laptops"
   | "MacBooks"
+  | "Game Consoles"
   | "Accessories"
   | "UK Used Devices"
   | "Brand New Devices";
+
+export type ProductBrand = "Apple" | "Samsung" | "LG" | "Sony" | "JBL" | "Bose";
 
 export type ProductCondition = "Brand New" | "UK Used" | "Excellent" | "Very Good" | "To Confirm";
 export type StockStatus = "In Stock" | "Low Stock" | "Out of Stock" | "Sold";
@@ -22,7 +30,7 @@ export interface Product {
   slug: string;
   category: ProductCategory;
   subcategory?: string;
-  brand: "Apple";
+  brand: ProductBrand;
   model: string;
   generation?: string;
   price: number;

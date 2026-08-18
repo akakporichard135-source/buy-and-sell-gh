@@ -3,6 +3,7 @@ import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "reac
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { categories, createProductSlug, getPrimaryImage, normalizeProduct, productConditions, stockStatuses } from "../../catalog/productCatalog";
+import { supportedBrands } from "../../catalog/storefrontTaxonomy";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 import type { Product, ProductImage } from "../../types/product";
 import { formatGhs } from "../../utils/format";
@@ -17,7 +18,7 @@ interface ProductFormState {
   name: string;
   category: Product["category"];
   subcategory: string;
-  brand: "Apple";
+  brand: Product["brand"];
   model: string;
   generation: string;
   condition: Product["condition"];
@@ -85,6 +86,7 @@ export function AdminProductManager() {
   const { session } = useAdminAuth();
   const { products, saveProduct, archiveProduct, deleteProduct, markSold, markOutOfStock, resetToSeedCatalog, createDraftProduct, backendStatus, loading, error } = useProductCatalog();
   const [query, setQuery] = useState("");
+  const [brand, setBrand] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");
   const [stock, setStock] = useState("All");
@@ -100,8 +102,9 @@ export function AdminProductManager() {
   const filtered = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return products.filter((product) => {
-      const searchable = [product.name, product.slug, product.model, product.category, product.condition, product.stockStatus, ...(product.tags ?? [])].join(" ").toLowerCase();
+      const searchable = [product.name, product.slug, product.model, product.brand, product.category, product.subcategory ?? "", product.condition, product.stockStatus, ...(product.tags ?? [])].join(" ").toLowerCase();
       return terms.every((term) => searchable.includes(term)) &&
+        (brand === "All" || product.brand === brand) &&
         (category === "All" || product.category === category) &&
         (condition === "All" || product.condition === condition) &&
         (stock === "All" || product.stockStatus === stock) &&
@@ -110,7 +113,7 @@ export function AdminProductManager() {
           (availability === "Hidden" && product.available === false && !product.archived) ||
           (availability === "Archived" && product.archived === true));
     });
-  }, [availability, category, condition, products, query, stock]);
+  }, [availability, brand, category, condition, products, query, stock]);
 
   useLayoutEffect(() => {
     if (!editing || pendingEditorTarget !== editing.id || !editorRef.current) return;
@@ -196,6 +199,7 @@ export function AdminProductManager() {
       <section className="admin-panel">
         <div className="admin-product-toolbar">
           <label className="admin-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search products..." /></label>
+          <label className="admin-toolbar-filter"><span>Brand</span><select value={brand} onChange={(event) => setBrand(event.target.value)}><option>All</option>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="admin-toolbar-filter"><span>Category</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option>All</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="admin-toolbar-filter"><span>Condition</span><select value={condition} onChange={(event) => setCondition(event.target.value)}><option>All</option>{productConditions.map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="admin-toolbar-filter"><span>Stock</span><select value={stock} onChange={(event) => setStock(event.target.value)}><option>All</option>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -326,6 +330,7 @@ function ProductForm({ form, setForm, onSubmit, products, backendStatus, saving,
     <form className="admin-product-form" onSubmit={onSubmit}>
       <AdminFieldset title="Basic Information">
         <label>Product name<input ref={productNameRef} required value={form.name} onChange={(event) => update("name", event.target.value)} onBlur={() => update("slug", createProductSlug(form.name, products.filter((product) => product.id !== form.id), form.id))} /></label>
+        <label>Brand<select value={form.brand} onChange={(event) => update("brand", event.target.value as Product["brand"])}>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label>Category<select value={form.category} onChange={(event) => update("category", event.target.value as Product["category"])}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label>Subcategory / family<input value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="MacBook Air, AirPods Pro, Charging & Power..." /></label>
         <label>Model<input required value={form.model} onChange={(event) => update("model", event.target.value)} /></label>
