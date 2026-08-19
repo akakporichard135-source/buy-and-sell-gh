@@ -3,7 +3,7 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import referralCampaign from "../assets/homepage/homepage-referral-campaign.jpg";
+import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
 
 export function ReferFriendPage() {
   return (

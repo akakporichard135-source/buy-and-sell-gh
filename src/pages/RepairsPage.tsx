@@ -3,7 +3,7 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import repairsCampaign from "../assets/homepage/homepage-repairs-campaign.jpg";
+import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
 
 export function RepairsPage() {
   return (

@@ -3,7 +3,7 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import installmentCampaign from "../assets/homepage/homepage-installment-campaign.jpg";
+import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 
 export function InstallmentPage() {
   return (

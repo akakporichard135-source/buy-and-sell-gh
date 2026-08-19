@@ -5,14 +5,14 @@ import { WhatsAppButton } from "../components/WhatsAppButton";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
 import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
-import installmentCampaign from "../assets/homepage/homepage-installment-campaign.jpg";
+import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
 import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
-import referralCampaign from "../assets/homepage/homepage-referral-campaign.jpg";
-import repairsCampaign from "../assets/homepage/homepage-repairs-campaign.jpg";
-import storeCampaign from "../assets/homepage/homepage-store-campaign.jpg";
-import tradeInStory from "../assets/homepage/homepage-trade-in-story.jpg";
-import upgradeValueStory from "../assets/homepage/homepage-upgrade-value-story.jpg";
+import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
+import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
+import storeCampaign from "../assets/homepage/owner-store-flyer.jpg";
+import sellCashArtwork from "../assets/homepage/owner-sell-cash.jpg";
+import upgradeSaveArtwork from "../assets/homepage/owner-upgrade-save.jpg";
 import { business } from "../config/business";
 
 const whatsappHref = "https://wa.me/" + business.whatsapp.primary;
@@ -33,6 +33,7 @@ type Campaign = {
   secondaryExternal?: boolean;
   notes?: string[];
   imagePriority?: boolean;
+  artShape?: "wide" | "square" | "poster";
 };
 
 const campaigns: Campaign[] = [
@@ -48,6 +49,7 @@ const campaigns: Campaign[] = [
     secondaryLabel: "Learn more",
     secondaryTo: "/about",
     imagePriority: true,
+    artShape: "square",
   },
   {
     eyebrow: "iPhone / Phones",
@@ -60,6 +62,7 @@ const campaigns: Campaign[] = [
     primaryTo: "/iphones",
     secondaryLabel: "Samsung requests",
     secondaryTo: "/shop?brand=Samsung",
+    artShape: "wide",
   },
   {
     eyebrow: "iPhone Installment",
@@ -74,30 +77,33 @@ const campaigns: Campaign[] = [
     secondaryTo: whatsappHref,
     secondaryExternal: true,
     notes: ["40% upfront", "Ghana Card required"],
+    artShape: "poster",
   },
   {
     eyebrow: "Sell Your Device",
     title: "Turn your old device into cash.",
     description: "Bring your phone, tablet, laptop, watch or game console for inspection and a confirmed offer.",
-    image: tradeInStory,
+    image: sellCashArtwork,
     imageAlt: "Premium trade-in counter artwork for selling an old device",
     theme: "warm",
     primaryLabel: "Get started",
     primaryTo: "/sell-or-trade",
     secondaryLabel: "How it works",
     secondaryTo: "/sell-or-trade",
+    artShape: "square",
   },
   {
     eyebrow: "Upgrade & Save",
     title: "Trade what you have for what you want next.",
     description: "Swap old iPhones, MacBooks, game consoles and iPads toward newer versions after inspection.",
-    image: upgradeValueStory,
+    image: upgradeSaveArtwork,
     imageAlt: "Premium device upgrade value artwork",
     theme: "black",
     primaryLabel: "Start a trade",
     primaryTo: "/sell-or-trade",
     secondaryLabel: "Request device",
     secondaryTo: "/pre-order",
+    artShape: "poster",
   },
   {
     eyebrow: "Repairs",
@@ -110,6 +116,7 @@ const campaigns: Campaign[] = [
     primaryTo: "/repairs",
     secondaryLabel: "Get support",
     secondaryTo: "/contact",
+    artShape: "square",
   },
   {
     eyebrow: "Gift Card Trading",
@@ -134,6 +141,7 @@ const campaigns: Campaign[] = [
     primaryTo: "/refer-a-friend",
     secondaryLabel: "Learn more",
     secondaryTo: "/refer-a-friend",
+    artShape: "wide",
   },
   {
     eyebrow: "Gaming",
@@ -265,7 +273,7 @@ function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?
             )}
           </div>
         </div>
-        <div className="campaign-art">
+        <div className={"campaign-art campaign-art-" + (campaign.artShape ?? "wide")}>
           <img
             src={campaign.image}
             alt={campaign.imageAlt}
