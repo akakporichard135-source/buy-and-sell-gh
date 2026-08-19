@@ -8140,3 +8140,54 @@ body {
     transition: none !important;
   }
 }
+
+/* Owner image campaign presentation polish */
+.campaign-art::before {
+  display: none;
+}
+
+.campaign-art img {
+  width: min(100%, 820px);
+  height: auto;
+  max-height: 660px;
+  border-radius: clamp(0.8rem, 1.2vw, 1.25rem);
+  object-fit: contain;
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.24));
+  box-shadow: none;
+}
+
+.campaign-art-poster img {
+  width: min(100%, 640px);
+  aspect-ratio: 4 / 5;
+  max-width: min(100%, 640px);
+  max-height: min(800px, 78svh);
+}
+
+.campaign-art-square img {
+  width: min(100%, 720px);
+  aspect-ratio: 1;
+  max-height: min(720px, 76svh);
+}
+
+.campaign-black .campaign-art img,
+.campaign-gold .campaign-art img {
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .campaign-art-poster img {
+    width: min(100%, 420px);
+    max-height: none;
+  }
+
+  .campaign-art-square img {
+    width: min(100%, 420px);
+    max-height: 420px;
+  }
+}
+
+@media (max-width: 390px) {
+  .campaign-art-square img {
+    max-height: 360px;
+  }
+}
