@@ -67,10 +67,12 @@ export function ShopPage() {
   const { activeProducts: products, loading, error, refreshProducts } = useProductCatalog();
   const [params] = useSearchParams();
   const initialCategory = params.get("category") ?? "All";
+  const initialGeneration = params.get("generation") ?? "All";
   const [filters, setFilters] = useState<FiltersState>({
     ...defaultFilters,
     category: normalizeStorefrontCategory(initialCategory),
     brand: supportedBrands.includes(params.get("brand") as Product["brand"]) ? params.get("brand")! : "All",
+    generation: initialGeneration,
     condition: initialCategory === "UK Used Devices" ? "UK Used" : initialCategory === "Brand New Devices" ? "Brand New" : "All",
     newArrival: params.get("newArrival") === "true",
     popular: params.get("popular") === "true",
@@ -94,6 +96,17 @@ export function ShopPage() {
 
   const activeFilters = useMemo(() => getActiveFilters(filters), [filters]);
   const activeFilterCount = activeFilters.length;
+  const dynamicIphoneGenerationOptions = useMemo(() => {
+    const options = Array.from(
+      new Set(
+        products
+          .filter((product) => product.brand === "Apple" && product.category === "iPhones")
+          .map(getIphoneGeneration)
+          .filter(Boolean),
+      ),
+    ).sort(compareGenerationLabelsNewest);
+    return options.length ? options : iphoneGenerationOptions;
+  }, [products]);
 
   const filtered = useMemo(() => {
     const terms = filters.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -172,7 +185,7 @@ export function ShopPage() {
       <section className="section shop-section">
         <div className="shop-layout">
           <aside className="filter-panel hidden lg:block">
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} />
           </aside>
           <div className="shop-results">
             <div className="catalogue-toolbar">
@@ -225,7 +238,7 @@ export function ShopPage() {
               </div>
               <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
             </div>
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} />
             <div className="filter-drawer-actions">
               <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Show {filtered.length} Products</button>
               <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
@@ -242,11 +255,13 @@ function FilterControls({
   updateFilter,
   clearFilters,
   activeFilterCount,
+  iphoneGenerationChoices,
 }: {
   filters: FiltersState;
   updateFilter: <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => void;
   clearFilters: () => void;
   activeFilterCount: number;
+  iphoneGenerationChoices: string[];
 }) {
   return (
     <div className="filter-controls">
@@ -267,7 +282,7 @@ function FilterControls({
           updateFilter("generation", "All");
         }}><option>All</option>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
         {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
-        {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Audio" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Accessories" && <label className="filter-label">Accessory Family<select value={filters.accessoryFamily} onChange={(e) => updateFilter("accessoryFamily", e.target.value)}><option value="All">All Accessories</option>{accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
@@ -376,4 +391,12 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
 
 function matchesShopCategory(product: Product, category: string) {
   return productMatchesStorefrontCategory(product, category);
+}
+
+function compareGenerationLabelsNewest(a: string, b: string) {
+  return generationNumberFromLabel(b) - generationNumberFromLabel(a);
+}
+
+function generationNumberFromLabel(label: string) {
+  return Number(label.match(/\d+/)?.[0] ?? 0);
 }

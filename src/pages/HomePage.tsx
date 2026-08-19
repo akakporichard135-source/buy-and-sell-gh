@@ -1,8 +1,10 @@
 import { ArrowRight } from "lucide-react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
-import accessoriesStory from "../assets/categories/accessories-premium.webp";
 import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
+import heroEcosystem from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
 import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
@@ -11,10 +13,10 @@ import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
 import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
 import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
 import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
-import storeCampaign from "../assets/homepage/owner-store-flyer.jpg";
 import sellCashArtwork from "../assets/homepage/owner-sell-cash.jpg";
 import upgradeSaveArtwork from "../assets/homepage/owner-upgrade-save.jpg";
 import { business } from "../config/business";
+import type { Product } from "../types/product";
 
 const whatsappHref = "https://wa.me/" + business.whatsapp.primary;
 
@@ -34,35 +36,23 @@ type Campaign = {
   secondaryExternal?: boolean;
   notes?: string[];
   imagePriority?: boolean;
-  artShape?: "wide" | "square" | "poster";
+  artShape?: "wide" | "square" | "poster" | "lineup";
+  fallbackImage?: string;
 };
 
-const majorCampaigns: Campaign[] = [
+const baseMajorCampaigns: Campaign[] = [
   {
     eyebrow: "Buy & Sell GH",
     title: "Premium tech. Your way.",
     description: "Buy, sell, trade, repair, pre-order and get support from Dome Pillar 2 in Accra.",
-    image: storeCampaign,
-    imageAlt: "Premium smartphone handoff in a black and gold Buy & Sell GH studio scene",
+    image: heroEcosystem,
+    imageAlt: "Premium Buy & Sell GH product composition with iPhones, laptop, watch and audio accessories",
     theme: "black",
     primaryLabel: "Shop",
     primaryTo: "/shop",
     secondaryLabel: "Learn more",
     secondaryTo: "/about",
     imagePriority: true,
-    artShape: "square",
-  },
-  {
-    eyebrow: "iPhone",
-    title: "Find the phone that fits.",
-    description: "Browse iPhones and supported phone requests with clear condition labels and availability confirmation.",
-    image: iphoneStory,
-    imageAlt: "Premium iPhone shopping artwork",
-    theme: "light",
-    primaryLabel: "Shop iPhone",
-    primaryTo: "/iphones",
-    secondaryLabel: "Samsung requests",
-    secondaryTo: "/shop?brand=Samsung",
     artShape: "wide",
   },
   {
@@ -124,34 +114,9 @@ const majorCampaigns: Campaign[] = [
 
 const featureTiles: Campaign[] = [
   {
-    eyebrow: "Gift Card Trading",
-    title: "Turn supported cards into value.",
-    description: "Send card details for review. Buy & Sell GH confirms accepted card types and value before any next step.",
-    image: giftCardCampaign,
-    imageAlt: "Premium phone and blank gift cards in a black and gold studio scene",
-    theme: "gold",
-    primaryLabel: "Check a card",
-    primaryTo: "/gift-cards",
-    secondaryLabel: "Contact us",
-    secondaryTo: "/contact",
-  },
-  {
-    eyebrow: "Refer a Friend",
-    title: "Good tech is better when shared.",
-    description: "Refer someone looking for a device, repair, trade-in or pre-order without any unconfirmed reward promises.",
-    image: referralCampaign,
-    imageAlt: "Premium smartphones with a sharing icon for referrals",
-    theme: "warm",
-    primaryLabel: "Refer someone",
-    primaryTo: "/refer-a-friend",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/refer-a-friend",
-    artShape: "wide",
-  },
-  {
     eyebrow: "Gaming",
     title: "Play more.",
-    description: "Game console support and requests with clear confirmation before any next step.",
+    description: "Consoles, controllers and gaming accessories.",
     image: gamingStory,
     imageAlt: "Premium game console and controller studio artwork",
     theme: "black",
@@ -163,19 +128,19 @@ const featureTiles: Campaign[] = [
   {
     eyebrow: "Audio",
     title: "Hear more.",
-    description: "AirPods, Bose, JBL and Sony audio requests where catalogue support is available.",
+    description: "AirPods, headphones, speakers and accessories.",
     image: audioAccessoriesStory,
     imageAlt: "Premium earbuds, headphones and accessory studio artwork",
     theme: "warm",
     primaryLabel: "Shop Audio",
     primaryTo: "/airpods",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/shop?category=AirPods",
+    secondaryLabel: "Shop Accessories",
+    secondaryTo: "/accessories",
   },
   {
     eyebrow: "Laptops & Tablets",
     title: "Work. Study. Create.",
-    description: "Compare laptop and tablet options, then confirm availability before pickup, delivery or pre-order.",
+    description: "MacBooks, laptops, iPads and tablets.",
     image: laptopTabletStory,
     imageAlt: "Premium laptop and tablet studio artwork",
     theme: "light",
@@ -185,14 +150,42 @@ const featureTiles: Campaign[] = [
     secondaryTo: "/ipads",
   },
   {
-    eyebrow: "Accessories",
-    title: "Everything that completes your setup.",
-    description: "Chargers, cases, cables, keyboards and everyday essentials for supported devices.",
-    image: accessoriesStory,
-    imageAlt: "Premium Apple accessories arranged for a clean setup",
+    eyebrow: "Repairs",
+    title: "Let the experts fix it.",
+    description: "Phones. Laptops. Game consoles.",
+    image: repairsCampaign,
+    imageAlt: "Buy & Sell GH repairs and sales artwork",
+    theme: "light",
+    primaryLabel: "Book a Repair",
+    primaryTo: "/repairs",
+    secondaryLabel: "Get Support",
+    secondaryTo: "/contact",
+    artShape: "square",
+  },
+  {
+    eyebrow: "Gift Card Trading",
+    title: "Turn supported cards into value.",
+    description: "Send card details for review and confirmation.",
+    image: giftCardCampaign,
+    imageAlt: "Premium phone and blank gift cards in a black and gold studio scene",
+    theme: "gold",
+    primaryLabel: "Check a Card",
+    primaryTo: "/gift-cards",
+    secondaryLabel: "Contact Us",
+    secondaryTo: "/contact",
+  },
+  {
+    eyebrow: "Refer a Friend",
+    title: "Good tech is better when shared.",
+    description: "Refer someone to Buy & Sell GH.",
+    image: referralCampaign,
+    imageAlt: "Buy & Sell GH refer a friend artwork",
     theme: "warm",
-    primaryLabel: "Shop Accessories",
-    primaryTo: "/accessories",
+    primaryLabel: "Refer Someone",
+    primaryTo: "/refer-a-friend",
+    secondaryLabel: "Learn More",
+    secondaryTo: "/refer-a-friend",
+    artShape: "wide",
   },
   {
     eyebrow: "Pre-Order",
@@ -207,20 +200,56 @@ const featureTiles: Campaign[] = [
     secondaryTo: "/device-request",
   },
   {
-    eyebrow: "Support",
-    title: "We're here when you need us.",
-    description: "Use WhatsApp or the contact page for availability, pickup, delivery, repair and trade-in help.",
-    image: storeCampaign,
-    imageAlt: "Buy & Sell GH shop rollup artwork for customer support",
+    eyebrow: "Trade-In",
+    title: "Upgrade for less.",
+    description: "Trade or swap your current device toward something newer.",
+    image: upgradeSaveArtwork,
+    imageAlt: "Buy & Sell GH upgrade and save trade-in artwork",
     theme: "black",
-    primaryLabel: "WhatsApp",
-    primaryTo: whatsappHref,
-    secondaryLabel: "Contact us",
-    secondaryTo: "/contact",
+    primaryLabel: "Start a Trade",
+    primaryTo: "/sell-or-trade",
+    secondaryLabel: "How It Works",
+    secondaryTo: "/sell-or-trade",
+    artShape: "poster",
   },
 ];
 
+const serviceItems = [
+  { label: "Buy", to: "/shop" },
+  { label: "Sell", to: "/sell-or-trade" },
+  { label: "Trade", to: "/sell-or-trade" },
+  { label: "Repair", to: "/repairs" },
+  { label: "Installment", to: "/installment" },
+  { label: "Gift Cards", to: "/gift-cards" },
+  { label: "Pre-Order", to: "/pre-order" },
+  { label: "Support", to: "/contact" },
+];
+
 export function HomePage() {
+  const { activeProducts } = useProductCatalog();
+  const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts), [activeProducts]);
+  const majorCampaigns = useMemo(
+    () => [
+      baseMajorCampaigns[0],
+      {
+        eyebrow: "iPhone",
+        title: latestIphone.generationLabel,
+        description: "Meet the latest lineup available through Buy & Sell GH.",
+        image: latestIphone.image,
+        imageAlt: latestIphone.imageAlt,
+        theme: "light" as const,
+        primaryLabel: "Learn more",
+        primaryTo: latestIphone.learnMoreTo,
+        secondaryLabel: "Shop iPhone",
+        secondaryTo: "/iphones",
+        artShape: "lineup" as const,
+        fallbackImage: iphoneStory,
+      },
+      ...baseMajorCampaigns.slice(1),
+    ],
+    [latestIphone],
+  );
+
   return (
     <>
       <SEO
@@ -237,6 +266,21 @@ export function HomePage() {
           {featureTiles.map((campaign) => (
             <CampaignTile campaign={campaign} key={campaign.eyebrow} />
           ))}
+        </section>
+
+        <section className="campaign-everything-section" aria-labelledby="everything-buy-and-sell-gh">
+          <div className="campaign-everything-copy">
+            <p className="campaign-eyebrow">Everything Buy & Sell GH</p>
+            <h2 id="everything-buy-and-sell-gh">Everything tech. One place.</h2>
+            <p>Buy. Sell. Trade. Repair. All in one place, with availability and next steps confirmed before payment.</p>
+          </div>
+          <div className="campaign-service-ribbon" aria-label="Buy & Sell GH services">
+            {serviceItems.map((item) => (
+              <Link className="campaign-service-chip" to={item.to} key={item.label}>
+                {item.label} <ArrowRight size={16} />
+              </Link>
+            ))}
+          </div>
         </section>
       </main>
     </>
@@ -282,6 +326,11 @@ function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?
             loading={priority || campaign.imagePriority ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={priority || campaign.imagePriority ? "high" : "auto"}
+            onError={(event) => {
+              if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaign.fallbackImage;
+            }}
           />
         </div>
       </div>
@@ -328,4 +377,51 @@ function CampaignTile({ campaign }: { campaign: Campaign }) {
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function getLatestIphoneLineup(products: Product[]) {
+  const ranked = products
+    .map((product) => ({ product, generationNumber: getIphoneGenerationNumber(product) }))
+    .filter((entry): entry is { product: Product; generationNumber: number } => entry.generationNumber !== null);
+  const newestNumber = ranked.length ? Math.max(...ranked.map((entry) => entry.generationNumber)) : null;
+  const generationLabel = newestNumber ? `iPhone ${newestNumber}` : "iPhone";
+  const variants = newestNumber
+    ? ranked.filter((entry) => entry.generationNumber === newestNumber).map((entry) => entry.product)
+    : [];
+  const imageProduct = selectBestIphoneImageProduct(variants);
+  const image = imageProduct?.images?.[imageProduct.primaryImageIndex ?? 0]?.src ?? imageProduct?.images?.[0]?.src ?? iphoneStory;
+
+  return {
+    generationLabel,
+    variants,
+    image,
+    imageAlt: imageProduct
+      ? `${generationLabel} lineup featuring ${imageProduct.name}`
+      : "Premium iPhone lineup artwork for Buy & Sell GH",
+    learnMoreTo: newestNumber
+      ? `/shop?category=Phones&brand=Apple&generation=${encodeURIComponent(generationLabel)}`
+      : "/iphones",
+  };
+}
+
+function getIphoneGenerationNumber(product: Product) {
+  if (product.brand !== "Apple" || product.category !== "iPhones") return null;
+  const searchable = [product.generation, product.name, product.model, product.slug].filter(Boolean).join(" ");
+  const match = searchable.match(/\biPhone[\s-]*(\d{2})\b/i);
+  return match ? Number(match[1]) : null;
+}
+
+function selectBestIphoneImageProduct(variants: Product[]) {
+  if (!variants.length) return undefined;
+  const sorted = [...variants].sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a));
+  return sorted.find((product) => product.images?.length) ?? sorted[0];
+}
+
+function iphoneVariantRank(product: Product) {
+  const searchable = `${product.name} ${product.model} ${product.slug}`.toLowerCase();
+  if (searchable.includes("pro-max") || searchable.includes("pro max")) return 5;
+  if (searchable.includes("pro")) return 4;
+  if (searchable.includes("plus")) return 3;
+  if (searchable.includes("air")) return 2;
+  return 1;
 }

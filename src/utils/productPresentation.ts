@@ -48,7 +48,7 @@ const iphoneNewestOrder = [
 export function getIphoneGeneration(product: Product) {
   if (product.generation?.startsWith("iPhone ")) return product.generation;
   if (product.slug === "iphone-air") return "iPhone 17";
-  const match = product.model.match(/iPhone\s+(1[1-7])/i);
+  const match = product.model.match(/iPhone\s+(\d{2})/i);
   return match ? `iPhone ${match[1]}` : "";
 }
 
