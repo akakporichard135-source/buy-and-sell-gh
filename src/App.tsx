@@ -20,6 +20,10 @@ const ContactPage = lazy(() => import("./pages/ContactPage").then((module) => ({
 const DeviceRequestPage = lazy(() => import("./pages/DeviceRequestPage").then((module) => ({ default: module.DeviceRequestPage })));
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+const InstallmentPage = lazy(() => import("./pages/InstallmentPage").then((module) => ({ default: module.InstallmentPage })));
+const RepairsPage = lazy(() => import("./pages/RepairsPage").then((module) => ({ default: module.RepairsPage })));
+const GiftCardsPage = lazy(() => import("./pages/GiftCardsPage").then((module) => ({ default: module.GiftCardsPage })));
+const ReferFriendPage = lazy(() => import("./pages/ReferFriendPage").then((module) => ({ default: module.ReferFriendPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage").then((module) => ({ default: module.OrderSuccessPage })));
 const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage").then((module) => ({ default: module.ProductDetailsPage })));
@@ -65,6 +69,10 @@ function PublicShell() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/installment" element={<InstallmentPage />} />
+          <Route path="/repairs" element={<RepairsPage />} />
+          <Route path="/gift-cards" element={<GiftCardsPage />} />
+          <Route path="/refer-a-friend" element={<ReferFriendPage />} />
           <Route path="/:categorySlug" element={<CategoryPage />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/sell-or-trade" element={<SellTradePage />} />

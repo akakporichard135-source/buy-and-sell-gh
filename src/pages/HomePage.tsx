@@ -2,236 +2,227 @@ import { ArrowRight, MapPin, MessageCircle, Search, ShoppingBag } from "lucide-r
 import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import repairsSalesArtwork from "../assets/brand/repairs-sales.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
+import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
+import installmentCampaign from "../assets/homepage/homepage-installment-campaign.jpg";
 import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
 import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
-import samsungStory from "../assets/homepage/homepage-samsung-story.jpg";
+import referralCampaign from "../assets/homepage/homepage-referral-campaign.jpg";
+import repairsCampaign from "../assets/homepage/homepage-repairs-campaign.jpg";
+import storeCampaign from "../assets/homepage/homepage-store-campaign.jpg";
 import tradeInStory from "../assets/homepage/homepage-trade-in-story.jpg";
 import upgradeValueStory from "../assets/homepage/homepage-upgrade-value-story.jpg";
 import { business } from "../config/business";
 
-const heroPoints = ["Original devices", "Trade-ins", "Pre-orders", "Accra support"];
-const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
+const whatsappHref = "https://wa.me/" + business.whatsapp.primary;
 
-const storySections = [
+type CampaignTheme = "black" | "light" | "gold" | "warm";
+
+type Campaign = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+  theme: CampaignTheme;
+  primaryLabel: string;
+  primaryTo: string;
+  secondaryLabel?: string;
+  secondaryTo?: string;
+  secondaryExternal?: boolean;
+  notes?: string[];
+  imagePriority?: boolean;
+};
+
+const campaigns: Campaign[] = [
   {
-    theme: "light",
-    eyebrow: "iPhone",
-    title: "iPhone, checked and ready.",
-    description:
-      "Browse current iPhone listings, compare condition labels and confirm final availability before payment.",
+    eyebrow: "Buy & Sell GH",
+    title: "Premium tech. Your way.",
+    description: "Buy, sell, trade, repair, pre-order and get support from Dome Pillar 2 in Accra.",
+    image: storeCampaign,
+    imageAlt: "Premium smartphone handoff in a black and gold Buy & Sell GH studio scene",
+    theme: "black",
+    primaryLabel: "Shop",
+    primaryTo: "/shop",
+    secondaryLabel: "Learn more",
+    secondaryTo: "/about",
+    imagePriority: true,
+  },
+  {
+    eyebrow: "iPhone / Phones",
+    title: "Find the phone that fits.",
+    description: "Browse iPhones and supported phone requests with clear condition labels and availability confirmation.",
     image: iphoneStory,
-    imageAlt: "Premium smartphone studio artwork for iPhone shopping",
+    imageAlt: "Premium iPhone shopping artwork",
+    theme: "light",
     primaryLabel: "Shop iPhone",
     primaryTo: "/iphones",
-    secondaryLabel: "Contact us",
-    secondaryTo: "/contact",
+    secondaryLabel: "Samsung requests",
+    secondaryTo: "/shop?brand=Samsung",
   },
   {
-    theme: "dark",
-    eyebrow: "Samsung",
-    title: "Galaxy requests welcome.",
-    description:
-      "Buy & Sell GH also supports Samsung customers. Check available listings or request the exact Galaxy device you want.",
-    image: samsungStory,
-    imageAlt: "Premium Android smartphone studio artwork for Samsung requests",
-    primaryLabel: "Check Samsung",
-    primaryTo: "/shop?brand=Samsung",
-    secondaryLabel: "Request a device",
-    secondaryTo: "/pre-order",
+    eyebrow: "iPhone Installment",
+    title: "Own an iPhone today.",
+    description: "Pay just 40% upfront. Ghana Card and 40% initial payment are required before Buy & Sell GH confirms next steps.",
+    image: installmentCampaign,
+    imageAlt: "Premium iPhones with gold payment tokens for installment enquiries",
+    theme: "black",
+    primaryLabel: "Learn more",
+    primaryTo: "/installment",
+    secondaryLabel: "Enquire on WhatsApp",
+    secondaryTo: whatsappHref,
+    secondaryExternal: true,
+    notes: ["40% upfront", "Ghana Card required"],
   },
   {
-    theme: "gold",
-    eyebrow: "Trade-In",
-    title: "Turn your current phone into your next upgrade.",
-    description:
-      "Sell or swap your device, then use its value toward another phone, tablet, laptop or accessory after inspection.",
+    eyebrow: "Sell Your Device",
+    title: "Turn your old device into cash.",
+    description: "Bring your phone, tablet, laptop, watch or game console for inspection and a confirmed offer.",
     image: tradeInStory,
-    imageAlt: "Premium counter artwork showing a phone trade-in",
-    primaryLabel: "Start Trade-In",
+    imageAlt: "Premium trade-in counter artwork for selling an old device",
+    theme: "warm",
+    primaryLabel: "Get started",
     primaryTo: "/sell-or-trade",
     secondaryLabel: "How it works",
     secondaryTo: "/sell-or-trade",
   },
   {
-    theme: "light",
-    eyebrow: "Upgrade Value",
-    title: "Turn device value into buying power.",
-    description:
-      "Use your device value toward another upgrade, or ask the team to help you compare the smartest next move.",
+    eyebrow: "Upgrade & Save",
+    title: "Trade what you have for what you want next.",
+    description: "Swap old iPhones, MacBooks, game consoles and iPads toward newer versions after inspection.",
     image: upgradeValueStory,
-    imageAlt: "Premium phone and value card artwork for upgrade value",
-    primaryLabel: "Sell or Trade",
+    imageAlt: "Premium device upgrade value artwork",
+    theme: "black",
+    primaryLabel: "Start a trade",
     primaryTo: "/sell-or-trade",
-    secondaryLabel: "Request help",
+    secondaryLabel: "Request device",
     secondaryTo: "/pre-order",
   },
   {
-    theme: "dark",
-    eyebrow: "Gaming",
-    title: "Console support for serious play.",
-    description:
-      "Explore game consoles and gaming requests with the same clear confirmation flow used across the store.",
-    image: gamingStory,
-    imageAlt: "Premium game console and controller studio artwork",
-    primaryLabel: "View Gaming",
-    primaryTo: "/shop?category=Game%20Consoles",
-    secondaryLabel: "Chat on WhatsApp",
-    secondaryTo: whatsappHref,
-    externalSecondary: true,
+    eyebrow: "Repairs",
+    title: "Let the experts fix it.",
+    description: "Repair support for mobile phones, laptops and game consoles, prepared for WhatsApp follow-up.",
+    image: repairsCampaign,
+    imageAlt: "Technician repairing a smartphone in a premium black and gold workspace",
+    theme: "light",
+    primaryLabel: "Book a repair",
+    primaryTo: "/repairs",
+    secondaryLabel: "Get support",
+    secondaryTo: "/contact",
   },
   {
+    eyebrow: "Gift Card Trading",
+    title: "Turn supported cards into value.",
+    description: "Send card details for review. Buy & Sell GH confirms accepted card types and value before any next step.",
+    image: giftCardCampaign,
+    imageAlt: "Premium phone and blank gift cards in a black and gold studio scene",
+    theme: "gold",
+    primaryLabel: "Check a card",
+    primaryTo: "/gift-cards",
+    secondaryLabel: "Contact us",
+    secondaryTo: "/contact",
+  },
+  {
+    eyebrow: "Refer a Friend",
+    title: "Good tech is better when shared.",
+    description: "Refer someone looking for a device, repair, trade-in or pre-order without any unconfirmed reward promises.",
+    image: referralCampaign,
+    imageAlt: "Premium smartphones with a sharing icon for referrals",
+    theme: "warm",
+    primaryLabel: "Refer someone",
+    primaryTo: "/refer-a-friend",
+    secondaryLabel: "Learn more",
+    secondaryTo: "/refer-a-friend",
+  },
+  {
+    eyebrow: "Gaming",
+    title: "Consoles and gaming support for serious play.",
+    description: "Explore game console listings and requests with the same clear confirmation flow used across the store.",
+    image: gamingStory,
+    imageAlt: "Premium game console and controller studio artwork",
+    theme: "black",
+    primaryLabel: "View gaming",
+    primaryTo: "/shop?category=Game%20Consoles",
+    secondaryLabel: "WhatsApp",
+    secondaryTo: whatsappHref,
+    secondaryExternal: true,
+  },
+  {
+    eyebrow: "Laptops / Tablets",
+    title: "MacBooks, laptops and iPads for work and school.",
+    description: "Compare laptop and tablet options, then confirm availability before pickup, delivery or pre-order.",
+    image: laptopTabletStory,
+    imageAlt: "Premium laptop and tablet studio artwork",
     theme: "light",
-    eyebrow: "Audio",
-    title: "AirPods, speakers and clean sound.",
-    description:
-      "Find AirPods and audio accessories, then confirm the exact model, connector and availability before pickup or delivery.",
+    primaryLabel: "Shop laptops",
+    primaryTo: "/macbooks",
+    secondaryLabel: "Shop tablets",
+    secondaryTo: "/ipads",
+  },
+  {
+    eyebrow: "Audio / Accessories",
+    title: "AirPods, audio and everyday essentials.",
+    description: "Find AirPods, chargers, cases, cables and accessories with model-specific details where available.",
     image: audioAccessoriesStory,
     imageAlt: "Premium earbuds, headphones and accessory studio artwork",
-    primaryLabel: "Shop Audio",
-    primaryTo: "/shop?category=Audio",
+    theme: "warm",
+    primaryLabel: "Shop AirPods",
+    primaryTo: "/airpods",
     secondaryLabel: "Accessories",
     secondaryTo: "/accessories",
   },
-] as const;
+];
 
 export function HomePage() {
   return (
     <>
       <SEO
-        title="Original Phones, iPads, Laptops and Accessories in Accra"
-        description="Buy & Sell GH sells original phones, iPads, laptops, gaming devices, audio and accessories in Accra with trade-in, pre-order and WhatsApp support."
+        title="Premium Tech Store in Accra | Buy & Sell GH"
+        description="Buy & Sell GH helps customers buy, sell, trade, repair, pre-order and request original phones, iPads, laptops, gaming devices, audio, accessories and supported gift-card services in Accra."
       />
 
-      <main className="apple-home-page">
-        <section className="apple-hero-section" aria-labelledby="home-hero-title">
-          <div className="apple-hero-copy">
-            <p className="apple-eyebrow">Buy & Sell GH</p>
-            <h1 id="home-hero-title">Premium devices. Trusted deals.</h1>
-            <p>
-              Shop original phones, iPads, laptops, gaming, audio and accessories in Accra. Buy, sell, trade or pre-order
-              with clear confirmation before payment.
-            </p>
-            <div className="apple-action-row">
-              <Link className="apple-button apple-button-primary" to="/shop">
-                Shop now <ArrowRight size={18} />
-              </Link>
-              <Link className="apple-button apple-button-secondary" to="/sell-or-trade">
-                Sell or trade
-              </Link>
-            </div>
-            <div className="apple-hero-points" aria-label="Store benefits">
-              {heroPoints.map((point) => (
-                <span key={point}>{point}</span>
-              ))}
-            </div>
-          </div>
-
-          <div className="apple-hero-art" aria-label="Buy & Sell GH premium device artwork">
-            <div className="apple-hero-ring" aria-hidden="true" />
-            <img
-              className="apple-hero-device-art"
-              src={repairsSalesArtwork}
-              alt="Buy & Sell GH phones, laptop, tablet, watch and game console artwork"
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
-            <div className="apple-hero-sweep" aria-hidden="true" />
-          </div>
-        </section>
-
-        <section className="apple-brand-ribbon" aria-label="Store range">
-          <span>Phones</span>
-          <span>Tablets</span>
-          <span>Laptops</span>
-          <span>Gaming</span>
-          <span>Audio</span>
-          <span>Accessories</span>
-        </section>
-
-        {storySections.map((section) => (
-          <section className={`apple-story-section apple-story-${section.theme}`} key={section.title}>
-            <div className="apple-story-copy">
-              <p className="apple-eyebrow">{section.eyebrow}</p>
-              <h2>{section.title}</h2>
-              <p>{section.description}</p>
-              <div className="apple-action-row">
-                <Link className="apple-button apple-button-primary" to={section.primaryTo}>
-                  {section.primaryLabel} <ArrowRight size={18} />
-                </Link>
-                {"externalSecondary" in section && section.externalSecondary ? (
-                  <a className="apple-button apple-button-secondary" href={section.secondaryTo} target="_blank" rel="noopener noreferrer">
-                    {section.secondaryLabel}
-                  </a>
-                ) : (
-                  <Link className="apple-button apple-button-secondary" to={section.secondaryTo}>
-                    {section.secondaryLabel}
-                  </Link>
-                )}
-              </div>
-            </div>
-            <div className="apple-story-art">
-              <img src={section.image} alt={section.imageAlt} loading="lazy" decoding="async" />
-            </div>
-          </section>
+      <main className="campaign-home">
+        {campaigns.map((campaign, index) => (
+          <CampaignSection campaign={campaign} priority={index === 0} key={campaign.title} />
         ))}
 
-        <section className="apple-duo-section" aria-label="Laptops and tablets">
-          <article className="apple-duo-panel apple-duo-wide apple-duo-dark">
-            <div>
-              <p className="apple-eyebrow">Laptops</p>
-              <h2>MacBooks and premium laptops for work, school and creative upgrades.</h2>
-              <p>Compare laptop and tablet options with clear support before pickup, delivery or pre-order.</p>
-              <div className="apple-duo-actions">
-                <Link className="apple-link" to="/macbooks">
-                  Shop laptops <ArrowRight size={16} />
-                </Link>
-                <Link className="apple-link" to="/ipads">
-                  Shop iPads <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
-            <img src={laptopTabletStory} alt="Premium laptop and tablet studio artwork" loading="lazy" decoding="async" />
-          </article>
-        </section>
-
-        <section className="apple-support-section" aria-label="Support options">
+        <section className="campaign-support-grid" aria-label="Pre-order and support options">
           <article>
             <Search size={24} />
-            <h2>Pre-order a device.</h2>
-            <p>Tell us the model, colour, storage and budget. We will help source it.</p>
+            <p className="campaign-eyebrow">Pre-Order</p>
+            <h2>Request the exact device you want.</h2>
+            <p>Tell us the model, colour, storage and budget. We will help source it and confirm next steps.</p>
             <Link to="/pre-order">Request device</Link>
           </article>
           <article>
             <MessageCircle size={24} />
-            <h2>Chat on WhatsApp.</h2>
-            <p>Confirm availability, pickup, delivery and final details with the shop.</p>
+            <p className="campaign-eyebrow">WhatsApp</p>
+            <h2>Talk directly with the shop.</h2>
+            <p>Confirm availability, pickup, delivery, repair, gift-card and trade-in details with Buy & Sell GH.</p>
             <WhatsAppButton>Chat now</WhatsAppButton>
           </article>
           <article>
             <MapPin size={24} />
-            <h2>Visit Dome Pillar 2.</h2>
-            <p>Buy & Sell GH is available in Accra for inspection and support.</p>
+            <p className="campaign-eyebrow">Visit</p>
+            <h2>Dome Pillar 2, Accra.</h2>
+            <p>Bring devices for inspection, support and final confirmation before payment.</p>
             <Link to="/contact">Get directions</Link>
           </article>
           <article>
             <ShoppingBag size={24} />
-            <h2>Shop with clarity.</h2>
-            <p>Products are checked, labelled and confirmed before payment.</p>
-            <Link to="/shop">Browse store</Link>
+            <p className="campaign-eyebrow">Store</p>
+            <h2>Browse with clarity.</h2>
+            <p>The shop remains Buy & Sell GH operated. Product grids stay inside Store where they belong.</p>
+            <Link to="/shop">Open store</Link>
           </article>
         </section>
 
-        <section className="apple-final-section">
-          <div>
-            <p className="apple-eyebrow">Buy & Sell GH</p>
-            <h2>Your next upgrade starts here.</h2>
-          </div>
-          <div className="apple-action-row">
-            <Link className="apple-button apple-button-primary" to="/shop">
+        <section className="campaign-final-section">
+          <p className="campaign-eyebrow">Buy & Sell GH</p>
+          <h2>Your next upgrade starts here.</h2>
+          <div className="campaign-actions">
+            <Link className="campaign-button campaign-button-primary" to="/shop">
               Shop devices
             </Link>
             <WhatsAppButton>WhatsApp</WhatsAppButton>
@@ -240,4 +231,54 @@ export function HomePage() {
       </main>
     </>
   );
+}
+
+function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
+  return (
+    <section className={"campaign-section campaign-" + campaign.theme} aria-labelledby={"campaign-" + slugify(campaign.title)}>
+      <div className="campaign-inner">
+        <div className="campaign-copy">
+          <p className="campaign-eyebrow">{campaign.eyebrow}</p>
+          <h1 id={"campaign-" + slugify(campaign.title)}>{campaign.title}</h1>
+          <p>{campaign.description}</p>
+          {campaign.notes && (
+            <div className="campaign-note-row" aria-label="Service notes">
+              {campaign.notes.map((note) => (
+                <span key={note}>{note}</span>
+              ))}
+            </div>
+          )}
+          <div className="campaign-actions">
+            <Link className="campaign-button campaign-button-primary" to={campaign.primaryTo}>
+              {campaign.primaryLabel} <ArrowRight size={18} />
+            </Link>
+            {campaign.secondaryLabel && campaign.secondaryTo && (
+              campaign.secondaryExternal ? (
+                <a className="campaign-button campaign-button-secondary" href={campaign.secondaryTo} target="_blank" rel="noopener noreferrer">
+                  {campaign.secondaryLabel}
+                </a>
+              ) : (
+                <Link className="campaign-button campaign-button-secondary" to={campaign.secondaryTo}>
+                  {campaign.secondaryLabel}
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+        <div className="campaign-art">
+          <img
+            src={campaign.image}
+            alt={campaign.imageAlt}
+            loading={priority || campaign.imagePriority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority || campaign.imagePriority ? "high" : "auto"}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }

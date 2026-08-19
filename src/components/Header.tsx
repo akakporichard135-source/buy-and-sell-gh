@@ -1,7 +1,7 @@
 import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
@@ -11,16 +11,20 @@ const navItems = [
   { label: "Store", to: "/shop" },
   { label: "iPhone", to: "/iphones" },
   { label: "Samsung", to: "/shop?brand=Samsung" },
-  { label: "iPad", to: "/ipads" },
+  { label: "Tablets", to: "/ipads" },
   { label: "Laptops", to: "/macbooks" },
   { label: "Gaming", to: "/shop?category=Game%20Consoles" },
   { label: "Audio", to: "/shop?category=Audio" },
   { label: "Accessories", to: "/accessories" },
+  { label: "Trade-In", to: "/sell-or-trade" },
   { label: "Support", to: "/contact" },
 ];
 
 const mobileUtilityItems = [
-  { label: "Sell or Trade", to: "/sell-or-trade" },
+  { label: "Installment", to: "/installment" },
+  { label: "Repairs", to: "/repairs" },
+  { label: "Gift Cards", to: "/gift-cards" },
+  { label: "Refer a Friend", to: "/refer-a-friend" },
   { label: "Pre-Order", to: "/pre-order" },
 ];
 
@@ -70,14 +74,17 @@ export function Header() {
     <header className="site-header sticky top-0 z-50 border-b border-black/8 bg-white/96 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
         <Logo />
-        <nav className="hidden items-center gap-2 xl:gap-4 lg:flex" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={linkClass(isNavItemActive(item.to))}>
-              {item.label}
-            </NavLink>
-          ))}
+        <nav className="hidden items-center gap-2 2xl:gap-4 xl:flex" aria-label="Main navigation">
+          {navItems.map((item) => {
+            const active = isNavItemActive(item.to);
+            return (
+              <Link key={item.to} to={item.to} className={linkClass(active)} aria-current={active ? "page" : undefined}>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <button className="icon-button" type="button" aria-label="Search products" onClick={() => setSearchOpen(true)}>
             <Search size={19} />
           </button>
@@ -87,7 +94,7 @@ export function Header() {
           </NavLink>
           <WhatsAppButton className="px-5 py-3 shadow-gold">WhatsApp</WhatsAppButton>
         </div>
-        <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 lg:hidden" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
+        <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 xl:hidden" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
           <Menu size={25} />
         </button>
       </div>
@@ -130,7 +137,7 @@ function MobileMenuOverlay({
   };
 
   return (
-    <div className="mobile-menu-overlay lg:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+    <div className="mobile-menu-overlay xl:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
       <div className="mobile-menu-panel">
         <div className="mobile-menu-header">
           <Logo />
@@ -139,16 +146,22 @@ function MobileMenuOverlay({
           </button>
         </div>
         <nav className="mobile-menu-nav" aria-label="Mobile navigation">
-          {navItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={`mobile-menu-link ${isNavItemActive(item.to) ? "is-active" : ""}`} onClick={onClose}>
-              {item.label}
-            </NavLink>
-          ))}
-          {mobileUtilityItems.map((item) => (
-            <NavLink key={item.to} to={item.to} className={`mobile-menu-link ${isNavItemActive(item.to) ? "is-active" : ""}`} onClick={onClose}>
-              {item.label}
-            </NavLink>
-          ))}
+          {navItems.map((item) => {
+            const active = isNavItemActive(item.to);
+            return (
+              <Link key={item.to} to={item.to} className={`mobile-menu-link ${active ? "is-active" : ""}`} aria-current={active ? "page" : undefined} onClick={onClose}>
+                {item.label}
+              </Link>
+            );
+          })}
+          {mobileUtilityItems.map((item) => {
+            const active = isNavItemActive(item.to);
+            return (
+              <Link key={item.to} to={item.to} className={`mobile-menu-link ${active ? "is-active" : ""}`} aria-current={active ? "page" : undefined} onClick={onClose}>
+                {item.label}
+              </Link>
+            );
+          })}
           <button className="mobile-menu-link" type="button" onClick={onSearch}>
             Search Products
           </button>
