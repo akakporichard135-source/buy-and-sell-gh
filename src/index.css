@@ -8191,3 +8191,219 @@ body {
     max-height: 360px;
   }
 }
+
+/* Homepage campaign rhythm correction */
+.campaign-home .campaign-section {
+  overflow: clip;
+}
+
+.campaign-home .campaign-section .campaign-inner {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: center;
+  gap: clamp(2rem, 4vw, 3.4rem);
+  min-height: auto;
+  padding: clamp(4.2rem, 7vw, 7rem) clamp(1rem, 5vw, 4rem);
+  text-align: center;
+}
+
+.campaign-home .campaign-section:first-child .campaign-inner {
+  min-height: clamp(720px, calc(100svh - 76px), 980px);
+}
+
+.campaign-home .campaign-section .campaign-copy {
+  display: grid;
+  justify-items: center;
+  width: min(100%, 62rem);
+  max-width: 62rem;
+}
+
+.campaign-home .campaign-section .campaign-copy h1 {
+  max-width: 12ch;
+  margin-inline: auto;
+  font-size: clamp(3.4rem, 7vw, 7.4rem);
+  line-height: 0.94;
+}
+
+.campaign-home .campaign-section .campaign-copy p {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
+.campaign-home .campaign-section .campaign-actions,
+.campaign-home .campaign-section .campaign-note-row {
+  justify-content: center;
+}
+
+.campaign-home .campaign-section .campaign-art {
+  width: min(100%, 1180px);
+  min-height: auto;
+  margin-top: clamp(0.2rem, 1vw, 0.8rem);
+}
+
+.campaign-home .campaign-section .campaign-art img {
+  display: block;
+  width: min(100%, 1080px);
+  max-height: min(720px, 74svh);
+  object-fit: contain;
+}
+
+.campaign-home .campaign-section .campaign-art-square img {
+  width: min(100%, 760px);
+  max-height: min(760px, 76svh);
+}
+
+.campaign-home .campaign-section .campaign-art-poster img {
+  width: min(100%, 620px);
+  max-height: none;
+}
+
+.campaign-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.4vw, 1rem);
+  background: #050506;
+  padding: clamp(0.75rem, 1.4vw, 1rem);
+}
+
+.campaign-tile {
+  display: grid;
+  min-height: clamp(620px, 58vw, 860px);
+  align-content: start;
+  justify-items: center;
+  overflow: hidden;
+  padding: clamp(3rem, 5vw, 5rem) clamp(1rem, 3vw, 3rem);
+  text-align: center;
+}
+
+.campaign-tile-copy {
+  display: grid;
+  justify-items: center;
+  width: min(100%, 36rem);
+}
+
+.campaign-tile h2 {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(2.7rem, 4.6vw, 5.4rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 0.94;
+}
+
+.campaign-tile p:not(.campaign-eyebrow) {
+  max-width: 30rem;
+  margin: 1rem auto 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(0.98rem, 1.2vw, 1.1rem);
+  line-height: 1.55;
+}
+
+.campaign-tile.campaign-light p:not(.campaign-eyebrow),
+.campaign-tile.campaign-warm p:not(.campaign-eyebrow),
+.campaign-tile.campaign-gold p:not(.campaign-eyebrow) {
+  color: rgba(16, 16, 18, 0.66);
+}
+
+.campaign-tile .campaign-actions {
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.campaign-tile-art {
+  display: grid;
+  width: min(100%, 720px);
+  min-height: 0;
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+  place-items: end center;
+}
+
+.campaign-tile-art img {
+  display: block;
+  width: min(100%, 680px);
+  max-height: 430px;
+  border-radius: clamp(0.75rem, 1.1vw, 1.1rem);
+  object-fit: contain;
+  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.2));
+}
+
+.campaign-tile .campaign-art-poster img {
+  width: min(100%, 430px);
+  max-height: 500px;
+}
+
+@media (max-width: 1180px) {
+  .campaign-tile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .campaign-tile {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .campaign-home .campaign-section .campaign-inner {
+    gap: 1.55rem;
+    padding: clamp(3.6rem, 14vw, 5.2rem) 1rem;
+  }
+
+  .campaign-home .campaign-section:first-child .campaign-inner {
+    min-height: auto;
+  }
+
+  .campaign-home .campaign-section .campaign-copy h1,
+  .campaign-tile h2 {
+    max-width: 11ch;
+    font-size: clamp(2.5rem, 12vw, 4rem);
+    line-height: 0.96;
+  }
+
+  .campaign-home .campaign-section .campaign-art {
+    width: 100%;
+    margin-top: 0.6rem;
+  }
+
+  .campaign-home .campaign-section .campaign-art img {
+    width: min(100%, 430px);
+    max-height: none;
+  }
+
+  .campaign-home .campaign-section .campaign-art-square img {
+    width: min(100%, 390px);
+  }
+
+  .campaign-home .campaign-section .campaign-art-poster img {
+    width: min(100%, 370px);
+  }
+
+  .campaign-tile-grid {
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+  }
+
+  .campaign-tile {
+    min-height: auto;
+    padding: clamp(3rem, 13vw, 4.4rem) 1rem;
+  }
+
+  .campaign-tile .campaign-actions {
+    width: min(100%, 28rem);
+  }
+
+  .campaign-tile-art {
+    margin-top: 1.7rem;
+  }
+
+  .campaign-tile-art img {
+    width: min(100%, 390px);
+    max-height: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .campaign-home .campaign-section .campaign-copy h1,
+  .campaign-tile h2 {
+    font-size: clamp(2.3rem, 11.5vw, 3.35rem);
+  }
+}

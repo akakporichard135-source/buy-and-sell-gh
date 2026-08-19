@@ -1,7 +1,8 @@
-import { ArrowRight, MapPin, MessageCircle, Search, ShoppingBag } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
-import { WhatsAppButton } from "../components/WhatsAppButton";
+import accessoriesStory from "../assets/categories/accessories-premium.webp";
+import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
 import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
@@ -36,7 +37,7 @@ type Campaign = {
   artShape?: "wide" | "square" | "poster";
 };
 
-const campaigns: Campaign[] = [
+const majorCampaigns: Campaign[] = [
   {
     eyebrow: "Buy & Sell GH",
     title: "Premium tech. Your way.",
@@ -52,7 +53,7 @@ const campaigns: Campaign[] = [
     artShape: "square",
   },
   {
-    eyebrow: "iPhone / Phones",
+    eyebrow: "iPhone",
     title: "Find the phone that fits.",
     description: "Browse iPhones and supported phone requests with clear condition labels and availability confirmation.",
     image: iphoneStory,
@@ -67,7 +68,7 @@ const campaigns: Campaign[] = [
   {
     eyebrow: "iPhone Installment",
     title: "Own an iPhone today.",
-    description: "Pay just 40% upfront. Ghana Card and 40% initial payment are required before Buy & Sell GH confirms next steps.",
+    description: "40% upfront. Ghana Card and initial payment are required before Buy & Sell GH confirms next steps.",
     image: installmentCampaign,
     imageAlt: "Premium iPhones with gold payment tokens for installment enquiries",
     theme: "black",
@@ -108,7 +109,7 @@ const campaigns: Campaign[] = [
   {
     eyebrow: "Repairs",
     title: "Let the experts fix it.",
-    description: "Repair support for mobile phones, laptops and game consoles, prepared for WhatsApp follow-up.",
+    description: "Phones. Laptops. Game consoles.",
     image: repairsCampaign,
     imageAlt: "Technician repairing a smartphone in a premium black and gold workspace",
     theme: "light",
@@ -116,8 +117,12 @@ const campaigns: Campaign[] = [
     primaryTo: "/repairs",
     secondaryLabel: "Get support",
     secondaryTo: "/contact",
+    notes: ["Mobile phones", "Laptops", "Game consoles"],
     artShape: "square",
   },
+];
+
+const featureTiles: Campaign[] = [
   {
     eyebrow: "Gift Card Trading",
     title: "Turn supported cards into value.",
@@ -145,20 +150,31 @@ const campaigns: Campaign[] = [
   },
   {
     eyebrow: "Gaming",
-    title: "Consoles and gaming support for serious play.",
-    description: "Explore game console listings and requests with the same clear confirmation flow used across the store.",
+    title: "Play more.",
+    description: "Game console support and requests with clear confirmation before any next step.",
     image: gamingStory,
     imageAlt: "Premium game console and controller studio artwork",
     theme: "black",
-    primaryLabel: "View gaming",
+    primaryLabel: "Shop Gaming",
     primaryTo: "/shop?category=Game%20Consoles",
-    secondaryLabel: "WhatsApp",
-    secondaryTo: whatsappHref,
-    secondaryExternal: true,
+    secondaryLabel: "Learn more",
+    secondaryTo: "/shop?category=Game%20Consoles",
   },
   {
-    eyebrow: "Laptops / Tablets",
-    title: "MacBooks, laptops and iPads for work and school.",
+    eyebrow: "Audio",
+    title: "Hear more.",
+    description: "AirPods, Bose, JBL and Sony audio requests where catalogue support is available.",
+    image: audioAccessoriesStory,
+    imageAlt: "Premium earbuds, headphones and accessory studio artwork",
+    theme: "warm",
+    primaryLabel: "Shop Audio",
+    primaryTo: "/airpods",
+    secondaryLabel: "Learn more",
+    secondaryTo: "/shop?category=AirPods",
+  },
+  {
+    eyebrow: "Laptops & Tablets",
+    title: "Work. Study. Create.",
     description: "Compare laptop and tablet options, then confirm availability before pickup, delivery or pre-order.",
     image: laptopTabletStory,
     imageAlt: "Premium laptop and tablet studio artwork",
@@ -169,16 +185,38 @@ const campaigns: Campaign[] = [
     secondaryTo: "/ipads",
   },
   {
-    eyebrow: "Audio / Accessories",
-    title: "AirPods, audio and everyday essentials.",
-    description: "Find AirPods, chargers, cases, cables and accessories with model-specific details where available.",
-    image: audioAccessoriesStory,
-    imageAlt: "Premium earbuds, headphones and accessory studio artwork",
+    eyebrow: "Accessories",
+    title: "Everything that completes your setup.",
+    description: "Chargers, cases, cables, keyboards and everyday essentials for supported devices.",
+    image: accessoriesStory,
+    imageAlt: "Premium Apple accessories arranged for a clean setup",
     theme: "warm",
-    primaryLabel: "Shop AirPods",
-    primaryTo: "/airpods",
-    secondaryLabel: "Accessories",
-    secondaryTo: "/accessories",
+    primaryLabel: "Shop Accessories",
+    primaryTo: "/accessories",
+  },
+  {
+    eyebrow: "Pre-Order",
+    title: "Can't find it? Request it.",
+    description: "Tell us the model, colour, storage and budget so Buy & Sell GH can confirm next steps.",
+    image: preorderStory,
+    imageAlt: "Premium devices arranged for a device request campaign",
+    theme: "light",
+    primaryLabel: "Request a Device",
+    primaryTo: "/pre-order",
+    secondaryLabel: "Learn more",
+    secondaryTo: "/device-request",
+  },
+  {
+    eyebrow: "Support",
+    title: "We're here when you need us.",
+    description: "Use WhatsApp or the contact page for availability, pickup, delivery, repair and trade-in help.",
+    image: storeCampaign,
+    imageAlt: "Buy & Sell GH shop rollup artwork for customer support",
+    theme: "black",
+    primaryLabel: "WhatsApp",
+    primaryTo: whatsappHref,
+    secondaryLabel: "Contact us",
+    secondaryTo: "/contact",
   },
 ];
 
@@ -191,50 +229,14 @@ export function HomePage() {
       />
 
       <main className="campaign-home">
-        {campaigns.map((campaign, index) => (
+        {majorCampaigns.map((campaign, index) => (
           <CampaignSection campaign={campaign} priority={index === 0} key={campaign.title} />
         ))}
 
-        <section className="campaign-support-grid" aria-label="Pre-order and support options">
-          <article>
-            <Search size={24} />
-            <p className="campaign-eyebrow">Pre-Order</p>
-            <h2>Request the exact device you want.</h2>
-            <p>Tell us the model, colour, storage and budget. We will help source it and confirm next steps.</p>
-            <Link to="/pre-order">Request device</Link>
-          </article>
-          <article>
-            <MessageCircle size={24} />
-            <p className="campaign-eyebrow">WhatsApp</p>
-            <h2>Talk directly with the shop.</h2>
-            <p>Confirm availability, pickup, delivery, repair, gift-card and trade-in details with Buy & Sell GH.</p>
-            <WhatsAppButton>Chat now</WhatsAppButton>
-          </article>
-          <article>
-            <MapPin size={24} />
-            <p className="campaign-eyebrow">Visit</p>
-            <h2>Dome Pillar 2, Accra.</h2>
-            <p>Bring devices for inspection, support and final confirmation before payment.</p>
-            <Link to="/contact">Get directions</Link>
-          </article>
-          <article>
-            <ShoppingBag size={24} />
-            <p className="campaign-eyebrow">Store</p>
-            <h2>Browse with clarity.</h2>
-            <p>The shop remains Buy & Sell GH operated. Product grids stay inside Store where they belong.</p>
-            <Link to="/shop">Open store</Link>
-          </article>
-        </section>
-
-        <section className="campaign-final-section">
-          <p className="campaign-eyebrow">Buy & Sell GH</p>
-          <h2>Your next upgrade starts here.</h2>
-          <div className="campaign-actions">
-            <Link className="campaign-button campaign-button-primary" to="/shop">
-              Shop devices
-            </Link>
-            <WhatsAppButton>WhatsApp</WhatsAppButton>
-          </div>
+        <section className="campaign-tile-grid" aria-label="Buy & Sell GH services and categories">
+          {featureTiles.map((campaign) => (
+            <CampaignTile campaign={campaign} key={campaign.eyebrow} />
+          ))}
         </section>
       </main>
     </>
@@ -284,6 +286,43 @@ function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?
         </div>
       </div>
     </section>
+  );
+}
+
+function CampaignTile({ campaign }: { campaign: Campaign }) {
+  return (
+    <article className={"campaign-tile campaign-" + campaign.theme} aria-labelledby={"tile-" + slugify(campaign.title)}>
+      <div className="campaign-tile-copy">
+        <p className="campaign-eyebrow">{campaign.eyebrow}</p>
+        <h2 id={"tile-" + slugify(campaign.title)}>{campaign.title}</h2>
+        <p>{campaign.description}</p>
+        <div className="campaign-actions">
+          {campaign.primaryTo.startsWith("http") ? (
+            <a className="campaign-button campaign-button-primary" href={campaign.primaryTo} target="_blank" rel="noopener noreferrer">
+              {campaign.primaryLabel} <ArrowRight size={18} />
+            </a>
+          ) : (
+            <Link className="campaign-button campaign-button-primary" to={campaign.primaryTo}>
+              {campaign.primaryLabel} <ArrowRight size={18} />
+            </Link>
+          )}
+          {campaign.secondaryLabel && campaign.secondaryTo && (
+            campaign.secondaryExternal ? (
+              <a className="campaign-button campaign-button-secondary" href={campaign.secondaryTo} target="_blank" rel="noopener noreferrer">
+                {campaign.secondaryLabel}
+              </a>
+            ) : (
+              <Link className="campaign-button campaign-button-secondary" to={campaign.secondaryTo}>
+                {campaign.secondaryLabel}
+              </Link>
+            )
+          )}
+        </div>
+      </div>
+      <div className={"campaign-tile-art campaign-art-" + (campaign.artShape ?? "wide")}>
+        <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
+      </div>
+    </article>
   );
 }
 
