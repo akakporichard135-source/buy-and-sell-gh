@@ -3,11 +3,12 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
+import accessoriesStory from "../assets/categories/accessories-premium.webp";
 import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
 import heroEcosystem from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
-import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-trading.webp";
 import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
 import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
@@ -38,6 +39,7 @@ type Campaign = {
   imagePriority?: boolean;
   artShape?: "wide" | "square" | "poster" | "lineup";
   fallbackImage?: string;
+  galleryImages?: { src: string; alt: string }[];
 };
 
 const baseMajorCampaigns: Campaign[] = [
@@ -150,24 +152,22 @@ const featureTiles: Campaign[] = [
     secondaryTo: "/ipads",
   },
   {
-    eyebrow: "Repairs",
-    title: "Let the experts fix it.",
-    description: "Phones. Laptops. Game consoles.",
-    image: repairsCampaign,
-    imageAlt: "Buy & Sell GH repairs and sales artwork",
-    theme: "light",
-    primaryLabel: "Book a Repair",
-    primaryTo: "/repairs",
-    secondaryLabel: "Get Support",
-    secondaryTo: "/contact",
-    artShape: "square",
+    eyebrow: "Accessories",
+    title: "Everything that completes your setup.",
+    description: "Cases, chargers, cables and essentials for supported devices.",
+    image: accessoriesStory,
+    imageAlt: "Premium Apple accessories arranged for a clean setup",
+    theme: "black",
+    primaryLabel: "Shop Accessories",
+    primaryTo: "/accessories",
+    artShape: "wide",
   },
   {
-    eyebrow: "Gift Card Trading",
-    title: "Turn supported cards into value.",
+    eyebrow: "Visa Card Trading",
+    title: "Turn supported Visa cards into value.",
     description: "Send card details for review and confirmation.",
-    image: giftCardCampaign,
-    imageAlt: "Premium phone and blank gift cards in a black and gold studio scene",
+    image: visaCardCampaign,
+    imageAlt: "Generic premium card trading visual with unbranded payment cards and a smartphone",
     theme: "gold",
     primaryLabel: "Check a Card",
     primaryTo: "/gift-cards",
@@ -200,17 +200,18 @@ const featureTiles: Campaign[] = [
     secondaryTo: "/device-request",
   },
   {
-    eyebrow: "Trade-In",
-    title: "Upgrade for less.",
-    description: "Trade or swap your current device toward something newer.",
-    image: upgradeSaveArtwork,
-    imageAlt: "Buy & Sell GH upgrade and save trade-in artwork",
+    eyebrow: "Support",
+    title: "We're here when you need us.",
+    description: "Get help with buying, selling, repairs, pre-orders and availability.",
+    image: heroEcosystem,
+    imageAlt: "Buy & Sell GH premium product support visual",
     theme: "black",
-    primaryLabel: "Start a Trade",
-    primaryTo: "/sell-or-trade",
-    secondaryLabel: "How It Works",
-    secondaryTo: "/sell-or-trade",
-    artShape: "poster",
+    primaryLabel: "Get Support",
+    primaryTo: "/contact",
+    secondaryLabel: "WhatsApp",
+    secondaryTo: whatsappHref,
+    secondaryExternal: true,
+    artShape: "wide",
   },
 ];
 
@@ -218,9 +219,10 @@ const serviceItems = [
   { label: "Buy", to: "/shop" },
   { label: "Sell", to: "/sell-or-trade" },
   { label: "Trade", to: "/sell-or-trade" },
-  { label: "Repair", to: "/repairs" },
+  { label: "Repairs", to: "/repairs" },
   { label: "Installment", to: "/installment" },
-  { label: "Gift Cards", to: "/gift-cards" },
+  { label: "Visa Card Trading", to: "/gift-cards" },
+  { label: "Refer a Friend", to: "/refer-a-friend" },
   { label: "Pre-Order", to: "/pre-order" },
   { label: "Support", to: "/contact" },
 ];
@@ -237,6 +239,7 @@ export function HomePage() {
         description: "Meet the latest lineup available through Buy & Sell GH.",
         image: latestIphone.image,
         imageAlt: latestIphone.imageAlt,
+        galleryImages: latestIphone.galleryImages,
         theme: "light" as const,
         primaryLabel: "Learn more",
         primaryTo: latestIphone.learnMoreTo,
@@ -254,7 +257,7 @@ export function HomePage() {
     <>
       <SEO
         title="Premium Tech Store in Accra | Buy & Sell GH"
-        description="Buy & Sell GH helps customers buy, sell, trade, repair, pre-order and request original phones, iPads, laptops, gaming devices, audio, accessories and supported gift-card services in Accra."
+        description="Buy & Sell GH helps customers buy, sell, trade, repair, pre-order and request original phones, iPads, laptops, gaming devices, audio, accessories and supported Visa card trading services in Accra."
       />
 
       <main className="campaign-home">
@@ -272,7 +275,7 @@ export function HomePage() {
           <div className="campaign-everything-copy">
             <p className="campaign-eyebrow">Everything Buy & Sell GH</p>
             <h2 id="everything-buy-and-sell-gh">Everything tech. One place.</h2>
-            <p>Buy. Sell. Trade. Repair. All in one place, with availability and next steps confirmed before payment.</p>
+            <p>Buy. Sell. Trade. Repair. All in one place.</p>
           </div>
           <div className="campaign-service-ribbon" aria-label="Buy & Sell GH services">
             {serviceItems.map((item) => (
@@ -320,18 +323,38 @@ function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?
           </div>
         </div>
         <div className={"campaign-art campaign-art-" + (campaign.artShape ?? "wide")}>
-          <img
-            src={campaign.image}
-            alt={campaign.imageAlt}
-            loading={priority || campaign.imagePriority ? "eager" : "lazy"}
-            decoding="async"
-            fetchPriority={priority || campaign.imagePriority ? "high" : "auto"}
-            onError={(event) => {
-              if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-              event.currentTarget.dataset.fallbackApplied = "true";
-              event.currentTarget.src = campaign.fallbackImage;
-            }}
-          />
+          {campaign.galleryImages && campaign.galleryImages.length > 1 ? (
+            <div className="campaign-lineup-gallery" aria-label={campaign.imageAlt}>
+              {campaign.galleryImages.map((image, index) => (
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  loading={priority || campaign.imagePriority || index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={priority || campaign.imagePriority || index === 0 ? "high" : "auto"}
+                  key={image.src}
+                  onError={(event) => {
+                    if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                    event.currentTarget.dataset.fallbackApplied = "true";
+                    event.currentTarget.src = campaign.fallbackImage;
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <img
+              src={campaign.image}
+              alt={campaign.imageAlt}
+              loading={priority || campaign.imagePriority ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={priority || campaign.imagePriority ? "high" : "auto"}
+              onError={(event) => {
+                if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = campaign.fallbackImage;
+              }}
+            />
+          )}
         </div>
       </div>
     </section>
@@ -395,6 +418,7 @@ function getLatestIphoneLineup(products: Product[]) {
     generationLabel,
     variants,
     image,
+    galleryImages: getLatestIphoneGalleryImages(variants),
     imageAlt: imageProduct
       ? `${generationLabel} lineup featuring ${imageProduct.name}`
       : "Premium iPhone lineup artwork for Buy & Sell GH",
@@ -415,6 +439,17 @@ function selectBestIphoneImageProduct(variants: Product[]) {
   if (!variants.length) return undefined;
   const sorted = [...variants].sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a));
   return sorted.find((product) => product.images?.length) ?? sorted[0];
+}
+
+function getLatestIphoneGalleryImages(variants: Product[]) {
+  return [...variants]
+    .sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a))
+    .map((product) => {
+      const src = product.images?.[product.primaryImageIndex ?? 0]?.src ?? product.images?.[0]?.src;
+      return src ? { src, alt: product.name } : null;
+    })
+    .filter((entry): entry is { src: string; alt: string } => Boolean(entry))
+    .slice(0, 4);
 }
 
 function iphoneVariantRank(product: Product) {

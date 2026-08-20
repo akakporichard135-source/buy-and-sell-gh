@@ -23,7 +23,7 @@ const navItems = [
 const mobileUtilityItems = [
   { label: "Installment", to: "/installment" },
   { label: "Repairs", to: "/repairs" },
-  { label: "Gift Cards", to: "/gift-cards" },
+  { label: "Visa Cards", to: "/gift-cards" },
   { label: "Refer a Friend", to: "/refer-a-friend" },
   { label: "Pre-Order", to: "/pre-order" },
 ];

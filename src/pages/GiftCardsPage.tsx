@@ -3,25 +3,25 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import giftCardCampaign from "../assets/homepage/homepage-gift-card-campaign.jpg";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-trading.webp";
 
 export function GiftCardsPage() {
   return (
     <>
-      <SEO title="Gift Card Trading Enquiry" description="Contact Buy & Sell GH to check supported gift card trading options. Values and accepted cards are confirmed directly." />
+      <SEO title="Visa Card Trading Enquiry" description="Contact Buy & Sell GH to check supported Visa card trading options. Values and accepted cards are confirmed directly." />
       <section className="service-hero service-hero-dark">
         <div>
-          <p className="campaign-eyebrow">Gift Card Trading</p>
+          <p className="campaign-eyebrow">Visa Card Trading</p>
           <h1>Check a supported card.</h1>
           <p>Send details for review. Buy & Sell GH confirms accepted card types and value before any next step.</p>
         </div>
-        <img src={giftCardCampaign} alt="Premium blank gift cards and smartphone in a black and gold studio" loading="eager" decoding="async" />
+        <img src={visaCardCampaign} alt="Generic premium card trading visual with unbranded payment cards and a smartphone" loading="eager" decoding="async" />
       </section>
       <section className="section service-layout">
-        <SuccessForm buttonLabel="Prepare Gift Card Enquiry" successIntent="general">
+        <SuccessForm buttonLabel="Prepare Visa Card Enquiry" successIntent="general">
           <FormField label="Customer name" name="name" required maxLength={120} />
           <FormField label="Phone number" name="phone" required maxLength={32} />
-          <FormField label="Card type" name="cardType" placeholder="Example: Visa gift card" required maxLength={120} />
+          <FormField label="Card type" name="cardType" placeholder="Example: Visa card" required maxLength={120} />
           <FormField label="Card currency" name="currency" maxLength={40} />
           <FormField label="Card value" name="cardValue" required maxLength={80} />
           <FormField label="Country/region on card" name="region" maxLength={120} />

@@ -8201,14 +8201,14 @@ body {
   grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   align-content: center;
-  gap: clamp(2rem, 4vw, 3.4rem);
+  gap: clamp(1rem, 2.4vw, 2.1rem);
   min-height: auto;
-  padding: clamp(4.2rem, 7vw, 7rem) clamp(1rem, 5vw, 4rem);
+  padding: clamp(3.2rem, 5.4vw, 5.6rem) clamp(1rem, 5vw, 4rem);
   text-align: center;
 }
 
 .campaign-home .campaign-section:first-child .campaign-inner {
-  min-height: clamp(720px, calc(100svh - 76px), 980px);
+  min-height: clamp(720px, calc(100svh - 76px), 940px);
 }
 
 .campaign-home .campaign-section .campaign-copy {
@@ -8227,49 +8227,85 @@ body {
 
 .campaign-home .campaign-section .campaign-copy p {
   max-width: 44rem;
+  margin-top: 0.82rem;
   margin-inline: auto;
 }
 
 .campaign-home .campaign-section .campaign-actions,
 .campaign-home .campaign-section .campaign-note-row {
   justify-content: center;
+  margin-top: 1rem;
 }
 
 .campaign-home .campaign-section .campaign-art {
-  width: min(100%, 1180px);
+  width: min(100%, 1320px);
   min-height: auto;
-  margin-top: clamp(0.2rem, 1vw, 0.8rem);
+  margin-top: clamp(0rem, 0.5vw, 0.35rem);
 }
 
 .campaign-home .campaign-section .campaign-art img {
   display: block;
-  width: min(100%, 1080px);
-  max-height: min(720px, 74svh);
+  width: min(100%, 1240px);
+  max-height: min(800px, 76svh);
   object-fit: contain;
 }
 
 .campaign-home .campaign-section .campaign-art-square img {
-  width: min(100%, 760px);
-  max-height: min(760px, 76svh);
+  width: min(100%, 880px);
+  max-height: min(820px, 76svh);
 }
 
 .campaign-home .campaign-section .campaign-art-poster img {
-  width: min(100%, 620px);
+  width: min(100%, 720px);
   max-height: none;
 }
 
 .campaign-home .campaign-section .campaign-art-lineup {
-  width: min(100%, 980px);
-  padding-block: clamp(0.5rem, 1.8vw, 1.6rem);
+  width: min(100%, 1160px);
+  padding-block: clamp(0.25rem, 0.8vw, 0.8rem);
+}
+
+.campaign-lineup-gallery {
+  display: flex;
+  width: min(100%, 1120px);
+  min-height: min(600px, 64svh);
+  align-items: end;
+  justify-content: center;
+  gap: clamp(0rem, 1vw, 0.5rem);
+  isolation: isolate;
 }
 
 .campaign-home .campaign-section .campaign-art-lineup img {
-  width: min(100%, 820px);
-  max-height: min(560px, 58svh);
+  width: min(100%, 1120px);
+  max-height: min(760px, 68svh);
   border-radius: clamp(1.2rem, 2vw, 2rem);
   background: transparent;
   object-fit: contain;
   filter: drop-shadow(0 28px 48px rgba(15, 15, 18, 0.18));
+}
+
+.campaign-home .campaign-section .campaign-lineup-gallery img {
+  width: clamp(160px, 23vw, 330px);
+  max-height: min(620px, 64svh);
+  margin-inline: clamp(-2rem, -1.8vw, -0.4rem);
+  object-fit: contain;
+}
+
+.campaign-home .campaign-section .campaign-lineup-gallery img:first-child {
+  width: clamp(220px, 30vw, 430px);
+  z-index: 4;
+}
+
+.campaign-home .campaign-section .campaign-lineup-gallery img:nth-child(2) {
+  z-index: 3;
+}
+
+.campaign-home .campaign-section .campaign-lineup-gallery img:nth-child(3) {
+  z-index: 2;
+}
+
+.campaign-home .campaign-section .campaign-lineup-gallery img:nth-child(4) {
+  z-index: 1;
 }
 
 .campaign-tile-grid {
@@ -8282,11 +8318,11 @@ body {
 
 .campaign-tile {
   display: grid;
-  min-height: clamp(620px, 58vw, 860px);
+  min-height: clamp(620px, 56vw, 840px);
   align-content: start;
   justify-items: center;
   overflow: hidden;
-  padding: clamp(3rem, 5vw, 5rem) clamp(1rem, 3vw, 3rem);
+  padding: clamp(2.6rem, 4.2vw, 4.2rem) clamp(1rem, 3vw, 2.8rem);
   text-align: center;
 }
 
@@ -8307,7 +8343,7 @@ body {
 
 .campaign-tile p:not(.campaign-eyebrow) {
   max-width: 30rem;
-  margin: 1rem auto 0;
+  margin: 0.78rem auto 0;
   color: rgba(255, 255, 255, 0.7);
   font-size: clamp(0.98rem, 1.2vw, 1.1rem);
   line-height: 1.55;
@@ -8321,29 +8357,29 @@ body {
 
 .campaign-tile .campaign-actions {
   justify-content: center;
-  margin-top: 1.25rem;
+  margin-top: 1rem;
 }
 
 .campaign-tile-art {
   display: grid;
-  width: min(100%, 720px);
+  width: min(100%, 800px);
   min-height: 0;
-  margin-top: clamp(2rem, 4vw, 3.5rem);
+  margin-top: clamp(1.2rem, 2.6vw, 2.5rem);
   place-items: end center;
 }
 
 .campaign-tile-art img {
   display: block;
-  width: min(100%, 680px);
-  max-height: 430px;
+  width: min(100%, 760px);
+  max-height: 540px;
   border-radius: clamp(0.75rem, 1.1vw, 1.1rem);
   object-fit: contain;
   filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.2));
 }
 
 .campaign-tile .campaign-art-poster img {
-  width: min(100%, 430px);
-  max-height: 500px;
+  width: min(100%, 500px);
+  max-height: 620px;
 }
 
 .campaign-everything-section {
@@ -8383,25 +8419,46 @@ body {
 }
 
 .campaign-service-ribbon {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 0.85rem;
-  width: min(100%, 980px);
+  width: min(100%, 1160px);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0.2rem 0 0.45rem;
+  scroll-snap-type: x proximity;
 }
 
 .campaign-service-chip {
-  display: inline-flex;
-  min-height: 58px;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  display: grid;
+  flex: 0 0 clamp(190px, 18vw, 240px);
+  min-height: 132px;
+  align-items: end;
+  justify-content: start;
   gap: 0.45rem;
   border: 1px solid rgba(246, 190, 0, 0.26);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1.45rem;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(246, 190, 0, 0.24), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035));
   color: #fff;
   font-weight: 950;
+  overflow: hidden;
+  padding: 1.1rem;
+  scroll-snap-align: start;
   text-decoration: none;
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.campaign-service-chip::before {
+  content: "";
+  position: absolute;
+  inset: 1rem 1rem auto auto;
+  width: 3.1rem;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: rgba(246, 190, 0, 0.16);
+  box-shadow: 0 0 42px rgba(246, 190, 0, 0.18);
 }
 
 .campaign-service-chip:hover {
@@ -8410,7 +8467,7 @@ body {
   transform: translateY(-1px);
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 920px) {
   .campaign-tile-grid {
     grid-template-columns: 1fr;
   }
@@ -8419,9 +8476,6 @@ body {
     min-height: auto;
   }
 
-  .campaign-service-ribbon {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 760px) {
@@ -8438,8 +8492,8 @@ body {
   }
 
   .campaign-home .campaign-section .campaign-inner {
-    gap: 1.55rem;
-    padding: clamp(3.6rem, 14vw, 5.2rem) 1rem;
+    gap: 1rem;
+    padding: clamp(3rem, 11vw, 4.4rem) 1rem;
   }
 
   .campaign-home .campaign-section:first-child .campaign-inner {
@@ -8471,7 +8525,7 @@ body {
   }
 
   .campaign-home .campaign-section .campaign-art img {
-    width: min(100%, 430px);
+    width: min(100%, 470px);
     max-height: none;
   }
 
@@ -8480,12 +8534,25 @@ body {
   }
 
   .campaign-home .campaign-section .campaign-art-poster img {
-    width: min(100%, 370px);
+    width: min(100%, 410px);
   }
 
   .campaign-home .campaign-section .campaign-art-lineup img {
-    width: min(100%, 390px);
-    max-height: 340px;
+    width: min(100%, 430px);
+    max-height: 430px;
+  }
+
+  .campaign-lineup-gallery {
+    width: min(100%, 430px);
+    min-height: 330px;
+    gap: 0;
+  }
+
+  .campaign-home .campaign-section .campaign-lineup-gallery img,
+  .campaign-home .campaign-section .campaign-lineup-gallery img:first-child {
+    width: clamp(120px, 43vw, 190px);
+    max-height: 330px;
+    margin-inline: -1.5rem;
   }
 
   .campaign-tile-grid {
@@ -8495,7 +8562,7 @@ body {
 
   .campaign-tile {
     min-height: auto;
-    padding: clamp(3rem, 13vw, 4.4rem) 1rem;
+    padding: clamp(2.8rem, 11vw, 4rem) 1rem;
   }
 
   .campaign-tile .campaign-actions {
@@ -8505,7 +8572,7 @@ body {
 
   .campaign-tile-art {
     max-width: calc(100vw - 2rem);
-    margin-top: 1.7rem;
+    margin-top: 1.15rem;
   }
 
   .campaign-tile-art img {
@@ -8524,21 +8591,15 @@ body {
   }
 
   .campaign-service-ribbon {
-    display: flex;
     width: calc(100vw - 2rem);
     max-width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding-bottom: 0.25rem;
-    scroll-snap-type: x proximity;
   }
 
   .campaign-service-chip {
     flex: 0 0 auto;
-    min-width: 9.5rem;
+    width: 11rem;
+    min-height: 116px;
     padding-inline: 1rem;
-    scroll-snap-align: start;
   }
 }
 
@@ -8550,6 +8611,17 @@ body {
   }
 
   .campaign-home .campaign-section .campaign-art-lineup img {
+    max-height: 380px;
+  }
+
+  .campaign-lineup-gallery {
+    min-height: 300px;
+  }
+
+  .campaign-home .campaign-section .campaign-lineup-gallery img,
+  .campaign-home .campaign-section .campaign-lineup-gallery img:first-child {
+    width: clamp(112px, 43vw, 170px);
     max-height: 300px;
+    margin-inline: -1.45rem;
   }
 }
