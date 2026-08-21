@@ -16,8 +16,14 @@ import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
 import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import sellCashArtwork from "../assets/homepage/owner-sell-cash.jpg";
 import upgradeSaveArtwork from "../assets/homepage/owner-upgrade-save.jpg";
+import appleWatchStory from "../assets/products/apple-watch-series-11-premium.webp";
+import ipadAirStory from "../assets/products/ipad-air-11-inch-m4-premium.webp";
+import ipadProStory from "../assets/products/ipad-pro-13-inch-m5-premium.webp";
+import macbookAirStory from "../assets/products/macbook-air-13-inch-m5-premium.webp";
+import macbookProStory from "../assets/products/macbook-pro-14-inch-m5-pro-max-premium.webp";
 import { business } from "../config/business";
 import type { Product } from "../types/product";
+import { resolveProductImage } from "../utils/productImages";
 
 const whatsappHref = "https://wa.me/" + business.whatsapp.primary;
 
@@ -111,6 +117,71 @@ const baseMajorCampaigns: Campaign[] = [
     secondaryTo: "/contact",
     notes: ["Mobile phones", "Laptops", "Game consoles"],
     artShape: "square",
+  },
+];
+
+const macbookAirCampaign: Campaign = {
+  eyebrow: "MacBook Air",
+  title: "Power that travels light.",
+  description: "Explore the latest MacBook Air models available through Buy & Sell GH.",
+  image: macbookAirStory,
+  imageAlt: "MacBook Air in a clean premium product presentation",
+  theme: "warm",
+  primaryLabel: "Learn more",
+  primaryTo: "/macbooks?family=MacBook%20Air",
+  secondaryLabel: "Shop MacBook",
+  secondaryTo: "/shop?category=MacBooks",
+  artShape: "wide",
+};
+
+const productStoryTiles: Campaign[] = [
+  {
+    eyebrow: "iPad Air",
+    title: "Light. Bright. Capable.",
+    description: "A powerful iPad for work, study and creativity.",
+    image: ipadAirStory,
+    imageAlt: "iPad Air in a clean premium product presentation",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/ipads?family=iPad%20Air",
+    secondaryLabel: "Shop iPad",
+    secondaryTo: "/shop?category=iPads",
+  },
+  {
+    eyebrow: "MacBook Pro",
+    title: "Built for demanding work.",
+    description: "Discover MacBook Pro models for serious performance.",
+    image: macbookProStory,
+    imageAlt: "MacBook Pro in a dark premium product presentation",
+    theme: "black",
+    primaryLabel: "Learn more",
+    primaryTo: "/macbooks?family=MacBook%20Pro",
+    secondaryLabel: "Shop MacBook",
+    secondaryTo: "/shop?category=MacBooks",
+  },
+  {
+    eyebrow: "Apple Watch",
+    title: "Stay connected. Keep moving.",
+    description: "Apple Watch models for everyday activity and connection.",
+    image: appleWatchStory,
+    imageAlt: "Apple Watch in a clean premium product presentation",
+    theme: "warm",
+    primaryLabel: "Learn more",
+    primaryTo: "/apple-watch",
+    secondaryLabel: "Shop Watch",
+    secondaryTo: "/shop?category=Apple%20Watches",
+  },
+  {
+    eyebrow: "iPad Pro",
+    title: "Big ideas. Pro power.",
+    description: "A premium iPad experience for advanced creative work.",
+    image: ipadProStory,
+    imageAlt: "iPad Pro in a dark premium product presentation",
+    theme: "black",
+    primaryLabel: "Learn more",
+    primaryTo: "/ipads?family=iPad%20Pro",
+    secondaryLabel: "Shop iPad",
+    secondaryTo: "/shop?category=iPads",
   },
 ];
 
@@ -215,6 +286,21 @@ const featureTiles: Campaign[] = [
   },
 ];
 
+const tradeAndCardTiles = [baseMajorCampaigns[3], featureTiles[4]];
+
+const lowerServiceTiles = [
+  baseMajorCampaigns[1],
+  baseMajorCampaigns[2],
+  baseMajorCampaigns[4],
+  featureTiles[5],
+  featureTiles[0],
+  featureTiles[1],
+  featureTiles[2],
+  featureTiles[3],
+  featureTiles[6],
+  featureTiles[7],
+];
+
 const serviceItems = [
   { label: "Buy", to: "/shop" },
   { label: "Sell", to: "/sell-or-trade" },
@@ -248,7 +334,7 @@ export function HomePage() {
         artShape: "lineup" as const,
         fallbackImage: iphoneStory,
       },
-      ...baseMajorCampaigns.slice(1),
+      macbookAirCampaign,
     ],
     [latestIphone],
   );
@@ -265,10 +351,29 @@ export function HomePage() {
           <CampaignSection campaign={campaign} priority={index === 0} key={campaign.title} />
         ))}
 
-        <section className="campaign-tile-grid" aria-label="Buy & Sell GH services and categories">
-          {featureTiles.map((campaign) => (
+        <section className="campaign-tile-grid campaign-product-grid" aria-label="Featured Apple product stories">
+          {productStoryTiles.map((campaign) => (
             <CampaignTile campaign={campaign} key={campaign.eyebrow} />
           ))}
+        </section>
+
+        <section className="campaign-tile-grid campaign-promo-grid" aria-label="Trade-in and Visa Card Trading">
+          {tradeAndCardTiles.map((campaign) => (
+            <CampaignTile campaign={campaign} key={campaign.eyebrow} />
+          ))}
+        </section>
+
+        <section className="campaign-lower-stories" aria-labelledby="more-from-buy-and-sell-gh">
+          <div className="campaign-grid-heading">
+            <p className="campaign-eyebrow">More from Buy & Sell GH</p>
+            <h2 id="more-from-buy-and-sell-gh">Services for every step.</h2>
+            <p>Buy, sell, repair, request and get support in one trusted place.</p>
+          </div>
+          <div className="campaign-tile-grid campaign-service-grid">
+            {lowerServiceTiles.map((campaign) => (
+              <CampaignTile campaign={campaign} key={campaign.eyebrow} />
+            ))}
+          </div>
         </section>
 
         <section className="campaign-everything-section" aria-labelledby="everything-buy-and-sell-gh">
@@ -412,7 +517,8 @@ function getLatestIphoneLineup(products: Product[]) {
     ? ranked.filter((entry) => entry.generationNumber === newestNumber).map((entry) => entry.product)
     : [];
   const imageProduct = selectBestIphoneImageProduct(variants);
-  const image = imageProduct?.images?.[imageProduct.primaryImageIndex ?? 0]?.src ?? imageProduct?.images?.[0]?.src ?? iphoneStory;
+  const resolvedImage = imageProduct ? resolveProductImage(imageProduct) : undefined;
+  const image = resolvedImage?.src ?? iphoneStory;
 
   return {
     generationLabel,
@@ -445,8 +551,8 @@ function getLatestIphoneGalleryImages(variants: Product[]) {
   return [...variants]
     .sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a))
     .map((product) => {
-      const src = product.images?.[product.primaryImageIndex ?? 0]?.src ?? product.images?.[0]?.src;
-      return src ? { src, alt: product.name } : null;
+      const image = resolveProductImage(product);
+      return image ? { src: image.src, alt: image.alt || product.name } : null;
     })
     .filter((entry): entry is { src: string; alt: string } => Boolean(entry))
     .slice(0, 4);
