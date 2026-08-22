@@ -1,33 +1,39 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Banknote, Building2, ChevronRight, MessageCircle, Smartphone } from "lucide-react";
 import { useMemo } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
 import accessoriesStory from "../assets/categories/accessories-premium.webp";
 import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
-import heroEcosystem from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
-import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
-import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
-import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
 import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
 import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import sellCashArtwork from "../assets/homepage/owner-sell-cash.jpg";
 import upgradeSaveArtwork from "../assets/homepage/owner-upgrade-save.jpg";
+import airpodsProStory from "../assets/products/airpods-pro-3-premium.webp";
 import appleWatchStory from "../assets/products/apple-watch-series-11-premium.webp";
+import cableStory from "../assets/products/apple-usb-c-charge-cable-premium.webp";
+import caseStory from "../assets/products/apple-clear-iphone-case-magsafe-premium.webp";
+import chargerStory from "../assets/products/apple-20w-usb-c-power-adapter-premium.webp";
 import ipadAirStory from "../assets/products/ipad-air-11-inch-m4-premium.webp";
 import ipadProStory from "../assets/products/ipad-pro-13-inch-m5-premium.webp";
+import iphone16Story from "../assets/products/iphone-16-pro-max-premium.webp";
+import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import macbookAirStory from "../assets/products/macbook-air-13-inch-m5-premium.webp";
 import macbookProStory from "../assets/products/macbook-pro-14-inch-m5-pro-max-premium.webp";
+import magsafeStory from "../assets/products/apple-magsafe-charger-premium.webp";
+import adapterStory from "../assets/products/apple-35w-dual-usb-c-power-adapter-premium.webp";
+import watchAccessoryStory from "../assets/products/apple-watch-fast-charger-usb-c-premium.webp";
 import { business } from "../config/business";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
 
-const whatsappHref = "https://wa.me/" + business.whatsapp.primary;
+const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 
-type CampaignTheme = "black" | "light" | "gold" | "warm";
+type CampaignTheme = "black" | "light" | "warm";
 
 type Campaign = {
   eyebrow: string;
@@ -40,430 +46,313 @@ type Campaign = {
   primaryTo: string;
   secondaryLabel?: string;
   secondaryTo?: string;
-  secondaryExternal?: boolean;
-  notes?: string[];
-  imagePriority?: boolean;
-  artShape?: "wide" | "square" | "poster" | "lineup" | "card";
-  fallbackImage?: string;
   galleryImages?: { src: string; alt: string }[];
+  fallbackImage?: string;
 };
-
-const baseMajorCampaigns: Campaign[] = [
-  {
-    eyebrow: "Buy & Sell GH",
-    title: "Premium tech. Your way.",
-    description: "Buy, sell, trade, repair, pre-order and get support from Dome Pillar 2 in Accra.",
-    image: heroEcosystem,
-    imageAlt: "Premium Buy & Sell GH product composition with iPhones, laptop, watch and audio accessories",
-    theme: "black",
-    primaryLabel: "Shop",
-    primaryTo: "/shop",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/about",
-    imagePriority: true,
-    artShape: "wide",
-  },
-  {
-    eyebrow: "iPhone Installment",
-    title: "Own an iPhone today.",
-    description: "40% upfront. Ghana Card and initial payment are required before Buy & Sell GH confirms next steps.",
-    image: installmentCampaign,
-    imageAlt: "Premium iPhones with gold payment tokens for installment enquiries",
-    theme: "black",
-    primaryLabel: "Learn more",
-    primaryTo: "/installment",
-    secondaryLabel: "Enquire on WhatsApp",
-    secondaryTo: whatsappHref,
-    secondaryExternal: true,
-    notes: ["40% upfront", "Ghana Card required"],
-    artShape: "poster",
-  },
-  {
-    eyebrow: "Sell Your Device",
-    title: "Turn your old device into cash.",
-    description: "Bring your phone, tablet, laptop, watch or game console for inspection and a confirmed offer.",
-    image: sellCashArtwork,
-    imageAlt: "Premium trade-in counter artwork for selling an old device",
-    theme: "warm",
-    primaryLabel: "Get started",
-    primaryTo: "/sell-or-trade",
-    secondaryLabel: "How it works",
-    secondaryTo: "/sell-or-trade",
-    artShape: "square",
-  },
-  {
-    eyebrow: "Upgrade & Save",
-    title: "Trade what you have for what you want next.",
-    description: "Swap old iPhones, MacBooks, game consoles and iPads toward newer versions after inspection.",
-    image: upgradeSaveArtwork,
-    imageAlt: "Premium device upgrade value artwork",
-    theme: "black",
-    primaryLabel: "Start a trade",
-    primaryTo: "/sell-or-trade",
-    secondaryLabel: "Request device",
-    secondaryTo: "/pre-order",
-    artShape: "poster",
-  },
-  {
-    eyebrow: "Repairs",
-    title: "Let the experts fix it.",
-    description: "Phones. Laptops. Game consoles.",
-    image: repairsCampaign,
-    imageAlt: "Technician repairing a smartphone in a premium black and gold workspace",
-    theme: "light",
-    primaryLabel: "Book a repair",
-    primaryTo: "/repairs",
-    secondaryLabel: "Get support",
-    secondaryTo: "/contact",
-    notes: ["Mobile phones", "Laptops", "Game consoles"],
-    artShape: "square",
-  },
-];
 
 const macbookAirCampaign: Campaign = {
   eyebrow: "MacBook Air",
-  title: "Power that travels light.",
-  description: "Explore the latest MacBook Air models available through Buy & Sell GH.",
+  title: "Supercharged for everything you do.",
+  description: "A remarkably capable laptop in a light, travel-ready design.",
   image: macbookAirStory,
-  imageAlt: "MacBook Air in a clean premium product presentation",
+  imageAlt: "MacBook Air in a clean warm studio presentation",
   theme: "warm",
   primaryLabel: "Learn more",
   primaryTo: "/macbooks?family=MacBook%20Air",
-  secondaryLabel: "Shop MacBook",
+  secondaryLabel: "Buy",
   secondaryTo: "/shop?category=MacBooks",
-  artShape: "wide",
 };
 
-const productStoryTiles: Campaign[] = [
-  {
-    eyebrow: "iPad Air",
-    title: "Light. Bright. Capable.",
-    description: "A powerful iPad for work, study and creativity.",
-    image: ipadAirStory,
-    imageAlt: "iPad Air in a clean premium product presentation",
-    theme: "light",
-    primaryLabel: "Learn more",
-    primaryTo: "/ipads?family=iPad%20Air",
-    secondaryLabel: "Shop iPad",
-    secondaryTo: "/shop?category=iPads",
-  },
+const ipadAirCampaign: Campaign = {
+  eyebrow: "iPad Air",
+  title: "Fresh. Powerful. Colourful.",
+  description: "Made for work, study, creativity and everything in between.",
+  image: ipadAirStory,
+  imageAlt: "iPad Air in a layered premium product presentation",
+  theme: "light",
+  primaryLabel: "Learn more",
+  primaryTo: "/ipads?family=iPad%20Air",
+  secondaryLabel: "Buy",
+  secondaryTo: "/shop?category=iPads",
+};
+
+const productTiles: Campaign[] = [
   {
     eyebrow: "MacBook Pro",
-    title: "Built for demanding work.",
-    description: "Discover MacBook Pro models for serious performance.",
+    title: "Power for your best work.",
+    description: "Serious performance for demanding creative and professional workflows.",
     image: macbookProStory,
-    imageAlt: "MacBook Pro in a dark premium product presentation",
+    imageAlt: "MacBook Pro in a premium dark studio presentation",
     theme: "black",
     primaryLabel: "Learn more",
     primaryTo: "/macbooks?family=MacBook%20Pro",
-    secondaryLabel: "Shop MacBook",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop?category=MacBooks",
   },
   {
     eyebrow: "Apple Watch",
-    title: "Stay connected. Keep moving.",
-    description: "Apple Watch models for everyday activity and connection.",
+    title: "Move. Connect. Keep going.",
+    description: "A capable everyday companion, right on your wrist.",
     image: appleWatchStory,
-    imageAlt: "Apple Watch in a clean premium product presentation",
+    imageAlt: "Apple Watch in a warm premium presentation",
     theme: "warm",
     primaryLabel: "Learn more",
     primaryTo: "/apple-watch",
-    secondaryLabel: "Shop Watch",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop?category=Apple%20Watches",
+  },
+  {
+    eyebrow: "AirPods Pro",
+    title: "Immersive sound. Effortless listening.",
+    description: "Premium personal audio for work, travel and everything between.",
+    image: airpodsProStory,
+    imageAlt: "AirPods Pro in a clean premium product presentation",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/airpods?family=AirPods%20Pro",
+    secondaryLabel: "Buy",
+    secondaryTo: "/shop?category=AirPods",
   },
   {
     eyebrow: "iPad Pro",
     title: "Big ideas. Pro power.",
-    description: "A premium iPad experience for advanced creative work.",
+    description: "A premium canvas for advanced creative work.",
     image: ipadProStory,
-    imageAlt: "iPad Pro in a dark premium product presentation",
+    imageAlt: "iPad Pro in a premium black studio presentation",
     theme: "black",
     primaryLabel: "Learn more",
     primaryTo: "/ipads?family=iPad%20Pro",
-    secondaryLabel: "Shop iPad",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop?category=iPads",
   },
 ];
 
-const featureTiles: Campaign[] = [
-  {
-    eyebrow: "Gaming",
-    title: "Play more.",
-    description: "Consoles, controllers and gaming accessories.",
-    image: gamingStory,
-    imageAlt: "Premium game console and controller studio artwork",
-    theme: "black",
-    primaryLabel: "Shop Gaming",
-    primaryTo: "/shop?category=Game%20Consoles",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/shop?category=Game%20Consoles",
-  },
-  {
-    eyebrow: "Audio",
-    title: "Hear more.",
-    description: "Headphones, earbuds and speakers.",
-    image: audioAccessoriesStory,
-    imageAlt: "Premium earbuds, headphones and accessory studio artwork",
-    theme: "warm",
-    primaryLabel: "Shop Audio",
-    primaryTo: "/airpods",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/airpods",
-  },
-  {
-    eyebrow: "Laptops & Tablets",
-    title: "Work. Study. Create.",
-    description: "MacBooks, laptops, iPads and tablets.",
-    image: laptopTabletStory,
-    imageAlt: "Premium laptop and tablet studio artwork",
-    theme: "light",
-    primaryLabel: "Shop laptops",
-    primaryTo: "/macbooks",
-    secondaryLabel: "Shop tablets",
-    secondaryTo: "/ipads",
-  },
-  {
-    eyebrow: "Accessories",
-    title: "Everything that completes your setup.",
-    description: "Cases, chargers, cables and essentials for supported devices.",
-    image: accessoriesStory,
-    imageAlt: "Premium Apple accessories arranged for a clean setup",
-    theme: "black",
-    primaryLabel: "Shop Accessories",
-    primaryTo: "/accessories",
-    artShape: "wide",
-  },
-  {
-    eyebrow: "Visa Card Trading",
-    title: "Turn supported Visa cards into value.",
-    description: "Send card details for review and confirmation.",
-    image: visaCardCampaign,
-    imageAlt: "One original unbranded black and gold card for supported card review",
-    theme: "warm",
-    primaryLabel: "Check a Card",
-    primaryTo: "/gift-cards",
-    secondaryLabel: "Contact Us",
-    secondaryTo: "/contact",
-    artShape: "card",
-  },
-  {
-    eyebrow: "Refer a Friend",
-    title: "Good tech is better when shared.",
-    description: "Refer someone to Buy & Sell GH.",
-    image: referralCampaign,
-    imageAlt: "Buy & Sell GH refer a friend artwork",
-    theme: "warm",
-    primaryLabel: "Refer Someone",
-    primaryTo: "/refer-a-friend",
-    secondaryLabel: "Learn More",
-    secondaryTo: "/refer-a-friend",
-    artShape: "wide",
-  },
-  {
-    eyebrow: "Pre-Order",
-    title: "Can't find it? Request it.",
-    description: "Tell us the model, colour, storage and budget so Buy & Sell GH can confirm next steps.",
-    image: preorderStory,
-    imageAlt: "Premium devices arranged for a device request campaign",
-    theme: "light",
-    primaryLabel: "Request a Device",
-    primaryTo: "/pre-order",
-    secondaryLabel: "Learn more",
-    secondaryTo: "/device-request",
-  },
-  {
-    eyebrow: "Support",
-    title: "We're here when you need us.",
-    description: "Chat on WhatsApp, call us or visit Buy & Sell GH at Dome Pillar 2 in Accra.",
-    image: heroEcosystem,
-    imageAlt: "Buy & Sell GH premium product support visual",
-    theme: "black",
-    primaryLabel: "Get Support",
-    primaryTo: "/contact",
-    secondaryLabel: "WhatsApp",
-    secondaryTo: whatsappHref,
-    secondaryExternal: true,
-    artShape: "wide",
-  },
+const accessories = [
+  { name: "AirPods", image: airpodsProStory, to: "/airpods" },
+  { name: "Cases", image: caseStory, to: "/accessories?family=iPhone%20Accessories" },
+  { name: "Chargers", image: chargerStory, to: "/accessories?family=Charging%20%26%20Power" },
+  { name: "MagSafe", image: magsafeStory, to: "/accessories?family=iPhone%20Accessories" },
+  { name: "Cables", image: cableStory, to: "/accessories?family=Cables" },
+  { name: "Watch Accessories", image: watchAccessoryStory, to: "/accessories?family=Watch%20Accessories" },
+  { name: "Adapters", image: adapterStory, to: "/accessories?family=Charging%20%26%20Power" },
 ];
 
-const shoppingTiles = [
-  ...productStoryTiles,
-  featureTiles[0],
-  featureTiles[1],
-  featureTiles[2],
-  featureTiles[3],
-];
-
-const serviceCampaigns = [
-  baseMajorCampaigns[3],
-  featureTiles[4],
-  baseMajorCampaigns[1],
-  baseMajorCampaigns[2],
-  baseMajorCampaigns[4],
-  featureTiles[5],
-  featureTiles[7],
+const serviceStories = [
+  { label: "Trade In", title: "Upgrade for less.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "gold" },
+  { label: "Phone Repairs", title: "Let the experts fix it.", image: repairsCampaign, to: "/repairs", tone: "light" },
+  { label: "Installment", title: "Own an iPhone today.", image: installmentCampaign, to: "/installment", tone: "black" },
+  { label: "Sell Your Device", title: "Turn your old device into cash.", image: sellCashArtwork, to: "/sell-or-trade", tone: "black" },
+  { label: "Upgrade & Save", title: "Swap what you have for what comes next.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "gold" },
+  { label: "Refer a Friend", title: "Good tech is better when shared.", image: referralCampaign, to: "/refer-a-friend", tone: "light" },
+  { label: "Pre-Order", title: "Request the exact device you want.", image: preorderStory, to: "/pre-order", tone: "warm" },
+  { label: "New Arrivals", title: "See what just landed.", image: iphone17Story, to: "/shop?sort=newest", tone: "black" },
+  { label: "Certified Pre-Owned", title: "More value. Clearly graded.", image: iphone16Story, to: "/shop?condition=UK%20Used", tone: "warm" },
+  { label: "Delivery", title: "Pickup and delivery, clearly arranged.", image: accessoriesStory, to: "/shopping-information", tone: "light" },
+  { label: "Support", title: "Answers when you need them.", image: audioAccessoriesStory, to: "/contact", tone: "black" },
 ];
 
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts), [activeProducts]);
-  const majorCampaigns = useMemo(
-    () => [
-      baseMajorCampaigns[0],
-      {
-        eyebrow: "iPhone",
-        title: latestIphone.generationLabel,
-        description: "Meet the latest lineup available through Buy & Sell GH.",
-        image: latestIphone.image,
-        imageAlt: latestIphone.imageAlt,
-        galleryImages: latestIphone.galleryImages,
-        theme: "light" as const,
-        primaryLabel: "Learn more",
-        primaryTo: latestIphone.learnMoreTo,
-        secondaryLabel: "Shop iPhone",
-        secondaryTo: "/iphones",
-        artShape: "lineup" as const,
-        fallbackImage: iphoneStory,
-      },
-      macbookAirCampaign,
-    ],
-    [latestIphone],
-  );
+
+  const latestIphoneCampaign: Campaign = {
+    eyebrow: "Latest iPhone",
+    title: latestIphone.generationLabel,
+    description: latestIphone.variants.some((product) => /\bpro\b/i.test(product.name))
+      ? "Pro in every way. Meet the newest iPhone family in our catalogue."
+      : "Meet the newest iPhone family in our catalogue.",
+    image: latestIphone.image,
+    imageAlt: latestIphone.imageAlt,
+    galleryImages: latestIphone.galleryImages,
+    theme: "black",
+    primaryLabel: "Learn more",
+    primaryTo: latestIphone.learnMoreTo,
+    secondaryLabel: "Buy",
+    secondaryTo: "/iphones",
+    fallbackImage: iphone17Story,
+  };
+
+  const families = [
+    { name: "iPhone", image: latestIphone.image, to: "/iphones" },
+    { name: "Mac", image: macbookAirStory, to: "/macbooks" },
+    { name: "iPad", image: ipadAirStory, to: "/ipads" },
+    { name: "Watch", image: appleWatchStory, to: "/apple-watch" },
+    { name: "AirPods", image: airpodsProStory, to: "/airpods" },
+    { name: "Accessories", image: accessoriesStory, to: "/accessories" },
+  ];
 
   return (
     <>
-      <SEO
-        title="Premium Tech Store in Accra | Buy & Sell GH"
-        description="Buy & Sell GH helps customers buy, sell, trade, repair, pre-order and request original phones, iPads, laptops, gaming devices, audio, accessories and supported Visa card trading services in Accra."
-      />
+      <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
+      <main className="storefront-home">
+        <div className="store-announcement" role="note">
+          <span>Trade in your current device and upgrade for less.</span>
+          <Link to="/sell-or-trade">Get estimate <ChevronRight size={15} /></Link>
+        </div>
 
-      <main className="campaign-home">
-        {majorCampaigns.map((campaign, index) => (
-          <CampaignSection campaign={campaign} priority={index === 0} key={campaign.title} />
-        ))}
+        <ProductLaunch campaign={latestIphoneCampaign} priority />
+        <ProductLaunch campaign={macbookAirCampaign} />
+        <ProductLaunch campaign={ipadAirCampaign} />
 
-        <section className="campaign-tile-grid campaign-product-grid" aria-label="Featured products and shopping categories">
-          {shoppingTiles.map((campaign) => (
-            <CampaignTile campaign={campaign} key={campaign.eyebrow} />
-          ))}
+        <section className="store-product-grid" aria-label="Featured product families">
+          {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
         </section>
 
-        <CampaignSection campaign={featureTiles[6]} />
+        <section className="store-trade-section" aria-labelledby="store-trade-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Trade In</p>
+            <h2 id="store-trade-title">Turn the device you have into the one you want.</h2>
+            <Link className="store-button store-button-primary" to="/sell-or-trade">Start Trade-In <ArrowRight size={17} /></Link>
+          </div>
+          <div className="trade-device-flow" aria-label="Trade an older device toward a newer device">
+            <img src={iphone16Story} alt="Current iPhone ready for a trade-in estimate" loading="lazy" decoding="async" />
+            <ArrowRight aria-hidden="true" />
+            <img src={iphone17Story} alt="Newer iPhone available after a confirmed trade-in" loading="lazy" decoding="async" />
+          </div>
+        </section>
 
-        {serviceCampaigns.map((campaign) => (
-          <CampaignSection campaign={campaign} key={campaign.eyebrow} />
-        ))}
+        <section className="store-payments-section" aria-labelledby="store-payments-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Payments</p>
+            <h2 id="store-payments-title">Pay your way.</h2>
+            <p>Final payment instructions are confirmed by Buy & Sell GH before payment.</p>
+          </div>
+          <div className="payment-methods" aria-label="Confirmed payment preferences">
+            <span><Smartphone size={23} /> Mobile Money on Confirmation</span>
+            <span><Banknote size={23} /> Pay on Pickup</span>
+            <span><Building2 size={23} /> Bank Transfer on Confirmation</span>
+          </div>
+        </section>
+
+        <section className="store-visa-section" aria-labelledby="store-visa-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Visa Card Trading</p>
+            <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
+            <p>Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.</p>
+            <div className="store-actions">
+              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
+              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+            </div>
+          </div>
+          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
+        </section>
+
+        <StoreRail eyebrow="Accessories" title="Perfect companions for your devices." description="Swipe to explore" className="accessory-rail">
+          {accessories.map((item) => (
+            <Link className="accessory-card" to={item.to} key={item.name}>
+              <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
+              <strong>{item.name}</strong>
+              <span>Shop <ChevronRight size={15} /></span>
+            </Link>
+          ))}
+        </StoreRail>
+
+        <section className="store-family-section" aria-labelledby="store-family-title">
+          <div className="store-section-heading">
+            <p className="store-eyebrow">Shop</p>
+            <h2 id="store-family-title">Shop by product family.</h2>
+          </div>
+          <div className="family-grid">
+            {families.map((family) => (
+              <Link to={family.to} className="family-card" key={family.name}>
+                <img src={family.image} alt="" loading="lazy" decoding="async" />
+                <strong>{family.name}</strong>
+                <ChevronRight size={17} />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail">
+          {serviceStories.map((story) => (
+            <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
+              <div><span>{story.label}</span><strong>{story.title}</strong></div>
+              <img src={story.image} alt={`${story.label} from Buy & Sell GH`} loading="lazy" decoding="async" />
+              <small>Learn more <ChevronRight size={14} /></small>
+            </Link>
+          ))}
+        </StoreRail>
+
+        <section className="store-support-section" aria-labelledby="store-support-title">
+          <MessageCircle size={42} aria-hidden="true" />
+          <p className="store-eyebrow">Support</p>
+          <h2 id="store-support-title">We're here to help.</h2>
+          <p>Need help choosing a device, placing an order or arranging a repair?</p>
+          <div className="store-actions">
+            <a className="store-button store-button-primary" href={whatsappHref} target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
+            <Link className="store-button store-button-secondary" to="/contact">Contact Support</Link>
+          </div>
+        </section>
       </main>
     </>
   );
 }
 
-function CampaignSection({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
+function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
   return (
-    <section className={"campaign-section campaign-" + campaign.theme} aria-labelledby={"campaign-" + slugify(campaign.title)}>
-      <div className="campaign-inner">
-        <div className="campaign-copy">
-          <p className="campaign-eyebrow">{campaign.eyebrow}</p>
-          <h1 id={"campaign-" + slugify(campaign.title)}>{campaign.title}</h1>
-          <p>{campaign.description}</p>
-          {campaign.notes && (
-            <div className="campaign-note-row" aria-label="Service notes">
-              {campaign.notes.map((note) => (
-                <span key={note}>{note}</span>
-              ))}
-            </div>
-          )}
-          <div className="campaign-actions">
-            <Link className="campaign-button campaign-button-primary" to={campaign.primaryTo}>
-              {campaign.primaryLabel} <ArrowRight size={18} />
-            </Link>
-            {campaign.secondaryLabel && campaign.secondaryTo && (
-              campaign.secondaryExternal ? (
-                <a className="campaign-button campaign-button-secondary" href={campaign.secondaryTo} target="_blank" rel="noopener noreferrer">
-                  {campaign.secondaryLabel}
-                </a>
-              ) : (
-                <Link className="campaign-button campaign-button-secondary" to={campaign.secondaryTo}>
-                  {campaign.secondaryLabel}
-                </Link>
-              )
-            )}
+    <section className={`store-launch store-launch-${campaign.theme}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
+      <div className="store-launch-copy">
+        <p className="store-eyebrow">{campaign.eyebrow}</p>
+        <h1 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h1>
+        <p>{campaign.description}</p>
+        <div className="store-actions">
+          <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
+          {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
+        </div>
+      </div>
+      <div className="store-launch-art">
+        {campaign.galleryImages && campaign.galleryImages.length > 1 ? (
+          <div className="store-phone-lineup" aria-label={campaign.imageAlt}>
+            {campaign.galleryImages.map((image, index) => (
+              <img
+                src={image.src}
+                alt={image.alt}
+                loading={priority || index === 0 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={priority || index === 0 ? "high" : "auto"}
+                key={image.src}
+                onError={(event) => {
+                  if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                  event.currentTarget.dataset.fallbackApplied = "true";
+                  event.currentTarget.src = campaign.fallbackImage;
+                }}
+              />
+            ))}
           </div>
-        </div>
-        <div className={"campaign-art campaign-art-" + (campaign.artShape ?? "wide")}>
-          {campaign.galleryImages && campaign.galleryImages.length > 1 ? (
-            <div className="campaign-lineup-gallery" aria-label={campaign.imageAlt}>
-              {campaign.galleryImages.map((image, index) => (
-                <img
-                  src={image.src}
-                  alt={image.alt}
-                  loading={priority || campaign.imagePriority || index === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  fetchPriority={priority || campaign.imagePriority || index === 0 ? "high" : "auto"}
-                  key={image.src}
-                  onError={(event) => {
-                    if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                    event.currentTarget.dataset.fallbackApplied = "true";
-                    event.currentTarget.src = campaign.fallbackImage;
-                  }}
-                />
-              ))}
-            </div>
-          ) : (
-            <img
-              src={campaign.image}
-              alt={campaign.imageAlt}
-              loading={priority || campaign.imagePriority ? "eager" : "lazy"}
-              decoding="async"
-              fetchPriority={priority || campaign.imagePriority ? "high" : "auto"}
-              onError={(event) => {
-                if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-                event.currentTarget.dataset.fallbackApplied = "true";
-                event.currentTarget.src = campaign.fallbackImage;
-              }}
-            />
-          )}
-        </div>
+        ) : (
+          <img src={campaign.image} alt={campaign.imageAlt} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />
+        )}
       </div>
     </section>
   );
 }
 
-function CampaignTile({ campaign }: { campaign: Campaign }) {
+function ProductTile({ campaign }: { campaign: Campaign }) {
   return (
-    <article className={"campaign-tile campaign-" + campaign.theme} aria-labelledby={"tile-" + slugify(campaign.title)}>
-      <div className="campaign-tile-copy">
-        <p className="campaign-eyebrow">{campaign.eyebrow}</p>
-        <h2 id={"tile-" + slugify(campaign.title)}>{campaign.title}</h2>
+    <article className={`store-product-tile store-product-${campaign.theme}`}>
+      <div className="store-tile-copy">
+        <p className="store-eyebrow">{campaign.eyebrow}</p>
+        <h2>{campaign.title}</h2>
         <p>{campaign.description}</p>
-        <div className="campaign-actions">
-          {campaign.primaryTo.startsWith("http") ? (
-            <a className="campaign-button campaign-button-primary" href={campaign.primaryTo} target="_blank" rel="noopener noreferrer">
-              {campaign.primaryLabel} <ArrowRight size={18} />
-            </a>
-          ) : (
-            <Link className="campaign-button campaign-button-primary" to={campaign.primaryTo}>
-              {campaign.primaryLabel} <ArrowRight size={18} />
-            </Link>
-          )}
-          {campaign.secondaryLabel && campaign.secondaryTo && (
-            campaign.secondaryExternal ? (
-              <a className="campaign-button campaign-button-secondary" href={campaign.secondaryTo} target="_blank" rel="noopener noreferrer">
-                {campaign.secondaryLabel}
-              </a>
-            ) : (
-              <Link className="campaign-button campaign-button-secondary" to={campaign.secondaryTo}>
-                {campaign.secondaryLabel}
-              </Link>
-            )
-          )}
+        <div className="store-actions">
+          <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
+          {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
         </div>
       </div>
-      <div className={"campaign-tile-art campaign-art-" + (campaign.artShape ?? "wide")}>
-        <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
-      </div>
+      <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
     </article>
+  );
+}
+
+function StoreRail({ eyebrow, title, description, className, children }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode }) {
+  return (
+    <section className={`store-rail-section ${className}`} aria-labelledby={`rail-${slugify(title)}`}>
+      <div className="store-rail-heading">
+        <div><p className="store-eyebrow">{eyebrow}</p><h2 id={`rail-${slugify(title)}`}>{title}</h2></div>
+        <span>{description} <ArrowRight size={16} /></span>
+      </div>
+      <div className="store-horizontal-rail">{children}</div>
+    </section>
   );
 }
 
@@ -477,24 +366,18 @@ function getLatestIphoneLineup(products: Product[]) {
     .filter((entry): entry is { product: Product; generationNumber: number } => entry.generationNumber !== null);
   const newestNumber = ranked.length ? Math.max(...ranked.map((entry) => entry.generationNumber)) : null;
   const generationLabel = newestNumber ? `iPhone ${newestNumber}` : "iPhone";
-  const variants = newestNumber
-    ? ranked.filter((entry) => entry.generationNumber === newestNumber).map((entry) => entry.product)
-    : [];
+  const variants = newestNumber ? ranked.filter((entry) => entry.generationNumber === newestNumber).map((entry) => entry.product) : [];
   const imageProduct = selectBestIphoneImageProduct(variants);
   const resolvedImage = imageProduct ? resolveProductImage(imageProduct) : undefined;
-  const image = resolvedImage?.src ?? iphoneStory;
+  const image = resolvedImage?.src ?? iphone17Story;
 
   return {
     generationLabel,
     variants,
     image,
     galleryImages: getLatestIphoneGalleryImages(variants),
-    imageAlt: imageProduct
-      ? `${generationLabel} lineup featuring ${imageProduct.name}`
-      : "Premium iPhone lineup artwork for Buy & Sell GH",
-    learnMoreTo: newestNumber
-      ? `/shop?category=Phones&brand=Apple&generation=${encodeURIComponent(generationLabel)}`
-      : "/iphones",
+    imageAlt: imageProduct ? `${generationLabel} lineup featuring ${imageProduct.name}` : "Premium iPhone lineup artwork for Buy & Sell GH",
+    learnMoreTo: newestNumber ? `/shop?category=Phones&brand=Apple&generation=${encodeURIComponent(generationLabel)}` : "/iphones",
   };
 }
 

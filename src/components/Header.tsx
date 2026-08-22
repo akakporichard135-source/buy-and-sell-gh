@@ -1,4 +1,4 @@
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Menu, MessageCircle, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -9,14 +9,12 @@ import { WhatsAppButton } from "./WhatsAppButton";
 
 const navItems = [
   { label: "Store", to: "/shop" },
+  { label: "Mac", to: "/macbooks" },
+  { label: "iPad", to: "/ipads" },
   { label: "iPhone", to: "/iphones" },
-  { label: "Samsung", to: "/shop?brand=Samsung" },
-  { label: "Tablets", to: "/ipads" },
-  { label: "Laptops", to: "/macbooks" },
-  { label: "Gaming", to: "/shop?category=Game%20Consoles" },
-  { label: "Audio", to: "/shop?category=Audio" },
+  { label: "Watch", to: "/apple-watch" },
+  { label: "AirPods", to: "/airpods" },
   { label: "Accessories", to: "/accessories" },
-  { label: "Trade-In", to: "/sell-or-trade" },
   { label: "Support", to: "/contact" },
 ];
 
@@ -72,7 +70,7 @@ export function Header() {
 
   return (
     <header className="site-header sticky top-0 z-50 border-b border-black/8 bg-white/96 shadow-sm backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
+      <div className="site-header-inner mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
         <Logo />
         <nav className="hidden items-center gap-2 2xl:gap-4 xl:flex" aria-label="Main navigation">
           {navItems.map((item) => {
@@ -92,11 +90,20 @@ export function Header() {
             <ShoppingBag size={19} />
             {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
           </NavLink>
-          <WhatsAppButton className="px-5 py-3 shadow-gold">WhatsApp</WhatsAppButton>
+          <a className="icon-button" href="https://wa.me/233244182149" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+            <MessageCircle size={19} />
+          </a>
         </div>
-        <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger h-11 w-11 shrink-0 xl:hidden" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
-          <Menu size={25} />
-        </button>
+        <div className="mobile-header-actions xl:hidden">
+          <button className="icon-button" type="button" aria-label="Search products" onClick={() => setSearchOpen(true)}><Search size={19} /></button>
+          <NavLink to="/cart" className="icon-button relative" aria-label="Open cart">
+            <ShoppingBag size={19} />
+            {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
+          </NavLink>
+          <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger shrink-0" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
+            <Menu size={22} />
+          </button>
+        </div>
       </div>
 
       {open && createPortal(
