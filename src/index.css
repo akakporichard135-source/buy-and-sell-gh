@@ -8262,13 +8262,13 @@ body {
 
 .store-human-campaign {
   display: grid;
-  min-height: clamp(720px, calc(100svh - 94px), 980px);
+  min-height: clamp(650px, calc(100svh - 94px), 840px);
   align-content: center;
   justify-items: center;
-  gap: clamp(1.5rem, 3vw, 2.6rem);
+  gap: clamp(0.9rem, 2vw, 1.5rem);
   overflow: hidden;
   background: var(--bg-secondary);
-  padding: clamp(3.8rem, 6vw, 6.2rem) max(1rem, calc((100vw - 1480px) / 2)) 0;
+  padding: clamp(3rem, 5vw, 4.8rem) max(1rem, calc((100vw - 1480px) / 2)) 0;
   color: var(--text-primary);
   text-align: center;
 }
@@ -8281,16 +8281,16 @@ body {
 }
 
 .store-human-campaign-copy h1 {
-  max-width: 13ch;
+  max-width: 16ch;
   margin: 0;
-  font-size: clamp(3.4rem, 6.4vw, 6.7rem);
+  font-size: clamp(3rem, 5.1vw, 5rem);
   font-weight: 950;
   letter-spacing: 0;
   line-height: 0.96;
 }
 
 .store-human-campaign-copy > p:not(.store-eyebrow) {
-  max-width: 48rem;
+  max-width: 42rem;
   margin: 0.9rem auto 0;
   color: var(--text-secondary);
   font-size: clamp(1rem, 1.25vw, 1.16rem);
@@ -8300,7 +8300,7 @@ body {
 .store-human-campaign-art {
   position: relative;
   display: block;
-  width: min(100%, 1380px);
+  width: min(100%, 1240px);
   overflow: hidden;
   animation: store-human-art-reveal 900ms 100ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
@@ -8318,7 +8318,7 @@ body {
 .store-human-campaign-art img {
   display: block;
   width: 100%;
-  max-height: min(650px, 64svh);
+  max-height: min(540px, 56svh);
   object-fit: contain;
   transform-origin: center bottom;
   animation: store-human-float 12s 1s ease-in-out infinite alternate;
@@ -8404,7 +8404,7 @@ body {
   color: var(--brand-gold);
 }
 
-.store-launch h1,
+.store-launch h2,
 .store-section-copy h2,
 .store-section-heading h2,
 .store-rail-heading h2,
@@ -8415,9 +8415,13 @@ body {
   line-height: 0.98;
 }
 
-.store-launch h1 {
+.store-launch h2 {
+  margin: 0;
   max-width: 15ch;
   font-size: clamp(3.3rem, 6vw, 6.25rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 0.98;
 }
 
 .store-launch-copy > p:not(.store-eyebrow),
@@ -8462,12 +8466,23 @@ body {
 }
 
 .store-button-primary {
-  background: var(--store-gold-bright);
-  color: #1d1d1f;
+  background: var(--link-blue);
+  color: #fff;
 }
 
 .store-button-primary:hover {
-  background: var(--brand-gold-hover);
+  background: #0066cc;
+}
+
+.store-launch-black .store-button-primary,
+.store-product-black .store-button-primary {
+  background: #2997ff;
+  color: #fff;
+}
+
+.store-launch-black .store-button-primary:hover,
+.store-product-black .store-button-primary:hover {
+  background: #147ce5;
 }
 
 .store-button-secondary {
@@ -8814,6 +8829,11 @@ body {
   color: inherit;
   padding: 1.35rem;
   scroll-snap-align: start;
+  transition: transform 220ms ease;
+}
+
+.service-story-card:hover {
+  transform: translateY(-3px);
 }
 
 .service-story-black {
@@ -9058,7 +9078,7 @@ body {
     padding: clamp(3.2rem, 13vw, 4.5rem) 1rem 2.2rem;
   }
 
-  .store-launch h1 {
+  .store-launch h2 {
     width: min(100%, calc(100vw - 2rem));
     font-size: clamp(2.7rem, 13vw, 4.1rem);
   }

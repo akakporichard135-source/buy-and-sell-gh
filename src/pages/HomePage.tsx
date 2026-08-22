@@ -10,8 +10,8 @@ import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories
 import airpodsProCampaignArt from "../assets/homepage/homepage-airpods-pro-cinematic.webp";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
-import humanTechCampaign from "../assets/homepage/homepage-human-tech-campaign.webp";
-import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-campaign-mobile.webp";
+import humanTechCampaign from "../assets/homepage/homepage-human-tech-sticker.webp";
+import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-sticker-mobile.webp";
 import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
@@ -83,6 +83,19 @@ const ipadAirCampaign: Campaign = {
   primaryTo: "/ipads?family=iPad%20Air",
   secondaryLabel: "Buy",
   secondaryTo: "/shop?category=iPads",
+};
+
+const deviceRequestCampaign: Campaign = {
+  eyebrow: "Pre-Order",
+  title: "Can't find it? Request it.",
+  description: "Tell us the exact device you want and Buy & Sell GH will confirm availability and next steps.",
+  image: preorderStory,
+  imageAlt: "Premium device ready for a Buy & Sell GH pre-order request",
+  theme: "warm",
+  primaryLabel: "Request a Device",
+  primaryTo: "/pre-order",
+  secondaryLabel: "Learn more",
+  secondaryTo: "/device-request",
 };
 
 const productTiles: Campaign[] = [
@@ -167,9 +180,9 @@ export function HomePage() {
 
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
-    title: latestIphone.generationLabel,
-    description: latestIphone.variants.some((product) => /\bpro\b/i.test(product.name))
-      ? "Pro in every way. Meet the newest iPhone family in our catalogue."
+    title: latestIphone.featuredName,
+    description: /\bpro\b/i.test(latestIphone.featuredName)
+      ? "Pro in every way."
       : "Meet the newest iPhone family in our catalogue.",
     image: hasCurrentLineupCampaign ? iphone17LineupCampaign : latestIphone.image,
     imageAlt: hasCurrentLineupCampaign
@@ -204,12 +217,10 @@ export function HomePage() {
 
         <section className="store-human-campaign" aria-labelledby="store-human-campaign-title">
           <div className="store-human-campaign-copy">
-            <p className="store-eyebrow">Buy &amp; Sell GH</p>
             <h1 id="store-human-campaign-title">Tech, your way.</h1>
             <p>Buy &amp; Sell GH helps customers buy, sell, trade, repair and upgrade iPhones, iPads, MacBooks, watches and accessories in Accra.</p>
             <div className="store-actions">
               <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
-              <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
             </div>
           </div>
           <picture className="store-human-campaign-art">
@@ -232,42 +243,7 @@ export function HomePage() {
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
         </section>
 
-        <section className="store-trade-section" aria-labelledby="store-trade-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Trade In</p>
-            <h2 id="store-trade-title">Turn the device you have into the one you want.</h2>
-            <Link className="store-button store-button-primary" to="/sell-or-trade">Start Trade-In <ArrowRight size={17} /></Link>
-          </div>
-          <div className="trade-device-flow" aria-label="Trade an older device toward a newer device">
-            <img src={upgradeSaveArtwork} alt="An older phone transitioning toward a newer flagship phone" loading="lazy" decoding="async" />
-          </div>
-        </section>
-
-        <section className="store-payments-section" aria-labelledby="store-payments-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Payments</p>
-            <h2 id="store-payments-title">Pay your way.</h2>
-            <p>Final payment instructions are confirmed by Buy & Sell GH before payment.</p>
-          </div>
-          <div className="payment-methods" aria-label="Confirmed payment preferences">
-            <span><Smartphone size={23} /> Mobile Money on Confirmation</span>
-            <span><Banknote size={23} /> Pay on Pickup</span>
-            <span><Building2 size={23} /> Bank Transfer on Confirmation</span>
-          </div>
-        </section>
-
-        <section className="store-visa-section" aria-labelledby="store-visa-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Visa Card Trading</p>
-            <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
-            <p>Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.</p>
-            <div className="store-actions">
-              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
-              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
-            </div>
-          </div>
-          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
-        </section>
+        <ProductLaunch campaign={deviceRequestCampaign} />
 
         <StoreRail eyebrow="Accessories" title="Perfect companions for your devices." description="Swipe to explore" className="accessory-rail">
           {accessories.map((item) => (
@@ -292,6 +268,43 @@ export function HomePage() {
                 <ChevronRight size={17} />
               </Link>
             ))}
+          </div>
+        </section>
+
+        <section className="store-trade-section" aria-labelledby="store-trade-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Trade In</p>
+            <h2 id="store-trade-title">Turn the device you have into the one you want.</h2>
+            <Link className="store-button store-button-primary" to="/sell-or-trade">Start Trade-In <ArrowRight size={17} /></Link>
+          </div>
+          <div className="trade-device-flow" aria-label="Trade an older device toward a newer device">
+            <img src={upgradeSaveArtwork} alt="An older phone transitioning toward a newer flagship phone" loading="lazy" decoding="async" />
+          </div>
+        </section>
+
+        <section className="store-visa-section" aria-labelledby="store-visa-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Visa Card Trading</p>
+            <h2 id="store-visa-title">Trade supported cards securely and simply.</h2>
+            <p>Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.</p>
+            <div className="store-actions">
+              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
+              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+            </div>
+          </div>
+          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
+        </section>
+
+        <section className="store-payments-section" aria-labelledby="store-payments-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Payments</p>
+            <h2 id="store-payments-title">Pay your way.</h2>
+            <p>Final payment instructions are confirmed by Buy & Sell GH before payment.</p>
+          </div>
+          <div className="payment-methods" aria-label="Confirmed payment preferences">
+            <span><Smartphone size={23} /> Mobile Money on Confirmation</span>
+            <span><Banknote size={23} /> Pay on Pickup</span>
+            <span><Building2 size={23} /> Bank Transfer on Confirmation</span>
           </div>
         </section>
 
@@ -325,7 +338,7 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
     <section className={`store-launch store-launch-${campaign.theme}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
       <div className="store-launch-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
-        <h1 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h1>
+        <h2 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
         <div className="store-actions">
           <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
@@ -405,6 +418,7 @@ function getLatestIphoneLineup(products: Product[]) {
 
   return {
     generationLabel,
+    featuredName: imageProduct?.name ?? generationLabel,
     variants,
     image,
     galleryImages: getLatestIphoneGalleryImages(variants),
