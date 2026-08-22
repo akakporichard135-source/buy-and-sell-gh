@@ -8,7 +8,7 @@ import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
 import heroEcosystem from "../assets/hero/hero-cinematic-ecosystem-17-16-v4.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import gamingStory from "../assets/homepage/homepage-gaming-story.jpg";
-import visaCardCampaign from "../assets/homepage/homepage-visa-card-trading.webp";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 import iphoneStory from "../assets/homepage/homepage-iphone-story.jpg";
 import laptopTabletStory from "../assets/homepage/homepage-laptop-tablet-story.jpg";
@@ -43,7 +43,7 @@ type Campaign = {
   secondaryExternal?: boolean;
   notes?: string[];
   imagePriority?: boolean;
-  artShape?: "wide" | "square" | "poster" | "lineup";
+  artShape?: "wide" | "square" | "poster" | "lineup" | "card";
   fallbackImage?: string;
   galleryImages?: { src: string; alt: string }[];
 };
@@ -201,14 +201,14 @@ const featureTiles: Campaign[] = [
   {
     eyebrow: "Audio",
     title: "Hear more.",
-    description: "AirPods, headphones, speakers and accessories.",
+    description: "Headphones, earbuds and speakers.",
     image: audioAccessoriesStory,
     imageAlt: "Premium earbuds, headphones and accessory studio artwork",
     theme: "warm",
     primaryLabel: "Shop Audio",
     primaryTo: "/airpods",
-    secondaryLabel: "Shop Accessories",
-    secondaryTo: "/accessories",
+    secondaryLabel: "Learn more",
+    secondaryTo: "/airpods",
   },
   {
     eyebrow: "Laptops & Tablets",
@@ -238,12 +238,13 @@ const featureTiles: Campaign[] = [
     title: "Turn supported Visa cards into value.",
     description: "Send card details for review and confirmation.",
     image: visaCardCampaign,
-    imageAlt: "Generic premium card trading visual with unbranded payment cards and a smartphone",
-    theme: "gold",
+    imageAlt: "One original unbranded black and gold card for supported card review",
+    theme: "warm",
     primaryLabel: "Check a Card",
     primaryTo: "/gift-cards",
     secondaryLabel: "Contact Us",
     secondaryTo: "/contact",
+    artShape: "card",
   },
   {
     eyebrow: "Refer a Friend",
@@ -273,7 +274,7 @@ const featureTiles: Campaign[] = [
   {
     eyebrow: "Support",
     title: "We're here when you need us.",
-    description: "Get help with buying, selling, repairs, pre-orders and availability.",
+    description: "Chat on WhatsApp, call us or visit Buy & Sell GH at Dome Pillar 2 in Accra.",
     image: heroEcosystem,
     imageAlt: "Buy & Sell GH premium product support visual",
     theme: "black",
@@ -286,31 +287,22 @@ const featureTiles: Campaign[] = [
   },
 ];
 
-const tradeAndCardTiles = [baseMajorCampaigns[3], featureTiles[4]];
-
-const lowerServiceTiles = [
-  baseMajorCampaigns[1],
-  baseMajorCampaigns[2],
-  baseMajorCampaigns[4],
-  featureTiles[5],
+const shoppingTiles = [
+  ...productStoryTiles,
   featureTiles[0],
   featureTiles[1],
   featureTiles[2],
   featureTiles[3],
-  featureTiles[6],
-  featureTiles[7],
 ];
 
-const serviceItems = [
-  { label: "Buy", to: "/shop" },
-  { label: "Sell", to: "/sell-or-trade" },
-  { label: "Trade", to: "/sell-or-trade" },
-  { label: "Repairs", to: "/repairs" },
-  { label: "Installment", to: "/installment" },
-  { label: "Visa Card Trading", to: "/gift-cards" },
-  { label: "Refer a Friend", to: "/refer-a-friend" },
-  { label: "Pre-Order", to: "/pre-order" },
-  { label: "Support", to: "/contact" },
+const serviceCampaigns = [
+  baseMajorCampaigns[3],
+  featureTiles[4],
+  baseMajorCampaigns[1],
+  baseMajorCampaigns[2],
+  baseMajorCampaigns[4],
+  featureTiles[5],
+  featureTiles[7],
 ];
 
 export function HomePage() {
@@ -351,45 +343,17 @@ export function HomePage() {
           <CampaignSection campaign={campaign} priority={index === 0} key={campaign.title} />
         ))}
 
-        <section className="campaign-tile-grid campaign-product-grid" aria-label="Featured Apple product stories">
-          {productStoryTiles.map((campaign) => (
+        <section className="campaign-tile-grid campaign-product-grid" aria-label="Featured products and shopping categories">
+          {shoppingTiles.map((campaign) => (
             <CampaignTile campaign={campaign} key={campaign.eyebrow} />
           ))}
         </section>
 
-        <section className="campaign-tile-grid campaign-promo-grid" aria-label="Trade-in and Visa Card Trading">
-          {tradeAndCardTiles.map((campaign) => (
-            <CampaignTile campaign={campaign} key={campaign.eyebrow} />
-          ))}
-        </section>
+        <CampaignSection campaign={featureTiles[6]} />
 
-        <section className="campaign-lower-stories" aria-labelledby="more-from-buy-and-sell-gh">
-          <div className="campaign-grid-heading">
-            <p className="campaign-eyebrow">More from Buy & Sell GH</p>
-            <h2 id="more-from-buy-and-sell-gh">Services for every step.</h2>
-            <p>Buy, sell, repair, request and get support in one trusted place.</p>
-          </div>
-          <div className="campaign-tile-grid campaign-service-grid">
-            {lowerServiceTiles.map((campaign) => (
-              <CampaignTile campaign={campaign} key={campaign.eyebrow} />
-            ))}
-          </div>
-        </section>
-
-        <section className="campaign-everything-section" aria-labelledby="everything-buy-and-sell-gh">
-          <div className="campaign-everything-copy">
-            <p className="campaign-eyebrow">Everything Buy & Sell GH</p>
-            <h2 id="everything-buy-and-sell-gh">Everything tech. One place.</h2>
-            <p>Buy. Sell. Trade. Repair. All in one place.</p>
-          </div>
-          <div className="campaign-service-ribbon" aria-label="Buy & Sell GH services">
-            {serviceItems.map((item) => (
-              <Link className="campaign-service-chip" to={item.to} key={item.label}>
-                {item.label} <ArrowRight size={16} />
-              </Link>
-            ))}
-          </div>
-        </section>
+        {serviceCampaigns.map((campaign) => (
+          <CampaignSection campaign={campaign} key={campaign.eyebrow} />
+        ))}
       </main>
     </>
   );

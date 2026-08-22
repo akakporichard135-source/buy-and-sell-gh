@@ -3,7 +3,7 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import visaCardCampaign from "../assets/homepage/homepage-visa-card-trading.webp";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 
 export function GiftCardsPage() {
   return (
@@ -15,7 +15,7 @@ export function GiftCardsPage() {
           <h1>Check a supported card.</h1>
           <p>Send details for review. Buy & Sell GH confirms accepted card types and value before any next step.</p>
         </div>
-        <img src={visaCardCampaign} alt="Generic premium card trading visual with unbranded payment cards and a smartphone" loading="eager" decoding="async" />
+        <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="eager" decoding="async" />
       </section>
       <section className="section service-layout">
         <SuccessForm buttonLabel="Prepare Visa Card Enquiry" successIntent="general">

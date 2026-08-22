@@ -8387,6 +8387,19 @@ body {
   max-height: none;
 }
 
+.campaign-home .campaign-section .campaign-art-card {
+  width: min(100%, 1040px);
+  padding-block: clamp(0.25rem, 1vw, 0.8rem);
+}
+
+.campaign-home .campaign-section .campaign-art-card img {
+  width: min(100%, 1000px);
+  max-height: min(660px, 68svh);
+  border-radius: clamp(0.65rem, 1vw, 1rem);
+  object-fit: contain;
+  filter: drop-shadow(0 24px 38px rgba(15, 15, 18, 0.16));
+}
+
 .campaign-home .campaign-section .campaign-art-lineup {
   width: min(100%, 1160px);
   padding-block: clamp(0.25rem, 0.8vw, 0.8rem);
@@ -8662,6 +8675,11 @@ body {
 
   .campaign-home .campaign-section .campaign-art-poster img {
     width: min(100%, 410px);
+  }
+
+  .campaign-home .campaign-section .campaign-art-card img {
+    width: min(100%, 430px);
+    max-height: none;
   }
 
   .campaign-home .campaign-section .campaign-art-lineup img {
