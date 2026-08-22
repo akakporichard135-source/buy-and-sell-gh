@@ -10,6 +10,8 @@ import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories
 import airpodsProCampaignArt from "../assets/homepage/homepage-airpods-pro-cinematic.webp";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
+import humanTechCampaign from "../assets/homepage/homepage-human-tech-campaign.webp";
+import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-campaign-mobile.webp";
 import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
@@ -200,7 +202,29 @@ export function HomePage() {
           <Link to="/sell-or-trade">Get estimate <ChevronRight size={15} /></Link>
         </div>
 
-        <ProductLaunch campaign={latestIphoneCampaign} priority />
+        <section className="store-human-campaign" aria-labelledby="store-human-campaign-title">
+          <div className="store-human-campaign-copy">
+            <p className="store-eyebrow">Buy &amp; Sell GH</p>
+            <h1 id="store-human-campaign-title">Tech, your way.</h1>
+            <p>Buy &amp; Sell GH helps customers buy, sell, trade, repair and upgrade iPhones, iPads, MacBooks, watches and accessories in Accra.</p>
+            <div className="store-actions">
+              <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
+              <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
+            </div>
+          </div>
+          <picture className="store-human-campaign-art">
+            <source media="(max-width: 760px)" srcSet={humanTechCampaignMobile} />
+            <img
+              src={humanTechCampaign}
+              alt="Three Buy & Sell GH customers presenting a laptop, smartphone and tablet"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
+          </picture>
+        </section>
+
+        <ProductLaunch campaign={latestIphoneCampaign} />
         <ProductLaunch campaign={macbookAirCampaign} />
         <ProductLaunch campaign={ipadAirCampaign} />
 
