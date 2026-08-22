@@ -7,12 +7,19 @@ import { SEO } from "../components/SEO";
 import accessoriesStory from "../assets/categories/accessories-premium.webp";
 import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
+import airpodsProCampaignArt from "../assets/homepage/homepage-airpods-pro-cinematic.webp";
+import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
+import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
+import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
+import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
+import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
+import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-cinematic.webp";
+import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
+import referralCampaign from "../assets/homepage/homepage-refer-cinematic.webp";
+import repairsCampaign from "../assets/homepage/homepage-repairs-cinematic.webp";
+import sellCashArtwork from "../assets/homepage/homepage-sell-cash-cinematic.webp";
+import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
-import installmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
-import referralCampaign from "../assets/homepage/owner-refer-friend.jpg";
-import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
-import sellCashArtwork from "../assets/homepage/owner-sell-cash.jpg";
-import upgradeSaveArtwork from "../assets/homepage/owner-upgrade-save.jpg";
 import airpodsProStory from "../assets/products/airpods-pro-3-premium.webp";
 import appleWatchStory from "../assets/products/apple-watch-series-11-premium.webp";
 import cableStory from "../assets/products/apple-usb-c-charge-cable-premium.webp";
@@ -54,7 +61,7 @@ const macbookAirCampaign: Campaign = {
   eyebrow: "MacBook Air",
   title: "Supercharged for everything you do.",
   description: "A remarkably capable laptop in a light, travel-ready design.",
-  image: macbookAirStory,
+  image: macbookAirCampaignArt,
   imageAlt: "MacBook Air in a clean warm studio presentation",
   theme: "warm",
   primaryLabel: "Learn more",
@@ -67,7 +74,7 @@ const ipadAirCampaign: Campaign = {
   eyebrow: "iPad Air",
   title: "Fresh. Powerful. Colourful.",
   description: "Made for work, study, creativity and everything in between.",
-  image: ipadAirStory,
+  image: ipadAirCampaignArt,
   imageAlt: "iPad Air in a layered premium product presentation",
   theme: "light",
   primaryLabel: "Learn more",
@@ -81,7 +88,7 @@ const productTiles: Campaign[] = [
     eyebrow: "MacBook Pro",
     title: "Power for your best work.",
     description: "Serious performance for demanding creative and professional workflows.",
-    image: macbookProStory,
+    image: macbookProCampaignArt,
     imageAlt: "MacBook Pro in a premium dark studio presentation",
     theme: "black",
     primaryLabel: "Learn more",
@@ -93,7 +100,7 @@ const productTiles: Campaign[] = [
     eyebrow: "Apple Watch",
     title: "Move. Connect. Keep going.",
     description: "A capable everyday companion, right on your wrist.",
-    image: appleWatchStory,
+    image: appleWatchCampaignArt,
     imageAlt: "Apple Watch in a warm premium presentation",
     theme: "warm",
     primaryLabel: "Learn more",
@@ -105,7 +112,7 @@ const productTiles: Campaign[] = [
     eyebrow: "AirPods Pro",
     title: "Immersive sound. Effortless listening.",
     description: "Premium personal audio for work, travel and everything between.",
-    image: airpodsProStory,
+    image: airpodsProCampaignArt,
     imageAlt: "AirPods Pro in a clean premium product presentation",
     theme: "light",
     primaryLabel: "Learn more",
@@ -117,7 +124,7 @@ const productTiles: Campaign[] = [
     eyebrow: "iPad Pro",
     title: "Big ideas. Pro power.",
     description: "A premium canvas for advanced creative work.",
-    image: ipadProStory,
+    image: ipadProCampaignArt,
     imageAlt: "iPad Pro in a premium black studio presentation",
     theme: "black",
     primaryLabel: "Learn more",
@@ -138,14 +145,14 @@ const accessories = [
 ];
 
 const serviceStories = [
-  { label: "Trade In", title: "Upgrade for less.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "gold" },
-  { label: "Phone Repairs", title: "Let the experts fix it.", image: repairsCampaign, to: "/repairs", tone: "light" },
+  { label: "Trade In", title: "Upgrade for less.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "light" },
+  { label: "Phone Repairs", title: "Let the experts fix it.", image: repairsCampaign, to: "/repairs", tone: "black" },
   { label: "Installment", title: "Own an iPhone today.", image: installmentCampaign, to: "/installment", tone: "black" },
-  { label: "Sell Your Device", title: "Turn your old device into cash.", image: sellCashArtwork, to: "/sell-or-trade", tone: "black" },
-  { label: "Upgrade & Save", title: "Swap what you have for what comes next.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "gold" },
+  { label: "Sell Your Device", title: "Turn your old device into cash.", image: sellCashArtwork, to: "/sell-or-trade", tone: "light" },
+  { label: "Upgrade & Save", title: "Swap what you have for what comes next.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "light" },
   { label: "Refer a Friend", title: "Good tech is better when shared.", image: referralCampaign, to: "/refer-a-friend", tone: "light" },
   { label: "Pre-Order", title: "Request the exact device you want.", image: preorderStory, to: "/pre-order", tone: "warm" },
-  { label: "New Arrivals", title: "See what just landed.", image: iphone17Story, to: "/shop?sort=newest", tone: "black" },
+  { label: "New Arrivals", title: "See what just landed.", image: iphone17LineupCampaign, to: "/shop?sort=newest", tone: "black" },
   { label: "Certified Pre-Owned", title: "More value. Clearly graded.", image: iphone16Story, to: "/shop?condition=UK%20Used", tone: "warm" },
   { label: "Delivery", title: "Pickup and delivery, clearly arranged.", image: accessoriesStory, to: "/shopping-information", tone: "light" },
   { label: "Support", title: "Answers when you need them.", image: audioAccessoriesStory, to: "/contact", tone: "black" },
@@ -154,6 +161,7 @@ const serviceStories = [
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts), [activeProducts]);
+  const hasCurrentLineupCampaign = latestIphone.generationLabel === "iPhone 17";
 
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
@@ -161,9 +169,11 @@ export function HomePage() {
     description: latestIphone.variants.some((product) => /\bpro\b/i.test(product.name))
       ? "Pro in every way. Meet the newest iPhone family in our catalogue."
       : "Meet the newest iPhone family in our catalogue.",
-    image: latestIphone.image,
-    imageAlt: latestIphone.imageAlt,
-    galleryImages: latestIphone.galleryImages,
+    image: hasCurrentLineupCampaign ? iphone17LineupCampaign : latestIphone.image,
+    imageAlt: hasCurrentLineupCampaign
+      ? "Latest iPhone 17 family with iPhone 17 Pro Max as the main device"
+      : latestIphone.imageAlt,
+    galleryImages: hasCurrentLineupCampaign ? undefined : latestIphone.galleryImages,
     theme: "black",
     primaryLabel: "Learn more",
     primaryTo: latestIphone.learnMoreTo,
@@ -205,9 +215,7 @@ export function HomePage() {
             <Link className="store-button store-button-primary" to="/sell-or-trade">Start Trade-In <ArrowRight size={17} /></Link>
           </div>
           <div className="trade-device-flow" aria-label="Trade an older device toward a newer device">
-            <img src={iphone16Story} alt="Current iPhone ready for a trade-in estimate" loading="lazy" decoding="async" />
-            <ArrowRight aria-hidden="true" />
-            <img src={iphone17Story} alt="Newer iPhone available after a confirmed trade-in" loading="lazy" decoding="async" />
+            <img src={upgradeSaveArtwork} alt="An older phone transitioning toward a newer flagship phone" loading="lazy" decoding="async" />
           </div>
         </section>
 
