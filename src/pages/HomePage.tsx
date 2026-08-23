@@ -57,7 +57,7 @@ type Campaign = {
   secondaryTo?: string;
   galleryImages?: { src: string; alt: string }[];
   fallbackImage?: string;
-  variant?: "iphone";
+  variant?: "iphone" | "macbook-air";
 };
 
 const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[] }> = {
@@ -79,6 +79,7 @@ const macbookAirCampaign: Campaign = {
   primaryTo: "/macbooks?family=MacBook%20Air",
   secondaryLabel: "Buy",
   secondaryTo: "/shop?category=MacBooks",
+  variant: "macbook-air",
 };
 
 const ipadAirCampaign: Campaign = {
@@ -156,6 +157,7 @@ const productTiles: Campaign[] = [
     secondaryLabel: "Buy",
     secondaryTo: "/shop?category=iPads",
   },
+  ipadAirCampaign,
 ];
 
 const accessories = [
@@ -250,7 +252,6 @@ export function HomePage() {
 
         <ProductLaunch campaign={latestIphoneCampaign} />
         <ProductLaunch campaign={macbookAirCampaign} />
-        <ProductLaunch campaign={ipadAirCampaign} />
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
