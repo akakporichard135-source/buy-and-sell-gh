@@ -12,6 +12,7 @@ import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinem
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
 import humanTechCampaign from "../assets/homepage/homepage-human-tech-sticker.webp";
 import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-sticker-mobile.webp";
+import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
 import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
@@ -37,8 +38,7 @@ import magsafeStory from "../assets/products/apple-magsafe-charger-premium.webp"
 import adapterStory from "../assets/products/apple-35w-dual-usb-c-power-adapter-premium.webp";
 import watchAccessoryStory from "../assets/products/apple-watch-fast-charger-usb-c-premium.webp";
 import { business } from "../config/business";
-import type { Product } from "../types/product";
-import { resolveProductImage } from "../utils/productImages";
+import { getLatestIphoneLineup } from "../utils/latestIphone";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 
@@ -57,6 +57,15 @@ type Campaign = {
   secondaryTo?: string;
   galleryImages?: { src: string; alt: string }[];
   fallbackImage?: string;
+  variant?: "iphone";
+};
+
+const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[] }> = {
+  "iPhone 17": {
+    image: iphone17LightCampaign,
+    alt: "iPhone 17 family on a seamless light studio background",
+    requiredSlugs: ["iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-17"],
+  },
 };
 
 const macbookAirCampaign: Campaign = {
@@ -175,8 +184,13 @@ const serviceStories = [
 
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
-  const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts), [activeProducts]);
-  const hasCurrentLineupCampaign = latestIphone.generationLabel === "iPhone 17";
+  const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
+  const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
+  const latestFamilyCampaign = registeredFamilyCampaign?.requiredSlugs.every((slug) =>
+    latestIphone.variants.some((product) => product.slug === slug),
+  )
+    ? registeredFamilyCampaign
+    : undefined;
 
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
@@ -184,17 +198,16 @@ export function HomePage() {
     description: /\bpro\b/i.test(latestIphone.featuredName)
       ? "Pro in every way."
       : "Meet the newest iPhone family in our catalogue.",
-    image: hasCurrentLineupCampaign ? iphone17LineupCampaign : latestIphone.image,
-    imageAlt: hasCurrentLineupCampaign
-      ? "Latest iPhone 17 family with iPhone 17 Pro Max as the main device"
-      : latestIphone.imageAlt,
-    galleryImages: hasCurrentLineupCampaign ? undefined : latestIphone.galleryImages,
-    theme: "black",
+    image: latestFamilyCampaign?.image ?? latestIphone.image,
+    imageAlt: latestFamilyCampaign?.alt ?? latestIphone.imageAlt,
+    galleryImages: latestFamilyCampaign ? undefined : latestIphone.galleryImages,
+    theme: "light",
     primaryLabel: "Learn more",
     primaryTo: latestIphone.learnMoreTo,
-    secondaryLabel: "Buy",
+    secondaryLabel: "Shop iPhone",
     secondaryTo: "/iphones",
     fallbackImage: iphone17Story,
+    variant: "iphone",
   };
 
   const families = [
@@ -335,7 +348,7 @@ export function HomePage() {
 
 function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
   return (
-    <section className={`store-launch store-launch-${campaign.theme}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
+    <section className={`store-launch store-launch-${campaign.theme}${campaign.variant ? ` store-launch-${campaign.variant}` : ""}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
       <div className="store-launch-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h2>
@@ -365,7 +378,18 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
             ))}
           </div>
         ) : (
-          <img src={campaign.image} alt={campaign.imageAlt} loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : "auto"} />
+          <img
+            src={campaign.image}
+            alt={campaign.imageAlt}
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority ? "high" : "auto"}
+            onError={(event) => {
+              if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaign.fallbackImage;
+            }}
+          />
         )}
       </div>
     </section>
@@ -403,59 +427,4 @@ function StoreRail({ eyebrow, title, description, className, children }: { eyebr
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-
-function getLatestIphoneLineup(products: Product[]) {
-  const ranked = products
-    .map((product) => ({ product, generationNumber: getIphoneGenerationNumber(product) }))
-    .filter((entry): entry is { product: Product; generationNumber: number } => entry.generationNumber !== null);
-  const newestNumber = ranked.length ? Math.max(...ranked.map((entry) => entry.generationNumber)) : null;
-  const generationLabel = newestNumber ? `iPhone ${newestNumber}` : "iPhone";
-  const variants = newestNumber ? ranked.filter((entry) => entry.generationNumber === newestNumber).map((entry) => entry.product) : [];
-  const imageProduct = selectBestIphoneImageProduct(variants);
-  const resolvedImage = imageProduct ? resolveProductImage(imageProduct) : undefined;
-  const image = resolvedImage?.src ?? iphone17Story;
-
-  return {
-    generationLabel,
-    featuredName: imageProduct?.name ?? generationLabel,
-    variants,
-    image,
-    galleryImages: getLatestIphoneGalleryImages(variants),
-    imageAlt: imageProduct ? `${generationLabel} lineup featuring ${imageProduct.name}` : "Premium iPhone lineup artwork for Buy & Sell GH",
-    learnMoreTo: newestNumber ? `/shop?category=Phones&brand=Apple&generation=${encodeURIComponent(generationLabel)}` : "/iphones",
-  };
-}
-
-function getIphoneGenerationNumber(product: Product) {
-  if (product.brand !== "Apple" || product.category !== "iPhones") return null;
-  const searchable = [product.generation, product.name, product.model, product.slug].filter(Boolean).join(" ");
-  const match = searchable.match(/\biPhone[\s-]*(\d{2})\b/i);
-  return match ? Number(match[1]) : null;
-}
-
-function selectBestIphoneImageProduct(variants: Product[]) {
-  if (!variants.length) return undefined;
-  const sorted = [...variants].sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a));
-  return sorted.find((product) => product.images?.length) ?? sorted[0];
-}
-
-function getLatestIphoneGalleryImages(variants: Product[]) {
-  return [...variants]
-    .sort((a, b) => iphoneVariantRank(b) - iphoneVariantRank(a))
-    .map((product) => {
-      const image = resolveProductImage(product);
-      return image ? { src: image.src, alt: image.alt || product.name } : null;
-    })
-    .filter((entry): entry is { src: string; alt: string } => Boolean(entry))
-    .slice(0, 4);
-}
-
-function iphoneVariantRank(product: Product) {
-  const searchable = `${product.name} ${product.model} ${product.slug}`.toLowerCase();
-  if (searchable.includes("pro-max") || searchable.includes("pro max")) return 5;
-  if (searchable.includes("pro")) return 4;
-  if (searchable.includes("plus")) return 3;
-  if (searchable.includes("air")) return 2;
-  return 1;
 }

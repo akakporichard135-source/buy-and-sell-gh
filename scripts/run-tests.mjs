@@ -33,6 +33,7 @@ try {
   const whatsapp = await bundle(path.join(projectRoot, "src/utils/whatsapp.ts"), path.join(outdir, "whatsapp.mjs"));
   const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
   const shopOrdering = await bundle(path.join(projectRoot, "src/utils/shopOrdering.ts"), path.join(outdir, "shopOrdering.mjs"));
+  const latestIphone = await bundle(path.join(projectRoot, "src/utils/latestIphone.ts"), path.join(outdir, "latestIphone.mjs"));
   const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
@@ -126,6 +127,20 @@ try {
   const secondMix = shopOrdering.mixProductsDeterministically(mixedProducts);
   assert.deepEqual(firstMix.map((item) => item.id), secondMix.map((item) => item.id), "Recommended ordering is stable");
   assert.deepEqual(firstMix.slice(0, 4).map((item) => item.category), ["iPhones", "iPads", "MacBooks", "AirPods"], "Recommended ordering interleaves categories");
+
+  const iphoneCatalogue = [
+    { ...product, id: "iphone-17-pro-max", slug: "iphone-17-pro-max", name: "iPhone 17 Pro Max", model: "iPhone 17 Pro Max", generation: "iPhone 17", category: "iPhones", condition: "To Confirm", images: [{ src: "iphone-17-pro-max.webp", alt: "iPhone 17 Pro Max" }] },
+    { ...product, id: "iphone-17", slug: "iphone-17", name: "iPhone 17", model: "iPhone 17", generation: "iPhone 17", category: "iPhones", condition: "To Confirm", images: [{ src: "iphone-17.webp", alt: "iPhone 17" }] },
+    { ...product, id: "iphone-18", slug: "iphone-18", name: "iPhone 18", model: "iPhone 18", generation: "iPhone 18", category: "iPhones", condition: "To Confirm", images: [{ src: "iphone-18.webp", alt: "iPhone 18" }] },
+    { ...product, id: "iphone-18-pro", slug: "iphone-18-pro", name: "iPhone 18 Pro", model: "iPhone 18 Pro", generation: "iPhone 18", category: "iPhones", condition: "To Confirm", images: [{ src: "iphone-18-pro.webp", alt: "iPhone 18 Pro" }] },
+    { ...product, id: "iphone-18-pro-max", slug: "iphone-18-pro-max", name: "iPhone 18 Pro Max", model: "iPhone 18 Pro Max", generation: "iPhone 18", category: "iPhones", condition: "To Confirm", images: [{ src: "iphone-18-pro-max.webp", alt: "iPhone 18 Pro Max" }] },
+  ];
+  const newestIphone = latestIphone.getLatestIphoneLineup(iphoneCatalogue, "safe-fallback.webp");
+  assert.equal(newestIphone.generationLabel, "iPhone 18", "Latest iPhone logic selects the newest numeric generation");
+  assert.equal(newestIphone.featuredName, "iPhone 18 Pro Max", "Latest iPhone logic selects the strongest verified variant");
+  assert.deepEqual(newestIphone.variants.map((item) => item.name), ["iPhone 18 Pro Max", "iPhone 18 Pro", "iPhone 18"], "Latest iPhone lineup excludes older generations and ranks variants");
+  assert.equal(newestIphone.image, "iphone-18-pro-max.webp", "Latest iPhone image follows the selected generation");
+  assert.equal(newestIphone.learnMoreTo, "/shop?category=Phones&brand=Apple&generation=iPhone%2018", "Latest iPhone CTA follows the selected generation");
 
   assert.equal(adminSecurity.normalizeTotpCode("12a 34-56"), "123456", "TOTP input keeps six digits only");
   assert.equal(adminSecurity.isValidTotpCode("123456"), true, "Six-digit TOTP code is accepted");
