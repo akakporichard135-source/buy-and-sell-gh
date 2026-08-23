@@ -8376,9 +8376,11 @@ body {
 }
 
 .store-launch-iphone {
-  min-height: clamp(650px, calc(100svh - 94px), 900px);
+  min-height: clamp(760px, calc(100svh - 94px), 980px);
   gap: clamp(1.25rem, 2.5vw, 2.25rem);
-  background: #fff;
+  background:
+    radial-gradient(ellipse at 50% 91%, rgba(197, 153, 52, 0.12), transparent 34rem),
+    linear-gradient(180deg, #fff 0%, #f7f7f8 72%, #efeff1 100%);
   color: #1d1d1f;
   padding-bottom: 0;
 }
@@ -8398,7 +8400,7 @@ body {
 
 .store-launch-iphone .store-launch-art {
   width: min(100%, 1380px);
-  min-height: clamp(330px, 42vw, 610px);
+  min-height: clamp(440px, 46vw, 690px);
 }
 
 .store-launch-iphone .store-launch-art > img {
@@ -8411,6 +8413,121 @@ body {
   border-radius: 6px;
   filter: drop-shadow(0 20px 28px rgba(29, 29, 31, 0.12));
   mix-blend-mode: multiply;
+}
+
+.store-iphone-cinematic {
+  position: relative;
+  width: min(100%, 1160px);
+  min-height: clamp(440px, 46vw, 690px);
+  isolation: isolate;
+  perspective: 1800px;
+}
+
+.store-iphone-cinematic::before {
+  position: absolute;
+  z-index: 0;
+  right: 10%;
+  bottom: 1.5%;
+  left: 10%;
+  height: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(29, 29, 31, 0.2), rgba(29, 29, 31, 0.06) 42%, transparent 72%);
+  content: "";
+  filter: blur(18px);
+  transform: scaleX(0.9);
+}
+
+.store-iphone-cinematic::after {
+  position: absolute;
+  z-index: 5;
+  top: 3%;
+  bottom: 7%;
+  left: -16%;
+  width: 17%;
+  background: linear-gradient(104deg, transparent 5%, rgba(255, 255, 255, 0.72) 46%, transparent 88%);
+  content: "";
+  filter: blur(8px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-10deg);
+  animation: store-iphone-light-sweep 14s ease-in-out 2s infinite;
+}
+
+.store-iphone-stage-light {
+  position: absolute;
+  z-index: 0;
+  top: 4%;
+  left: 50%;
+  width: min(68vw, 760px);
+  aspect-ratio: 1.7;
+  border: 1px solid rgba(197, 153, 52, 0.2);
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.96) 0 38%, rgba(219, 190, 118, 0.11) 62%, transparent 73%);
+  box-shadow: 0 0 90px rgba(197, 153, 52, 0.08);
+  transform: translateX(-50%);
+}
+
+.store-iphone-device {
+  position: absolute;
+  z-index: 2;
+  bottom: -1%;
+  left: 50%;
+  display: grid;
+  width: clamp(230px, 29vw, 410px);
+  height: 96%;
+  place-items: end center;
+  transform-origin: 50% 88%;
+  will-change: transform;
+}
+
+.store-iphone-device img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 34px 35px rgba(22, 24, 30, 0.22));
+}
+
+.store-iphone-device-left {
+  z-index: 2;
+  width: clamp(215px, 26vw, 360px);
+  animation: store-iphone-left-drift 18s cubic-bezier(0.45, 0, 0.2, 1) infinite alternate;
+}
+
+.store-iphone-device-center {
+  z-index: 4;
+  width: clamp(270px, 32vw, 455px);
+  height: 101%;
+  animation: store-iphone-center-drift 18s cubic-bezier(0.45, 0, 0.2, 1) infinite alternate;
+}
+
+.store-iphone-device-right {
+  z-index: 3;
+  width: clamp(205px, 24vw, 335px);
+  animation: store-iphone-right-drift 18s cubic-bezier(0.45, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes store-iphone-left-drift {
+  0% { transform: translate3d(-122%, 3%, -45px) rotateY(-7deg) rotateZ(-2deg); }
+  100% { transform: translate3d(-141%, 0, -62px) rotateY(-12deg) rotateZ(-3deg); }
+}
+
+@keyframes store-iphone-center-drift {
+  0% { transform: translate3d(-50%, 0, 25px) scale(1.015) rotateY(0); }
+  100% { transform: translate3d(-50%, -2.5%, 60px) scale(1.055) rotateY(1.5deg); }
+}
+
+@keyframes store-iphone-right-drift {
+  0% { transform: translate3d(23%, 4%, -60px) rotateY(8deg) rotateZ(2deg); }
+  100% { transform: translate3d(43%, 0, -45px) rotateY(13deg) rotateZ(3deg); }
+}
+
+@keyframes store-iphone-light-sweep {
+  0%, 64% { left: -16%; opacity: 0; }
+  70% { opacity: 0.34; }
+  84% { opacity: 0.14; }
+  90%, 100% { left: 101%; opacity: 0; }
 }
 
 .store-launch-macbook-air {
@@ -9568,13 +9685,58 @@ body {
 
   .store-launch-iphone .store-launch-art {
     width: 100%;
-    min-height: clamp(245px, 70vw, 320px);
+    min-height: clamp(335px, 98vw, 430px);
   }
 
   .store-launch-iphone .store-launch-art > img {
     width: min(112%, 560px);
     max-width: none;
     max-height: none;
+  }
+
+  .store-iphone-cinematic {
+    width: 100vw;
+    min-height: clamp(335px, 98vw, 430px);
+  }
+
+  .store-iphone-stage-light {
+    top: 10%;
+    width: 112vw;
+    max-width: 500px;
+    aspect-ratio: 1.35;
+  }
+
+  .store-iphone-device-left {
+    width: min(48vw, 210px);
+    height: 91%;
+    animation-name: store-iphone-left-drift-mobile;
+  }
+
+  .store-iphone-device-center {
+    width: min(64vw, 270px);
+    height: 100%;
+    animation-name: store-iphone-center-drift-mobile;
+  }
+
+  .store-iphone-device-right {
+    width: min(46vw, 200px);
+    height: 90%;
+    animation-name: store-iphone-right-drift-mobile;
+  }
+
+  @keyframes store-iphone-left-drift-mobile {
+    0% { transform: translate3d(-120%, 6%, -38px) rotateY(-6deg) rotateZ(-2deg); }
+    100% { transform: translate3d(-134%, 2%, -48px) rotateY(-10deg) rotateZ(-2.5deg); }
+  }
+
+  @keyframes store-iphone-center-drift-mobile {
+    0% { transform: translate3d(-50%, 1%, 22px) scale(1.01); }
+    100% { transform: translate3d(-50%, -1.5%, 45px) scale(1.035) rotateY(1deg); }
+  }
+
+  @keyframes store-iphone-right-drift-mobile {
+    0% { transform: translate3d(19%, 7%, -45px) rotateY(7deg) rotateZ(2deg); }
+    100% { transform: translate3d(31%, 3%, -35px) rotateY(11deg) rotateZ(2.5deg); }
   }
 
   .store-launch-macbook-air {
@@ -9829,6 +9991,23 @@ body {
 
   .store-button {
     transition: none;
+  }
+
+  .store-iphone-device,
+  .store-iphone-cinematic::after {
+    animation: none;
+  }
+
+  .store-iphone-device-left {
+    transform: translate3d(-132%, 1%, -45px) rotateY(-9deg) rotateZ(-2deg);
+  }
+
+  .store-iphone-device-center {
+    transform: translate3d(-50%, -1%, 38px) scale(1.03);
+  }
+
+  .store-iphone-device-right {
+    transform: translate3d(34%, 2%, -40px) rotateY(10deg) rotateZ(2deg);
   }
 }
 

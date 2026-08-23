@@ -12,6 +12,9 @@ import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinem
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
 import humanTechCampaign from "../assets/homepage/homepage-human-tech-sticker.webp";
 import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-sticker-mobile.webp";
+import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
+import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
+import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
 import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
 import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
@@ -68,15 +71,27 @@ type Campaign = {
   secondaryLabel?: string;
   secondaryTo?: string;
   galleryImages?: { src: string; alt: string }[];
+  cinematicLayers?: IphoneCinematicLayer[];
   fallbackImage?: string;
   variant?: "iphone" | "macbook-air";
 };
 
-const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[] }> = {
+type IphoneCinematicLayer = {
+  src: string;
+  alt: string;
+  role: "left" | "center" | "right";
+};
+
+const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[]; layers: IphoneCinematicLayer[] }> = {
   "iPhone 17": {
     image: iphone17LightCampaign,
     alt: "iPhone 17 family on a seamless light studio background",
     requiredSlugs: ["iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-17"],
+    layers: [
+      { src: iphone17CutoutLeft, alt: "iPhone 17 in a pale finish from a three-quarter front angle", role: "left" },
+      { src: iphone17ProMaxCutoutCenter, alt: "iPhone 17 Pro Max in dark blue from a three-quarter rear angle", role: "center" },
+      { src: iphoneAirCutoutRight, alt: "iPhone Air in pale blue showing its slim side profile", role: "right" },
+    ],
   },
 };
 
@@ -210,13 +225,11 @@ export function HomePage() {
 
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
-    title: latestIphone.featuredName,
-    description: /\bpro\b/i.test(latestIphone.featuredName)
-      ? "Pro in every way."
-      : "Meet the newest iPhone family in our catalogue.",
+    title: "iPhone",
+    description: "Meet the latest iPhone lineup.",
     image: latestFamilyCampaign?.image ?? latestIphone.image,
     imageAlt: latestFamilyCampaign?.alt ?? latestIphone.imageAlt,
-    galleryImages: latestFamilyCampaign ? undefined : latestIphone.galleryImages,
+    cinematicLayers: latestFamilyCampaign?.layers ?? createCatalogueIphoneLayers(latestIphone.galleryImages),
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: latestIphone.learnMoreTo,
@@ -458,7 +471,27 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
         </div>
       </div>
       <div className="store-launch-art">
-        {campaign.galleryImages && campaign.galleryImages.length > 1 ? (
+        {campaign.variant === "iphone" && campaign.cinematicLayers?.length ? (
+          <div className="store-iphone-cinematic" aria-label={campaign.imageAlt}>
+            <span className="store-iphone-stage-light" aria-hidden="true" />
+            {campaign.cinematicLayers.map((layer, index) => (
+              <div className={`store-iphone-device store-iphone-device-${layer.role}`} key={`${layer.role}-${layer.src}`}>
+                <img
+                  src={layer.src}
+                  alt={layer.alt}
+                  loading={priority || index === 1 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={priority || index === 1 ? "high" : "auto"}
+                  onError={(event) => {
+                    if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+                    event.currentTarget.dataset.fallbackApplied = "true";
+                    event.currentTarget.src = campaign.fallbackImage;
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        ) : campaign.galleryImages && campaign.galleryImages.length > 1 ? (
           <div className="store-phone-lineup" aria-label={campaign.imageAlt}>
             {campaign.galleryImages.map((image, index) => (
               <img
@@ -493,6 +526,11 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
       </div>
     </section>
   );
+}
+
+function createCatalogueIphoneLayers(images: { src: string; alt: string }[]): IphoneCinematicLayer[] {
+  const roles: IphoneCinematicLayer["role"][] = ["center", "left", "right"];
+  return images.slice(0, 3).map((image, index) => ({ ...image, role: roles[index] }));
 }
 
 function ProductTile({ campaign }: { campaign: Campaign }) {
