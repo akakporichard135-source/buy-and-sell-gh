@@ -1,4 +1,4 @@
-import { ArrowRight, Banknote, Building2, ChevronRight, MapPin, MessageCircle, Search, ShieldCheck, Smartphone, X } from "lucide-react";
+import { Apple, ArrowRight, Banknote, Building2, ChevronRight, List, MapPin, MessageCircle, Search, ShieldCheck, Smartphone, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -24,14 +24,11 @@ import sellCashArtwork from "../assets/homepage/homepage-sell-cash-cinematic.web
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 import airpodsProStory from "../assets/products/airpods-pro-3-premium.webp";
-import appleWatchStory from "../assets/products/apple-watch-series-11-premium.webp";
 import cableStory from "../assets/products/apple-usb-c-charge-cable-premium.webp";
 import caseStory from "../assets/products/apple-clear-iphone-case-magsafe-premium.webp";
 import chargerStory from "../assets/products/apple-20w-usb-c-power-adapter-premium.webp";
-import ipadAirStory from "../assets/products/ipad-air-11-inch-m4-premium.webp";
 import iphone16Story from "../assets/products/iphone-16-pro-max-premium.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
-import macbookAirStory from "../assets/products/macbook-air-13-inch-m5-premium.webp";
 import magsafeStory from "../assets/products/apple-magsafe-charger-premium.webp";
 import adapterStory from "../assets/products/apple-35w-dual-usb-c-power-adapter-premium.webp";
 import watchAccessoryStory from "../assets/products/apple-watch-fast-charger-usb-c-premium.webp";
@@ -43,25 +40,18 @@ import { getLocalPremiumImage, resolveProductImage } from "../utils/productImage
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 const marketplaceLocation = "Dome Pillar 2, Accra";
 
-type MarketplaceGroup = "all" | "phones" | "tablets" | "laptops" | "watches" | "audio" | "other";
-type MarketplaceFilter = "all" | "under-10000" | "uk-used" | "excellent" | "in-stock";
+type MarketplaceBrand = "Samsung" | "Apple" | "Google" | "Huawei" | "LG" | "Xiaomi" | "Motorola" | "Other";
+type MarketplaceFilter = "all" | "price" | "brand" | "condition" | "verified" | "recommended";
 
-const marketplaceGroupDefinitions: { id: MarketplaceGroup; label: string; fallback: string }[] = [
-  { id: "all", label: "All Used", fallback: iphone16Story },
-  { id: "phones", label: "Phones", fallback: iphone16Story },
-  { id: "tablets", label: "Tablets", fallback: ipadAirStory },
-  { id: "laptops", label: "Laptops", fallback: macbookAirStory },
-  { id: "watches", label: "Watches", fallback: appleWatchStory },
-  { id: "audio", label: "Audio", fallback: airpodsProStory },
-  { id: "other", label: "Other", fallback: accessoriesStory },
-];
+const marketplaceBrands: MarketplaceBrand[] = ["Samsung", "Apple", "Google", "Huawei", "LG", "Xiaomi", "Motorola", "Other"];
 
 const marketplaceFilters: { id: MarketplaceFilter; label: string }[] = [
-  { id: "all", label: "All verified stock" },
-  { id: "under-10000", label: "Price: under GH₵10,000" },
-  { id: "uk-used", label: "Condition: UK Used" },
-  { id: "excellent", label: "Condition: Excellent" },
-  { id: "in-stock", label: "Availability: In Stock" },
+  { id: "all", label: "All Ghana" },
+  { id: "price", label: "Price, GH₵" },
+  { id: "brand", label: "Brand" },
+  { id: "condition", label: "Condition" },
+  { id: "verified", label: "Verified stock" },
+  { id: "recommended", label: "Recommended" },
 ];
 
 type CampaignTheme = "black" | "light" | "warm";
@@ -208,7 +198,7 @@ const serviceStories = [
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const [marketplaceSearch, setMarketplaceSearch] = useState("");
-  const [marketplaceGroup, setMarketplaceGroup] = useState<MarketplaceGroup>("all");
+  const [marketplaceBrand, setMarketplaceBrand] = useState<MarketplaceBrand>("Apple");
   const [marketplaceFilter, setMarketplaceFilter] = useState<MarketplaceFilter>("all");
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
@@ -248,36 +238,9 @@ export function HomePage() {
     [activeProducts],
   );
 
-  const marketplaceProductsByGroup = useMemo(() => {
-    const grouped: Record<MarketplaceGroup, Product[]> = {
-      all: marketplaceProducts,
-      phones: [],
-      tablets: [],
-      laptops: [],
-      watches: [],
-      audio: [],
-      other: [],
-    };
-    marketplaceProducts.forEach((product) => grouped[getMarketplaceGroup(product)].push(product));
-    return grouped;
-  }, [marketplaceProducts]);
-
-  const marketplaceGroups = useMemo(
-    () => marketplaceGroupDefinitions
-      .map((definition) => {
-        const matchingProducts = marketplaceProductsByGroup[definition.id];
-        return {
-          ...definition,
-          count: matchingProducts.length,
-          image: getMarketplaceProductImage(matchingProducts[0] ?? marketplaceProducts[0])?.src ?? definition.fallback,
-        };
-      })
-      .filter((group) => group.id === "all" || group.count > 0),
-    [marketplaceProducts, marketplaceProductsByGroup],
-  );
-
   const marketplaceSearchTerm = marketplaceSearch.trim().toLowerCase();
-  const marketplaceResults = marketplaceProductsByGroup[marketplaceGroup]
+  const marketplaceResults = marketplaceProducts
+    .filter((product) => matchesMarketplaceBrand(product, marketplaceBrand))
     .filter((product) => !marketplaceSearchTerm || [
       product.name,
       product.model,
@@ -363,20 +326,23 @@ export function HomePage() {
               )}
             </form>
 
-            <div className="marketplace-shortcuts" aria-label="Browse pre-owned inventory by device type">
-              {marketplaceGroups.map((group) => (
-                <button
-                  className={marketplaceGroup === group.id ? "is-active" : ""}
-                  type="button"
-                  aria-pressed={marketplaceGroup === group.id}
-                  onClick={() => setMarketplaceGroup(group.id)}
-                  key={group.id}
-                >
-                  <span><img src={group.image} alt="" loading="lazy" decoding="async" /></span>
-                  <strong>{group.label}</strong>
-                  <small>{group.count} {group.count === 1 ? "device" : "devices"}</small>
-                </button>
-              ))}
+            <div className="marketplace-shortcuts" aria-label="Browse used inventory by brand">
+              {marketplaceBrands.map((brand) => {
+                const count = marketplaceProducts.filter((product) => matchesMarketplaceBrand(product, brand)).length;
+                return (
+                  <button
+                    className={marketplaceBrand === brand ? "is-active" : ""}
+                    type="button"
+                    aria-pressed={marketplaceBrand === brand}
+                    onClick={() => setMarketplaceBrand(brand)}
+                    key={brand}
+                  >
+                    <MarketplaceBrandMark brand={brand} />
+                    <strong>{brand}</strong>
+                    <small>{count} {count === 1 ? "device" : "devices"}</small>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="marketplace-filter-row" aria-label="Filter used devices">
@@ -395,15 +361,15 @@ export function HomePage() {
 
             <div className="marketplace-results-heading">
               <div>
-                <h3>Used devices at Buy &amp; Sell GH</h3>
+                <h3>UK Used devices at Buy &amp; Sell GH</h3>
                 <p><MapPin size={15} /> {marketplaceLocation}</p>
               </div>
               <Link to="/shop?category=UK%20Used%20Devices">View all used devices <ChevronRight size={16} /></Link>
             </div>
 
             {marketplaceResults.length > 0 ? (
-              <div className="marketplace-product-grid">
-                {marketplaceResults.slice(0, 4).map((product) => (
+              <div className="marketplace-product-rail" aria-label="Swipe through UK Used devices">
+                {marketplaceResults.map((product) => (
                   <MarketplaceProductCard product={product} key={product.id} />
                 ))}
               </div>
@@ -411,7 +377,7 @@ export function HomePage() {
               <div className="marketplace-empty-state">
                 <strong>No used devices match those filters.</strong>
                 <p>Try another device type or clear the marketplace filters.</p>
-                <button type="button" onClick={() => { setMarketplaceSearch(""); setMarketplaceGroup("all"); setMarketplaceFilter("all"); }}>Clear filters</button>
+                <button type="button" onClick={() => { setMarketplaceSearch(""); setMarketplaceBrand("Apple"); setMarketplaceFilter("all"); }}>Clear filters</button>
               </div>
             )}
           </div>
@@ -558,6 +524,31 @@ function StoreRail({ eyebrow, title, description, className, children }: { eyebr
   );
 }
 
+function MarketplaceBrandMark({ brand }: { brand: MarketplaceBrand }) {
+  if (brand === "Apple") {
+    return <span className="marketplace-brand-mark marketplace-brand-apple" aria-hidden="true"><Apple /></span>;
+  }
+
+  if (brand === "Other") {
+    return <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><List /></span>;
+  }
+
+  const logoText: Record<Exclude<MarketplaceBrand, "Apple" | "Other">, string> = {
+    Samsung: "SAMSUNG",
+    Google: "G",
+    Huawei: "HUAWEI",
+    LG: "LG",
+    Xiaomi: "mi",
+    Motorola: "M",
+  };
+
+  return (
+    <span className={`marketplace-brand-mark marketplace-brand-${slugify(brand)}`} aria-hidden="true">
+      <span>{logoText[brand]}</span>
+    </span>
+  );
+}
+
 function MarketplaceProductCard({ product }: { product: Product }) {
   const resolvedImage = getMarketplaceProductImage(product);
   const isPriceOnRequest = product.priceOnRequest || product.price <= 0;
@@ -609,20 +600,19 @@ function isMarketplaceProductInStock(product: Product) {
   return product.stockQuantity > 0 && (product.stockStatus === "In Stock" || product.stockStatus === "Low Stock");
 }
 
-function getMarketplaceGroup(product: Product): MarketplaceGroup {
-  if (product.category === "Phones" || product.category === "iPhones") return "phones";
-  if (product.category === "Tablets" || product.category === "iPads") return "tablets";
-  if (product.category === "Laptops" || product.category === "MacBooks") return "laptops";
-  if (product.category === "Watches" || product.category === "Apple Watches") return "watches";
-  if (product.category === "Audio" || product.category === "AirPods") return "audio";
-  return "other";
+function matchesMarketplaceBrand(product: Product, brand: MarketplaceBrand) {
+  const normalizedBrand = product.brand.toLowerCase();
+  if (brand === "Other") {
+    return !marketplaceBrands.slice(0, -1).some((knownBrand) => knownBrand.toLowerCase() === normalizedBrand);
+  }
+  return normalizedBrand === brand.toLowerCase();
 }
 
 function matchesMarketplaceFilter(product: Product, filter: MarketplaceFilter) {
-  if (filter === "under-10000") return product.price > 0 && product.price <= 10000;
-  if (filter === "uk-used") return product.condition === "UK Used" || [...(product.tags ?? []), ...(product.badges ?? [])].some((label) => label.toLowerCase().includes("uk used"));
-  if (filter === "excellent") return product.condition === "Excellent";
-  if (filter === "in-stock") return isMarketplaceProductInStock(product);
+  if (filter === "price") return product.price > 0 && product.price <= 10000;
+  if (filter === "condition") return product.condition === "UK Used" || [...(product.tags ?? []), ...(product.badges ?? [])].some((label) => label.toLowerCase().includes("uk used"));
+  if (filter === "verified") return isMarketplaceProductInStock(product);
+  if (filter === "recommended") return Boolean(product.popular || product.isPopular || product.featured || product.isFeatured) || isMarketplaceProductInStock(product);
   return true;
 }
 
