@@ -9,18 +9,20 @@ import { WhatsAppButton } from "./WhatsAppButton";
 
 const navItems = [
   { label: "Store", to: "/shop" },
-  { label: "Mac", to: "/macbooks" },
-  { label: "iPad", to: "/ipads" },
   { label: "iPhone", to: "/iphones" },
+  { label: "iPad", to: "/ipads" },
+  { label: "Mac", to: "/macbooks" },
   { label: "Watch", to: "/apple-watch" },
   { label: "AirPods", to: "/airpods" },
   { label: "Accessories", to: "/accessories" },
+  { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
+  { label: "Others", to: "/#marketplace-discovery" },
+  { label: "Repairs", to: "/repairs" },
   { label: "Support", to: "/contact" },
 ];
 
 const mobileUtilityItems = [
   { label: "Installment", to: "/installment" },
-  { label: "Repairs", to: "/repairs" },
   { label: "Visa Cards", to: "/gift-cards" },
   { label: "Refer a Friend", to: "/refer-a-friend" },
   { label: "Pre-Order", to: "/pre-order" },
@@ -190,3 +192,4 @@ function MobileMenuOverlay({
     </div>
   );
 }
+

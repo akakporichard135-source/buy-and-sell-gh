@@ -68,17 +68,33 @@ export function ShopPage() {
   const [params] = useSearchParams();
   const initialCategory = params.get("category") ?? "All";
   const initialGeneration = params.get("generation") ?? "All";
+  const initialCondition = getConditionFromParams(params, initialCategory);
   const [filters, setFilters] = useState<FiltersState>({
     ...defaultFilters,
     category: normalizeStorefrontCategory(initialCategory),
     brand: supportedBrands.includes(params.get("brand") as Product["brand"]) ? params.get("brand")! : "All",
     generation: initialGeneration,
-    condition: initialCategory === "UK Used Devices" ? "UK Used" : initialCategory === "Brand New Devices" ? "Brand New" : "All",
+    condition: initialCondition,
     newArrival: params.get("newArrival") === "true",
     popular: params.get("popular") === "true",
   });
   const [sort, setSort] = useState<SortOption>("Recommended");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const paramsKey = params.toString();
+
+  useEffect(() => {
+    const nextCategory = params.get("category") ?? "All";
+    const nextBrand = params.get("brand");
+    setFilters((current) => ({
+      ...current,
+      category: normalizeStorefrontCategory(nextCategory),
+      brand: supportedBrands.includes(nextBrand as Product["brand"]) ? nextBrand! : "All",
+      generation: params.get("generation") ?? "All",
+      condition: getConditionFromParams(params, nextCategory),
+      newArrival: params.get("newArrival") === "true",
+      popular: params.get("popular") === "true",
+    }));
+  }, [paramsKey]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -389,6 +405,13 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
   return active;
 }
 
+function getConditionFromParams(params: URLSearchParams, category: string) {
+  const explicitCondition = params.get("condition");
+  if (conditions.includes(explicitCondition as Product["condition"])) return explicitCondition!;
+  if (category === "UK Used Devices") return "UK Used";
+  if (category === "Brand New Devices") return "Brand New";
+  return "All";
+}
 function matchesShopCategory(product: Product, category: string) {
   return productMatchesStorefrontCategory(product, category);
 }
@@ -400,3 +423,4 @@ function compareGenerationLabelsNewest(a: string, b: string) {
 function generationNumberFromLabel(label: string) {
   return Number(label.match(/\d+/)?.[0] ?? 0);
 }
+
