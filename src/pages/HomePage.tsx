@@ -1,6 +1,6 @@
 import { Apple, ArrowRight, Banknote, Building2, ChevronRight, List, MapPin, MessageCircle, Search, ShieldCheck, Smartphone, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
@@ -10,8 +10,18 @@ import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories
 import airpodsProCampaignArt from "../assets/homepage/homepage-airpods-pro-cinematic.webp";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
-import humanTechCampaign from "../assets/homepage/homepage-human-tech-sticker.webp";
-import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-sticker-mobile.webp";
+import stickerCamera from "../assets/homepage/sticker-collage/camera.webp";
+import stickerController from "../assets/homepage/sticker-collage/controller.webp";
+import stickerHeadphones from "../assets/homepage/sticker-collage/headphones.webp";
+import stickerLaptop from "../assets/homepage/sticker-collage/laptop.webp";
+import stickerPersonCenter from "../assets/homepage/sticker-collage/person-center.webp";
+import stickerPersonLeft from "../assets/homepage/sticker-collage/person-left.webp";
+import stickerPersonRight from "../assets/homepage/sticker-collage/person-right.webp";
+import stickerPhone from "../assets/homepage/sticker-collage/phone.webp";
+import stickerPlant from "../assets/homepage/sticker-collage/plant.webp";
+import stickerShoes from "../assets/homepage/sticker-collage/shoes.webp";
+import stickerSpeaker from "../assets/homepage/sticker-collage/speaker.webp";
+import stickerTablet from "../assets/homepage/sticker-collage/tablet.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
@@ -82,6 +92,29 @@ type IphoneCinematicLayer = {
   role: "left" | "center" | "right";
 };
 
+
+type HumanStickerLayer = {
+  id: string;
+  src: string;
+  alt: string;
+  depth: number;
+  priority?: boolean;
+};
+
+const humanStickerLayers: HumanStickerLayer[] = [
+  { id: "plant", src: stickerPlant, alt: "Decorative plant accent", depth: 4 },
+  { id: "person-left", src: stickerPersonLeft, alt: "Customer presenting a laptop", depth: 6, priority: true },
+  { id: "person-right", src: stickerPersonRight, alt: "Customer presenting a tablet", depth: 6, priority: true },
+  { id: "person-center", src: stickerPersonCenter, alt: "Customer presenting an iPhone", depth: 7, priority: true },
+  { id: "headphones", src: stickerHeadphones, alt: "Premium headphones", depth: 9 },
+  { id: "camera", src: stickerCamera, alt: "Camera accessory", depth: 9 },
+  { id: "laptop", src: stickerLaptop, alt: "Laptop with gold display lighting", depth: 11, priority: true },
+  { id: "tablet", src: stickerTablet, alt: "Tablet with gold display lighting", depth: 11, priority: true },
+  { id: "phone", src: stickerPhone, alt: "Flagship smartphone", depth: 12, priority: true },
+  { id: "controller", src: stickerController, alt: "Game controller", depth: 13 },
+  { id: "speaker", src: stickerSpeaker, alt: "Compact audio speaker", depth: 13 },
+  { id: "shoes", src: stickerShoes, alt: "Lifestyle styling accent", depth: 14 },
+];
 const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[]; layers: IphoneCinematicLayer[] }> = {
   "iPhone 17": {
     image: iphone17LightCampaign,
@@ -263,6 +296,33 @@ export function HomePage() {
     ].join(" ").toLowerCase().includes(marketplaceSearchTerm))
     .filter((product) => matchesMarketplaceFilter(product, marketplaceFilter));
 
+  const collageFrame = useRef<HTMLDivElement | null>(null);
+
+  const updateCollageParallax = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const frame = collageFrame.current;
+    if (!frame) return;
+
+    const rect = frame.getBoundingClientRect();
+    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+    window.requestAnimationFrame(() => {
+      frame.querySelectorAll<HTMLElement>(".store-sticker-layer").forEach((layer) => {
+        const depth = Number(layer.dataset.depth || 0);
+        layer.style.setProperty("--parallax-x", `${(offsetX * depth).toFixed(2)}px`);
+        layer.style.setProperty("--parallax-y", `${(offsetY * depth * -0.55).toFixed(2)}px`);
+      });
+    });
+  };
+
+  const resetCollageParallax = () => {
+    collageFrame.current?.querySelectorAll<HTMLElement>(".store-sticker-layer").forEach((layer) => {
+      layer.style.setProperty("--parallax-x", "0px");
+      layer.style.setProperty("--parallax-y", "0px");
+    });
+  };
   return (
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
@@ -278,18 +338,41 @@ export function HomePage() {
             <p>Buy &amp; Sell GH helps customers buy, sell, trade, repair and upgrade iPhones, iPads, MacBooks, watches and accessories in Accra.</p>
             <div className="store-actions">
               <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
+              <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
             </div>
           </div>
-          <picture className="store-human-campaign-art">
-            <source media="(max-width: 760px)" srcSet={humanTechCampaignMobile} />
-            <img
-              src={humanTechCampaign}
-              alt="Three Buy & Sell GH customers presenting a laptop, smartphone and tablet"
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-            />
-          </picture>
+          <div
+            className="store-sticker-collage"
+            ref={collageFrame}
+            role="img"
+            aria-label="Three Buy & Sell GH customers presenting a laptop, smartphone, tablet and accessories"
+            onPointerMove={updateCollageParallax}
+            onPointerLeave={resetCollageParallax}
+          >
+            <span className="store-sticker-doodle store-sticker-doodle-ring" aria-hidden="true" />
+            <span className="store-sticker-doodle store-sticker-doodle-spark" aria-hidden="true" />
+            <span className="store-sticker-doodle store-sticker-doodle-zigzag" aria-hidden="true" />
+            {humanStickerLayers.map((layer) => (
+              <span
+                className={`store-sticker-layer store-sticker-layer-${layer.id}`}
+                data-depth={layer.depth}
+                key={layer.id}
+                style={{ "--layer-depth": layer.depth } as CSSProperties}
+              >
+                <span className="store-sticker-layer-inner">
+                  <img
+                    src={layer.src}
+                    alt=""
+                    aria-hidden="true"
+                    loading={layer.priority ? "eager" : "lazy"}
+                    decoding="async"
+                    fetchPriority={layer.priority ? "high" : "auto"}
+                    draggable={false}
+                  />
+                </span>
+              </span>
+            ))}
+          </div>
         </section>
 
         <ProductLaunch campaign={latestIphoneCampaign} />
