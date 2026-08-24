@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
 import accessoriesStory from "../assets/categories/accessories-premium.webp";
-import preorderStory from "../assets/categories/brand-new-devices-premium.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
@@ -27,20 +26,10 @@ import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.w
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-cinematic.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
-import referralCampaign from "../assets/homepage/homepage-refer-cinematic.webp";
 import repairsCampaign from "../assets/homepage/homepage-repairs-cinematic.webp";
-import sellCashArtwork from "../assets/homepage/homepage-sell-cash-cinematic.webp";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
-import airpodsProStory from "../assets/products/airpods-pro-3-premium.webp";
-import cableStory from "../assets/products/apple-usb-c-charge-cable-premium.webp";
-import caseStory from "../assets/products/apple-clear-iphone-case-magsafe-premium.webp";
-import chargerStory from "../assets/products/apple-20w-usb-c-power-adapter-premium.webp";
-import iphone16Story from "../assets/products/iphone-16-pro-max-premium.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
-import magsafeStory from "../assets/products/apple-magsafe-charger-premium.webp";
-import adapterStory from "../assets/products/apple-35w-dual-usb-c-power-adapter-premium.webp";
-import watchAccessoryStory from "../assets/products/apple-watch-fast-charger-usb-c-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 
@@ -140,19 +129,6 @@ const ipadAirCampaign: Campaign = {
   secondaryTo: "/shop?category=iPads",
 };
 
-const deviceRequestCampaign: Campaign = {
-  eyebrow: "Pre-Order",
-  title: "Can't find it? Request it.",
-  description: "Tell us the exact device you want and Buy & Sell GH will confirm availability and next steps.",
-  image: preorderStory,
-  imageAlt: "Premium device ready for a Buy & Sell GH pre-order request",
-  theme: "warm",
-  primaryLabel: "Request a Device",
-  primaryTo: "/pre-order",
-  secondaryLabel: "Learn more",
-  secondaryTo: "/device-request",
-};
-
 const productTiles: Campaign[] = [
   ipadAirCampaign,
   {
@@ -191,28 +167,38 @@ const productTiles: Campaign[] = [
     secondaryLabel: "Buy",
     secondaryTo: "/shop?category=iPads",
   },
-];
-
-const accessories = [
-  { name: "AirPods", image: airpodsProStory, to: "/airpods" },
-  { name: "Cases", image: caseStory, to: "/accessories?family=iPhone%20Accessories" },
-  { name: "Chargers", image: chargerStory, to: "/accessories?family=Charging%20%26%20Power" },
-  { name: "MagSafe", image: magsafeStory, to: "/accessories?family=iPhone%20Accessories" },
-  { name: "Cables", image: cableStory, to: "/accessories?family=Cables" },
-  { name: "Watch Accessories", image: watchAccessoryStory, to: "/accessories?family=Watch%20Accessories" },
-  { name: "Adapters", image: adapterStory, to: "/accessories?family=Charging%20%26%20Power" },
+  {
+    eyebrow: "Trade In",
+    title: "Turn the device you have into the one you want.",
+    description: "Get an estimate and upgrade through the real Buy & Sell GH trade flow.",
+    image: upgradeSaveArtwork,
+    imageAlt: "An older phone transitioning toward a newer flagship phone",
+    theme: "light",
+    primaryLabel: "Get estimate",
+    primaryTo: "/sell-or-trade",
+    secondaryLabel: "How it works",
+    secondaryTo: "/sell-or-trade",
+  },
+  {
+    eyebrow: "Visa Card Trading",
+    title: "Trade supported cards securely and simply.",
+    description: "Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.",
+    image: visaCardCampaign,
+    imageAlt: "One original unbranded black and gold card for supported card review",
+    theme: "warm",
+    primaryLabel: "Check a Card",
+    primaryTo: "/gift-cards",
+    secondaryLabel: "Contact Us",
+    secondaryTo: "/contact",
+  },
 ];
 
 const serviceStories = [
-  { label: "Trade In", title: "Upgrade for less.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "light" },
+  { label: "Upgrade for less", title: "Move into something newer.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "light" },
   { label: "Phone Repairs", title: "Let the experts fix it.", image: repairsCampaign, to: "/repairs", tone: "black" },
   { label: "Installment", title: "Own an iPhone today.", image: installmentCampaign, to: "/installment", tone: "black" },
-  { label: "Sell Your Device", title: "Turn your old device into cash.", image: sellCashArtwork, to: "/sell-or-trade", tone: "light" },
-  { label: "Upgrade & Save", title: "Swap what you have for what comes next.", image: upgradeSaveArtwork, to: "/sell-or-trade", tone: "light" },
-  { label: "Refer a Friend", title: "Good tech is better when shared.", image: referralCampaign, to: "/refer-a-friend", tone: "light" },
-  { label: "Pre-Order", title: "Request the exact device you want.", image: preorderStory, to: "/pre-order", tone: "warm" },
-  { label: "New Arrivals", title: "See what just landed.", image: iphone17LineupCampaign, to: "/shop?sort=newest", tone: "black" },
   { label: "Delivery", title: "Pickup and delivery, clearly arranged.", image: accessoriesStory, to: "/shopping-information", tone: "light" },
+  { label: "Certified devices", title: "See what just landed.", image: iphone17LineupCampaign, to: "/shop?sort=newest", tone: "black" },
   { label: "Support", title: "Answers when you need them.", image: audioAccessoriesStory, to: "/contact", tone: "black" },
 ];
 
@@ -321,30 +307,6 @@ export function HomePage() {
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
-        </section>
-
-        <section className="store-trade-section" aria-labelledby="store-trade-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Trade In</p>
-            <h2 id="store-trade-title">Turn the device you have into the one you want.</h2>
-            <Link className="store-button store-button-primary" to="/sell-or-trade">Start Trade-In <ArrowRight size={17} /></Link>
-          </div>
-          <div className="trade-device-flow" aria-label="Trade an older device toward a newer device">
-            <img src={upgradeSaveArtwork} alt="An older phone transitioning toward a newer flagship phone" loading="lazy" decoding="async" />
-          </div>
-        </section>
-
-        <section className="store-visa-section" aria-labelledby="store-visa-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Visa Card Trading</p>
-            <h2 id="store-visa-title">Trade supported cards securely and simply.</h2>
-            <p>Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.</p>
-            <div className="store-actions">
-              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
-              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
-            </div>
-          </div>
-          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
         </section>
 
         <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail">
