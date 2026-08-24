@@ -1,6 +1,6 @@
 import { ArrowRight, ChevronRight, MessageCircle } from "lucide-react";
-import { useMemo, useRef } from "react";
-import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { SEO } from "../components/SEO";
@@ -8,15 +8,8 @@ import accessoriesStory from "../assets/categories/accessories-premium.webp";
 import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
-import stickerController from "../assets/homepage/sticker-collage/controller.webp";
-import stickerHeadphones from "../assets/homepage/sticker-collage/headphones.webp";
-import stickerLaptop from "../assets/homepage/sticker-collage/laptop.webp";
-import stickerPersonCenter from "../assets/homepage/sticker-collage/person-center.webp";
-import stickerPersonLeft from "../assets/homepage/sticker-collage/person-left.webp";
-import stickerPersonRight from "../assets/homepage/sticker-collage/person-right.webp";
-import stickerPhone from "../assets/homepage/sticker-collage/phone.webp";
-import stickerSpeaker from "../assets/homepage/sticker-collage/speaker.webp";
-import stickerTablet from "../assets/homepage/sticker-collage/tablet.webp";
+import techYourWayPoster from "../assets/homepage/homepage-human-tech-sticker.webp";
+import techYourWayVideo from "../assets/homepage/homepage-tech-your-way-cinematic.mp4";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
@@ -70,25 +63,6 @@ const cinematicDeviceDelays: Record<CinematicDeviceRole, string> = {
 };
 
 
-type HumanStickerLayer = {
-  id: string;
-  src: string;
-  alt: string;
-  depth: number;
-  priority?: boolean;
-};
-
-const humanStickerLayers: HumanStickerLayer[] = [
-  { id: "person-left", src: stickerPersonLeft, alt: "Customer presenting a laptop", depth: 6, priority: true },
-  { id: "person-right", src: stickerPersonRight, alt: "Customer presenting a tablet", depth: 6, priority: true },
-  { id: "person-center", src: stickerPersonCenter, alt: "Customer presenting an iPhone", depth: 7, priority: true },
-  { id: "headphones", src: stickerHeadphones, alt: "Premium headphones", depth: 9 },
-  { id: "laptop", src: stickerLaptop, alt: "Laptop with gold display lighting", depth: 11, priority: true },
-  { id: "tablet", src: stickerTablet, alt: "Tablet with gold display lighting", depth: 11, priority: true },
-  { id: "phone", src: stickerPhone, alt: "Flagship smartphone", depth: 12, priority: true },
-  { id: "controller", src: stickerController, alt: "Game controller", depth: 13 },
-  { id: "speaker", src: stickerSpeaker, alt: "Compact audio speaker", depth: 13 },
-];
 const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requiredSlugs: string[]; layers: CinematicDeviceLayer[] }> = {
   "iPhone 17": {
     image: iphone17LightCampaign,
@@ -228,39 +202,13 @@ export function HomePage() {
     variant: "iphone",
   };
 
-  const collageFrame = useRef<HTMLDivElement | null>(null);
-
-  const updateCollageParallax = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "mouse" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const frame = collageFrame.current;
-    if (!frame) return;
-
-    const rect = frame.getBoundingClientRect();
-    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
-    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
-
-    window.requestAnimationFrame(() => {
-      frame.querySelectorAll<HTMLElement>(".store-sticker-layer").forEach((layer) => {
-        const depth = Number(layer.dataset.depth || 0);
-        layer.style.setProperty("--parallax-x", `${(offsetX * depth).toFixed(2)}px`);
-        layer.style.setProperty("--parallax-y", `${(offsetY * depth * -0.55).toFixed(2)}px`);
-      });
-    });
-  };
-
-  const resetCollageParallax = () => {
-    collageFrame.current?.querySelectorAll<HTMLElement>(".store-sticker-layer").forEach((layer) => {
-      layer.style.setProperty("--parallax-x", "0px");
-      layer.style.setProperty("--parallax-y", "0px");
-    });
-  };
   return (
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
         <section className="store-human-campaign" aria-labelledby="store-human-campaign-title">
           <div className="store-human-campaign-copy">
+            <p className="store-eyebrow">Buy &amp; Sell GH</p>
             <h1 id="store-human-campaign-title">Tech, your way.</h1>
             <p>Buy &amp; Sell GH helps customers buy, sell, trade, repair and upgrade iPhones, iPads, MacBooks, watches and accessories in Accra.</p>
             <div className="store-actions">
@@ -268,38 +216,7 @@ export function HomePage() {
               <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
             </div>
           </div>
-          <div
-            className="store-sticker-collage"
-            ref={collageFrame}
-            role="img"
-            aria-label="Three Buy & Sell GH customers presenting a laptop, smartphone, tablet and accessories"
-            onPointerMove={updateCollageParallax}
-            onPointerLeave={resetCollageParallax}
-          >
-            <span className="store-sticker-doodle store-sticker-doodle-ring" aria-hidden="true" />
-            <span className="store-sticker-doodle store-sticker-doodle-spark" aria-hidden="true" />
-            <span className="store-sticker-doodle store-sticker-doodle-zigzag" aria-hidden="true" />
-            {humanStickerLayers.map((layer) => (
-              <span
-                className={`store-sticker-layer store-sticker-layer-${layer.id}`}
-                data-depth={layer.depth}
-                key={layer.id}
-                style={{ "--layer-depth": layer.depth } as CSSProperties}
-              >
-                <span className="store-sticker-layer-inner">
-                  <img
-                    src={layer.src}
-                    alt=""
-                    aria-hidden="true"
-                    loading={layer.priority ? "eager" : "lazy"}
-                    decoding="async"
-                    fetchPriority={layer.priority ? "high" : "auto"}
-                    draggable={false}
-                  />
-                </span>
-              </span>
-            ))}
-          </div>
+          <CampaignVideo />
         </section>
 
         <ProductLaunch campaign={latestIphoneCampaign} />
@@ -331,6 +248,65 @@ export function HomePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function CampaignVideo() {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ));
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+    mediaQuery.addEventListener("change", updatePreference);
+    return () => mediaQuery.removeEventListener("change", updatePreference);
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || prefersReducedMotion) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        void video.play().catch(() => undefined);
+      } else {
+        video.pause();
+      }
+    }, { threshold: 0.18 });
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) {
+    return (
+      <div className="store-campaign-video-frame store-campaign-video-poster" role="img" aria-label="Cinematic Buy & Sell GH device campaign">
+        <img src={techYourWayPoster} alt="" aria-hidden="true" loading="eager" decoding="async" fetchPriority="high" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="store-campaign-video-frame" aria-label="Cinematic Buy & Sell GH device campaign">
+      <video
+        ref={videoRef}
+        className="store-campaign-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={techYourWayPoster}
+        aria-label="Cinematic Buy & Sell GH device campaign video"
+      >
+        <source src={techYourWayVideo} type="video/mp4" />
+        <img src={techYourWayPoster} alt="Cinematic Buy & Sell GH device campaign" loading="eager" decoding="async" fetchPriority="high" />
+      </video>
+    </div>
   );
 }
 
