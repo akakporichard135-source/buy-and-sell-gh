@@ -27,6 +27,7 @@ import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
+const CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS = 1.25;
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -298,6 +299,12 @@ function CampaignVideo() {
         autoPlay
         muted
         loop
+        onTimeUpdate={(event) => {
+          const video = event.currentTarget;
+          if (video.currentTime >= CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS) {
+            video.currentTime = 0.05;
+          }
+        }}
         playsInline
         preload="metadata"
         poster={techYourWayPoster}
