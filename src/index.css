@@ -11405,6 +11405,8 @@ body {
 .store-launch-macbook-air .store-launch-art > img {
   width: min(100vw, 1500px);
   height: clamp(500px, 53vw, 780px);
+  -webkit-mask-image: radial-gradient(ellipse 78% 82% at 50% 54%, #000 52%, rgba(0, 0, 0, 0.9) 68%, transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 82% at 50% 54%, #000 52%, rgba(0, 0, 0, 0.9) 68%, transparent 100%);
   object-fit: contain;
   object-position: center bottom;
   mix-blend-mode: multiply;
@@ -11632,6 +11634,30 @@ body {
   min-height: clamp(390px, 45vw, 660px);
 }
 
+.store-launch-macbook-pro {
+  min-height: auto;
+  padding-top: clamp(3.25rem, 5.4vw, 5.2rem);
+  padding-bottom: 0;
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(211, 161, 28, 0.17), transparent 34rem),
+    linear-gradient(180deg, #111 0%, #080808 100%);
+}
+
+.store-launch-macbook-pro .store-launch-art {
+  width: min(100%, 1180px);
+  min-height: clamp(390px, 45vw, 660px);
+}
+
+.store-launch-macbook-pro .store-launch-art > img {
+  width: min(100%, 960px);
+  height: clamp(430px, 46vw, 680px);
+  max-height: none;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 34px 38px rgba(0, 0, 0, 0.38));
+}
+
 @media (max-width: 768px) {
   .store-launch {
     gap: 0.85rem;
@@ -11645,6 +11671,15 @@ body {
   .store-launch-availability {
     width: min(100%, calc(100vw - 2rem));
     font-size: 0.92rem;
+  }
+
+  .store-launch-macbook-pro .store-launch-art {
+    min-height: clamp(300px, 94vw, 430px);
+  }
+
+  .store-launch-macbook-pro .store-launch-art > img {
+    width: min(100%, 560px);
+    height: clamp(300px, 94vw, 430px);
   }
 }
 

@@ -20,8 +20,8 @@ import {
   getAirpodsGeneration,
   getIphoneGeneration,
   getMacbookGeneration,
+  getMacbookGenerationOptions,
   iphoneGenerationOptions,
-  macbookGenerationOptions,
 } from "../utils/productPresentation";
 import type { Product } from "../types/product";
 import { compareProductsNewest, mixProductsDeterministically } from "../utils/shopOrdering";
@@ -123,6 +123,7 @@ export function ShopPage() {
     ).sort(compareGenerationLabelsNewest);
     return options.length ? options : iphoneGenerationOptions;
   }, [products]);
+  const dynamicMacbookGenerationOptions = useMemo(() => getMacbookGenerationOptions(products), [products]);
 
   const filtered = useMemo(() => {
     const terms = filters.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -201,7 +202,7 @@ export function ShopPage() {
       <section className="section shop-section">
         <div className="shop-layout">
           <aside className="filter-panel hidden lg:block">
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
           </aside>
           <div className="shop-results">
             <div className="catalogue-toolbar">
@@ -254,7 +255,7 @@ export function ShopPage() {
               </div>
               <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
             </div>
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
             <div className="filter-drawer-actions">
               <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Show {filtered.length} Products</button>
               <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
@@ -272,12 +273,14 @@ function FilterControls({
   clearFilters,
   activeFilterCount,
   iphoneGenerationChoices,
+  macbookGenerationChoices,
 }: {
   filters: FiltersState;
   updateFilter: <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => void;
   clearFilters: () => void;
   activeFilterCount: number;
   iphoneGenerationChoices: string[];
+  macbookGenerationChoices: string[];
 }) {
   return (
     <div className="filter-controls">
@@ -299,7 +302,7 @@ function FilterControls({
         }}><option>All</option>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
         {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
         {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Audio" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Accessories" && <label className="filter-label">Accessory Family<select value={filters.accessoryFamily} onChange={(e) => updateFilter("accessoryFamily", e.target.value)}><option value="All">All Accessories</option>{accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
       </div>

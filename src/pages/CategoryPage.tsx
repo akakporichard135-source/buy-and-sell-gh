@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { ProductGrid } from "../components/ProductGrid";
@@ -21,11 +21,11 @@ import {
   getIphoneGeneration,
   getMacbookFamily,
   getMacbookGeneration,
+  getMacbookGenerationOptions,
   getWatchFamily,
   ipadFamilyOptions,
   iphoneGenerationOptions,
   macbookFamilyOptions,
-  macbookGenerationOptions,
   productMatchesCategorySlug,
   watchFamilyOptions,
 } from "../utils/productPresentation";
@@ -75,15 +75,17 @@ const categoryCopy: Record<string, { title: string; eyebrow: string; description
 
 export function CategoryPage() {
   const { categorySlug = "" } = useParams();
+  const [searchParams] = useSearchParams();
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const [generation, setGeneration] = useState("All");
   const [ipadFamily, setIpadFamily] = useState("All");
   const [watchFamily, setWatchFamily] = useState("All");
-  const [macbookFamily, setMacbookFamily] = useState("All");
-  const [macbookGeneration, setMacbookGeneration] = useState("All");
+  const [macbookFamily, setMacbookFamily] = useState(() => searchParams.get("family") ?? "All");
+  const [macbookGeneration, setMacbookGeneration] = useState(() => searchParams.get("generation") ?? "All");
   const [airpodsFamily, setAirpodsFamily] = useState("All");
   const [airpodsGeneration, setAirpodsGeneration] = useState("All");
   const [accessoryFamily, setAccessoryFamily] = useState("All");
+  const dynamicMacbookGenerationOptions = useMemo(() => getMacbookGenerationOptions(activeProducts), [activeProducts]);
   const copy = categoryCopy[categorySlug];
   const products = activeProducts
     .filter((product) => productMatchesCategorySlug(product, categorySlug))
@@ -169,7 +171,7 @@ export function CategoryPage() {
             <label className="choice-label">Chip / Generation
               <select value={macbookGeneration} onChange={(event) => setMacbookGeneration(event.target.value)}>
                 <option>All</option>
-                {macbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}
+                {dynamicMacbookGenerationOptions.map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>
           </div>

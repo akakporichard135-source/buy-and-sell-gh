@@ -26,6 +26,8 @@ import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp"
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
+import { getLatestMacLaunch } from "../utils/latestMac";
+import type { LatestMacLaunch } from "../utils/latestMac";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 
@@ -46,7 +48,7 @@ type Campaign = {
   galleryImages?: { src: string; alt: string }[];
   cinematicLayers?: CinematicDeviceLayer[];
   fallbackImage?: string;
-  variant?: "iphone" | "macbook-air";
+  variant?: "iphone" | "macbook-air" | "macbook-pro";
   showImage?: boolean;
 };
 
@@ -79,20 +81,6 @@ const iphoneFamilyCampaigns: Record<string, { image: string; alt: string; requir
   },
 };
 
-const macbookAirCampaign: Campaign = {
-  eyebrow: "MacBook Air",
-  title: "Supercharged for everything you do.",
-  description: "A remarkably capable laptop in a light, travel-ready design.",
-  image: macbookAirCampaignArt,
-  imageAlt: "MacBook Air in a clean warm studio presentation",
-  theme: "warm",
-  primaryLabel: "Learn more",
-  primaryTo: "/macbooks?family=MacBook%20Air",
-  secondaryLabel: "Buy",
-  secondaryTo: "/shop?category=MacBooks",
-  variant: "macbook-air",
-};
-
 const ipadAirCampaign: Campaign = {
   eyebrow: "iPad Air",
   title: "Fresh. Powerful. Colourful.",
@@ -108,18 +96,6 @@ const ipadAirCampaign: Campaign = {
 
 const productTiles: Campaign[] = [
   ipadAirCampaign,
-  {
-    eyebrow: "MacBook Pro",
-    title: "Power for your best work.",
-    description: "Serious performance for demanding creative and professional workflows.",
-    image: macbookProCampaignArt,
-    imageAlt: "MacBook Pro in a premium dark studio presentation",
-    theme: "black",
-    primaryLabel: "Learn more",
-    primaryTo: "/macbooks?family=MacBook%20Pro",
-    secondaryLabel: "Buy",
-    secondaryTo: "/shop?category=MacBooks",
-  },
   {
     eyebrow: "Apple Watch",
     title: "Move. Connect. Keep going.",
@@ -238,8 +214,8 @@ export function HomePage() {
   const location = useLocation();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
   const latestIphoneAction = useMemo(() => getLaunchAction(latestIphone.variants, latestIphone.featuredName, `/pre-order?model=${encodeURIComponent(latestIphone.featuredName)}`), [latestIphone.featuredName, latestIphone.variants]);
-  const macbookAirProducts = useMemo(() => activeProducts.filter((product) => product.category === "MacBooks" && /macbook air/i.test(`${product.name} ${product.model} ${product.generation ?? ""}`)), [activeProducts]);
-  const macbookAirAction = useMemo(() => getLaunchAction(macbookAirProducts, "MacBook Air", "/pre-order?category=MacBooks&model=MacBook%20Air"), [macbookAirProducts]);
+  const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
+  const latestMacbookPro = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Pro"), [activeProducts]);
   const brandCounts = useMemo(() => getBrandCounts(activeProducts), [activeProducts]);
   const marketplaceBrands = useMemo(() => getMarketplaceBrandShortcuts(activeProducts, brandCounts), [activeProducts, brandCounts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
@@ -271,19 +247,20 @@ export function HomePage() {
     variant: "iphone",
   };
 
-  const featuredMacbookAirCampaign: Campaign = {
-    ...macbookAirCampaign,
-    availabilityText: getLaunchAvailability(macbookAirProducts, "MacBook Air"),
-    secondaryLabel: macbookAirAction.label,
-    secondaryTo: macbookAirAction.to,
-  };
+  const featuredMacbookAirCampaign = latestMacbookAir
+    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "warm", macbookAirCampaignArt, "macbook-air")
+    : null;
+  const featuredMacbookProCampaign = latestMacbookPro
+    ? createMacCampaign(latestMacbookPro, "Built for demanding creative, technical and professional workflows.", "black", macbookProCampaignArt, "macbook-pro")
+    : null;
 
   return (
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
         <ProductLaunch campaign={latestIphoneCampaign} priority />
-        <ProductLaunch campaign={featuredMacbookAirCampaign} />
+        {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
+        {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
@@ -582,6 +559,31 @@ function getLaunchAction(products: Product[], fallbackName: string, fallbackTo: 
   const purchasableProduct = products.find(isProductPurchasable);
   if (purchasableProduct) return { label: "Buy", to: `/product/${purchasableProduct.slug}` };
   return { label: "Pre-order", to: fallbackTo || `/pre-order?model=${encodeURIComponent(fallbackName)}` };
+}
+
+function createMacCampaign(
+  launch: LatestMacLaunch,
+  description: string,
+  theme: CampaignTheme,
+  fallbackImage: string,
+  variant: "macbook-air" | "macbook-pro",
+): Campaign {
+  const action = getLaunchAction(launch.variants, launch.featuredProduct.name, launch.preorderTo);
+  return {
+    eyebrow: `${launch.generation} · ${launch.family}`,
+    title: launch.family,
+    description,
+    availabilityText: getLaunchAvailability(launch.variants, launch.featuredProduct.name),
+    image: launch.image,
+    imageAlt: launch.imageAlt,
+    theme,
+    primaryLabel: "Learn more",
+    primaryTo: launch.learnMoreTo,
+    secondaryLabel: action.label,
+    secondaryTo: action.to,
+    fallbackImage,
+    variant,
+  };
 }
 
 function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {

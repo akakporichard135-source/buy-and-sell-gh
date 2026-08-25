@@ -34,6 +34,8 @@ try {
   const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
   const shopOrdering = await bundle(path.join(projectRoot, "src/utils/shopOrdering.ts"), path.join(outdir, "shopOrdering.mjs"));
   const latestIphone = await bundle(path.join(projectRoot, "src/utils/latestIphone.ts"), path.join(outdir, "latestIphone.mjs"));
+  const latestMac = await bundle(path.join(projectRoot, "src/utils/latestMac.ts"), path.join(outdir, "latestMac.mjs"));
+  const productPresentation = await bundle(path.join(projectRoot, "src/utils/productPresentation.ts"), path.join(outdir, "productPresentation.mjs"));
   const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
@@ -141,6 +143,22 @@ try {
   assert.deepEqual(newestIphone.variants.map((item) => item.name), ["iPhone 18 Pro Max", "iPhone 18 Pro", "iPhone 18"], "Latest iPhone lineup excludes older generations and ranks variants");
   assert.equal(newestIphone.image, "iphone-18-pro-max.webp", "Latest iPhone image follows the selected generation");
   assert.equal(newestIphone.learnMoreTo, "/shop?category=Phones&brand=Apple&generation=iPhone%2018", "Latest iPhone CTA follows the selected generation");
+
+  const macCatalogue = [
+    { ...product, id: "air-m5-13", slug: "macbook-air-13-m5", name: "MacBook Air 13-inch (M5)", model: "MacBook Air 13-inch (M5)", generation: "M5", category: "MacBooks", subcategory: "MacBook Air", condition: "To Confirm", images: [{ src: "air-m5-13.webp", alt: "MacBook Air 13-inch M5" }] },
+    { ...product, id: "air-m5-15", slug: "macbook-air-15-m5", name: "MacBook Air 15-inch (M5)", model: "MacBook Air 15-inch (M5)", generation: "M5", category: "MacBooks", subcategory: "MacBook Air", condition: "To Confirm", images: [{ src: "air-m5-15.webp", alt: "MacBook Air 15-inch M5" }] },
+    { ...product, id: "air-m6-13", slug: "macbook-air-13-m6", name: "MacBook Air 13-inch (M6)", model: "MacBook Air 13-inch (M6)", generation: "M6", category: "MacBooks", subcategory: "MacBook Air", condition: "To Confirm", images: [{ src: "air-m6-13.webp", alt: "MacBook Air 13-inch M6" }] },
+    { ...product, id: "pro-m5-14", slug: "macbook-pro-14-m5", name: "MacBook Pro 14-inch (M5)", model: "MacBook Pro 14-inch (M5)", generation: "M5", category: "MacBooks", subcategory: "MacBook Pro", condition: "To Confirm", images: [{ src: "pro-m5-14.webp", alt: "MacBook Pro 14-inch M5" }] },
+    { ...product, id: "pro-m5-16", slug: "macbook-pro-16-m5-pro-max", name: "MacBook Pro 16-inch (M5 Pro / M5 Max)", model: "MacBook Pro 16-inch (M5 Pro / M5 Max)", generation: "M5", category: "MacBooks", subcategory: "MacBook Pro", condition: "To Confirm", images: [{ src: "pro-m5-16.webp", alt: "MacBook Pro 16-inch M5 Pro and M5 Max" }] },
+  ];
+  const newestAir = latestMac.getLatestMacLaunch(macCatalogue, "MacBook Air");
+  const newestPro = latestMac.getLatestMacLaunch(macCatalogue, "MacBook Pro");
+  assert.equal(newestAir.generation, "M6", "Mac launch logic automatically selects a future numeric generation");
+  assert.equal(newestAir.featuredProduct.name, "MacBook Air 13-inch (M6)", "Mac launch imagery stays within the selected generation");
+  assert.equal(newestAir.preorderTo, "/pre-order?category=MacBooks&model=MacBook%20Air%2013-inch%20(M6)", "Mac pre-order CTA passes the selected model");
+  assert.equal(newestPro.generation, "M5", "MacBook Pro launch selects the newest supported generation");
+  assert.equal(newestPro.featuredProduct.name, "MacBook Pro 16-inch (M5 Pro / M5 Max)", "MacBook Pro launch prioritizes the strongest legitimate variant");
+  assert.deepEqual(productPresentation.getMacbookGenerationOptions(macCatalogue), ["M6", "M5"], "Mac generation filters derive future generations from the catalogue");
 
   assert.equal(adminSecurity.normalizeTotpCode("12a 34-56"), "123456", "TOTP input keeps six digits only");
   assert.equal(adminSecurity.isValidTotpCode("123456"), true, "Six-digit TOTP code is accepted");

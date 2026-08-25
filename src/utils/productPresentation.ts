@@ -141,16 +141,36 @@ export function getMacbookFamily(product: Product) {
 
 export function getMacbookGeneration(product: Product) {
   const searchable = [product.generation, product.name, product.model].filter(Boolean).join(" ");
-  return searchable.match(/\bM[1-5]\b/i)?.[0].toUpperCase() ?? "";
+  return searchable.match(/\bM\d+\b/i)?.[0].toUpperCase() ?? "";
 }
 
 export function compareMacbooksNewest(a: Product, b: Product) {
+  const generationDifference = getMacbookGenerationNumber(b) - getMacbookGenerationNumber(a);
+  if (generationDifference !== 0) return generationDifference;
   const aIndex = macbookNewestOrder.indexOf(a.slug);
   const bIndex = macbookNewestOrder.indexOf(b.slug);
   if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
   if (aIndex === -1) return 1;
   if (bIndex === -1) return -1;
   return aIndex - bIndex;
+}
+
+export function getMacbookGenerationOptions(products: Product[]) {
+  const options = Array.from(
+    new Set(
+      products
+        .filter((product) => product.category === "MacBooks")
+        .map(getMacbookGeneration)
+        .filter(Boolean),
+    ),
+  );
+  return options.length
+    ? options.sort((a, b) => Number(b.slice(1)) - Number(a.slice(1)))
+    : [...macbookGenerationOptions];
+}
+
+function getMacbookGenerationNumber(product: Product) {
+  return Number(getMacbookGeneration(product).slice(1)) || -1;
 }
 
 export const airpodsFamilyOptions = ["AirPods", "AirPods Pro", "AirPods Max"] as const;

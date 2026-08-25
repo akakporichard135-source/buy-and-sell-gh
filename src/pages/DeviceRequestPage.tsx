@@ -3,8 +3,12 @@ import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import preOrderArtwork from "../assets/homepage/homepage-preorder-premium.jpg";
+import { useSearchParams } from "react-router-dom";
 
 export function DeviceRequestPage() {
+  const [searchParams] = useSearchParams();
+  const requestedModel = searchParams.get("model")?.trim() ?? "";
+
   return (
     <>
       <SEO title="Pre-Order an Apple Device" description="Pre-order an Apple device that is not currently available on the Buy & Sell GH website." />
@@ -18,7 +22,7 @@ export function DeviceRequestPage() {
       </section>
       <section className="section device-request-layout grid gap-8">
         <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
-          <FormField label="Device model" name="model" required maxLength={160} />
+          <FormField label="Device model" name="model" required defaultValue={requestedModel} maxLength={160} />
           <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
           <FormField label="Colour" name="color" maxLength={80} />
           <FormField label="Preferred condition" name="condition" options={["Brand New", "UK Used", "Either"]} />
