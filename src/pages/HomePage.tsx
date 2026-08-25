@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronRight, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product, ProductBrand } from "../types/product";
 import { Link, useLocation } from "react-router-dom";
@@ -11,13 +11,8 @@ import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
-import stickerController from "../assets/homepage/sticker-collage/controller.webp";
-import stickerLaptop from "../assets/homepage/sticker-collage/laptop.webp";
-import stickerPersonCenter from "../assets/homepage/sticker-collage/person-center.webp";
-import stickerPersonLeft from "../assets/homepage/sticker-collage/person-left.webp";
-import stickerPersonRight from "../assets/homepage/sticker-collage/person-right.webp";
-import stickerPhone from "../assets/homepage/sticker-collage/phone.webp";
-import stickerTablet from "../assets/homepage/sticker-collage/tablet.webp";
+import humanTechCampaignPoster from "../assets/homepage/homepage-human-tech-sticker.webp";
+import humanTechCampaignVideo from "../assets/homepage/homepage-tech-your-way-cinematic.mp4";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
@@ -203,16 +198,6 @@ type MarketplaceBrandShortcut = {
 const marketplaceMainBrands = new Set(["Samsung", "LG", "Bose", "JBL", "Sony"]);
 const requestReadyMarketplaceBrands = ["Google", "Huawei", "Xiaomi", "Motorola"];
 
-const stickerCampaignLayers = [
-  { className: "store-sticker-layer-person-left", src: stickerPersonLeft, alt: "Customer presenting a laptop in a Buy and Sell GH campaign" },
-  { className: "store-sticker-layer-person-center", src: stickerPersonCenter, alt: "Customer presenting an iPhone in a Buy and Sell GH campaign" },
-  { className: "store-sticker-layer-person-right", src: stickerPersonRight, alt: "Customer presenting an iPad in a Buy and Sell GH campaign" },
-  { className: "store-sticker-layer-laptop", src: stickerLaptop, alt: "Premium laptop cut-out" },
-  { className: "store-sticker-layer-tablet", src: stickerTablet, alt: "Premium tablet cut-out" },
-  { className: "store-sticker-layer-phone", src: stickerPhone, alt: "Premium phone cut-out" },
-  { className: "store-sticker-layer-controller", src: stickerController, alt: "Gaming controller cut-out" },
-];
-
 const marketplaceFilterChips = [
   { label: "All", to: "/shop" },
   { label: "Price", to: "/shop" },
@@ -272,7 +257,7 @@ export function HomePage() {
               <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
             </div>
           </div>
-          <StickerCampaignComposition />
+          <VideoStickerCampaign />
         </section>
 
         <ProductLaunch campaign={latestIphoneCampaign} />
@@ -387,19 +372,112 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
     </section>
   );
 }
-function StickerCampaignComposition() {
+function VideoStickerCampaign() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const loopStart = 0.12;
+    const loopEnd = 4.7;
+    const holdPoints = [1.05, 2.95];
+    const heldPoints = new Set<number>();
+    let holdTimeout: number | undefined;
+    let isVisible = true;
+
+    const clearHold = () => {
+      if (!holdTimeout) return;
+      window.clearTimeout(holdTimeout);
+      holdTimeout = undefined;
+    };
+
+    const safelyPlay = () => {
+      if (!isVisible || reduceMotionQuery.matches) return;
+      void video.play().catch(() => undefined);
+    };
+
+    const handleTimeUpdate = () => {
+      if (video.currentTime >= loopEnd) {
+        clearHold();
+        heldPoints.clear();
+        video.currentTime = loopStart;
+        safelyPlay();
+        return;
+      }
+
+      const nextHold = holdPoints.find((point) => video.currentTime >= point && !heldPoints.has(point));
+      if (nextHold === undefined || video.paused) return;
+
+      heldPoints.add(nextHold);
+      video.pause();
+      holdTimeout = window.setTimeout(() => {
+        holdTimeout = undefined;
+        safelyPlay();
+      }, 2400);
+    };
+
+    const handleMotionPreference = () => {
+      if (reduceMotionQuery.matches) {
+        clearHold();
+        video.pause();
+        video.currentTime = loopStart;
+      } else {
+        safelyPlay();
+      }
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = Boolean(entry?.isIntersecting);
+      if (isVisible) {
+        safelyPlay();
+      } else {
+        clearHold();
+        video.pause();
+      }
+    }, { threshold: 0.18 });
+
+    video.playbackRate = 0.82;
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    reduceMotionQuery.addEventListener("change", handleMotionPreference);
+    observer.observe(video);
+    handleMotionPreference();
+
+    return () => {
+      clearHold();
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      reduceMotionQuery.removeEventListener("change", handleMotionPreference);
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="store-sticker-collage" role="img" aria-label="Buy and Sell GH customers presenting phones, laptops and tablets">
+    <div className="store-campaign-video-frame" aria-label="Buy and Sell GH customers presenting phones, laptops and tablets">
+      <span className="store-video-sticker-halo" aria-hidden="true" />
       <span className="store-sticker-doodle store-sticker-doodle-ring" aria-hidden="true" />
       <span className="store-sticker-doodle store-sticker-doodle-spark" aria-hidden="true" />
       <span className="store-sticker-doodle store-sticker-doodle-zigzag" aria-hidden="true" />
-      {stickerCampaignLayers.map((layer) => (
-        <span className={`store-sticker-layer ${layer.className}`} aria-hidden="true" key={layer.className}>
-          <span className="store-sticker-layer-inner">
-            <img src={layer.src} alt={layer.alt} loading="eager" decoding="async" fetchPriority="high" />
-          </span>
-        </span>
-      ))}
+      <video
+        ref={videoRef}
+        className="store-campaign-video"
+        src={humanTechCampaignVideo}
+        poster={humanTechCampaignPoster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-hidden="true"
+      />
+      <img
+        className="store-campaign-video-poster"
+        src={humanTechCampaignPoster}
+        alt="Buy and Sell GH customers presenting phones, laptops and tablets"
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+      />
     </div>
   );
 }
