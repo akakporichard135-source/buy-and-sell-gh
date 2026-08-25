@@ -1,9 +1,10 @@
 import { ArrowRight, ChevronRight, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product, ProductBrand } from "../types/product";
 import { Link, useLocation } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
 import ownerInstallmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg";
@@ -11,8 +12,6 @@ import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
-import humanTechCampaignPoster from "../assets/homepage/homepage-human-tech-sticker.webp";
-import humanTechCampaignVideo from "../assets/homepage/homepage-tech-your-way-cinematic.mp4";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
@@ -36,6 +35,7 @@ type Campaign = {
   eyebrow: string;
   title: string;
   description: string;
+  availabilityText?: string;
   image: string;
   imageAlt: string;
   theme: CampaignTheme;
@@ -196,7 +196,29 @@ type MarketplaceBrandShortcut = {
 };
 
 const marketplaceMainBrands = new Set(["Samsung", "LG", "Bose", "JBL", "Sony"]);
-const requestReadyMarketplaceBrands = ["Google", "Huawei", "Xiaomi", "Motorola"];
+const requestReadyMarketplaceBrands = [
+  "Google",
+  "Huawei",
+  "Xiaomi",
+  "Motorola",
+  "OnePlus",
+  "Nothing",
+  "Oppo",
+  "Vivo",
+  "Realme",
+  "Tecno",
+  "Infinix",
+  "HP",
+  "Dell",
+  "Lenovo",
+  "Asus",
+  "Acer",
+  "Beats",
+  "Anker",
+  "Belkin",
+  "Oraimo",
+  "Skullcandy",
+];
 
 const marketplaceFilterChips = [
   { label: "All", to: "/shop" },
@@ -213,6 +235,9 @@ export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const location = useLocation();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
+  const latestIphoneAction = useMemo(() => getLaunchAction(latestIphone.variants, latestIphone.featuredName, `/pre-order?model=${encodeURIComponent(latestIphone.featuredName)}`), [latestIphone.featuredName, latestIphone.variants]);
+  const macbookAirProducts = useMemo(() => activeProducts.filter((product) => product.category === "MacBooks" && /macbook air/i.test(`${product.name} ${product.model} ${product.generation ?? ""}`)), [activeProducts]);
+  const macbookAirAction = useMemo(() => getLaunchAction(macbookAirProducts, "MacBook Air", "/pre-order?category=MacBooks&model=MacBook%20Air"), [macbookAirProducts]);
   const brandCounts = useMemo(() => getBrandCounts(activeProducts), [activeProducts]);
   const marketplaceBrands = useMemo(() => getMarketplaceBrandShortcuts(activeProducts, brandCounts), [activeProducts, brandCounts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
@@ -230,38 +255,33 @@ export function HomePage() {
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
     title: latestIphone.featuredName,
-    description: "Meet the latest iPhone lineup.",
+    description: "Meet the newest iPhone family in the Buy & Sell GH catalogue.",
+    availabilityText: getLaunchAvailability(latestIphone.variants, latestIphone.generationLabel),
     image: latestFamilyCampaign?.image ?? latestIphone.image,
     imageAlt: latestFamilyCampaign?.alt ?? latestIphone.imageAlt,
     cinematicLayers: latestFamilyCampaign?.layers ?? createCatalogueIphoneLayers(latestIphone.galleryImages),
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: latestIphone.learnMoreTo,
-    secondaryLabel: "Shop iPhone",
-    secondaryTo: "/iphones",
+    secondaryLabel: latestIphoneAction.label,
+    secondaryTo: latestIphoneAction.to,
     fallbackImage: iphone17Story,
     variant: "iphone",
+  };
+
+  const featuredMacbookAirCampaign: Campaign = {
+    ...macbookAirCampaign,
+    availabilityText: getLaunchAvailability(macbookAirProducts, "MacBook Air"),
+    secondaryLabel: macbookAirAction.label,
+    secondaryTo: macbookAirAction.to,
   };
 
   return (
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <section className="store-human-campaign" aria-labelledby="store-human-campaign-title">
-          <div className="store-human-campaign-copy">
-            <p className="store-eyebrow">Buy &amp; Sell GH</p>
-            <h1 id="store-human-campaign-title">Tech, your way.</h1>
-            <p>Buy &amp; Sell GH helps customers buy, sell, trade, repair and upgrade iPhones, iPads, MacBooks, watches and accessories in Accra.</p>
-            <div className="store-actions">
-              <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
-              <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
-            </div>
-          </div>
-          <VideoStickerCampaign />
-        </section>
-
-        <ProductLaunch campaign={latestIphoneCampaign} />
-        <ProductLaunch campaign={macbookAirCampaign} />
+        <ProductLaunch campaign={latestIphoneCampaign} priority />
+        <ProductLaunch campaign={featuredMacbookAirCampaign} />
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
@@ -297,6 +317,7 @@ export function HomePage() {
 function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }) {
   const [isBrandListOpen, setIsBrandListOpen] = useState(false);
   const mainBrands = brands.filter((brand) => marketplaceMainBrands.has(brand.label));
+  const otherBrands = brands.filter((brand) => !marketplaceMainBrands.has(brand.label));
 
   return (
     <section id="marketplace-discovery" className="store-marketplace-section" aria-labelledby="marketplace-discovery-title">
@@ -341,7 +362,7 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
               <span>Real catalogue brands show counts. Request-only brands open Pre-Order.</span>
             </div>
             <div className="marketplace-brand-list">
-              {brands.map((shortcut) => (
+              {otherBrands.map((shortcut) => (
                 <Link className="marketplace-brand-list-item" to={shortcut.to} key={shortcut.label}>
                   <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
                   <span>
@@ -372,114 +393,6 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
     </section>
   );
 }
-function VideoStickerCampaign() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return undefined;
-
-    const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const loopStart = 0.12;
-    const loopEnd = 4.7;
-    const holdPoints = [1.05, 2.95];
-    const heldPoints = new Set<number>();
-    let holdTimeout: number | undefined;
-    let isVisible = true;
-
-    const clearHold = () => {
-      if (!holdTimeout) return;
-      window.clearTimeout(holdTimeout);
-      holdTimeout = undefined;
-    };
-
-    const safelyPlay = () => {
-      if (!isVisible || reduceMotionQuery.matches) return;
-      void video.play().catch(() => undefined);
-    };
-
-    const handleTimeUpdate = () => {
-      if (video.currentTime >= loopEnd) {
-        clearHold();
-        heldPoints.clear();
-        video.currentTime = loopStart;
-        safelyPlay();
-        return;
-      }
-
-      const nextHold = holdPoints.find((point) => video.currentTime >= point && !heldPoints.has(point));
-      if (nextHold === undefined || video.paused) return;
-
-      heldPoints.add(nextHold);
-      video.pause();
-      holdTimeout = window.setTimeout(() => {
-        holdTimeout = undefined;
-        safelyPlay();
-      }, 2400);
-    };
-
-    const handleMotionPreference = () => {
-      if (reduceMotionQuery.matches) {
-        clearHold();
-        video.pause();
-        video.currentTime = loopStart;
-      } else {
-        safelyPlay();
-      }
-    };
-
-    const observer = new IntersectionObserver(([entry]) => {
-      isVisible = Boolean(entry?.isIntersecting);
-      if (isVisible) {
-        safelyPlay();
-      } else {
-        clearHold();
-        video.pause();
-      }
-    }, { threshold: 0.18 });
-
-    video.playbackRate = 0.82;
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    reduceMotionQuery.addEventListener("change", handleMotionPreference);
-    observer.observe(video);
-    handleMotionPreference();
-
-    return () => {
-      clearHold();
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      reduceMotionQuery.removeEventListener("change", handleMotionPreference);
-      observer.disconnect();
-    };
-  }, []);
-
-  return (
-    <div className="store-campaign-video-frame" aria-label="Buy and Sell GH customers presenting phones, laptops and tablets">
-      <span className="store-video-sticker-halo" aria-hidden="true" />
-      <span className="store-video-sticker-outline" aria-hidden="true" />
-      <video
-        ref={videoRef}
-        className="store-campaign-video"
-        src={humanTechCampaignVideo}
-        poster={humanTechCampaignPoster}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-      />
-      <img
-        className="store-campaign-video-poster"
-        src={humanTechCampaignPoster}
-        alt="Buy and Sell GH customers presenting phones, laptops and tablets"
-        loading="eager"
-        decoding="async"
-        fetchPriority="high"
-      />
-    </div>
-  );
-}
-
 function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
   return (
     <section className={`store-launch store-launch-${campaign.theme}${campaign.variant ? ` store-launch-${campaign.variant}` : ""}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
@@ -487,6 +400,7 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
+        {campaign.availabilityText && <p className="store-launch-availability">{campaign.availabilityText}</p>}
         <div className="store-actions">
           <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
           {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
@@ -651,6 +565,18 @@ function getBrandCounts(products: Product[]) {
     if (product.brand !== "Apple") counts[product.brand] = (counts[product.brand] ?? 0) + 1;
     return counts;
   }, {});
+}
+
+function getLaunchAvailability(products: Product[], fallbackName: string) {
+  const purchasableProduct = products.find(isProductPurchasable);
+  if (purchasableProduct) return `${purchasableProduct.name} is available now while stock lasts.`;
+  return `${fallbackName} is available for pre-order or enquiry. Final availability is confirmed by Buy & Sell GH.`;
+}
+
+function getLaunchAction(products: Product[], fallbackName: string, fallbackTo: string) {
+  const purchasableProduct = products.find(isProductPurchasable);
+  if (purchasableProduct) return { label: "Buy", to: `/product/${purchasableProduct.slug}` };
+  return { label: "Pre-order", to: fallbackTo || `/pre-order?model=${encodeURIComponent(fallbackName)}` };
 }
 
 function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {
