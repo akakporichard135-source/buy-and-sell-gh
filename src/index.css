@@ -11331,3 +11331,245 @@ body {
     height: clamp(330px, 84vw, 500px);
   }
 }
+
+/* Final correction pass: sticker surface, brand sheet, and aligned campaign tiles */
+.store-human-campaign {
+  background: #f5f5f7;
+}
+
+.store-sticker-collage {
+  width: min(100%, 1180px);
+  height: clamp(430px, 38vw, 570px);
+  margin-top: clamp(0.1rem, 0.7vw, 0.45rem);
+  background: transparent;
+}
+
+.store-sticker-collage::before {
+  right: 12%;
+  bottom: 0;
+  left: 12%;
+  height: 18%;
+  background: radial-gradient(ellipse at center, rgba(29, 29, 31, 0.12), rgba(29, 29, 31, 0.035) 48%, transparent 74%);
+  filter: blur(22px);
+}
+
+.store-sticker-layer-inner {
+  animation: store-sticker-move-hold var(--float-duration, 5.4s) var(--float-delay, 0s) cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.store-sticker-layer img {
+  filter:
+    drop-shadow(0 0 1px rgba(255, 255, 255, 1))
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.96))
+    drop-shadow(0 18px 30px rgba(29, 29, 31, 0.14));
+}
+
+@keyframes store-sticker-move-hold {
+  0%, 17% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  31%, 78% {
+    transform: translate3d(0, var(--float-distance), 0) rotate(0.55deg);
+  }
+  92%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+.store-sticker-doodle {
+  animation: store-sticker-doodle-move-hold 5.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes store-sticker-doodle-move-hold {
+  0%, 18% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  32%, 78% { transform: translate3d(0, -7px, 0) rotate(2deg); }
+  92%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+}
+
+.store-campaign-video-frame {
+  display: none;
+}
+
+.store-launch-macbook-air {
+  background:
+    radial-gradient(ellipse at 50% 84%, rgba(29, 29, 31, 0.12), transparent 34rem),
+    radial-gradient(circle at 62% 47%, rgba(218, 171, 53, 0.12), transparent 24rem),
+    linear-gradient(180deg, #ffffff 0%, #f5f5f7 58%, #eeeeef 100%);
+}
+
+.store-launch-macbook-air .store-launch-art {
+  width: min(100%, 1500px);
+  min-height: clamp(450px, 50vw, 740px);
+}
+
+.store-launch-macbook-air .store-launch-art > img {
+  width: min(100vw, 1500px);
+  height: clamp(500px, 53vw, 780px);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 42px 42px rgba(29, 29, 31, 0.18));
+}
+
+.store-product-grid {
+  grid-auto-rows: minmax(clamp(650px, 53vw, 800px), auto);
+}
+
+.store-product-tile {
+  grid-template-rows: minmax(clamp(175px, 13vw, 230px), auto) minmax(0, 1fr);
+  background: #f5f5f7;
+}
+
+.store-product-tile .store-tile-copy {
+  min-height: clamp(175px, 13vw, 230px);
+  align-content: start;
+}
+
+.store-product-light,
+.store-product-warm,
+.store-product-tile:has(img[src*="apple-watch"]),
+.store-product-tile:has(img[src*="ipad-air"]) {
+  background: #f5f5f7;
+}
+
+.store-product-light:nth-child(odd),
+.store-product-warm:nth-child(odd) {
+  background: #f5f5f7;
+}
+
+.store-product-tile > img {
+  align-self: end;
+  max-height: clamp(390px, 31vw, 495px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 22px 28px rgba(29, 29, 31, 0.11));
+}
+
+.store-product-black > img {
+  filter: none;
+}
+
+.marketplace-others-action {
+  cursor: pointer;
+}
+
+.marketplace-brand-panel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 1.2rem;
+  background: #fff;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  box-shadow: 0 18px 45px rgba(29, 29, 31, 0.08);
+}
+
+.marketplace-brand-panel-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.marketplace-brand-panel-heading strong {
+  color: #111;
+  font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  font-weight: 950;
+}
+
+.marketplace-brand-panel-heading span {
+  max-width: 38rem;
+  color: #6e6e73;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.marketplace-brand-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 0.65rem;
+}
+
+.marketplace-brand-list-item {
+  display: grid;
+  min-width: 0;
+  min-height: 82px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.9rem;
+  background: #f5f5f7;
+  color: #111;
+  padding: 0.72rem;
+  text-decoration: none;
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.marketplace-brand-list-item:hover,
+.marketplace-brand-list-item:focus-visible {
+  background: #f7efda;
+  transform: translateY(-2px);
+}
+
+.marketplace-brand-list-item strong,
+.marketplace-brand-list-item small {
+  display: block;
+}
+
+.marketplace-brand-list-item small {
+  color: #6e6e73;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-sticker-layer-inner,
+  .store-sticker-doodle {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-sticker-collage {
+    width: min(100%, 520px);
+    height: clamp(420px, 116vw, 520px);
+  }
+
+  .store-product-grid {
+    grid-auto-rows: auto;
+  }
+
+  .store-product-tile {
+    min-height: clamp(545px, 132vw, 670px);
+    grid-template-rows: auto minmax(0, 1fr);
+    padding-top: clamp(2.8rem, 11vw, 3.8rem);
+  }
+
+  .store-product-tile .store-tile-copy {
+    min-height: auto;
+  }
+
+  .store-product-tile > img {
+    max-height: clamp(300px, 78vw, 430px);
+  }
+
+  .store-launch-macbook-air .store-launch-art > img {
+    width: min(116vw, 600px);
+    height: auto;
+    max-width: none;
+  }
+
+  .marketplace-brand-panel-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .marketplace-brand-panel-heading span {
+    text-align: left;
+  }
+
+  .marketplace-brand-list {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronRight, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product, ProductBrand } from "../types/product";
 import { Link, useLocation } from "react-router-dom";
@@ -11,15 +11,20 @@ import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
-import techYourWayPoster from "../assets/homepage/homepage-human-tech-sticker.webp";
-import techYourWayVideo from "../assets/homepage/homepage-tech-your-way-cinematic.mp4";
+import stickerController from "../assets/homepage/sticker-collage/controller.webp";
+import stickerLaptop from "../assets/homepage/sticker-collage/laptop.webp";
+import stickerPersonCenter from "../assets/homepage/sticker-collage/person-center.webp";
+import stickerPersonLeft from "../assets/homepage/sticker-collage/person-left.webp";
+import stickerPersonRight from "../assets/homepage/sticker-collage/person-right.webp";
+import stickerPhone from "../assets/homepage/sticker-collage/phone.webp";
+import stickerTablet from "../assets/homepage/sticker-collage/tablet.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
 import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
-import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-cinematic.webp";
+import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
 import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
@@ -29,8 +34,6 @@ import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
-const CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS = 1.05;
-const CAMPAIGN_VIDEO_HOLD_MS = 3200;
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -190,12 +193,25 @@ const marketplaceBrandMarks: Partial<Record<ProductBrand, { mark: string; classN
 };
 
 type MarketplaceBrandShortcut = {
-  label: ProductBrand;
+  label: string;
   mark: string;
   className: string;
   count: number;
   to: string;
 };
+
+const marketplaceMainBrands = new Set(["Samsung", "LG", "Bose", "JBL", "Sony"]);
+const requestReadyMarketplaceBrands = ["Google", "Huawei", "Xiaomi", "Motorola"];
+
+const stickerCampaignLayers = [
+  { className: "store-sticker-layer-person-left", src: stickerPersonLeft, alt: "Customer presenting a laptop in a Buy and Sell GH campaign" },
+  { className: "store-sticker-layer-person-center", src: stickerPersonCenter, alt: "Customer presenting an iPhone in a Buy and Sell GH campaign" },
+  { className: "store-sticker-layer-person-right", src: stickerPersonRight, alt: "Customer presenting an iPad in a Buy and Sell GH campaign" },
+  { className: "store-sticker-layer-laptop", src: stickerLaptop, alt: "Premium laptop cut-out" },
+  { className: "store-sticker-layer-tablet", src: stickerTablet, alt: "Premium tablet cut-out" },
+  { className: "store-sticker-layer-phone", src: stickerPhone, alt: "Premium phone cut-out" },
+  { className: "store-sticker-layer-controller", src: stickerController, alt: "Gaming controller cut-out" },
+];
 
 const marketplaceFilterChips = [
   { label: "All", to: "/shop" },
@@ -256,7 +272,7 @@ export function HomePage() {
               <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
             </div>
           </div>
-          <CampaignVideo />
+          <StickerCampaignComposition />
         </section>
 
         <ProductLaunch campaign={latestIphoneCampaign} />
@@ -294,6 +310,9 @@ export function HomePage() {
 }
 
 function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }) {
+  const [isBrandListOpen, setIsBrandListOpen] = useState(false);
+  const mainBrands = brands.filter((brand) => marketplaceMainBrands.has(brand.label));
+
   return (
     <section id="marketplace-discovery" className="store-marketplace-section" aria-labelledby="marketplace-discovery-title">
       <div className="marketplace-shell">
@@ -303,7 +322,15 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
             <h2 id="marketplace-discovery-title">Browse beyond Apple.</h2>
             <p>Search, filter and explore store-verified devices and accessories from the wider Buy &amp; Sell GH catalogue.</p>
           </div>
-          <a className="marketplace-verified marketplace-others-action" href="#marketplace-brand-list"><SlidersHorizontal size={18} /> Others</a>
+          <button
+            className="marketplace-verified marketplace-others-action"
+            type="button"
+            aria-expanded={isBrandListOpen}
+            aria-controls="marketplace-brand-list"
+            onClick={() => setIsBrandListOpen((open) => !open)}
+          >
+            <SlidersHorizontal size={18} /> Others
+          </button>
         </div>
 
         <Link className="marketplace-search" to="/shop" aria-label="Search the Buy and Sell GH catalogue">
@@ -312,20 +339,44 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
           <ArrowRight size={20} aria-hidden="true" />
         </Link>
 
-        <div id="marketplace-brand-list" className="marketplace-shortcuts" aria-label="Non-Apple brand shortcuts">
-          {brands.map((shortcut) => (
+        <div className="marketplace-shortcuts marketplace-main-shortcuts" aria-label="Featured non-Apple brand shortcuts">
+          {mainBrands.map((shortcut) => (
             <Link className="marketplace-shortcut" to={shortcut.to} key={shortcut.label}>
               <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
               <strong>{shortcut.label}</strong>
               <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Enquire"}</small>
             </Link>
           ))}
-          <Link className="marketplace-shortcut" to="/pre-order">
-            <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><span>Other</span></span>
-            <strong>Other</strong>
-            <small>Request device</small>
-          </Link>
         </div>
+
+        {isBrandListOpen && (
+          <div id="marketplace-brand-list" className="marketplace-brand-panel" aria-label="More non-Apple brands">
+            <div className="marketplace-brand-panel-heading">
+              <strong>More brands</strong>
+              <span>Real catalogue brands show counts. Request-only brands open Pre-Order.</span>
+            </div>
+            <div className="marketplace-brand-list">
+              {brands.map((shortcut) => (
+                <Link className="marketplace-brand-list-item" to={shortcut.to} key={shortcut.label}>
+                  <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
+                  <span>
+                    <strong>{shortcut.label}</strong>
+                    <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Request / enquire"}</small>
+                  </span>
+                  <ChevronRight size={18} aria-hidden="true" />
+                </Link>
+              ))}
+              <Link className="marketplace-brand-list-item" to="/pre-order">
+                <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><span>Other</span></span>
+                <span>
+                  <strong>Other</strong>
+                  <small>Request a brand or device</small>
+                </span>
+                <ChevronRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="marketplace-filter-row" aria-label="Marketplace filters">
           {marketplaceFilterChips.map((chip) => (
@@ -336,93 +387,19 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
     </section>
   );
 }
-function CampaignVideo() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  ));
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
-
-    updatePreference();
-    mediaQuery.addEventListener("change", updatePreference);
-    return () => mediaQuery.removeEventListener("change", updatePreference);
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || prefersReducedMotion) return;
-
-    let holdTimer: number | undefined;
-    let isVisible = false;
-
-    const clearHold = () => {
-      if (holdTimer === undefined) return;
-      window.clearTimeout(holdTimer);
-      holdTimer = undefined;
-    };
-
-    const startMovement = () => {
-      if (!isVisible) return;
-      clearHold();
-      video.currentTime = 0.05;
-      void video.play().catch(() => undefined);
-    };
-
-    const pauseAndHold = () => {
-      video.pause();
-      clearHold();
-      holdTimer = window.setTimeout(startMovement, CAMPAIGN_VIDEO_HOLD_MS);
-    };
-
-    const handleTimeUpdate = () => {
-      if (video.currentTime >= CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS) pauseAndHold();
-    };
-
-    const observer = new IntersectionObserver(([entry]) => {
-      isVisible = entry.isIntersecting;
-      if (isVisible) {
-        startMovement();
-      } else {
-        clearHold();
-        video.pause();
-      }
-    }, { threshold: 0.18 });
-
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    observer.observe(video);
-
-    return () => {
-      clearHold();
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      observer.disconnect();
-    };
-  }, [prefersReducedMotion]);
-
-  if (prefersReducedMotion) {
-    return (
-      <div className="store-campaign-video-frame store-campaign-video-poster" role="img" aria-label="Cinematic Buy & Sell GH device campaign">
-        <img src={techYourWayPoster} alt="" aria-hidden="true" loading="eager" decoding="async" fetchPriority="high" />
-      </div>
-    );
-  }
-
+function StickerCampaignComposition() {
   return (
-    <div className="store-campaign-video-frame" aria-label="Cinematic Buy & Sell GH device campaign">
-      <video
-        ref={videoRef}
-        className="store-campaign-video"
-        muted
-        playsInline
-        preload="metadata"
-        poster={techYourWayPoster}
-        aria-label="Cinematic Buy & Sell GH device campaign video"
-      >
-        <source src={techYourWayVideo} type="video/mp4" />
-        <img src={techYourWayPoster} alt="Cinematic Buy & Sell GH device campaign" loading="eager" decoding="async" fetchPriority="high" />
-      </video>
+    <div className="store-sticker-collage" role="img" aria-label="Buy and Sell GH customers presenting phones, laptops and tablets">
+      <span className="store-sticker-doodle store-sticker-doodle-ring" aria-hidden="true" />
+      <span className="store-sticker-doodle store-sticker-doodle-spark" aria-hidden="true" />
+      <span className="store-sticker-doodle store-sticker-doodle-zigzag" aria-hidden="true" />
+      {stickerCampaignLayers.map((layer) => (
+        <span className={`store-sticker-layer ${layer.className}`} aria-hidden="true" key={layer.className}>
+          <span className="store-sticker-layer-inner">
+            <img src={layer.src} alt={layer.alt} loading="eager" decoding="async" fetchPriority="high" />
+          </span>
+        </span>
+      ))}
     </div>
   );
 }
@@ -602,15 +579,16 @@ function getBrandCounts(products: Product[]) {
 
 function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {
   const productBrands = Array.from(new Set(products.map((product) => product.brand).filter((brand): brand is ProductBrand => brand !== "Apple")));
-  const brands = Array.from(new Set([...supportedMarketplaceBrands, ...productBrands]));
+  const brands = Array.from(new Set<string>([...supportedMarketplaceBrands, ...productBrands, ...requestReadyMarketplaceBrands]));
 
   return brands.map((brand) => {
-    const brandMeta = marketplaceBrandMarks[brand] ?? { mark: brand, className: "marketplace-brand-word" };
-    const count = counts[brand] ?? 0;
+    const productBrand = productBrands.find((catalogueBrand) => catalogueBrand === brand);
+    const brandMeta = productBrand ? marketplaceBrandMarks[productBrand] : undefined;
+    const count = productBrand ? counts[productBrand] ?? 0 : 0;
     return {
       label: brand,
-      mark: brandMeta.mark,
-      className: brandMeta.className,
+      mark: brandMeta?.mark ?? brand,
+      className: brandMeta?.className ?? `marketplace-brand-${slugify(brand)}`,
       count,
       to: count > 0 ? `/shop?brand=${encodeURIComponent(brand)}` : `/pre-order?brand=${encodeURIComponent(brand)}`,
     };
