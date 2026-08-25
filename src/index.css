@@ -11574,19 +11574,19 @@ body {
   }
 }
 
-/* Final top-campaign video pass: keep the MP4, remove the box, and present it as a surface-level sticker visual. */
+/* Final top-campaign video pass: keep the MP4 as one unified die-cut sticker composition. */
 .store-human-campaign {
   background:
-    radial-gradient(ellipse at 50% 86%, rgba(211, 161, 28, 0.08), transparent 34rem),
-    linear-gradient(180deg, #ffffff 0%, #f7f7f8 62%, #f5f5f7 100%);
+    radial-gradient(ellipse at 50% 88%, rgba(211, 161, 28, 0.06), transparent 34rem),
+    linear-gradient(180deg, #ffffff 0%, #fafafa 42%, #f5f5f7 100%);
 }
 
 .store-campaign-video-frame {
   position: relative;
   display: grid;
-  width: min(94vw, 1120px);
-  height: clamp(360px, 35vw, 520px);
-  margin-top: clamp(0.2rem, 0.8vw, 0.7rem);
+  width: min(92vw, 1080px);
+  height: clamp(350px, 33vw, 500px);
+  margin-top: clamp(0.1rem, 0.6vw, 0.45rem);
   place-items: center;
   overflow: visible;
   isolation: isolate;
@@ -11599,39 +11599,43 @@ body {
 
 .store-campaign-video-frame::before {
   position: absolute;
-  right: 6%;
-  bottom: 5%;
-  left: 6%;
-  height: 22%;
+  right: 12%;
+  bottom: 4%;
+  left: 12%;
+  height: 20%;
   border-radius: 999px;
-  background: radial-gradient(ellipse at center, rgba(29, 29, 31, 0.12), rgba(29, 29, 31, 0.035) 48%, transparent 74%);
+  background: radial-gradient(ellipse at center, rgba(29, 29, 31, 0.11), rgba(29, 29, 31, 0.03) 48%, transparent 74%);
   content: "";
   filter: blur(20px);
-  z-index: -2;
+  z-index: -3;
 }
 
 .store-campaign-video-frame::after {
-  position: absolute;
-  inset: 2% 6% 0;
-  border-radius: 48% 52% 46% 54% / 54% 46% 52% 48%;
-  background:
-    radial-gradient(circle at 24% 34%, rgba(255, 255, 255, 0.88), transparent 12rem),
-    radial-gradient(circle at 76% 30%, rgba(211, 161, 28, 0.12), transparent 14rem);
-  content: "";
-  filter: blur(10px);
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 .store-video-sticker-halo {
   position: absolute;
-  inset: 8% 8% 1%;
-  border-radius: 50%;
+  inset: 5% 4% 0;
   background:
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.56) 48%, transparent 73%),
-    radial-gradient(circle at 52% 24%, rgba(211, 161, 28, 0.1), transparent 24rem);
-  filter: blur(16px);
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.46) 48%, transparent 72%),
+    radial-gradient(circle at 50% 28%, rgba(211, 161, 28, 0.07), transparent 23rem);
+  clip-path: polygon(7% 35%, 17% 16%, 33% 8%, 51% 4%, 68% 8%, 84% 18%, 95% 38%, 91% 68%, 78% 86%, 56% 94%, 33% 92%, 14% 82%, 4% 61%);
+  filter: blur(15px);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.store-video-sticker-outline {
+  position: absolute;
+  inset: 4.5% 4% 0;
+  display: block;
+  background: #fff;
+  clip-path: polygon(7% 36%, 16% 15%, 32% 7%, 51% 3%, 69% 8%, 85% 19%, 96% 39%, 92% 68%, 79% 87%, 56% 96%, 32% 93%, 13% 82%, 3% 61%);
+  filter:
+    drop-shadow(0 0 8px rgba(255, 255, 255, 0.96))
+    drop-shadow(0 18px 26px rgba(29, 29, 31, 0.08));
+  opacity: 0.92;
   pointer-events: none;
   z-index: 0;
 }
@@ -11641,11 +11645,11 @@ body {
   position: relative;
   z-index: 1;
   display: block;
-  width: min(100%, 1080px);
+  width: min(100%, 1040px);
   height: 100%;
   padding: 0;
   border: 0;
-  border-radius: 0.35rem;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
   object-fit: contain;
@@ -11654,43 +11658,24 @@ body {
     contrast(1.04)
     saturate(1.04)
     drop-shadow(0 0 1px rgba(255, 255, 255, 0.98))
-    drop-shadow(0 0 7px rgba(255, 255, 255, 0.72))
-    drop-shadow(0 18px 28px rgba(29, 29, 31, 0.1));
+    drop-shadow(0 0 9px rgba(255, 255, 255, 0.9))
+    drop-shadow(0 18px 26px rgba(29, 29, 31, 0.08));
+  clip-path: polygon(7% 36%, 16% 15%, 32% 7%, 51% 3%, 69% 8%, 85% 19%, 96% 39%, 92% 68%, 79% 87%, 56% 96%, 32% 93%, 13% 82%, 3% 61%);
   -webkit-mask-image:
-    radial-gradient(ellipse at center, #000 0 68%, rgba(0, 0, 0, 0.9) 77%, rgba(0, 0, 0, 0.42) 89%, transparent 100%);
+    radial-gradient(ellipse at center, #000 0 72%, rgba(0, 0, 0, 0.96) 79%, rgba(0, 0, 0, 0.68) 90%, transparent 100%);
   mask-image:
-    radial-gradient(ellipse at center, #000 0 68%, rgba(0, 0, 0, 0.9) 77%, rgba(0, 0, 0, 0.42) 89%, transparent 100%);
+    radial-gradient(ellipse at center, #000 0 72%, rgba(0, 0, 0, 0.96) 79%, rgba(0, 0, 0, 0.68) 90%, transparent 100%);
 }
 
 .store-campaign-video-poster {
   display: none;
 }
 
-.store-campaign-video-frame .store-sticker-doodle {
-  z-index: 2;
-  opacity: 0.78;
-}
-
-.store-campaign-video-frame .store-sticker-doodle-ring {
-  left: 13%;
-  top: 17%;
-}
-
-.store-campaign-video-frame .store-sticker-doodle-spark {
-  right: 18%;
-  top: 14%;
-}
-
-.store-campaign-video-frame .store-sticker-doodle-zigzag {
-  right: 32%;
-  bottom: 10%;
-}
-
 @media (max-width: 768px) {
   .store-campaign-video-frame {
-    width: min(100%, calc(100vw - 1rem));
-    height: clamp(330px, 90vw, 470px);
-    margin-top: 0.2rem;
+    width: min(100%, calc(100vw - 0.75rem));
+    height: clamp(320px, 86vw, 455px);
+    margin-top: 0.05rem;
   }
 
   .store-campaign-video,
@@ -11704,38 +11689,24 @@ body {
       contrast(1.03)
       saturate(1.03)
       drop-shadow(0 0 1px rgba(255, 255, 255, 0.98))
-      drop-shadow(0 0 5px rgba(255, 255, 255, 0.74))
-      drop-shadow(0 12px 20px rgba(29, 29, 31, 0.09));
+      drop-shadow(0 0 7px rgba(255, 255, 255, 0.86))
+      drop-shadow(0 12px 20px rgba(29, 29, 31, 0.07));
     -webkit-mask-image:
-      radial-gradient(ellipse at center, #000 0 72%, rgba(0, 0, 0, 0.88) 82%, rgba(0, 0, 0, 0.48) 91%, transparent 100%);
+      radial-gradient(ellipse at center, #000 0 74%, rgba(0, 0, 0, 0.92) 84%, rgba(0, 0, 0, 0.58) 92%, transparent 100%);
     mask-image:
-      radial-gradient(ellipse at center, #000 0 72%, rgba(0, 0, 0, 0.88) 82%, rgba(0, 0, 0, 0.48) 91%, transparent 100%);
+      radial-gradient(ellipse at center, #000 0 74%, rgba(0, 0, 0, 0.92) 84%, rgba(0, 0, 0, 0.58) 92%, transparent 100%);
   }
 
   .store-video-sticker-halo {
-    inset: 11% 1% 3%;
+    inset: 8% 0 4%;
     filter: blur(14px);
-  }
-
-  .store-campaign-video-frame .store-sticker-doodle-ring {
-    left: 7%;
-    top: 13%;
-  }
-
-  .store-campaign-video-frame .store-sticker-doodle-spark {
-    right: 10%;
-    top: 12%;
-  }
-
-  .store-campaign-video-frame .store-sticker-doodle-zigzag {
-    display: none;
   }
 }
 
 @media (max-width: 420px) {
   .store-campaign-video-frame {
-    width: min(100%, calc(100vw - 0.5rem));
-    height: clamp(315px, 96vw, 420px);
+    width: min(100%, calc(100vw - 0.35rem));
+    height: clamp(300px, 90vw, 395px);
   }
 }
 

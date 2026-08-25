@@ -455,9 +455,7 @@ function VideoStickerCampaign() {
   return (
     <div className="store-campaign-video-frame" aria-label="Buy and Sell GH customers presenting phones, laptops and tablets">
       <span className="store-video-sticker-halo" aria-hidden="true" />
-      <span className="store-sticker-doodle store-sticker-doodle-ring" aria-hidden="true" />
-      <span className="store-sticker-doodle store-sticker-doodle-spark" aria-hidden="true" />
-      <span className="store-sticker-doodle store-sticker-doodle-zigzag" aria-hidden="true" />
+      <span className="store-video-sticker-outline" aria-hidden="true" />
       <video
         ref={videoRef}
         className="store-campaign-video"
