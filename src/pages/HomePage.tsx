@@ -1,42 +1,36 @@
-import { ArrowRight, ChevronRight, Eye, MapPin, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, ChevronRight, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product, ProductBrand } from "../types/product";
 import { Link, useLocation } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { getPrimaryImage, isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
 import ownerInstallmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
 import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg";
 import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
-import ownerStoreFlyerCampaign from "../assets/homepage/owner-store-flyer.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
-import audioAccessoriesStory from "../assets/homepage/homepage-audio-accessories-story.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
-import installmentCampaign from "../assets/homepage/homepage-installment-cinematic.webp";
 import techYourWayPoster from "../assets/homepage/homepage-human-tech-sticker.webp";
 import techYourWayVideo from "../assets/homepage/homepage-tech-your-way-cinematic.mp4";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
 import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
-import iphone17LineupCampaign from "../assets/homepage/homepage-iphone-17-lineup-cinematic.webp";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-cinematic.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
-import repairsCampaign from "../assets/homepage/homepage-repairs-cinematic.webp";
+import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
-import { formatGhs } from "../utils/format";
-import { productWhatsAppUrl } from "../utils/whatsapp";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
-const CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS = 1.25;
+const CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS = 1.05;
+const CAMPAIGN_VIDEO_HOLD_MS = 3200;
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -133,7 +127,7 @@ const productTiles: Campaign[] = [
     description: "A capable everyday companion, right on your wrist.",
     image: appleWatchCampaignArt,
     imageAlt: "Apple Watch in a warm premium presentation",
-    theme: "warm",
+    theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/apple-watch",
     secondaryLabel: "Buy",
@@ -178,28 +172,36 @@ const productTiles: Campaign[] = [
 ];
 
 const serviceStories = [
-  { label: "Upgrade & Save", title: "Move into something newer.", image: ownerUpgradeSaveCampaign, to: "/sell-or-trade", tone: "light" },
-  { label: "Sell for Cash", title: "Sell your old phone.", image: ownerSellCashCampaign, to: "/sell-or-trade", tone: "black" },
+  { label: "Upgrade & Save", title: "Move into something newer.", image: ownerUpgradeSaveCampaign, to: "/sell-or-trade?mode=upgrade", tone: "light" },
+  { label: "Sell for Cash", title: "Sell your old phone.", image: ownerSellCashCampaign, to: "/sell-or-trade?mode=sell", tone: "black" },
   { label: "Installment", title: "Own an iPhone today.", image: ownerInstallmentCampaign, to: "/installment", tone: "black" },
   { label: "Repairs", title: "Let the experts fix it.", image: ownerRepairsCampaign, to: "/repairs", tone: "light" },
   { label: "Refer a Friend", title: "Good tech is better shared.", image: ownerReferFriendCampaign, to: "/refer-a-friend", tone: "light" },
-  { label: "Pre-Order", title: "Request the exact device.", image: ownerStoreFlyerCampaign, to: "/pre-order", tone: "black" },
+  { label: "Pre-Order", title: "Request the exact device.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
 ];
 
-const marketplaceBrandShortcuts: Array<{ label: ProductBrand | "Other"; mark: string; className: string; to: string }> = [
-  { label: "Samsung", mark: "SAMSUNG", className: "marketplace-brand-samsung", to: "/shop?brand=Samsung" },
-  { label: "LG", mark: "LG", className: "marketplace-brand-lg", to: "/shop?brand=LG" },
-  { label: "Bose", mark: "BOSE", className: "marketplace-brand-word", to: "/shop?brand=Bose" },
-  { label: "JBL", mark: "JBL", className: "marketplace-brand-word", to: "/shop?brand=JBL" },
-  { label: "Sony", mark: "SONY", className: "marketplace-brand-word", to: "/shop?brand=Sony" },
-  { label: "Other", mark: "Other", className: "marketplace-brand-other", to: "/pre-order" },
-];
+const supportedMarketplaceBrands: ProductBrand[] = ["Samsung", "LG", "Bose", "JBL", "Sony"];
+const marketplaceBrandMarks: Partial<Record<ProductBrand, { mark: string; className: string }>> = {
+  Samsung: { mark: "SAMSUNG", className: "marketplace-brand-samsung" },
+  LG: { mark: "LG", className: "marketplace-brand-lg" },
+  Bose: { mark: "BOSE", className: "marketplace-brand-word" },
+  JBL: { mark: "JBL", className: "marketplace-brand-word" },
+  Sony: { mark: "SONY", className: "marketplace-brand-word" },
+};
+
+type MarketplaceBrandShortcut = {
+  label: ProductBrand;
+  mark: string;
+  className: string;
+  count: number;
+  to: string;
+};
 
 const marketplaceFilterChips = [
   { label: "All", to: "/shop" },
   { label: "Price", to: "/shop" },
   { label: "Brand", to: "/shop" },
-  { label: "Condition", to: "/shop?category=UK%20Used%20Devices" },
+  { label: "Condition", to: "/shop" },
   { label: "Storage", to: "/shop" },
   { label: "Availability", to: "/shop" },
   { label: "Recommended", to: "/shop" },
@@ -211,7 +213,7 @@ export function HomePage() {
   const location = useLocation();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
   const brandCounts = useMemo(() => getBrandCounts(activeProducts), [activeProducts]);
-  const ukUsedProducts = useMemo(() => getUkUsedMarketplaceProducts(activeProducts), [activeProducts]);
+  const marketplaceBrands = useMemo(() => getMarketplaceBrandShortcuts(activeProducts, brandCounts), [activeProducts, brandCounts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
   const latestFamilyCampaign = registeredFamilyCampaign?.requiredSlugs.every((slug) =>
     latestIphone.variants.some((product) => product.slug === slug),
@@ -264,7 +266,7 @@ export function HomePage() {
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
         </section>
 
-        <MarketplaceDiscovery brandCounts={brandCounts} products={ukUsedProducts} />
+        <MarketplaceDiscovery brands={marketplaceBrands} />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail">
           {serviceStories.map((story) => (
@@ -291,7 +293,7 @@ export function HomePage() {
   );
 }
 
-function MarketplaceDiscovery({ brandCounts, products }: { brandCounts: Partial<Record<ProductBrand, number>>; products: Product[] }) {
+function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }) {
   return (
     <section id="marketplace-discovery" className="store-marketplace-section" aria-labelledby="marketplace-discovery-title">
       <div className="marketplace-shell">
@@ -301,7 +303,7 @@ function MarketplaceDiscovery({ brandCounts, products }: { brandCounts: Partial<
             <h2 id="marketplace-discovery-title">Browse beyond Apple.</h2>
             <p>Search, filter and explore store-verified devices and accessories from the wider Buy &amp; Sell GH catalogue.</p>
           </div>
-          <span className="marketplace-verified"><SlidersHorizontal size={18} /> Store Verified</span>
+          <a className="marketplace-verified marketplace-others-action" href="#marketplace-brand-list"><SlidersHorizontal size={18} /> Others</a>
         </div>
 
         <Link className="marketplace-search" to="/shop" aria-label="Search the Buy and Sell GH catalogue">
@@ -310,17 +312,19 @@ function MarketplaceDiscovery({ brandCounts, products }: { brandCounts: Partial<
           <ArrowRight size={20} aria-hidden="true" />
         </Link>
 
-        <div className="marketplace-shortcuts" aria-label="Non-Apple brand shortcuts">
-          {marketplaceBrandShortcuts.map((shortcut) => {
-            const count = shortcut.label === "Other" ? 0 : brandCounts[shortcut.label] ?? 0;
-            return (
-              <Link className="marketplace-shortcut" to={shortcut.to} key={shortcut.label}>
-                <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
-                <strong>{shortcut.label}</strong>
-                <small>{count > 0 ? `${count} ${count === 1 ? "product" : "products"}` : shortcut.label === "Other" ? "Request device" : "Request / filter"}</small>
-              </Link>
-            );
-          })}
+        <div id="marketplace-brand-list" className="marketplace-shortcuts" aria-label="Non-Apple brand shortcuts">
+          {brands.map((shortcut) => (
+            <Link className="marketplace-shortcut" to={shortcut.to} key={shortcut.label}>
+              <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
+              <strong>{shortcut.label}</strong>
+              <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Enquire"}</small>
+            </Link>
+          ))}
+          <Link className="marketplace-shortcut" to="/pre-order">
+            <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><span>Other</span></span>
+            <strong>Other</strong>
+            <small>Request device</small>
+          </Link>
         </div>
 
         <div className="marketplace-filter-row" aria-label="Marketplace filters">
@@ -328,57 +332,8 @@ function MarketplaceDiscovery({ brandCounts, products }: { brandCounts: Partial<
             <Link to={chip.to} key={chip.label}>{chip.label}</Link>
           ))}
         </div>
-
-        <div className="marketplace-results-heading">
-          <div>
-            <h3>UK Used and inspected stock</h3>
-            <p>One swipeable row of real Buy &amp; Sell GH pre-owned inventory.</p>
-          </div>
-          <Link to="/shop?category=UK%20Used%20Devices">View all UK Used <ChevronRight size={16} /></Link>
-        </div>
-
-        {products.length > 0 ? (
-          <div className="marketplace-product-rail" aria-label="UK Used product row">
-            {products.map((product) => <MarketplaceProductCard product={product} key={product.id} />)}
-          </div>
-        ) : (
-          <div className="marketplace-empty-state">
-            <strong>No UK Used stock is currently listed.</strong>
-            <p>Request the exact device and Buy &amp; Sell GH will confirm availability.</p>
-            <Link to="/pre-order">Request a Device</Link>
-          </div>
-        )}
       </div>
     </section>
-  );
-}
-
-function MarketplaceProductCard({ product }: { product: Product }) {
-  const primaryImage = getPrimaryImage(product);
-  const storage = product.storage[0] ?? "To confirm";
-  const color = product.defaultColor ?? product.colors[0] ?? "To confirm";
-  const price = product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price);
-
-  return (
-    <article className="marketplace-product-card">
-      <Link className="marketplace-product-image" to={`/product/${product.slug}`} aria-label={`View ${product.name}`}>
-        {primaryImage ? <img src={primaryImage.src} alt={primaryImage.alt} loading="lazy" decoding="async" /> : <span>{product.name}</span>}
-      </Link>
-      <div className="marketplace-product-copy">
-        <p className="marketplace-product-price">{price}</p>
-        <h4>{product.name}</h4>
-        <p className="marketplace-product-location"><MapPin size={14} /> Dome Pillar 2, Accra</p>
-        <div className="marketplace-product-meta">
-          <span>{product.condition}</span>
-          <span>{storage}</span>
-          <span>{product.stockStatus}</span>
-        </div>
-        <div className="marketplace-product-actions">
-          <Link to={`/product/${product.slug}`}><Eye size={15} /> View Details</Link>
-          <a href={productWhatsAppUrl(product, storage, color)} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
-        </div>
-      </div>
-    </article>
   );
 }
 function CampaignVideo() {
@@ -400,16 +355,50 @@ function CampaignVideo() {
     const video = videoRef.current;
     if (!video || prefersReducedMotion) return;
 
+    let holdTimer: number | undefined;
+    let isVisible = false;
+
+    const clearHold = () => {
+      if (holdTimer === undefined) return;
+      window.clearTimeout(holdTimer);
+      holdTimer = undefined;
+    };
+
+    const startMovement = () => {
+      if (!isVisible) return;
+      clearHold();
+      video.currentTime = 0.05;
+      void video.play().catch(() => undefined);
+    };
+
+    const pauseAndHold = () => {
+      video.pause();
+      clearHold();
+      holdTimer = window.setTimeout(startMovement, CAMPAIGN_VIDEO_HOLD_MS);
+    };
+
+    const handleTimeUpdate = () => {
+      if (video.currentTime >= CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS) pauseAndHold();
+    };
+
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        void video.play().catch(() => undefined);
+      isVisible = entry.isIntersecting;
+      if (isVisible) {
+        startMovement();
       } else {
+        clearHold();
         video.pause();
       }
     }, { threshold: 0.18 });
 
+    video.addEventListener("timeupdate", handleTimeUpdate);
     observer.observe(video);
-    return () => observer.disconnect();
+
+    return () => {
+      clearHold();
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      observer.disconnect();
+    };
   }, [prefersReducedMotion]);
 
   if (prefersReducedMotion) {
@@ -425,15 +414,7 @@ function CampaignVideo() {
       <video
         ref={videoRef}
         className="store-campaign-video"
-        autoPlay
         muted
-        loop
-        onTimeUpdate={(event) => {
-          const video = event.currentTarget;
-          if (video.currentTime >= CAMPAIGN_VIDEO_SAFE_LOOP_END_SECONDS) {
-            video.currentTime = 0.05;
-          }
-        }}
         playsInline
         preload="metadata"
         poster={techYourWayPoster}
@@ -619,17 +600,21 @@ function getBrandCounts(products: Product[]) {
   }, {});
 }
 
-function getUkUsedMarketplaceProducts(products: Product[]) {
-  const usedConditions = new Set(["UK Used", "Excellent", "Very Good"]);
-  return products
-    .filter((product) => usedConditions.has(product.condition))
-    .filter((product) => isProductPurchasable(product))
-    .sort((a, b) => {
-      const ukUsedScore = Number(b.condition === "UK Used") - Number(a.condition === "UK Used");
-      if (ukUsedScore !== 0) return ukUsedScore;
-      return b.price - a.price;
-    })
-    .slice(0, 12);
+function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {
+  const productBrands = Array.from(new Set(products.map((product) => product.brand).filter((brand): brand is ProductBrand => brand !== "Apple")));
+  const brands = Array.from(new Set([...supportedMarketplaceBrands, ...productBrands]));
+
+  return brands.map((brand) => {
+    const brandMeta = marketplaceBrandMarks[brand] ?? { mark: brand, className: "marketplace-brand-word" };
+    const count = counts[brand] ?? 0;
+    return {
+      label: brand,
+      mark: brandMeta.mark,
+      className: brandMeta.className,
+      count,
+      to: count > 0 ? `/shop?brand=${encodeURIComponent(brand)}` : `/pre-order?brand=${encodeURIComponent(brand)}`,
+    };
+  });
 }
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

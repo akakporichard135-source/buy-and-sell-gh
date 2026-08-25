@@ -2,7 +2,7 @@ import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import shopRollupArtwork from "../assets/brand/shop-rollup-banner.webp";
+import preOrderArtwork from "../assets/homepage/homepage-preorder-premium.jpg";
 
 export function DeviceRequestPage() {
   return (
@@ -14,7 +14,7 @@ export function DeviceRequestPage() {
           <h1>Can't find the device you want?</h1>
           <p>Use this form when the device you want is not currently available on the website. Tell us the exact device you're looking for and Buy & Sell GH will help you source it.</p>
         </div>
-        <img src={shopRollupArtwork} alt="Buy & Sell GH shop banner artwork" loading="eager" decoding="async" />
+        <img src={preOrderArtwork} alt="Premium reserved device pre-order artwork" loading="eager" decoding="async" />
       </section>
       <section className="section device-request-layout grid gap-8">
         <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">

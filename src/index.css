@@ -11135,3 +11135,199 @@ body {
     height: 340px;
   }
 }
+
+/* Final focused homepage/service cleanup */
+.store-human-campaign {
+  background: #f5f5f7;
+}
+
+.store-campaign-video-frame {
+  width: min(92vw, 1060px);
+  aspect-ratio: 16 / 9.8;
+  margin-top: clamp(0.2rem, 1vw, 0.8rem);
+  background: #f5f5f7;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.store-campaign-video,
+.store-campaign-video-poster img {
+  background: #f5f5f7;
+  filter: drop-shadow(0 22px 28px rgba(29, 29, 31, 0.08));
+}
+
+.store-launch-macbook-air {
+  background:
+    radial-gradient(ellipse at 50% 88%, rgba(14, 14, 16, 0.16), transparent 34rem),
+    radial-gradient(circle at 64% 54%, rgba(216, 167, 45, 0.13), transparent 24rem),
+    linear-gradient(180deg, #fbfbfb 0%, #f5f5f7 55%, #ececef 100%);
+}
+
+.store-launch-macbook-air::after {
+  position: absolute;
+  z-index: 0;
+  top: 42%;
+  left: -18%;
+  width: 18%;
+  height: 42%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+  content: "";
+  filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transform: skewX(-16deg);
+  animation: store-macbook-light-sweep 11s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.store-launch-macbook-air .store-launch-art {
+  min-height: clamp(430px, 50vw, 720px);
+  perspective: 1600px;
+}
+
+.store-launch-macbook-air .store-launch-art > img {
+  width: min(100vw, 1420px);
+  height: clamp(470px, 52vw, 760px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 44px 45px rgba(20, 18, 14, 0.2));
+  mix-blend-mode: multiply;
+  transform-origin: 50% 72%;
+  animation: store-macbook-premium-hold 8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes store-macbook-premium-hold {
+  0%, 30% { transform: translate3d(0, 1%, 0) rotateX(0deg) rotateZ(0deg) scale(1); }
+  42%, 72% { transform: translate3d(0, -0.8%, 0) rotateX(1.4deg) rotateZ(-0.35deg) scale(1.012); }
+  84%, 100% { transform: translate3d(0, 1%, 0) rotateX(0deg) rotateZ(0deg) scale(1); }
+}
+
+@keyframes store-macbook-light-sweep {
+  0%, 54% { left: -18%; opacity: 0; }
+  64% { opacity: 0.34; }
+  78% { opacity: 0.12; }
+  88%, 100% { left: 105%; opacity: 0; }
+}
+
+.store-product-grid {
+  align-items: stretch;
+  grid-auto-rows: minmax(clamp(620px, 52vw, 790px), auto);
+}
+
+.store-product-tile {
+  min-height: 0;
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+  background-clip: padding-box;
+}
+
+.store-product-light,
+.store-product-warm {
+  background: #f5f5f7;
+}
+
+.store-product-light:nth-child(odd),
+.store-product-warm:nth-child(odd) {
+  background: #fff;
+}
+
+.store-product-tile > img {
+  align-self: end;
+  width: min(100%, 640px);
+  max-height: 470px;
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+}
+
+.store-product-black > img {
+  mix-blend-mode: normal;
+}
+
+.store-product-tile:has(img[src*="apple-watch"]),
+.store-product-tile:has(img[src*="ipad-air"]) {
+  background: #f5f5f7;
+}
+
+.store-product-tile:has(img[src*="apple-watch"]) > img,
+.store-product-tile:has(img[src*="ipad-air"]) > img {
+  filter: drop-shadow(0 24px 28px rgba(29, 29, 31, 0.12));
+}
+
+.marketplace-heading {
+  align-items: center;
+}
+
+.marketplace-others-action {
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+}
+
+.marketplace-others-action:hover,
+.marketplace-others-action:focus-visible {
+  background: var(--brand-gold-strong);
+  color: #111;
+}
+
+.marketplace-shortcuts {
+  scroll-margin-top: 6rem;
+}
+
+.store-marketplace-section {
+  padding-bottom: clamp(3rem, 5vw, 5rem);
+}
+
+.service-hero,
+.page-hero {
+  align-items: center;
+}
+
+.service-hero img,
+.page-hero img {
+  object-fit: contain;
+  object-position: center;
+}
+
+.sell-trade-aside-art {
+  display: none;
+}
+
+.device-request-hero img {
+  background: #f5f5f7;
+  border-radius: 0.85rem;
+  box-shadow: 0 24px 44px rgba(17, 17, 17, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-launch-macbook-air::after,
+  .store-launch-macbook-air .store-launch-art > img {
+    animation: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-campaign-video-frame {
+    width: min(94vw, 520px);
+    aspect-ratio: 1 / 1.08;
+  }
+
+  .store-product-grid {
+    grid-auto-rows: auto;
+  }
+
+  .store-product-tile {
+    min-height: clamp(560px, 138vw, 690px);
+  }
+
+  .store-product-tile > img {
+    max-height: clamp(310px, 82vw, 450px);
+  }
+
+  .store-launch-macbook-air .store-launch-art > img {
+    height: clamp(330px, 84vw, 500px);
+  }
+}

@@ -1,4 +1,5 @@
 import { ClipboardCheck, MessageCircle } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
@@ -7,16 +8,26 @@ import sellOldIphoneArtwork from "../assets/brand/sell-old-iphone-cash.webp";
 import upgradeSaveArtwork from "../assets/brand/upgrade-save-tall.webp";
 
 export function SellTradePage() {
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode");
+  const isUpgradeMode = mode === "upgrade";
+  const heroArtwork = isUpgradeMode ? upgradeSaveArtwork : sellOldIphoneArtwork;
+  const heroAlt = isUpgradeMode ? "Buy & Sell GH upgrade and save artwork" : "Buy & Sell GH sell your old phone artwork";
+  const heroTitle = isUpgradeMode ? "Upgrade for less with your current device" : "Sell your old phone for cash";
+  const heroDescription = isUpgradeMode
+    ? "Trade or swap your current device toward something newer. Final value is confirmed after physical inspection at Buy & Sell GH."
+    : "Send your device details for an estimate. Final cash value is confirmed only after physical inspection at Buy & Sell GH.";
+
   return (
     <>
       <SEO title="Sell or Trade In Your Phone" description="Submit your iPhone or gadget trade-in details to Buy & Sell GH. Final price is confirmed after inspection." />
       <section className="page-hero sell-trade-hero">
         <div>
           <p className="eyebrow-dark">Sell or Trade In</p>
-          <h1>Turn your current phone into your next upgrade</h1>
-          <p>Final price is confirmed only after physical inspection at Buy & Sell GH.</p>
+          <h1>{heroTitle}</h1>
+          <p>{heroDescription}</p>
         </div>
-        <img src={sellOldIphoneArtwork} alt="Buy & Sell GH trade-in artwork" loading="eager" decoding="async" />
+        <img src={heroArtwork} alt={heroAlt} loading="eager" decoding="async" />
       </section>
       <section className="section sell-trade-layout">
         <div className="sell-trade-main grid gap-4">
@@ -62,7 +73,6 @@ export function SellTradePage() {
           </SuccessForm>
         </div>
         <aside className="sell-trade-whatsapp rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">
-          <img className="sell-trade-aside-art" src={upgradeSaveArtwork} alt="" loading="lazy" decoding="async" />
           <MessageCircle className="text-gold" />
           <h2 className="mt-4 text-2xl font-black">Prefer WhatsApp?</h2>
           <p className="mt-3 text-sm leading-7 text-white/70">Send your device details and photos directly. The inspection note still applies.</p>
