@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, ChevronRight, CircleCheck, History, LockKeyhole, MessageCircle, Search, ShieldCheck, SlidersHorizontal, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product, ProductBrand } from "../types/product";
@@ -6,11 +6,10 @@ import { Link, useLocation } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import ownerInstallmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
-import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg";
-import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
-import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
-import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
+import installmentCampaignArt from "../assets/homepage/homepage-installment-cinematic.webp";
+import referCampaignArt from "../assets/homepage/homepage-refer-cinematic.webp";
+import repairsCampaignArt from "../assets/homepage/homepage-repairs-cinematic.webp";
+import sellCashCampaignArt from "../assets/homepage/homepage-sell-cash-cinematic.webp";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -22,9 +21,14 @@ import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premi
 import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
 import macbookProM5Cutout from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
-import preOrderCampaignArt from "../assets/homepage/owner-preorder-now.png";
+import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardSingle from "../assets/homepage/homepage-visa-card-single.webp";
+import samsungStoryArt from "../assets/homepage/homepage-samsung-story.jpg";
+import audioStoryArt from "../assets/homepage/homepage-audio-accessories-story.jpg";
+import laptopStoryArt from "../assets/homepage/homepage-laptop-tablet-story.jpg";
+import audioCategoryArt from "../assets/categories/audio-premium.webp";
+import gamingCategoryArt from "../assets/categories/game-consoles-premium.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
@@ -135,28 +139,45 @@ const productTiles: Campaign[] = [
     secondaryTo: "/sell-or-trade",
     showImage: false,
   },
-  {
-    eyebrow: "Visa Card Trading",
-    title: "Trade supported cards securely and simply.",
-    description: "Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.",
-    image: visaCardSingle,
-    imageAlt: "One original unbranded black and gold card for supported card review",
-    theme: "warm",
-    primaryLabel: "Check a Card",
-    primaryTo: "/gift-cards",
-    secondaryLabel: "Contact Us",
-    secondaryTo: "/contact",
-  },
 ];
 
 const serviceStories = [
-  { label: "Upgrade & Save", title: "Move into something newer.", image: ownerUpgradeSaveCampaign, to: "/sell-or-trade?mode=upgrade", tone: "light" },
-  { label: "Sell for Cash", title: "Sell your old phone.", image: ownerSellCashCampaign, to: "/sell-or-trade?mode=sell", tone: "black" },
-  { label: "Installment", title: "Own an iPhone today.", image: ownerInstallmentCampaign, to: "/installment", tone: "black" },
-  { label: "Repairs", title: "Let the experts fix it.", image: ownerRepairsCampaign, to: "/repairs", tone: "light" },
-  { label: "Refer a Friend", title: "Good tech is better shared.", image: ownerReferFriendCampaign, to: "/refer-a-friend", tone: "light" },
-  { label: "Pre-Order", title: "Request the exact device.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
+  { label: "Upgrade & Save", title: "Move into something newer.", description: "Trade or swap your current device through the existing Buy & Sell GH flow.", image: upgradeSaveArtwork, to: "/sell-or-trade?mode=upgrade", tone: "light" },
+  { label: "Sell for Cash", title: "A clear route from device to value.", description: "Submit your device details for inspection and a confirmed offer.", image: sellCashCampaignArt, to: "/sell-or-trade?mode=sell", tone: "dark" },
+  { label: "Installment", title: "A more flexible way to plan.", description: "Ask about current eligibility, deposit requirements and confirmed payment terms.", image: installmentCampaignArt, to: "/installment", tone: "dark" },
+  { label: "Repairs", title: "Let the experts fix it.", description: "Request support for phones, laptops and game consoles.", image: repairsCampaignArt, to: "/repairs", tone: "dark" },
+  { label: "Refer a Friend", title: "Good tech is better shared.", description: "Introduce someone to devices, repairs, sourcing or trade-in support.", image: referCampaignArt, to: "/refer-a-friend", tone: "light" },
+  { label: "Pre-Order", title: "Request the exact device.", description: "Tell us the model and configuration you want us to source.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
 ];
+
+const cardCapabilityGroups = [
+  {
+    label: "Available now",
+    description: "Supported card enquiries, purchase guidance and direct customer support.",
+    icon: CircleCheck,
+    status: "live",
+  },
+  {
+    label: "Account experience",
+    description: "Purchase history, installment tracking, reminders and statements are planned.",
+    icon: History,
+    status: "planned",
+  },
+  {
+    label: "Partner-enabled",
+    description: "Card issuing, limits, rewards and account controls require licensed financial partners.",
+    icon: LockKeyhole,
+    status: "partner",
+  },
+] as const;
+
+const marketplaceEditorialStories = [
+  { brand: "Samsung", eyebrow: "Mobile", title: "Galaxy, sourced with clarity.", image: samsungStoryArt, tone: "dark" },
+  { brand: "LG", eyebrow: "Screens & devices", title: "Technology for work and home.", image: laptopStoryArt, tone: "light" },
+  { brand: "Bose", eyebrow: "Premium audio", title: "Sound with room to breathe.", image: audioStoryArt, tone: "warm" },
+  { brand: "JBL", eyebrow: "Portable audio", title: "Music made to move.", image: audioCategoryArt, tone: "light" },
+  { brand: "Sony", eyebrow: "Gaming & audio", title: "Play, listen and discover.", image: gamingCategoryArt, tone: "dark" },
+] as const;
 
 const supportedMarketplaceBrands: ProductBrand[] = ["Samsung", "LG", "Bose", "JBL", "Sony"];
 const marketplaceBrandMarks: Partial<Record<ProductBrand, { mark: string; className: string }>> = {
@@ -274,14 +295,20 @@ export function HomePage() {
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
         </section>
 
+        <BuySellCardFeature />
+
         <MarketplaceDiscovery brands={marketplaceBrands} />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
             <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
-              <div><span>{story.label}</span><strong>{story.title}</strong></div>
               <img src={story.image} alt={`${story.label} from Buy & Sell GH`} loading="lazy" decoding="async" />
-              <small>Learn more <ChevronRight size={14} /></small>
+              <div className="service-story-copy">
+                <span>{story.label}</span>
+                <strong>{story.title}</strong>
+                <p>{story.description}</p>
+                <small>Learn more <ChevronRight size={14} /></small>
+              </div>
             </Link>
           ))}
         </StoreRail>
@@ -298,6 +325,45 @@ export function HomePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function BuySellCardFeature() {
+  return (
+    <section className="buy-sell-card-feature" aria-labelledby="buy-sell-card-title">
+      <div className="buy-sell-card-main">
+        <div className="buy-sell-card-copy">
+          <p className="store-eyebrow">Buy &amp; Sell Card</p>
+          <h2 id="buy-sell-card-title">Your purchases. One clear view.</h2>
+          <p className="buy-sell-card-lede">A future customer account experience for purchases, eligible payment plans, trade-in credits and support.</p>
+          <div className="buy-sell-card-notice">
+            <ShieldCheck size={20} aria-hidden="true" />
+            <p><strong>In development.</strong> Buy &amp; Sell GH does not currently issue a bank or credit card. Financial features will only launch with approved providers.</p>
+          </div>
+          <div className="store-actions">
+            <Link className="store-button store-button-primary" to="/gift-cards">Check a supported card</Link>
+            <Link className="store-button store-button-secondary" to="/contact">Talk to us</Link>
+          </div>
+        </div>
+        <div className="buy-sell-card-visual" aria-label="Original black and gold Buy and Sell card concept">
+          <span className="buy-sell-card-orbit" aria-hidden="true" />
+          <img src={visaCardSingle} alt="Original unbranded black and gold card concept" loading="lazy" decoding="async" />
+          <div className="buy-sell-card-preview" aria-hidden="true">
+            <span><WalletCards size={18} /> Account overview</span>
+            <strong>Planned experience</strong>
+            <small>Purchases · Plans · Support</small>
+          </div>
+        </div>
+      </div>
+      <div className="buy-sell-card-capabilities" aria-label="Buy and Sell Card capability status">
+        {cardCapabilityGroups.map(({ description, icon: Icon, label, status }) => (
+          <article className={`buy-sell-card-capability buy-sell-card-capability-${status}`} key={label}>
+            <Icon size={23} aria-hidden="true" />
+            <div><strong>{label}</strong><p>{description}</p></div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -322,6 +388,23 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
           <span>Search phones, brands, storage, condition...</span>
           <ArrowRight size={20} aria-hidden="true" />
         </Link>
+
+        <div className="marketplace-editorial-rail" aria-label="Featured multi-brand stories">
+          {marketplaceEditorialStories.map((story) => {
+            const brand = brands.find((item) => item.label === story.brand);
+            const count = brand?.count ?? 0;
+            return (
+              <Link className={`marketplace-editorial-card marketplace-editorial-${story.tone}`} to={brand?.to ?? `/pre-order?brand=${encodeURIComponent(story.brand)}`} key={story.brand}>
+                <img src={story.image} alt={`${story.brand} ${story.eyebrow.toLowerCase()} editorial`} loading="lazy" decoding="async" />
+                <div>
+                  <span>{story.brand} · {story.eyebrow}</span>
+                  <strong>{story.title}</strong>
+                  <small>{count > 0 ? `Explore ${count} ${count === 1 ? "product" : "products"}` : "Request or enquire"} <ChevronRight size={15} /></small>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
 
         <div className="marketplace-shortcuts marketplace-main-shortcuts" aria-label="Featured non-Apple brand shortcuts">
           {mainBrands.map((shortcut) => (

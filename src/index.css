@@ -11897,3 +11897,462 @@ body {
     max-height: clamp(280px, 74vw, 390px);
   }
 }
+
+/* Premium lower-homepage stories: card concept, multi-brand showroom, and services. */
+.buy-sell-card-feature {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 42%, rgba(216, 167, 45, 0.2), transparent 27rem),
+    radial-gradient(ellipse at 48% 110%, rgba(255, 255, 255, 0.08), transparent 42rem),
+    #0b0b0d;
+  color: #fff;
+  padding: clamp(4.5rem, 8vw, 8rem) max(1rem, calc((100vw - 1380px) / 2));
+}
+
+.buy-sell-card-feature::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.025), transparent 34%, rgba(216, 167, 45, 0.035) 72%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.buy-sell-card-main {
+  display: grid;
+  width: min(100%, 1380px);
+  grid-template-columns: minmax(0, 0.78fr) minmax(520px, 1.22fr);
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 6rem);
+  margin-inline: auto;
+}
+
+.buy-sell-card-copy {
+  position: relative;
+  z-index: 2;
+}
+
+.buy-sell-card-copy .store-eyebrow {
+  color: var(--brand-gold-soft);
+}
+
+.buy-sell-card-copy h2 {
+  max-width: 10ch;
+  margin: 0.32rem 0 0;
+  font-size: clamp(3.25rem, 6vw, 6.6rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 0.92;
+}
+
+.buy-sell-card-lede {
+  max-width: 36rem;
+  margin: 1.35rem 0 0;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(1.05rem, 1.35vw, 1.24rem);
+  line-height: 1.62;
+}
+
+.buy-sell-card-notice {
+  display: grid;
+  max-width: 38rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  margin-top: 1.45rem;
+  border-top: 1px solid rgba(240, 207, 120, 0.34);
+  padding-top: 1.1rem;
+}
+
+.buy-sell-card-notice svg {
+  margin-top: 0.15rem;
+  color: var(--brand-gold-soft);
+}
+
+.buy-sell-card-notice p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.67);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.buy-sell-card-notice strong {
+  color: #fff;
+}
+
+.buy-sell-card-feature .store-actions {
+  justify-content: start;
+  margin-top: 1.5rem;
+}
+
+.buy-sell-card-feature .store-button-primary {
+  background: var(--brand-gold);
+  color: #0b0b0d;
+}
+
+.buy-sell-card-feature .store-button-secondary {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+
+.buy-sell-card-visual {
+  position: relative;
+  display: grid;
+  min-height: clamp(480px, 48vw, 700px);
+  place-items: center;
+  perspective: 1400px;
+}
+
+.buy-sell-card-orbit {
+  position: absolute;
+  width: min(90%, 650px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(240, 207, 120, 0.32);
+  border-radius: 50%;
+  box-shadow: 0 0 90px rgba(216, 167, 45, 0.14), inset 0 0 70px rgba(216, 167, 45, 0.06);
+  transform: rotateX(66deg) rotateZ(-8deg);
+}
+
+.buy-sell-card-visual > img {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 850px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 48px 45px rgba(0, 0, 0, 0.5));
+  transform: rotateY(-4deg) rotateX(1deg) translateY(-1%);
+  animation: buy-sell-card-float 9s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.buy-sell-card-preview {
+  position: absolute;
+  z-index: 2;
+  right: 2%;
+  bottom: 8%;
+  display: grid;
+  min-width: 220px;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(20, 20, 23, 0.8);
+  padding: 1rem;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.buy-sell-card-preview span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--brand-gold-soft);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.buy-sell-card-preview strong {
+  font-size: 1.1rem;
+}
+
+.buy-sell-card-preview small {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.buy-sell-card-capabilities {
+  display: grid;
+  width: min(100%, 1380px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: clamp(2.5rem, 5vw, 4.5rem) auto 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.buy-sell-card-capability {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 1.35rem clamp(1rem, 2.4vw, 2rem) 0;
+}
+
+.buy-sell-card-capability + .buy-sell-card-capability {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.buy-sell-card-capability svg {
+  color: var(--brand-gold-soft);
+}
+
+.buy-sell-card-capability strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.buy-sell-card-capability p {
+  margin: 0.42rem 0 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.marketplace-editorial-rail {
+  display: flex;
+  gap: clamp(0.8rem, 1.3vw, 1.15rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+  padding: 0.2rem 0 1rem;
+  scroll-padding-inline: 0.1rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: rgba(142, 100, 9, 0.35) transparent;
+}
+
+.marketplace-editorial-card {
+  position: relative;
+  display: grid;
+  flex: 0 0 clamp(330px, 31vw, 450px);
+  min-height: clamp(510px, 42vw, 610px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #111;
+  scroll-snap-align: start;
+  box-shadow: 0 20px 48px rgba(29, 29, 31, 0.1);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.marketplace-editorial-card:hover,
+.marketplace-editorial-card:focus-visible {
+  box-shadow: 0 28px 58px rgba(29, 29, 31, 0.15);
+  transform: translateY(-4px);
+}
+
+.marketplace-editorial-card > img {
+  width: 100%;
+  height: 100%;
+  min-height: 330px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.marketplace-editorial-card > div {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.35rem;
+}
+
+.marketplace-editorial-card span {
+  color: var(--brand-gold-strong);
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marketplace-editorial-card strong {
+  max-width: 15ch;
+  font-size: clamp(1.65rem, 2.2vw, 2.35rem);
+  line-height: 1;
+}
+
+.marketplace-editorial-card small {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.35rem;
+  color: #4a4a4f;
+  font-weight: 850;
+}
+
+.marketplace-editorial-dark {
+  background: #111;
+  color: #fff;
+}
+
+.marketplace-editorial-dark small {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.marketplace-editorial-warm {
+  background: #f7f0e5;
+}
+
+.marketplace-main-shortcuts {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.service-story-rail {
+  background:
+    radial-gradient(circle at 80% 10%, rgba(216, 167, 45, 0.11), transparent 26rem),
+    #101012;
+  color: #fff;
+}
+
+.service-story-rail .store-rail-heading h2 {
+  color: #fff;
+}
+
+.service-story-card {
+  position: relative;
+  flex-basis: clamp(370px, 37vw, 520px);
+  min-height: clamp(560px, 46vw, 680px);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #f5f5f7;
+  color: #111;
+  padding: 0;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.service-story-card:hover,
+.service-story-card:focus-visible {
+  box-shadow: 0 28px 58px rgba(0, 0, 0, 0.34);
+  transform: translateY(-5px);
+}
+
+.service-story-card > img {
+  width: 100%;
+  height: 100%;
+  min-height: 350px;
+  margin: 0;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.service-story-copy {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1.4rem;
+}
+
+.service-story-card .service-story-copy strong {
+  max-width: 18ch;
+  font-size: clamp(1.75rem, 2.4vw, 2.6rem);
+}
+
+.service-story-copy p {
+  max-width: 34rem;
+  margin: 0;
+  color: #626267;
+  font-size: 0.92rem;
+  line-height: 1.52;
+}
+
+.service-story-copy small {
+  min-height: 44px;
+  margin-top: 0.15rem;
+  color: var(--brand-gold-strong);
+}
+
+.service-story-dark {
+  background: #0c0c0e;
+  color: #fff;
+}
+
+.service-story-dark .service-story-copy p {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+@keyframes buy-sell-card-float {
+  0%, 30%, 100% { transform: rotateY(-4deg) rotateX(1deg) translateY(-1%); }
+  48%, 78% { transform: rotateY(-2deg) rotateX(0deg) translateY(-2.4%); }
+}
+
+@media (max-width: 980px) {
+  .buy-sell-card-main {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+
+  .buy-sell-card-copy {
+    display: grid;
+    justify-items: center;
+  }
+
+  .buy-sell-card-copy h2,
+  .buy-sell-card-lede {
+    margin-inline: auto;
+  }
+
+  .buy-sell-card-feature .store-actions {
+    justify-content: center;
+  }
+
+  .buy-sell-card-capabilities {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .buy-sell-card-capability {
+    padding-inline: 0;
+  }
+
+  .buy-sell-card-capability + .buy-sell-card-capability {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    border-left: 0;
+    padding-top: 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .buy-sell-card-feature {
+    padding-block: 3.7rem;
+  }
+
+  .buy-sell-card-copy h2 {
+    width: min(100%, calc(100vw - 2rem));
+    font-size: clamp(2.75rem, 14vw, 4rem);
+  }
+
+  .buy-sell-card-notice {
+    text-align: left;
+  }
+
+  .buy-sell-card-visual {
+    min-height: clamp(330px, 94vw, 440px);
+  }
+
+  .buy-sell-card-visual > img {
+    width: min(108vw, 560px);
+    max-width: none;
+  }
+
+  .buy-sell-card-preview {
+    right: 0;
+    bottom: 0;
+    min-width: 190px;
+    padding: 0.8rem;
+  }
+
+  .marketplace-editorial-card {
+    flex-basis: min(86vw, 370px);
+    min-height: 500px;
+  }
+
+  .marketplace-editorial-card > img {
+    min-height: 310px;
+  }
+
+  .service-story-card {
+    flex-basis: min(87vw, 380px);
+    min-height: 540px;
+  }
+
+  .service-story-card > img {
+    min-height: 330px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buy-sell-card-visual > img,
+  .marketplace-editorial-card,
+  .service-story-card {
+    animation: none;
+    transition: none;
+  }
+}
