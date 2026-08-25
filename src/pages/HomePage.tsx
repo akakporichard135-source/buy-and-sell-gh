@@ -19,10 +19,12 @@ import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
+import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
+import macbookProM5Cutout from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
 import preOrderCampaignArt from "../assets/homepage/owner-preorder-now.png";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
-import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
+import visaCardSingle from "../assets/homepage/homepage-visa-card-single.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
@@ -137,7 +139,7 @@ const productTiles: Campaign[] = [
     eyebrow: "Visa Card Trading",
     title: "Trade supported cards securely and simply.",
     description: "Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.",
-    image: visaCardCampaign,
+    image: visaCardSingle,
     imageAlt: "One original unbranded black and gold card for supported card review",
     theme: "warm",
     primaryLabel: "Check a Card",
@@ -248,10 +250,16 @@ export function HomePage() {
   };
 
   const featuredMacbookAirCampaign = latestMacbookAir
-    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "warm", macbookAirCampaignArt, "macbook-air")
+    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "warm", macbookAirCampaignArt, "macbook-air", {
+      image: macbookAirM5Cutout,
+      slug: "macbook-air-15-m5",
+    })
     : null;
   const featuredMacbookProCampaign = latestMacbookPro
-    ? createMacCampaign(latestMacbookPro, "Built for demanding creative, technical and professional workflows.", "black", macbookProCampaignArt, "macbook-pro")
+    ? createMacCampaign(latestMacbookPro, "Built for demanding creative, technical and professional workflows.", "black", macbookProCampaignArt, "macbook-pro", {
+      image: macbookProM5Cutout,
+      slug: "macbook-pro-16-m5-pro-max",
+    })
     : null;
 
   return (
@@ -515,7 +523,7 @@ function createCatalogueIphoneLayers(images: { src: string; alt: string }[]): Ci
 function ProductTile({ campaign }: { campaign: Campaign }) {
   const shouldShowImage = campaign.showImage !== false;
   return (
-    <article className={`store-product-tile store-product-${campaign.theme}${!shouldShowImage ? " store-product-text-only" : ""}`}>
+    <article className={`store-product-tile store-product-${campaign.theme} store-product-${slugify(campaign.eyebrow)}${!shouldShowImage ? " store-product-text-only" : ""}`}>
       <div className="store-tile-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2>{campaign.title}</h2>
@@ -567,6 +575,7 @@ function createMacCampaign(
   theme: CampaignTheme,
   fallbackImage: string,
   variant: "macbook-air" | "macbook-pro",
+  integratedAsset?: { image: string; slug: string },
 ): Campaign {
   const action = getLaunchAction(launch.variants, launch.featuredProduct.name, launch.preorderTo);
   return {
@@ -574,7 +583,7 @@ function createMacCampaign(
     title: launch.family,
     description,
     availabilityText: getLaunchAvailability(launch.variants, launch.featuredProduct.name),
-    image: launch.image,
+    image: launch.featuredProduct.slug === integratedAsset?.slug ? integratedAsset.image : launch.image,
     imageAlt: launch.imageAlt,
     theme,
     primaryLabel: "Learn more",
