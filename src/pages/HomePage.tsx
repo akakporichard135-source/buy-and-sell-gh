@@ -20,7 +20,7 @@ import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.w
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
-import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
+import preOrderCampaignArt from "../assets/homepage/owner-preorder-now.png";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
@@ -47,6 +47,7 @@ type Campaign = {
   cinematicLayers?: CinematicDeviceLayer[];
   fallbackImage?: string;
   variant?: "iphone" | "macbook-air";
+  showImage?: boolean;
 };
 
 type CinematicDeviceRole = "left" | "center" | "right";
@@ -154,6 +155,7 @@ const productTiles: Campaign[] = [
     primaryTo: "/sell-or-trade",
     secondaryLabel: "How it works",
     secondaryTo: "/sell-or-trade",
+    showImage: false,
   },
   {
     eyebrow: "Visa Card Trading",
@@ -249,7 +251,7 @@ export function HomePage() {
 
   useEffect(() => {
     if (location.hash !== "#marketplace-discovery") return;
-    window.requestAnimationFrame(() => document.getElementById("marketplace-discovery")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    window.requestAnimationFrame(() => document.getElementById("marketplace-discovery")?.scrollIntoView({ behavior: "auto", block: "start" }));
   }, [location.hash]);
 
   const latestIphoneCampaign: Campaign = {
@@ -289,7 +291,7 @@ export function HomePage() {
 
         <MarketplaceDiscovery brands={marketplaceBrands} />
 
-        <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail">
+        <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
             <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
               <div><span>{story.label}</span><strong>{story.title}</strong></div>
@@ -299,7 +301,7 @@ export function HomePage() {
           ))}
         </StoreRail>
 
-        <section className="store-support-section" aria-labelledby="store-support-title">
+        <section id="store-support" className="store-support-section" aria-labelledby="store-support-title">
           <MessageCircle size={42} aria-hidden="true" />
           <p className="store-eyebrow">Support</p>
           <h2 id="store-support-title">We're here to help.</h2>
@@ -328,15 +330,6 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
             <h2 id="marketplace-discovery-title">Browse beyond Apple.</h2>
             <p>Search, filter and explore store-verified devices and accessories from the wider Buy &amp; Sell GH catalogue.</p>
           </div>
-          <button
-            className="marketplace-verified marketplace-others-action"
-            type="button"
-            aria-expanded={isBrandListOpen}
-            aria-controls="marketplace-brand-list"
-            onClick={() => setIsBrandListOpen((open) => !open)}
-          >
-            <SlidersHorizontal size={18} /> Others
-          </button>
         </div>
 
         <Link className="marketplace-search" to="/shop" aria-label="Search the Buy and Sell GH catalogue">
@@ -353,6 +346,17 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
               <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Enquire"}</small>
             </Link>
           ))}
+          <button
+            className="marketplace-shortcut marketplace-others-action"
+            type="button"
+            aria-expanded={isBrandListOpen}
+            aria-controls="marketplace-brand-list"
+            onClick={() => setIsBrandListOpen((open) => !open)}
+          >
+            <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><SlidersHorizontal size={34} /></span>
+            <strong>Others</strong>
+            <small>More brands</small>
+          </button>
         </div>
 
         {isBrandListOpen && (
@@ -532,8 +536,9 @@ function createCatalogueIphoneLayers(images: { src: string; alt: string }[]): Ci
 }
 
 function ProductTile({ campaign }: { campaign: Campaign }) {
+  const shouldShowImage = campaign.showImage !== false;
   return (
-    <article className={`store-product-tile store-product-${campaign.theme}`}>
+    <article className={`store-product-tile store-product-${campaign.theme}${!shouldShowImage ? " store-product-text-only" : ""}`}>
       <div className="store-tile-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2>{campaign.title}</h2>
@@ -543,14 +548,14 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
           {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
         </div>
       </div>
-      <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
+      {shouldShowImage && <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />}
     </article>
   );
 }
 
-function StoreRail({ eyebrow, title, description, className, children }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode }) {
+function StoreRail({ eyebrow, title, description, className, children, id }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode; id?: string }) {
   return (
-    <section className={`store-rail-section ${className}`} aria-labelledby={`rail-${slugify(title)}`}>
+    <section id={id} className={`store-rail-section ${className}`} aria-labelledby={`rail-${slugify(title)}`}>
       <div className="store-rail-heading">
         <div><p className="store-eyebrow">{eyebrow}</p><h2 id={`rail-${slugify(title)}`}>{title}</h2></div>
         <span>{description} <ArrowRight size={16} /></span>

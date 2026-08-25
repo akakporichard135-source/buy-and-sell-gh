@@ -11647,3 +11647,79 @@ body {
     font-size: 0.92rem;
   }
 }
+
+/* Focused cleanup: Pre-Order owner art, Trade-In tile, brand row, and anchor landing. */
+:where(#marketplace-discovery, #more-from-store, #store-support, .store-product-grid, .service-story-rail) {
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+}
+
+.store-product-text-only {
+  min-height: clamp(420px, 36vw, 560px);
+  align-content: center;
+  grid-template-rows: auto;
+  padding-bottom: clamp(2.8rem, 4.5vw, 4.6rem);
+}
+
+.store-product-text-only .store-tile-copy {
+  min-height: 0;
+}
+
+.store-product-text-only h2 {
+  max-width: 13ch;
+}
+
+.marketplace-shortcuts {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.marketplace-shortcuts .marketplace-others-action {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.marketplace-shortcuts .marketplace-others-action:hover,
+.marketplace-shortcuts .marketplace-others-action:focus-visible {
+  background: #f5f0df;
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+
+.marketplace-shortcuts .marketplace-others-action[aria-expanded="true"] {
+  background: #111;
+  color: #fff;
+}
+
+.marketplace-shortcuts .marketplace-others-action[aria-expanded="true"] .marketplace-brand-mark {
+  color: #fff;
+}
+
+.service-story-card:has(img[src*="owner-preorder-now"]) {
+  background:
+    linear-gradient(180deg, rgba(255, 209, 0, 0.18), transparent 42%),
+    #fff;
+}
+
+.service-story-card:has(img[src*="owner-preorder-now"]) img {
+  width: min(100%, 15.5rem);
+  max-height: 18.5rem;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 768px) {
+  :where(#marketplace-discovery, #more-from-store, #store-support, .store-product-grid, .service-story-rail) {
+    scroll-margin-top: calc(4.75rem + env(safe-area-inset-top, 0px));
+  }
+
+  .marketplace-shortcuts {
+    grid-template-columns: none;
+  }
+
+  .store-product-text-only {
+    min-height: auto;
+    padding-block: clamp(3rem, 12vw, 4rem);
+  }
+}
