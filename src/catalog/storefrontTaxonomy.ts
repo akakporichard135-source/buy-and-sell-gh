@@ -1,4 +1,5 @@
 import type { Product, ProductBrand } from "../types/product";
+import { isElectronicsProduct } from "./catalogueDiscovery";
 
 export const storefrontCategories = [
   "Phones",
@@ -8,6 +9,7 @@ export const storefrontCategories = [
   "Game Consoles",
   "Accessories",
   "Audio",
+  "Electronics",
 ] as const;
 
 export type StorefrontCategory = (typeof storefrontCategories)[number];
@@ -38,6 +40,7 @@ export function getBrandFilterValue(value: string | null) {
 const legacyCategoryAliases: Record<string, StorefrontCategory> = {
   iPhones: "Phones",
   Phones: "Phones",
+  "Mobile Phones": "Phones",
   iPads: "Tablets",
   Tablets: "Tablets",
   MacBooks: "Laptops",
@@ -48,6 +51,7 @@ const legacyCategoryAliases: Record<string, StorefrontCategory> = {
   Audio: "Audio",
   "Game Consoles": "Game Consoles",
   Accessories: "Accessories",
+  Electronics: "Electronics",
 };
 
 export function normalizeStorefrontCategory(value: string | null): StorefrontCategory | "All" {
@@ -60,6 +64,7 @@ export function getStorefrontCategory(product: Pick<Product, "category">): Store
 }
 
 export function productMatchesStorefrontCategory(product: Product, category: string) {
+  if (category === "Electronics") return isElectronicsProduct(product);
   return category === "All" || getStorefrontCategory(product) === category;
 }
 

@@ -39,6 +39,7 @@ try {
   const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
   const adminAuthMessages = await bundle(path.join(projectRoot, "src/admin/adminAuthMessages.ts"), path.join(outdir, "adminAuthMessages.mjs"));
   const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
+  const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
   const product = {
@@ -182,6 +183,25 @@ try {
   assert.equal(brandOptions.filter((brand) => brand === "Samsung").length, 1, "Preferred and catalogue brand options are deduplicated");
   assert.equal(storefrontTaxonomy.getBrandFilterValue("  Google  "), "Google", "Arbitrary catalogue brand URLs are accepted safely");
 
+  const discoveryProducts = [
+    { ...product, id: "apple-phone", brand: "Apple", category: "iPhones", subcategory: "" },
+    { ...product, id: "samsung-phone", brand: "Samsung", category: "Mobile Phones", subcategory: "", specifications: ["RAM: 12GB", "Dual SIM"] },
+    { ...product, id: "google-phone", brand: "Google", category: "Phones", subcategory: "" },
+    { ...product, id: "tecno-phone", brand: "Tecno", category: "Mobile Phones", subcategory: "" },
+    { ...product, id: "macbook-electronics", brand: "Apple", category: "MacBooks", subcategory: "MacBook Air" },
+    { ...product, id: "television", brand: "LG", category: "Electronics", subcategory: "TV & Video Equipment" },
+    { ...product, id: "console", brand: "Sony", category: "Game Consoles", subcategory: "" },
+  ];
+  assert.deepEqual(catalogueDiscovery.getPrimaryMobilePhoneBrands(discoveryProducts), ["Samsung", "Google"], "Primary mobile-phone brands are data-driven and exclude unpublished brands");
+  assert.deepEqual(catalogueDiscovery.getOtherMobilePhoneBrands(discoveryProducts), ["Tecno"], "Others contains only additional published phone brands");
+  assert.deepEqual(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts, "Tecno").map((item) => item.id), ["tecno-phone"], "Selecting an Other brand returns only that brand's real products");
+  assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Mobile Phones excludes Apple products");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Existing MacBook products map to Laptops & Computers");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "tv-video-equipment").length, 1, "TV products map through the Electronics subcategory");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "video-games-consoles").length, 1, "Existing console products map to Video Games & Consoles");
+  assert.equal(catalogueDiscovery.getProductRam(discoveryProducts[1]), "12GB", "RAM remains compatible with the existing specifications field");
+  assert.deepEqual(catalogueDiscovery.withProductRam(["RAM: 8GB", "Dual SIM"], "16GB"), ["RAM: 16GB", "Dual SIM"], "Admin RAM updates replace only the RAM specification");
+
   const notificationStorageData = new Map();
   const notificationStorage = {
     getItem: (key) => notificationStorageData.get(key) ?? null,
@@ -202,13 +222,19 @@ try {
 
   const productManagerSource = await readFile(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), "utf8");
   assert.match(productManagerSource, /useLayoutEffect[\s\S]*scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/, "Product editing scrolls only after the editor is rendered");
+  assert.match(productManagerSource, /RAM, where applicable/, "Existing Admin Product Manager supports RAM without a schema change");
+  assert.match(productManagerSource, /TV & Video Equipment/, "Existing Admin Product Manager exposes the requested electronics taxonomy");
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
   assert.doesNotMatch(headerSource, /\{ label: "Others", to: "\/#marketplace-discovery" \}/, "Global navigation does not duplicate the marketplace Others control");
+  assert.match(headerSource, /\{ label: "Mobile Phones", to: "\/mobile-phones" \}/, "Mobile Phones appears in the shared desktop and mobile navigation");
+  assert.match(headerSource, /\{ label: "Electronics", to: "\/electronics" \}/, "Electronics appears in the shared desktop and mobile navigation");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
-  assert.doesNotMatch(homepageSource, /requestReadyMarketplaceBrands/, "Marketplace additional brands come from published catalogue data");
-  assert.match(homepageSource, /<strong>Others<\/strong>/, "Marketplace Others control remains available");
+  assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
+  const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
+  assert.match(appSource, /path="\/mobile-phones"/, "Mobile Phones has a dedicated public route");
+  assert.match(appSource, /path="\/electronics"/, "Electronics has a dedicated public route");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
   assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");

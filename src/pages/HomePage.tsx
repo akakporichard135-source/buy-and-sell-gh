@@ -1,8 +1,8 @@
-import { ArrowRight, ChevronRight, CircleCheck, History, LockKeyhole, MessageCircle, Search, ShieldCheck, SlidersHorizontal, WalletCards } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, ChevronRight, CircleCheck, History, LockKeyhole, MessageCircle, ShieldCheck, WalletCards } from "lucide-react";
+import { useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import type { Product, ProductBrand } from "../types/product";
-import { Link, useLocation } from "react-router-dom";
+import type { Product } from "../types/product";
+import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
@@ -168,55 +168,18 @@ const cardCapabilityGroups = [
   },
 ] as const;
 
-const supportedMarketplaceBrands: ProductBrand[] = ["Samsung", "LG", "Bose", "JBL", "Sony"];
-const marketplaceBrandMarks: Partial<Record<ProductBrand, { mark: string; className: string }>> = {
-  Samsung: { mark: "SAMSUNG", className: "marketplace-brand-samsung" },
-  LG: { mark: "LG", className: "marketplace-brand-lg" },
-  Bose: { mark: "BOSE", className: "marketplace-brand-word" },
-  JBL: { mark: "JBL", className: "marketplace-brand-word" },
-  Sony: { mark: "SONY", className: "marketplace-brand-word" },
-};
-
-type MarketplaceBrandShortcut = {
-  label: string;
-  mark: string;
-  className: string;
-  count: number;
-  to: string;
-};
-
-const marketplaceMainBrands = new Set(["Samsung", "LG", "Bose", "JBL", "Sony"]);
-const marketplaceFilterChips = [
-  { label: "All", to: "/shop" },
-  { label: "Price", to: "/shop" },
-  { label: "Brand", to: "/shop" },
-  { label: "Condition", to: "/shop" },
-  { label: "Storage", to: "/shop" },
-  { label: "Availability", to: "/shop" },
-  { label: "Recommended", to: "/shop" },
-  { label: "Store Verified", to: "/shop" },
-];
-
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
-  const location = useLocation();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
   const latestIphoneAction = useMemo(() => getLaunchAction(latestIphone.variants, latestIphone.featuredName, `/pre-order?model=${encodeURIComponent(latestIphone.featuredName)}`), [latestIphone.featuredName, latestIphone.variants]);
   const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
   const latestMacbookPro = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Pro"), [activeProducts]);
-  const brandCounts = useMemo(() => getBrandCounts(activeProducts), [activeProducts]);
-  const marketplaceBrands = useMemo(() => getMarketplaceBrandShortcuts(activeProducts, brandCounts), [activeProducts, brandCounts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
   const latestFamilyCampaign = registeredFamilyCampaign?.requiredSlugs.every((slug) =>
     latestIphone.variants.some((product) => product.slug === slug),
   )
     ? registeredFamilyCampaign
     : undefined;
-
-  useEffect(() => {
-    if (location.hash !== "#marketplace-discovery") return;
-    window.requestAnimationFrame(() => document.getElementById("marketplace-discovery")?.scrollIntoView({ behavior: "auto", block: "start" }));
-  }, [location.hash]);
 
   const latestIphoneCampaign: Campaign = {
     eyebrow: "Latest iPhone",
@@ -261,8 +224,6 @@ export function HomePage() {
         </section>
 
         <BuySellCardFeature />
-
-        <MarketplaceDiscovery brands={marketplaceBrands} />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -328,87 +289,6 @@ function BuySellCardFeature() {
   );
 }
 
-function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }) {
-  const [isBrandListOpen, setIsBrandListOpen] = useState(false);
-  const mainBrands = brands.filter((brand) => marketplaceMainBrands.has(brand.label));
-  const otherBrands = brands.filter((brand) => !marketplaceMainBrands.has(brand.label));
-
-  return (
-    <section id="marketplace-discovery" className="store-marketplace-section" aria-labelledby="marketplace-discovery-title">
-      <div className="marketplace-shell">
-        <div className="marketplace-heading">
-          <div>
-            <p className="store-eyebrow">Buy &amp; Sell GH Marketplace</p>
-            <h2 id="marketplace-discovery-title">Browse beyond Apple.</h2>
-            <p>Search, filter and explore store-verified devices and accessories from the wider Buy &amp; Sell GH catalogue.</p>
-          </div>
-        </div>
-
-        <Link className="marketplace-search" to="/shop" aria-label="Search the Buy and Sell GH catalogue">
-          <Search size={20} aria-hidden="true" />
-          <span>Search phones, brands, storage, condition...</span>
-          <ArrowRight size={20} aria-hidden="true" />
-        </Link>
-
-        <div className="marketplace-shortcuts marketplace-main-shortcuts" aria-label="Featured non-Apple brand shortcuts">
-          {mainBrands.map((shortcut) => (
-            <Link className="marketplace-shortcut" to={shortcut.to} key={shortcut.label}>
-              <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
-              <strong>{shortcut.label}</strong>
-              <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Enquire"}</small>
-            </Link>
-          ))}
-          <button
-            className="marketplace-shortcut marketplace-others-action"
-            type="button"
-            aria-expanded={isBrandListOpen}
-            aria-controls="marketplace-brand-list"
-            onClick={() => setIsBrandListOpen((open) => !open)}
-          >
-            <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><SlidersHorizontal size={34} /></span>
-            <strong>Others</strong>
-            <small>More brands</small>
-          </button>
-        </div>
-
-        {isBrandListOpen && (
-          <div id="marketplace-brand-list" className="marketplace-brand-panel" aria-label="More non-Apple brands">
-            <div className="marketplace-brand-panel-heading">
-              <strong>More brands</strong>
-              <span>Published catalogue brands appear here automatically.</span>
-            </div>
-            <div className="marketplace-brand-list">
-              {otherBrands.map((shortcut) => (
-                <Link className="marketplace-brand-list-item" to={shortcut.to} key={shortcut.label}>
-                  <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
-                  <span>
-                    <strong>{shortcut.label}</strong>
-                    <small>{shortcut.count} {shortcut.count === 1 ? "product" : "products"}</small>
-                  </span>
-                  <ChevronRight size={18} aria-hidden="true" />
-                </Link>
-              ))}
-              <Link className="marketplace-brand-list-item" to="/pre-order">
-                <span className="marketplace-brand-mark marketplace-brand-other" aria-hidden="true"><span>Other</span></span>
-                <span>
-                  <strong>Other</strong>
-                  <small>Request a brand or device</small>
-                </span>
-                <ChevronRight size={18} aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-        )}
-
-        <div className="marketplace-filter-row" aria-label="Marketplace filters">
-          {marketplaceFilterChips.map((chip) => (
-            <Link to={chip.to} key={chip.label}>{chip.label}</Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
   return (
     <section className={`store-launch store-launch-${campaign.theme}${campaign.variant ? ` store-launch-${campaign.variant}` : ""}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
@@ -577,13 +457,6 @@ function StoreRail({ eyebrow, title, description, className, children, id }: { e
   );
 }
 
-function getBrandCounts(products: Product[]) {
-  return products.reduce<Partial<Record<ProductBrand, number>>>((counts, product) => {
-    if (product.brand !== "Apple") counts[product.brand] = (counts[product.brand] ?? 0) + 1;
-    return counts;
-  }, {});
-}
-
 function getLaunchAvailability(products: Product[], fallbackName: string) {
   const purchasableProduct = products.find(isProductPurchasable);
   if (purchasableProduct) return `${purchasableProduct.name} is available now while stock lasts.`;
@@ -622,23 +495,6 @@ function createMacCampaign(
   };
 }
 
-function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {
-  const productBrands = Array.from(new Set(products.map((product) => product.brand).filter((brand): brand is ProductBrand => brand !== "Apple")));
-  const brands = Array.from(new Set<string>([...supportedMarketplaceBrands, ...productBrands]));
-
-  return brands.map((brand) => {
-    const productBrand = productBrands.find((catalogueBrand) => catalogueBrand === brand);
-    const brandMeta = productBrand ? marketplaceBrandMarks[productBrand] : undefined;
-    const count = productBrand ? counts[productBrand] ?? 0 : 0;
-    return {
-      label: brand,
-      mark: brandMeta?.mark ?? brand,
-      className: brandMeta?.className ?? `marketplace-brand-${slugify(brand)}`,
-      count,
-      to: count > 0 ? `/shop?brand=${encodeURIComponent(brand)}` : `/pre-order?brand=${encodeURIComponent(brand)}`,
-    };
-  });
-}
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }

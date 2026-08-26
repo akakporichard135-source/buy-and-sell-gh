@@ -2,6 +2,7 @@ import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, Rota
 import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
 import { categories, createProductSlug, getPrimaryImage, normalizeProduct, productConditions, stockStatuses } from "../../catalog/productCatalog";
 import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -28,6 +29,7 @@ interface ProductFormState {
   stockQuantity: string;
   stockStatus: Product["stockStatus"];
   storage: string;
+  ram: string;
   colors: string;
   defaultColor: string;
   batteryHealth: string;
@@ -63,6 +65,7 @@ const productToForm = (product: Product): ProductFormState => ({
   stockQuantity: String(product.stockQuantity),
   stockStatus: product.stockStatus,
   storage: listToText(product.storage),
+  ram: getProductRam(product),
   colors: listToText(product.colors),
   defaultColor: product.defaultColor ?? product.colors[0] ?? "",
   batteryHealth: product.batteryHealth ?? "",
@@ -337,7 +340,7 @@ function ProductForm({ form, setForm, onSubmit, products, brandOptions, backendS
         <label>Product name<input ref={productNameRef} required value={form.name} onChange={(event) => update("name", event.target.value)} onBlur={() => update("slug", createProductSlug(form.name, products.filter((product) => product.id !== form.id), form.id))} /></label>
         <label>Brand<input required list="admin-product-brand-options" maxLength={80} value={form.brand} onChange={(event) => update("brand", event.target.value)} placeholder="Apple, Google, Tecno..." /><datalist id="admin-product-brand-options">{brandOptions.map((item) => <option key={item} value={item} />)}</datalist></label>
         <label>Category<select value={form.category} onChange={(event) => update("category", event.target.value as Product["category"])}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label>Subcategory / family<input value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="MacBook Air, AirPods Pro, Charging & Power..." /></label>
+        <label>Subcategory / family<input list="admin-product-subcategory-options" value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="Laptops & Computers, TV & Video Equipment..." /><datalist id="admin-product-subcategory-options"><option value="Laptops & Computers" /><option value="TV & Video Equipment" /><option value="Video Games & Consoles" /><option value="Mobile Phones" /></datalist></label>
         <label>Model<input required value={form.model} onChange={(event) => update("model", event.target.value)} /></label>
         <label>Generation<input value={form.generation} onChange={(event) => update("generation", event.target.value)} /></label>
         <label>Product URL slug<input required readOnly value={form.slug} aria-describedby="product-slug-help" /></label>
@@ -368,6 +371,7 @@ function ProductForm({ form, setForm, onSubmit, products, brandOptions, backendS
 
       <AdminFieldset title="Options">
         <label>Storage / configuration options<textarea value={form.storage} onChange={(event) => update("storage", event.target.value)} placeholder="One option per line" /></label>
+        <label>RAM, where applicable<input value={form.ram} onChange={(event) => update("ram", event.target.value)} placeholder="8GB, 16GB, 32GB..." /></label>
         <label>Colour options<textarea value={form.colors} onChange={(event) => update("colors", event.target.value)} placeholder="One colour per line" /></label>
         <label>Default colour<input value={form.defaultColor} onChange={(event) => update("defaultColor", event.target.value)} /></label>
       </AdminFieldset>
@@ -450,7 +454,7 @@ function formToProduct(form: ProductFormState, products: Product[]): Product {
   const colors = textToList(form.colors);
   const quantity = Math.max(0, Number(form.stockQuantity) || 0);
   const stockStatus = form.stockStatus === "Sold" ? "Sold" : quantity === 0 ? "Out of Stock" : form.stockStatus;
-  const specifications = textToList(form.specifications);
+  const specifications = withProductRam(textToList(form.specifications), form.ram);
   const includedItems = textToList(form.includedItems);
   const validImages = form.images.filter((image) => image.src.trim());
   const selectedPrimaryImage = form.images[form.primaryImageIndex];

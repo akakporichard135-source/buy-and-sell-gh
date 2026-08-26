@@ -14,6 +14,8 @@ const navItems = [
   { label: "Mac", to: "/macbooks" },
   { label: "Watch", to: "/apple-watch" },
   { label: "AirPods", to: "/airpods" },
+  { label: "Mobile Phones", to: "/mobile-phones" },
+  { label: "Electronics", to: "/electronics" },
   { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
   { label: "Repairs", to: "/repairs" },
@@ -77,7 +79,7 @@ export function Header() {
       </div>
       <div className="site-header-inner mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
         <Logo />
-        <nav className="hidden items-center gap-2 2xl:gap-4 xl:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-1 2xl:gap-2 xl:flex" aria-label="Main navigation">
           {navItems.map((item) => {
             const active = isNavItemActive(item.to);
             return (

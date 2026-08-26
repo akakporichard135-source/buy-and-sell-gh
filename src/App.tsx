@@ -21,6 +21,8 @@ const DeviceRequestPage = lazy(() => import("./pages/DeviceRequestPage").then((m
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
 const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
 const InstallmentPage = lazy(() => import("./pages/InstallmentPage").then((module) => ({ default: module.InstallmentPage })));
+const MobilePhonesPage = lazy(() => import("./pages/MobilePhonesPage").then((module) => ({ default: module.MobilePhonesPage })));
+const ElectronicsPage = lazy(() => import("./pages/ElectronicsPage").then((module) => ({ default: module.ElectronicsPage })));
 const RepairsPage = lazy(() => import("./pages/RepairsPage").then((module) => ({ default: module.RepairsPage })));
 const GiftCardsPage = lazy(() => import("./pages/GiftCardsPage").then((module) => ({ default: module.GiftCardsPage })));
 const ReferFriendPage = lazy(() => import("./pages/ReferFriendPage").then((module) => ({ default: module.ReferFriendPage })));
@@ -69,6 +71,8 @@ function PublicShell() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/mobile-phones" element={<MobilePhonesPage />} />
+          <Route path="/electronics" element={<ElectronicsPage />} />
           <Route path="/installment" element={<InstallmentPage />} />
           <Route path="/repairs" element={<RepairsPage />} />
           <Route path="/gift-cards" element={<GiftCardsPage />} />

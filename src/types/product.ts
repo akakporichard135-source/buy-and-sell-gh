@@ -1,5 +1,6 @@
 export type ProductCategory =
   | "Phones"
+  | "Mobile Phones"
   | "iPhones"
   | "Tablets"
   | "iPads"
@@ -11,6 +12,7 @@ export type ProductCategory =
   | "MacBooks"
   | "Game Consoles"
   | "Accessories"
+  | "Electronics"
   | "UK Used Devices"
   | "Brand New Devices";
 
