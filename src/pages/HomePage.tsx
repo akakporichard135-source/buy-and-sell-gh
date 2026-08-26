@@ -186,30 +186,6 @@ type MarketplaceBrandShortcut = {
 };
 
 const marketplaceMainBrands = new Set(["Samsung", "LG", "Bose", "JBL", "Sony"]);
-const requestReadyMarketplaceBrands = [
-  "Google",
-  "Huawei",
-  "Xiaomi",
-  "Motorola",
-  "OnePlus",
-  "Nothing",
-  "Oppo",
-  "Vivo",
-  "Realme",
-  "Tecno",
-  "Infinix",
-  "HP",
-  "Dell",
-  "Lenovo",
-  "Asus",
-  "Acer",
-  "Beats",
-  "Anker",
-  "Belkin",
-  "Oraimo",
-  "Skullcandy",
-];
-
 const marketplaceFilterChips = [
   { label: "All", to: "/shop" },
   { label: "Price", to: "/shop" },
@@ -399,7 +375,7 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
           <div id="marketplace-brand-list" className="marketplace-brand-panel" aria-label="More non-Apple brands">
             <div className="marketplace-brand-panel-heading">
               <strong>More brands</strong>
-              <span>Real catalogue brands show counts. Request-only brands open Pre-Order.</span>
+              <span>Published catalogue brands appear here automatically.</span>
             </div>
             <div className="marketplace-brand-list">
               {otherBrands.map((shortcut) => (
@@ -407,7 +383,7 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
                   <span className={`marketplace-brand-mark ${shortcut.className}`} aria-hidden="true"><span>{shortcut.mark}</span></span>
                   <span>
                     <strong>{shortcut.label}</strong>
-                    <small>{shortcut.count > 0 ? `${shortcut.count} ${shortcut.count === 1 ? "product" : "products"}` : "Request / enquire"}</small>
+                    <small>{shortcut.count} {shortcut.count === 1 ? "product" : "products"}</small>
                   </span>
                   <ChevronRight size={18} aria-hidden="true" />
                 </Link>
@@ -648,7 +624,7 @@ function createMacCampaign(
 
 function getMarketplaceBrandShortcuts(products: Product[], counts: Partial<Record<ProductBrand, number>>): MarketplaceBrandShortcut[] {
   const productBrands = Array.from(new Set(products.map((product) => product.brand).filter((brand): brand is ProductBrand => brand !== "Apple")));
-  const brands = Array.from(new Set<string>([...supportedMarketplaceBrands, ...productBrands, ...requestReadyMarketplaceBrands]));
+  const brands = Array.from(new Set<string>([...supportedMarketplaceBrands, ...productBrands]));
 
   return brands.map((brand) => {
     const productBrand = productBrands.find((catalogueBrand) => catalogueBrand === brand);

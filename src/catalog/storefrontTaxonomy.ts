@@ -12,7 +12,28 @@ export const storefrontCategories = [
 
 export type StorefrontCategory = (typeof storefrontCategories)[number];
 
-export const supportedBrands: ProductBrand[] = ["Apple", "Samsung", "LG", "Bose", "JBL", "Sony"];
+export const preferredBrands: ProductBrand[] = ["Apple", "Samsung", "LG", "Bose", "JBL", "Sony"];
+
+export function getBrandOptions(products: Pick<Product, "brand">[], selectedBrand?: string) {
+  const catalogueBrands = products.map((product) => product.brand.trim()).filter(Boolean);
+  const selected = selectedBrand?.trim();
+  return Array.from(new Set([...preferredBrands, ...catalogueBrands, ...(selected && selected !== "All" ? [selected] : [])]))
+    .sort((left, right) => {
+      const leftPreferred = preferredBrands.indexOf(left);
+      const rightPreferred = preferredBrands.indexOf(right);
+      if (leftPreferred >= 0 || rightPreferred >= 0) {
+        if (leftPreferred < 0) return 1;
+        if (rightPreferred < 0) return -1;
+        return leftPreferred - rightPreferred;
+      }
+      return left.localeCompare(right);
+    });
+}
+
+export function getBrandFilterValue(value: string | null) {
+  const brand = value?.trim();
+  return brand ? brand.slice(0, 80) : "All";
+}
 
 const legacyCategoryAliases: Record<string, StorefrontCategory> = {
   iPhones: "Phones",

@@ -8,10 +8,11 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { conditions, stockStatuses } from "../catalog/productCatalog";
 import {
   categorySupportsStorage,
+  getBrandFilterValue,
+  getBrandOptions,
   normalizeStorefrontCategory,
   productMatchesStorefrontCategory,
   storefrontCategories,
-  supportedBrands,
 } from "../catalog/storefrontTaxonomy";
 import {
   accessoryFamilyOptions,
@@ -72,7 +73,7 @@ export function ShopPage() {
   const [filters, setFilters] = useState<FiltersState>({
     ...defaultFilters,
     category: normalizeStorefrontCategory(initialCategory),
-    brand: supportedBrands.includes(params.get("brand") as Product["brand"]) ? params.get("brand")! : "All",
+    brand: getBrandFilterValue(params.get("brand")),
     generation: initialGeneration,
     condition: initialCondition,
     newArrival: params.get("newArrival") === "true",
@@ -88,7 +89,7 @@ export function ShopPage() {
     setFilters((current) => ({
       ...current,
       category: normalizeStorefrontCategory(nextCategory),
-      brand: supportedBrands.includes(nextBrand as Product["brand"]) ? nextBrand! : "All",
+      brand: getBrandFilterValue(nextBrand),
       generation: params.get("generation") ?? "All",
       condition: getConditionFromParams(params, nextCategory),
       newArrival: params.get("newArrival") === "true",
@@ -112,6 +113,7 @@ export function ShopPage() {
 
   const activeFilters = useMemo(() => getActiveFilters(filters), [filters]);
   const activeFilterCount = activeFilters.length;
+  const brandOptions = useMemo(() => getBrandOptions(products, filters.brand), [filters.brand, products]);
   const dynamicIphoneGenerationOptions = useMemo(() => {
     const options = Array.from(
       new Set(
@@ -202,7 +204,7 @@ export function ShopPage() {
       <section className="section shop-section">
         <div className="shop-layout">
           <aside className="filter-panel hidden lg:block">
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
           </aside>
           <div className="shop-results">
             <div className="catalogue-toolbar">
@@ -255,7 +257,7 @@ export function ShopPage() {
               </div>
               <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
             </div>
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
             <div className="filter-drawer-actions">
               <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Show {filtered.length} Products</button>
               <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
@@ -272,6 +274,7 @@ function FilterControls({
   updateFilter,
   clearFilters,
   activeFilterCount,
+  brandOptions,
   iphoneGenerationChoices,
   macbookGenerationChoices,
 }: {
@@ -279,6 +282,7 @@ function FilterControls({
   updateFilter: <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => void;
   clearFilters: () => void;
   activeFilterCount: number;
+  brandOptions: string[];
   iphoneGenerationChoices: string[];
   macbookGenerationChoices: string[];
 }) {
@@ -299,7 +303,7 @@ function FilterControls({
         <label className="filter-label">Brand<select value={filters.brand} onChange={(e) => {
           updateFilter("brand", e.target.value);
           updateFilter("generation", "All");
-        }}><option>All</option>{supportedBrands.map((item) => <option key={item}>{item}</option>)}</select></label>
+        }}><option>All</option>{brandOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
         {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
         {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
         {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}

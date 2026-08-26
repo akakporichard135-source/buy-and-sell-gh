@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { assertAdminAal2, fetchAdminRole, type AdminRole } from "./adminAuthorization";
+import { getAdminSessionFailureMessage, getAdminSignInErrorMessage, type AdminSessionFailureReason } from "./adminAuthMessages";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 export type AdminAssuranceLevel = "aal1" | "aal2" | null;
@@ -55,23 +56,30 @@ const notifyAdminSessionCleared = () => {
 
 const signOutInvalidSession = async () => {
   clearAdminClientState();
-  await supabase?.auth.signOut({ scope: "global" });
+  await supabase?.auth.signOut({ scope: "local" });
   notifyAdminSessionCleared();
 };
 
-const validateSupabaseSession = async (candidate: Session | null): Promise<AdminSession | null> => {
-  if (!supabase || !candidate?.user.email) return null;
+type AdminSessionValidation =
+  | { ok: true; session: AdminSession }
+  | { ok: false; reason: AdminSessionFailureReason };
+
+const validateSupabaseSession = async (candidate: Session | null): Promise<AdminSessionValidation> => {
+  if (!supabase || !candidate?.user.email) return { ok: false, reason: "missing" };
 
   const { data: userData, error: userError } = await supabase.auth.getUser(candidate.access_token);
   if (userError || !userData.user || userData.user.id !== candidate.user.id || !userData.user.email) {
-    await signOutInvalidSession();
-    return null;
+    return { ok: false, reason: "invalid" };
   }
 
-  const role = await fetchAdminRole(userData.user.id);
+  let role: AdminRole | null;
+  try {
+    role = await fetchAdminRole(userData.user.id);
+  } catch {
+    return { ok: false, reason: "verification" };
+  }
   if (!role) {
-    await signOutInvalidSession();
-    return null;
+    return { ok: false, reason: "unauthorized" };
   }
 
   const [{ data: assurance, error: assuranceError }, { data: factors, error: factorsError }] = await Promise.all([
@@ -79,20 +87,22 @@ const validateSupabaseSession = async (candidate: Session | null): Promise<Admin
     supabase.auth.mfa.listFactors(),
   ]);
   if (assuranceError || factorsError || !assurance) {
-    await signOutInvalidSession();
-    return null;
+    return { ok: false, reason: "verification" };
   }
 
   return {
-    userId: userData.user.id,
-    email: userData.user.email,
-    mode: "supabase",
-    role,
-    assuranceLevel: assurance.currentLevel === "aal2" ? "aal2" : "aal1",
-    verifiedTotpFactors: (factors?.totp ?? []).map((factor) => ({
-      id: factor.id,
-      friendlyName: factor.friendly_name || "Authenticator app",
-    })),
+    ok: true,
+    session: {
+      userId: userData.user.id,
+      email: userData.user.email,
+      mode: "supabase",
+      role,
+      assuranceLevel: assurance.currentLevel === "aal2" ? "aal2" : "aal1",
+      verifiedTotpFactors: (factors?.totp ?? []).map((factor) => ({
+        id: factor.id,
+        friendlyName: factor.friendly_name || "Authenticator app",
+      })),
+    },
   };
 };
 
@@ -104,12 +114,15 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const applySupabaseSession = useCallback(async (candidate: Session | null) => {
     const sequence = ++validationSequence.current;
     try {
-      const nextSession = await validateSupabaseSession(candidate);
-      if (sequence === validationSequence.current) setSession(nextSession);
-      return nextSession;
+      const validation = await validateSupabaseSession(candidate);
+      if (!validation.ok && candidate && (validation.reason === "invalid" || validation.reason === "unauthorized")) {
+        await signOutInvalidSession();
+      }
+      if (sequence === validationSequence.current) setSession(validation.ok ? validation.session : null);
+      return validation;
     } catch {
       if (sequence === validationSequence.current) setSession(null);
-      return null;
+      return { ok: false, reason: "verification" } as const;
     }
   }, []);
 
@@ -121,7 +134,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       return null;
     }
-    return applySupabaseSession(data.session);
+    const validation = await applySupabaseSession(data.session);
+    return validation.ok ? validation.session : null;
   }, [applySupabaseSession, session]);
 
   useEffect(() => {
@@ -181,14 +195,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (supabase) {
         try {
           const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
-          if (error || !data.session) return { ok: false, message: "Unable to sign in with those credentials." };
-          const nextSession = await applySupabaseSession(data.session);
-          if (!nextSession) return { ok: false, message: "Unable to sign in with those credentials." };
-          setSession(nextSession);
+          if (error || !data.session) return { ok: false, message: getAdminSignInErrorMessage(error) };
+          const validation = await applySupabaseSession(data.session);
+          if (!validation.ok) return { ok: false, message: getAdminSessionFailureMessage(validation.reason) };
+          setSession(validation.session);
           return { ok: true };
         } catch {
           await signOutInvalidSession();
-          return { ok: false, message: "Admin sign-in could not be completed. Try again shortly." };
+          return { ok: false, message: "Unable to sign in right now. Try again." };
         }
       }
 
@@ -196,7 +210,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const allowedEmail = import.meta.env.VITE_LOCAL_ADMIN_EMAIL;
       const allowedPassword = import.meta.env.VITE_LOCAL_ADMIN_PASSWORD;
       if (!allowedEmail || !allowedPassword || trimmedEmail !== allowedEmail || password !== allowedPassword) {
-        return { ok: false, message: "Unable to sign in with those credentials." };
+        return { ok: false, message: "Incorrect email or password." };
       }
 
       const nextSession: AdminSession = {

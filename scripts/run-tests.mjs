@@ -37,6 +37,8 @@ try {
   const latestMac = await bundle(path.join(projectRoot, "src/utils/latestMac.ts"), path.join(outdir, "latestMac.mjs"));
   const productPresentation = await bundle(path.join(projectRoot, "src/utils/productPresentation.ts"), path.join(outdir, "productPresentation.mjs"));
   const adminSecurity = await bundle(path.join(projectRoot, "src/admin/adminSecurity.ts"), path.join(outdir, "adminSecurity.mjs"));
+  const adminAuthMessages = await bundle(path.join(projectRoot, "src/admin/adminAuthMessages.ts"), path.join(outdir, "adminAuthMessages.mjs"));
+  const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
   const product = {
@@ -170,6 +172,15 @@ try {
   assert.equal(adminSecurity.safeAdminRedirect("/admin/reset-password"), "/admin/reset-password", "MFA can return to password recovery");
   assert.equal(adminSecurity.loginBackoffMs(2), 0, "First login failures do not create a lockout");
   assert.equal(adminSecurity.loginBackoffMs(8), 60000, "Login backoff is capped at one minute");
+  assert.equal(adminAuthMessages.getAdminSignInErrorMessage({ code: "invalid_credentials", status: 400 }), "Incorrect email or password.", "Invalid credentials receive an accurate message");
+  assert.equal(adminAuthMessages.getAdminSessionFailureMessage("unauthorized"), "This account does not have admin access.", "Authenticated unauthorized users receive an authorization message");
+  assert.equal(adminAuthMessages.getAdminSessionFailureMessage("verification"), "Unable to verify admin access right now. Try again.", "Verification failures do not masquerade as credential errors");
+
+  const brandProducts = [{ brand: "Google" }, { brand: "Samsung" }, { brand: "Tecno" }, { brand: "Google" }];
+  const brandOptions = storefrontTaxonomy.getBrandOptions(brandProducts);
+  assert.ok(brandOptions.includes("Google") && brandOptions.includes("Tecno"), "Brand filters derive additional brands from catalogue data");
+  assert.equal(brandOptions.filter((brand) => brand === "Samsung").length, 1, "Preferred and catalogue brand options are deduplicated");
+  assert.equal(storefrontTaxonomy.getBrandFilterValue("  Google  "), "Google", "Arbitrary catalogue brand URLs are accepted safely");
 
   const notificationStorageData = new Map();
   const notificationStorage = {
@@ -193,6 +204,11 @@ try {
   assert.match(productManagerSource, /useLayoutEffect[\s\S]*scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/, "Product editing scrolls only after the editor is rendered");
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
+  const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
+  assert.doesNotMatch(headerSource, /\{ label: "Others", to: "\/#marketplace-discovery" \}/, "Global navigation does not duplicate the marketplace Others control");
+  const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
+  assert.doesNotMatch(homepageSource, /requestReadyMarketplaceBrands/, "Marketplace additional brands come from published catalogue data");
+  assert.match(homepageSource, /<strong>Others<\/strong>/, "Marketplace Others control remains available");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
   assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");

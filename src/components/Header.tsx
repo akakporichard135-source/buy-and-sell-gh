@@ -16,7 +16,6 @@ const navItems = [
   { label: "AirPods", to: "/airpods" },
   { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
-  { label: "Others", to: "/#marketplace-discovery" },
   { label: "Repairs", to: "/repairs" },
   { label: "Support", to: "/contact" },
 ];
