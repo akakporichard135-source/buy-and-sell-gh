@@ -32,6 +32,7 @@ const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage").then(
 const SellTradePage = lazy(() => import("./pages/SellTradePage").then((module) => ({ default: module.SellTradePage })));
 const ShopPage = lazy(() => import("./pages/ShopPage").then((module) => ({ default: module.ShopPage })));
 const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPage").then((module) => ({ default: module.ShoppingInformationPage })));
+const MacLaunchPage = lazy(() => import("./pages/MacLaunchPage").then((module) => ({ default: module.MacLaunchPage })));
 
 export default function App() {
   return (
@@ -74,6 +75,8 @@ function PublicShell() {
           <Route path="/phones-tablets" element={<MobilePhonesPage />} />
           <Route path="/mobile-phones" element={<Navigate to="/phones-tablets" replace />} />
           <Route path="/electronics" element={<ElectronicsPage />} />
+          <Route path="/mac-mini" element={<MacLaunchPage product="mac-mini" />} />
+          <Route path="/mac-studio" element={<MacLaunchPage product="mac-studio" />} />
           <Route path="/installment" element={<InstallmentPage />} />
           <Route path="/repairs" element={<RepairsPage />} />
           <Route path="/gift-cards" element={<GiftCardsPage />} />

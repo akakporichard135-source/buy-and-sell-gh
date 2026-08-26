@@ -237,10 +237,20 @@ try {
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
-  assert.match(homepageSource, /function HumanTechCampaign\(\)/, "The original reference-inspired human product campaign is present");
+  assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
+  assert.match(homepageSource, /newMacLaunches\["mac-mini"\][\s\S]*newMacLaunches\["mac-studio"\]/, "The two new Mac launches lead the homepage in the approved order");
   const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
   assert.match(appSource, /path="\/phones-tablets"/, "Phones & Tablets has a dedicated public route");
   assert.match(appSource, /path="\/electronics"/, "Electronics has a dedicated public route");
+  assert.match(appSource, /path="\/mac-mini"/, "Mac mini has a dedicated launch route");
+  assert.match(appSource, /path="\/mac-studio"/, "Mac Studio has a dedicated launch route");
+  const newMacLaunchSource = await readFile(path.join(projectRoot, "src/data/newMacLaunches.ts"), "utf8");
+  assert.match(newMacLaunchSource, /Mac mini \(M6 or M5 Pro\)/, "Mac mini preorder preserves both announced chip options");
+  assert.match(newMacLaunchSource, /Mac Studio \(M5 Max or M5 Ultra\)/, "Mac Studio preorder preserves both announced chip options");
+  assert.match(newMacLaunchSource, /\/pre-order\?category=Mac&model=/, "New Mac CTAs use the existing model-prefilled preorder flow");
+  const macLaunchPageSource = await readFile(path.join(projectRoot, "src/pages/MacLaunchPage.tsx"), "utf8");
+  assert.match(macLaunchPageSource, /Wi-Fi 7 and Bluetooth 6/, "Launch stories include verified connectivity details");
+  assert.match(macLaunchPageSource, /Up to 512GB unified memory/, "Mac Studio story includes the verified M5 Ultra memory ceiling");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
   assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");

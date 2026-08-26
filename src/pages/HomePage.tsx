@@ -11,8 +11,7 @@ import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg"
 import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
-import humanTechCampaign from "../assets/homepage/homepage-human-tech-campaign.webp";
-import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-campaign-mobile.webp";
+import { NewMacLaunchCampaign } from "../components/NewMacLaunchCampaign";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -33,6 +32,7 @@ import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
+import { newMacLaunches } from "../data/newMacLaunches";
 
 const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 
@@ -216,7 +216,8 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <HumanTechCampaign />
+        <NewMacLaunchCampaign launch={newMacLaunches["mac-mini"]} priority />
+        <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
         {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
         {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
@@ -249,26 +250,6 @@ export function HomePage() {
         </section>
       </main>
     </>
-  );
-}
-
-function HumanTechCampaign() {
-  return (
-    <section className="store-human-campaign" aria-labelledby="human-tech-campaign-title">
-      <div className="store-human-campaign-copy">
-        <p className="store-eyebrow">Buy &amp; Sell GH</p>
-        <h1 id="human-tech-campaign-title">Tech, your way.</h1>
-        <p>Buy, sell, trade, repair and upgrade trusted devices with one local team in Accra.</p>
-        <div className="store-actions">
-          <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
-          <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
-        </div>
-      </div>
-      <picture className="store-human-campaign-art">
-        <source media="(max-width: 640px)" srcSet={humanTechCampaignMobile} />
-        <img src={humanTechCampaign} alt="Three Buy and Sell GH customers presenting a laptop, iPhone and tablet" fetchPriority="high" decoding="async" />
-      </picture>
-    </section>
   );
 }
 
