@@ -11786,6 +11786,7 @@ body {
 /* Homepage surface integration: product art belongs to the campaign, not a nested image stage. */
 .store-launch-macbook-air {
   background: #fff;
+  gap: clamp(0.6rem, 1.25vw, 1.1rem);
 }
 
 .store-launch-macbook-air::before {
@@ -13009,14 +13010,24 @@ body {
 }
 
 .new-mac-launch-dark {
-  background: #060607;
+  background: #000;
   color: #fff;
+}
+
+.new-mac-launch-mac-mini {
+  background: #fff;
+}
+
+.new-mac-launch-mac-studio {
+  border-top: 1px solid rgba(229, 180, 56, 0.28);
+  background: #000;
 }
 
 .new-mac-launch-copy {
   position: relative;
   z-index: 2;
   display: grid;
+  width: min(calc(100vw - 2rem), 56rem);
   justify-items: center;
   opacity: 0;
   transform: translateY(18px);
@@ -13043,9 +13054,11 @@ body {
 }
 
 .new-mac-launch-status {
+  width: min(100%, 34rem);
   margin: 0.65rem 0 0;
   color: #6e6e73;
   font-size: clamp(0.92rem, 1.25vw, 1.05rem);
+  line-height: 1.45;
 }
 
 .new-mac-launch-dark .new-mac-launch-status {
@@ -13097,6 +13110,34 @@ body {
   transform-origin: center bottom;
 }
 
+.new-mac-launch-mac-mini .new-mac-launch-art,
+.new-mac-launch-mac-studio .new-mac-launch-art {
+  width: min(1540px, 108vw);
+  min-height: clamp(380px, 48vw, 660px);
+  margin-top: clamp(0.5rem, 1.2vw, 1rem);
+}
+
+.new-mac-launch-mac-mini .new-mac-launch-art img,
+.new-mac-launch-mac-studio .new-mac-launch-art img {
+  width: 108%;
+  max-width: none;
+  max-height: 660px;
+}
+
+.new-mac-launch-mac-mini .new-mac-launch-art img {
+  max-height: 760px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(180deg, transparent 0, #000 14%, #000 97%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%), linear-gradient(180deg, transparent 0, #000 14%, #000 97%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.new-mac-launch-mac-studio .new-mac-launch-art img {
+  max-height: 760px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%);
+}
+
 .new-mac-launch-light .new-mac-launch-art img,
 .mac-story-light .mac-story-hero > img {
   mix-blend-mode: multiply;
@@ -13108,12 +13149,20 @@ body {
   transform: none;
 }
 
-.new-mac-launch.is-visible .new-mac-launch-glow {
-  animation: new-mac-light-sweep 9s 0.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+.new-mac-launch-mac-mini.is-visible .new-mac-launch-glow {
+  animation: new-mac-light-sweep 2.1s 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.new-mac-launch.is-visible .new-mac-launch-art img {
-  animation: new-mac-settle 8s 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+.new-mac-launch-mac-studio.is-visible .new-mac-launch-glow {
+  animation: new-mac-light-sweep 2.2s 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.new-mac-launch-mac-mini.is-visible .new-mac-launch-art img {
+  animation: mac-mini-cinematic-arrival 2.8s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.new-mac-launch-mac-studio.is-visible .new-mac-launch-art img {
+  animation: mac-studio-cinematic-arrival 3s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes new-mac-light-sweep {
@@ -13122,9 +13171,18 @@ body {
   82%, 100% { opacity: 0; transform: translate3d(8%, -4%, 0); }
 }
 
-@keyframes new-mac-settle {
-  0%, 22%, 100% { transform: rotateX(0.4deg) rotateY(-0.5deg) translateY(0); }
-  46%, 74% { transform: rotateX(0deg) rotateY(0.4deg) translateY(-5px); }
+@keyframes mac-mini-cinematic-arrival {
+  0% { transform: translate3d(0, 28px, -34px) rotateX(3deg) rotateY(-2deg) scale(0.965); }
+  58% { transform: translate3d(0, 0, 0) rotateX(0.25deg) rotateY(0.7deg) scale(1.008); }
+  78% { transform: translate3d(0, 0, 0) rotateX(0) rotateY(-0.15deg) scale(1); }
+  100% { transform: translate3d(0, 0, 0) rotateX(0) rotateY(0) scale(1); }
+}
+
+@keyframes mac-studio-cinematic-arrival {
+  0% { opacity: 0.18; filter: brightness(0.24); transform: translate3d(0, 18px, -54px) rotateX(1.8deg) rotateY(-1.5deg) scale(0.95); }
+  52% { opacity: 1; filter: brightness(1); transform: translate3d(0, 0, 0) rotateX(0.2deg) rotateY(0.55deg) scale(1.01); }
+  76% { opacity: 1; filter: brightness(1); transform: translate3d(0, 0, 0) rotateX(0) rotateY(-0.12deg) scale(1); }
+  100% { opacity: 1; filter: brightness(1); transform: translate3d(0, 0, 0) rotateX(0) rotateY(0) scale(1); }
 }
 
 .mac-story-page {
@@ -13326,6 +13384,11 @@ body {
     font-size: clamp(3.2rem, 17vw, 5.5rem);
   }
 
+  .new-mac-launch-mac-studio .new-mac-launch-copy h1,
+  .new-mac-launch-mac-studio .new-mac-launch-copy h2 {
+    font-size: clamp(3rem, 15vw, 4.6rem);
+  }
+
   .new-mac-launch-art {
     width: 100vw;
     min-height: clamp(290px, 80vw, 430px);
@@ -13336,6 +13399,18 @@ body {
     width: 112vw;
     max-width: none;
     max-height: 430px;
+  }
+
+  .new-mac-launch-mac-mini .new-mac-launch-art,
+  .new-mac-launch-mac-studio .new-mac-launch-art {
+    width: 100vw;
+    min-height: clamp(300px, 82vw, 450px);
+  }
+
+  .new-mac-launch-mac-mini .new-mac-launch-art img,
+  .new-mac-launch-mac-studio .new-mac-launch-art img {
+    width: 116vw;
+    max-height: 450px;
   }
 
   .mac-story-hero {
@@ -13383,6 +13458,11 @@ body {
   .new-mac-launch-art img,
   .mac-story-hero > img {
     width: 126vw;
+  }
+
+  .new-mac-launch-mac-mini .new-mac-launch-art img,
+  .new-mac-launch-mac-studio .new-mac-launch-art img {
+    width: 116vw;
   }
 }
 
