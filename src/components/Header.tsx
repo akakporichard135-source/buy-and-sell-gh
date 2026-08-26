@@ -14,7 +14,7 @@ const navItems = [
   { label: "Mac", to: "/macbooks" },
   { label: "Watch", to: "/apple-watch" },
   { label: "AirPods", to: "/airpods" },
-  { label: "Mobile Phones", to: "/mobile-phones" },
+  { label: "Phones & Tablets", to: "/phones-tablets" },
   { label: "Electronics", to: "/electronics" },
   { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },

@@ -188,7 +188,9 @@ try {
     { ...product, id: "samsung-phone", brand: "Samsung", category: "Mobile Phones", subcategory: "", specifications: ["RAM: 12GB", "Dual SIM"] },
     { ...product, id: "google-phone", brand: "Google", category: "Phones", subcategory: "" },
     { ...product, id: "tecno-phone", brand: "Tecno", category: "Mobile Phones", subcategory: "" },
+    { ...product, id: "samsung-tablet", brand: "Samsung", category: "Phones & Tablets", subcategory: "Tablets" },
     { ...product, id: "macbook-electronics", brand: "Apple", category: "MacBooks", subcategory: "MacBook Air" },
+    { ...product, id: "dell-laptop", brand: "Dell", category: "Electronics", subcategory: "Laptops & Computers" },
     { ...product, id: "television", brand: "LG", category: "Electronics", subcategory: "TV & Video Equipment" },
     { ...product, id: "console", brand: "Sony", category: "Game Consoles", subcategory: "" },
   ];
@@ -196,7 +198,9 @@ try {
   assert.deepEqual(catalogueDiscovery.getOtherMobilePhoneBrands(discoveryProducts), ["Tecno"], "Others contains only additional published phone brands");
   assert.deepEqual(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts, "Tecno").map((item) => item.id), ["tecno-phone"], "Selecting an Other brand returns only that brand's real products");
   assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Mobile Phones excludes Apple products");
-  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Existing MacBook products map to Laptops & Computers");
+  assert.deepEqual(catalogueDiscovery.getPhoneTabletProducts(discoveryProducts, "tablets").map((item) => item.id), ["samsung-tablet"], "Phones & Tablets supports non-Apple tablet inventory");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Only non-Apple computers map to Electronics");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Electronics excludes all Apple catalogue products");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "tv-video-equipment").length, 1, "TV products map through the Electronics subcategory");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "video-games-consoles").length, 1, "Existing console products map to Video Games & Consoles");
   assert.equal(catalogueDiscovery.getProductRam(discoveryProducts[1]), "12GB", "RAM remains compatible with the existing specifications field");
@@ -228,12 +232,14 @@ try {
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
   assert.doesNotMatch(headerSource, /\{ label: "Others", to: "\/#marketplace-discovery" \}/, "Global navigation does not duplicate the marketplace Others control");
-  assert.match(headerSource, /\{ label: "Mobile Phones", to: "\/mobile-phones" \}/, "Mobile Phones appears in the shared desktop and mobile navigation");
+  assert.match(headerSource, /\{ label: "Phones & Tablets", to: "\/phones-tablets" \}/, "Phones & Tablets appears in the shared desktop and mobile navigation");
   assert.match(headerSource, /\{ label: "Electronics", to: "\/electronics" \}/, "Electronics appears in the shared desktop and mobile navigation");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
+  assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
+  assert.match(homepageSource, /function HumanTechCampaign\(\)/, "The original reference-inspired human product campaign is present");
   const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
-  assert.match(appSource, /path="\/mobile-phones"/, "Mobile Phones has a dedicated public route");
+  assert.match(appSource, /path="\/phones-tablets"/, "Phones & Tablets has a dedicated public route");
   assert.match(appSource, /path="\/electronics"/, "Electronics has a dedicated public route");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");

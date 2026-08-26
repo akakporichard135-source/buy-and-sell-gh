@@ -71,7 +71,8 @@ function PublicShell() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/mobile-phones" element={<MobilePhonesPage />} />
+          <Route path="/phones-tablets" element={<MobilePhonesPage />} />
+          <Route path="/mobile-phones" element={<Navigate to="/phones-tablets" replace />} />
           <Route path="/electronics" element={<ElectronicsPage />} />
           <Route path="/installment" element={<InstallmentPage />} />
           <Route path="/repairs" element={<RepairsPage />} />

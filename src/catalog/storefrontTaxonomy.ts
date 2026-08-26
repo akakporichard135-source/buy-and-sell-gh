@@ -14,7 +14,7 @@ export const storefrontCategories = [
 
 export type StorefrontCategory = (typeof storefrontCategories)[number];
 
-export const preferredBrands: ProductBrand[] = ["Apple", "Samsung", "LG", "Bose", "JBL", "Sony"];
+export const preferredBrands: ProductBrand[] = ["Apple"];
 
 export function getBrandOptions(products: Pick<Product, "brand">[], selectedBrand?: string) {
   const catalogueBrands = products.map((product) => product.brand.trim()).filter(Boolean);

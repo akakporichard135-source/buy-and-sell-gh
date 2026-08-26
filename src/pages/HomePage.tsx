@@ -11,6 +11,8 @@ import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg"
 import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
 import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
 import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
+import humanTechCampaign from "../assets/homepage/homepage-human-tech-campaign.webp";
+import humanTechCampaignMobile from "../assets/homepage/homepage-human-tech-campaign-mobile.webp";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -93,7 +95,7 @@ const ipadAirCampaign: Campaign = {
   theme: "light",
   primaryLabel: "Learn more",
   primaryTo: "/ipads?family=iPad%20Air",
-  secondaryLabel: "Buy",
+  secondaryLabel: "Shop now",
   secondaryTo: "/shop?category=iPads",
 };
 
@@ -108,7 +110,7 @@ const productTiles: Campaign[] = [
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/apple-watch",
-    secondaryLabel: "Buy",
+    secondaryLabel: "Shop now",
     secondaryTo: "/shop?category=Apple%20Watches",
   },
   {
@@ -120,7 +122,7 @@ const productTiles: Campaign[] = [
     theme: "black",
     primaryLabel: "Learn more",
     primaryTo: "/ipads?family=iPad%20Pro",
-    secondaryLabel: "Buy",
+    secondaryLabel: "Shop now",
     secondaryTo: "/shop?category=iPads",
   },
   {
@@ -171,7 +173,6 @@ const cardCapabilityGroups = [
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestIphone = useMemo(() => getLatestIphoneLineup(activeProducts, iphone17Story), [activeProducts]);
-  const latestIphoneAction = useMemo(() => getLaunchAction(latestIphone.variants, latestIphone.featuredName, `/pre-order?model=${encodeURIComponent(latestIphone.featuredName)}`), [latestIphone.featuredName, latestIphone.variants]);
   const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
   const latestMacbookPro = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Pro"), [activeProducts]);
   const registeredFamilyCampaign = iphoneFamilyCampaigns[latestIphone.generationLabel];
@@ -192,8 +193,8 @@ export function HomePage() {
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: latestIphone.learnMoreTo,
-    secondaryLabel: latestIphoneAction.label,
-    secondaryTo: latestIphoneAction.to,
+    secondaryLabel: "Shop now",
+    secondaryTo: "/iphones",
     fallbackImage: iphone17Story,
     variant: "iphone",
   };
@@ -215,6 +216,7 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
+        <HumanTechCampaign />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
         {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
         {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
@@ -247,6 +249,26 @@ export function HomePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function HumanTechCampaign() {
+  return (
+    <section className="store-human-campaign" aria-labelledby="human-tech-campaign-title">
+      <div className="store-human-campaign-copy">
+        <p className="store-eyebrow">Buy &amp; Sell GH</p>
+        <h1 id="human-tech-campaign-title">Tech, your way.</h1>
+        <p>Buy, sell, trade, repair and upgrade trusted devices with one local team in Accra.</p>
+        <div className="store-actions">
+          <Link className="store-button store-button-primary" to="/shop">Shop now</Link>
+          <Link className="store-button store-button-secondary" to="/about">Learn more</Link>
+        </div>
+      </div>
+      <picture className="store-human-campaign-art">
+        <source media="(max-width: 640px)" srcSet={humanTechCampaignMobile} />
+        <img src={humanTechCampaign} alt="Three Buy and Sell GH customers presenting a laptop, iPhone and tablet" fetchPriority="high" decoding="async" />
+      </picture>
+    </section>
   );
 }
 
@@ -460,13 +482,7 @@ function StoreRail({ eyebrow, title, description, className, children, id }: { e
 function getLaunchAvailability(products: Product[], fallbackName: string) {
   const purchasableProduct = products.find(isProductPurchasable);
   if (purchasableProduct) return `${purchasableProduct.name} is available now while stock lasts.`;
-  return `${fallbackName} is available for pre-order or enquiry. Final availability is confirmed by Buy & Sell GH.`;
-}
-
-function getLaunchAction(products: Product[], fallbackName: string, fallbackTo: string) {
-  const purchasableProduct = products.find(isProductPurchasable);
-  if (purchasableProduct) return { label: "Buy", to: `/product/${purchasableProduct.slug}` };
-  return { label: "Pre-order", to: fallbackTo || `/pre-order?model=${encodeURIComponent(fallbackName)}` };
+  return `${fallbackName} is available for enquiry. Final availability is confirmed by Buy & Sell GH.`;
 }
 
 function createMacCampaign(
@@ -477,7 +493,6 @@ function createMacCampaign(
   variant: "macbook-air" | "macbook-pro",
   integratedAsset?: { image: string; slug: string },
 ): Campaign {
-  const action = getLaunchAction(launch.variants, launch.featuredProduct.name, launch.preorderTo);
   return {
     eyebrow: `${launch.generation} · ${launch.family}`,
     title: launch.family,
@@ -488,8 +503,8 @@ function createMacCampaign(
     theme,
     primaryLabel: "Learn more",
     primaryTo: launch.learnMoreTo,
-    secondaryLabel: action.label,
-    secondaryTo: action.to,
+    secondaryLabel: "Shop now",
+    secondaryTo: "/macbooks",
     fallbackImage,
     variant,
   };

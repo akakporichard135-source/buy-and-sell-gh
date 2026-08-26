@@ -62,6 +62,7 @@ import { macbookProducts } from "./macbookProducts";
 export const categories: ProductCategory[] = [
   "Phones",
   "Mobile Phones",
+  "Phones & Tablets",
   "iPhones",
   "Tablets",
   "iPads",

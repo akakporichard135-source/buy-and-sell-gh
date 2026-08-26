@@ -5,6 +5,7 @@ import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
 import { conditions, stockStatuses } from "../catalog/productCatalog";
 import {
   categorySupportsStorage,
@@ -65,7 +66,8 @@ const defaultFilters: FiltersState = {
 
 const storageOptions = ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB", "GPS", "GPS + Cellular", "USB-C Case"];
 export function ShopPage() {
-  const { activeProducts: products, loading, error, refreshProducts } = useProductCatalog();
+  const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
+  const products = useMemo(() => activeProducts.filter(isAppleCatalogueProduct), [activeProducts]);
   const [params] = useSearchParams();
   const initialCategory = params.get("category") ?? "All";
   const initialGeneration = params.get("generation") ?? "All";

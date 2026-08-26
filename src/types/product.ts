@@ -1,6 +1,7 @@
 export type ProductCategory =
   | "Phones"
   | "Mobile Phones"
+  | "Phones & Tablets"
   | "iPhones"
   | "Tablets"
   | "iPads"

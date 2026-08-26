@@ -1,81 +1,114 @@
-import { ArrowLeft, ArrowRight, ChevronRight, Smartphone } from "lucide-react";
+import { Cable, ChevronRight, Smartphone, Tablet } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { getMobilePhoneProducts, getOtherMobilePhoneBrands, getPrimaryMobilePhoneBrands } from "../catalog/catalogueDiscovery";
+import {
+  getOtherPhoneTabletBrands,
+  getPhoneTabletCategory,
+  getPhoneTabletProducts,
+  getPrimaryPhoneTabletBrands,
+  phoneTabletCategoryLabels,
+  type PhoneTabletCategoryKey,
+} from "../catalog/catalogueDiscovery";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { ProductGrid } from "../components/ProductGrid";
+import { MarketplaceCatalogue } from "../components/MarketplaceCatalogue";
 import { SEO } from "../components/SEO";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
+
+const categoryIcons = {
+  "mobile-phones": Smartphone,
+  tablets: Tablet,
+  "phone-accessories": Cable,
+  "tablet-accessories": Cable,
+} as const;
 
 export function MobilePhonesPage() {
   const { activeProducts, error, loading, refreshProducts } = useProductCatalog();
   const [params] = useSearchParams();
   const selectedBrand = params.get("brand")?.trim() ?? "";
   const showOtherBrands = params.get("view") === "others" && !selectedBrand;
-  const primaryBrands = useMemo(() => getPrimaryMobilePhoneBrands(activeProducts), [activeProducts]);
-  const otherBrands = useMemo(() => getOtherMobilePhoneBrands(activeProducts), [activeProducts]);
-  const phoneProducts = useMemo(() => getMobilePhoneProducts(activeProducts, selectedBrand), [activeProducts, selectedBrand]);
+  const marketplaceProducts = useMemo(() => getPhoneTabletProducts(activeProducts), [activeProducts]);
+  const primaryBrands = useMemo(() => getPrimaryPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
+  const otherBrands = useMemo(() => getOtherPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
+  const availableCategories = useMemo(() => (Object.keys(phoneTabletCategoryLabels) as PhoneTabletCategoryKey[]).filter((key) => marketplaceProducts.some((product) => getPhoneTabletCategory(product) === key)), [marketplaceProducts]);
 
   return (
     <>
-      <SEO title="Mobile Phones in Ghana" description="Browse published non-Apple mobile phones from Buy & Sell GH by brand, with real catalogue availability and owner-uploaded product photos." />
-      <section className="catalogue-hub-hero">
-        <p className="eyebrow-dark">Mobile Phones</p>
-        <h1>Explore phones beyond iPhone.</h1>
-        <p>Browse published phones available from Buy &amp; Sell GH. Select a brand to see its current catalogue.</p>
+      <SEO title="Phones & Tablets in Ghana" description="Browse real non-Apple phones, tablets and related accessories published by Buy & Sell GH." />
+      <section className="marketplace-page-hero">
+        <p className="eyebrow-dark">Phones &amp; Tablets</p>
+        <h1>Current non-Apple devices from one trusted store.</h1>
+        <p>Search owner-published inventory by category, brand, condition, price and storage. Every listing comes directly from Buy &amp; Sell GH.</p>
       </section>
 
-      <section className="catalogue-hub-section" aria-labelledby="mobile-phone-brands-title">
-        <div className="catalogue-hub-heading">
-          <div><p className="eyebrow-dark">Brands</p><h2 id="mobile-phone-brands-title">Choose a phone brand.</h2></div>
-          <Link to="/shop?category=Phones" className="catalogue-hub-text-link">Open phone filters <ArrowRight size={16} /></Link>
-        </div>
+      {availableCategories.length > 0 && (
+        <section className="marketplace-navigation" aria-labelledby="phone-tablet-categories-title">
+          <div className="marketplace-section-heading"><div><p className="eyebrow-dark">Categories</p><h2 id="phone-tablet-categories-title">Browse phones and tablets.</h2></div></div>
+          <div className="marketplace-category-rail">
+            {availableCategories.map((category) => <MarketplaceCategoryCard category={category} products={marketplaceProducts} key={category} />)}
+          </div>
+        </section>
+      )}
 
-        {primaryBrands.length > 0 || otherBrands.length > 0 ? (
+      {(primaryBrands.length > 0 || otherBrands.length > 0) && (
+        <section className="marketplace-navigation" aria-labelledby="phone-tablet-brands-title">
+          <div className="marketplace-section-heading"><div><p className="eyebrow-dark">Brands</p><h2 id="phone-tablet-brands-title">Choose a brand.</h2></div></div>
           <div className="phone-brand-grid">
-            {primaryBrands.map((brand) => <PhoneBrandCard brand={brand} products={activeProducts} key={brand} />)}
+            {primaryBrands.map((brand) => <PhoneBrandCard brand={brand} products={marketplaceProducts} key={brand} />)}
             {otherBrands.length > 0 && (
-              <Link className={`phone-brand-card phone-brand-card-others ${showOtherBrands ? "is-active" : ""}`} to="/mobile-phones?view=others">
+              <Link className={`phone-brand-card phone-brand-card-others ${showOtherBrands ? "is-active" : ""}`} to="/phones-tablets?view=others">
                 <span className="phone-brand-other-mark"><Smartphone size={38} /></span>
                 <div><strong>Others</strong><small>{otherBrands.length} additional {otherBrands.length === 1 ? "brand" : "brands"}</small></div>
                 <ChevronRight size={20} />
               </Link>
             )}
           </div>
-        ) : (
-          <div className="catalogue-hub-empty compact"><strong>No non-Apple phone brands are published yet.</strong><p>New brands will appear here automatically when the owner publishes matching products.</p><Link className="btn-primary" to="/pre-order">Request a Phone</Link></div>
-        )}
-
-        {showOtherBrands && (
-          <div className="other-brand-panel" aria-labelledby="other-phone-brands-title">
-            <div className="other-brand-panel-heading"><div><p className="eyebrow-dark">Others</p><h2 id="other-phone-brands-title">Other phone brands</h2><p>Choose a brand first to view its published devices.</p></div><Link to="/mobile-phones"><ArrowLeft size={17} /> Back to all brands</Link></div>
-            {otherBrands.length > 0 ? <div className="other-brand-name-list">{otherBrands.map((brand) => <Link to={`/mobile-phones?brand=${encodeURIComponent(brand)}`} key={brand}><span>{brand}</span><ChevronRight size={18} /></Link>)}</div> : <p className="other-brand-empty">No additional phone brands are published yet.</p>}
-          </div>
-        )}
-      </section>
+          {showOtherBrands && (
+            <div className="other-brand-panel" aria-labelledby="other-phone-brands-title">
+              <div className="other-brand-panel-heading"><div><p className="eyebrow-dark">Others</p><h2 id="other-phone-brands-title">Additional phone and tablet brands</h2><p>Choose a brand to view only its real published products.</p></div><Link to="/phones-tablets">Back to all brands</Link></div>
+              <div className="other-brand-name-list">{otherBrands.map((brand) => <Link to={`/phones-tablets?brand=${encodeURIComponent(brand)}`} key={brand}><span>{brand}</span><ChevronRight size={18} /></Link>)}</div>
+            </div>
+          )}
+        </section>
+      )}
 
       {!showOtherBrands && (
-        <section className="catalogue-hub-results" aria-labelledby="mobile-phone-results-title">
-          <div className="catalogue-hub-heading">
-            <div><p className="eyebrow-dark">{phoneProducts.length} {phoneProducts.length === 1 ? "product" : "products"}</p><h2 id="mobile-phone-results-title">{selectedBrand ? `${selectedBrand} phones` : "Available mobile phones"}</h2></div>
-            {selectedBrand && <Link className="catalogue-hub-text-link" to="/mobile-phones">Clear brand <ArrowLeft size={16} /></Link>}
-          </div>
-          {loading ? <div className="catalogue-hub-empty compact">Loading mobile phones...</div> : error ? <div className="catalogue-hub-empty compact"><strong>Catalogue is temporarily unavailable.</strong><button className="btn-secondary" type="button" onClick={() => void refreshProducts()}>Retry</button></div> : <ProductGrid products={phoneProducts} />}
-        </section>
+        <MarketplaceCatalogue
+          products={marketplaceProducts}
+          categoryLabels={phoneTabletCategoryLabels}
+          getCategory={getPhoneTabletCategory}
+          loading={loading}
+          error={error}
+          emptyTitle="No non-Apple phones or tablets are available yet."
+          onRetry={() => void refreshProducts()}
+        />
       )}
     </>
   );
 }
 
+function MarketplaceCategoryCard({ category, products }: { category: PhoneTabletCategoryKey; products: Product[] }) {
+  const matching = getPhoneTabletProducts(products, category);
+  const representative = matching.find((product) => resolveProductImage(product));
+  const image = representative ? resolveProductImage(representative) : undefined;
+  const Icon = categoryIcons[category];
+  return (
+    <Link className="marketplace-category-card" to={`/phones-tablets?category=${category}`}>
+      <span className="marketplace-category-image">{image ? <img src={image.src} alt={image.alt} loading="lazy" decoding="async" /> : <Icon size={42} aria-hidden="true" />}</span>
+      <strong>{phoneTabletCategoryLabels[category]}</strong>
+      <small>{matching.length} {matching.length === 1 ? "listing" : "listings"}</small>
+    </Link>
+  );
+}
+
 function PhoneBrandCard({ brand, products }: { brand: string; products: Product[] }) {
-  const brandProducts = getMobilePhoneProducts(products, brand);
-  const representative = brandProducts.find((product) => resolveProductImage(product)) ?? brandProducts[0];
+  const brandProducts = getPhoneTabletProducts(products, null, brand);
+  const representative = brandProducts.find((product) => resolveProductImage(product));
   const image = representative ? resolveProductImage(representative) : undefined;
   return (
-    <Link className="phone-brand-card" to={`/mobile-phones?brand=${encodeURIComponent(brand)}`}>
+    <Link className="phone-brand-card" to={`/phones-tablets?brand=${encodeURIComponent(brand)}`}>
       <span className="phone-brand-image">{image ? <img src={image.src} alt={image.alt} loading="lazy" decoding="async" /> : <span>{brand.slice(0, 1)}</span>}</span>
-      <div><strong>{brand}</strong><small>{brandProducts.length} {brandProducts.length === 1 ? "product" : "products"}</small></div>
+      <div><strong>{brand}</strong><small>{brandProducts.length} {brandProducts.length === 1 ? "listing" : "listings"}</small></div>
       <ChevronRight size={20} />
     </Link>
   );
