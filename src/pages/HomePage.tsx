@@ -6,10 +6,11 @@ import { Link, useLocation } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import installmentCampaignArt from "../assets/homepage/homepage-installment-cinematic.webp";
-import referCampaignArt from "../assets/homepage/homepage-refer-cinematic.webp";
-import repairsCampaignArt from "../assets/homepage/homepage-repairs-cinematic.webp";
-import sellCashCampaignArt from "../assets/homepage/homepage-sell-cash-cinematic.webp";
+import ownerInstallmentCampaign from "../assets/homepage/owner-installment-payment.jpg";
+import ownerReferFriendCampaign from "../assets/homepage/owner-refer-friend.jpg";
+import ownerRepairsCampaign from "../assets/homepage/owner-repairs.jpg";
+import ownerSellCashCampaign from "../assets/homepage/owner-sell-cash.jpg";
+import ownerUpgradeSaveCampaign from "../assets/homepage/owner-upgrade-save.jpg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -21,14 +22,10 @@ import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premi
 import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
 import macbookProM5Cutout from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
-import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
+import preOrderCampaignArt from "../assets/homepage/owner-preorder-now.png";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardSingle from "../assets/homepage/homepage-visa-card-single.webp";
-import samsungStoryArt from "../assets/homepage/homepage-samsung-story.jpg";
-import audioStoryArt from "../assets/homepage/homepage-audio-accessories-story.jpg";
-import laptopStoryArt from "../assets/homepage/homepage-laptop-tablet-story.jpg";
-import audioCategoryArt from "../assets/categories/audio-premium.webp";
-import gamingCategoryArt from "../assets/categories/game-consoles-premium.webp";
+
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
@@ -142,12 +139,12 @@ const productTiles: Campaign[] = [
 ];
 
 const serviceStories = [
-  { label: "Upgrade & Save", title: "Move into something newer.", description: "Trade or swap your current device through the existing Buy & Sell GH flow.", image: upgradeSaveArtwork, to: "/sell-or-trade?mode=upgrade", tone: "light" },
-  { label: "Sell for Cash", title: "A clear route from device to value.", description: "Submit your device details for inspection and a confirmed offer.", image: sellCashCampaignArt, to: "/sell-or-trade?mode=sell", tone: "dark" },
-  { label: "Installment", title: "A more flexible way to plan.", description: "Ask about current eligibility, deposit requirements and confirmed payment terms.", image: installmentCampaignArt, to: "/installment", tone: "dark" },
-  { label: "Repairs", title: "Let the experts fix it.", description: "Request support for phones, laptops and game consoles.", image: repairsCampaignArt, to: "/repairs", tone: "dark" },
-  { label: "Refer a Friend", title: "Good tech is better shared.", description: "Introduce someone to devices, repairs, sourcing or trade-in support.", image: referCampaignArt, to: "/refer-a-friend", tone: "light" },
-  { label: "Pre-Order", title: "Request the exact device.", description: "Tell us the model and configuration you want us to source.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
+  { label: "Upgrade & Save", title: "Move into something newer.", image: ownerUpgradeSaveCampaign, to: "/sell-or-trade?mode=upgrade", tone: "light" },
+  { label: "Sell for Cash", title: "Sell your old phone.", image: ownerSellCashCampaign, to: "/sell-or-trade?mode=sell", tone: "black" },
+  { label: "Installment", title: "Own an iPhone today.", image: ownerInstallmentCampaign, to: "/installment", tone: "black" },
+  { label: "Repairs", title: "Let the experts fix it.", image: ownerRepairsCampaign, to: "/repairs", tone: "light" },
+  { label: "Refer a Friend", title: "Good tech is better shared.", image: ownerReferFriendCampaign, to: "/refer-a-friend", tone: "light" },
+  { label: "Pre-Order", title: "Request the exact device.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
 ];
 
 const cardCapabilityGroups = [
@@ -169,14 +166,6 @@ const cardCapabilityGroups = [
     icon: LockKeyhole,
     status: "partner",
   },
-] as const;
-
-const marketplaceEditorialStories = [
-  { brand: "Samsung", eyebrow: "Mobile", title: "Galaxy, sourced with clarity.", image: samsungStoryArt, tone: "dark" },
-  { brand: "LG", eyebrow: "Screens & devices", title: "Technology for work and home.", image: laptopStoryArt, tone: "light" },
-  { brand: "Bose", eyebrow: "Premium audio", title: "Sound with room to breathe.", image: audioStoryArt, tone: "warm" },
-  { brand: "JBL", eyebrow: "Portable audio", title: "Music made to move.", image: audioCategoryArt, tone: "light" },
-  { brand: "Sony", eyebrow: "Gaming & audio", title: "Play, listen and discover.", image: gamingCategoryArt, tone: "dark" },
 ] as const;
 
 const supportedMarketplaceBrands: ProductBrand[] = ["Samsung", "LG", "Bose", "JBL", "Sony"];
@@ -302,13 +291,9 @@ export function HomePage() {
         <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
             <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
+              <div><span>{story.label}</span><strong>{story.title}</strong></div>
               <img src={story.image} alt={`${story.label} from Buy & Sell GH`} loading="lazy" decoding="async" />
-              <div className="service-story-copy">
-                <span>{story.label}</span>
-                <strong>{story.title}</strong>
-                <p>{story.description}</p>
-                <small>Learn more <ChevronRight size={14} /></small>
-              </div>
+              <small>Learn more <ChevronRight size={14} /></small>
             </Link>
           ))}
         </StoreRail>
@@ -388,23 +373,6 @@ function MarketplaceDiscovery({ brands }: { brands: MarketplaceBrandShortcut[] }
           <span>Search phones, brands, storage, condition...</span>
           <ArrowRight size={20} aria-hidden="true" />
         </Link>
-
-        <div className="marketplace-editorial-rail" aria-label="Featured multi-brand stories">
-          {marketplaceEditorialStories.map((story) => {
-            const brand = brands.find((item) => item.label === story.brand);
-            const count = brand?.count ?? 0;
-            return (
-              <Link className={`marketplace-editorial-card marketplace-editorial-${story.tone}`} to={brand?.to ?? `/pre-order?brand=${encodeURIComponent(story.brand)}`} key={story.brand}>
-                <img src={story.image} alt={`${story.brand} ${story.eyebrow.toLowerCase()} editorial`} loading="lazy" decoding="async" />
-                <div>
-                  <span>{story.brand} · {story.eyebrow}</span>
-                  <strong>{story.title}</strong>
-                  <small>{count > 0 ? `Explore ${count} ${count === 1 ? "product" : "products"}` : "Request or enquire"} <ChevronRight size={15} /></small>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
 
         <div className="marketplace-shortcuts marketplace-main-shortcuts" aria-label="Featured non-Apple brand shortcuts">
           {mainBrands.map((shortcut) => (
