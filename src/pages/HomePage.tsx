@@ -18,11 +18,12 @@ import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premi
 import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
 import macbookProM5Cutout from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
-import installmentCampaignArt from "../assets/homepage/homepage-installment-cinematic.webp";
+import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installment-owner.png";
+import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
+import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
+import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
 import referFriendCampaignArt from "../assets/homepage/homepage-refer-cinematic.webp";
-import repairsCampaignArt from "../assets/homepage/homepage-repairs-cinematic.webp";
-import sellCashCampaignArt from "../assets/homepage/homepage-sell-cash-cinematic.webp";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
@@ -138,10 +139,10 @@ const productTiles: Campaign[] = [
 ];
 
 const serviceStories = [
-  { label: "Upgrade & Save", title: "Move into something newer.", description: "Trade or swap your current device toward your next upgrade.", image: upgradeSaveArtwork, to: "/sell-or-trade?mode=upgrade", tone: "light" },
-  { label: "Sell for Cash", title: "Sell your old device.", description: "Request an assessment and confirm the next step with our team.", image: sellCashCampaignArt, to: "/sell-or-trade?mode=sell", tone: "light" },
-  { label: "Installment", title: "Own an iPhone today.", description: "Review current requirements before sending your request.", image: installmentCampaignArt, to: "/installment", tone: "black" },
-  { label: "Repairs", title: "Let the experts fix it.", description: "Support for phones, laptops and game consoles.", image: repairsCampaignArt, to: "/repairs", tone: "black" },
+  { label: "Upgrade & Save", title: "Move into something newer.", description: "Trade or swap your current device toward your next upgrade.", image: moreStoreUpgradeArtwork, to: "/sell-or-trade?mode=upgrade", tone: "light" },
+  { label: "Sell for Cash", title: "Sell your old device.", description: "Request an assessment and confirm the next step with our team.", image: moreStoreSellCashArtwork, to: "/sell-or-trade?mode=sell", tone: "light" },
+  { label: "Installment", title: "Own an iPhone today.", description: "Review current requirements before sending your request.", image: moreStoreInstallmentArtwork, to: "/installment", tone: "black" },
+  { label: "Repairs", title: "Let the experts fix it.", description: "Support for phones, laptops and game consoles.", image: moreStoreRepairsArtwork, to: "/repairs", tone: "black" },
   { label: "Refer a Friend", title: "Good tech is better shared.", description: "Send someone you trust directly to Buy & Sell GH.", image: referFriendCampaignArt, to: "/refer-a-friend", tone: "light" },
   { label: "Pre-Order", title: "Request the exact device.", description: "Tell us the model you want and we will confirm sourcing details.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
 ];
@@ -222,7 +223,7 @@ export function HomePage() {
 
         <MarketplaceAssurance />
 
-        <StoreRail eyebrow="Services" title="More from our store." description="Swipe to explore" className="service-story-rail" id="more-from-store">
+        <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
             <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
               <div><span>{story.label}</span><strong>{story.title}</strong><p>{story.description}</p></div>

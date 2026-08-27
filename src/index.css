@@ -13967,3 +13967,107 @@ body {
     grid-column: auto;
   }
 }
+
+/* More from our store: owner campaign artwork and consistent service-card rhythm. */
+.storefront-home .service-story-rail {
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
+}
+
+.storefront-home .service-story-rail .store-rail-heading {
+  width: min(100%, 1280px);
+  margin-inline: auto;
+  margin-bottom: clamp(1.75rem, 3vw, 2.75rem);
+  text-align: center;
+}
+
+.storefront-home .service-story-rail .store-rail-heading > :where(span, h2, p) {
+  margin-inline: auto;
+}
+
+.storefront-home .service-story-rail .store-rail-heading > span {
+  max-width: 38ch;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.45;
+}
+
+.storefront-home .service-story-rail .store-horizontal-rail {
+  display: grid;
+  width: min(100%, 1280px);
+  margin-inline: auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  overflow: visible;
+  padding: 0;
+}
+
+.storefront-home .service-story-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: 10.25rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  padding: clamp(1rem, 1.5vw, 1.3rem);
+  border-radius: 8px;
+}
+
+.storefront-home .service-story-card > div {
+  min-height: 0;
+}
+
+.storefront-home .service-story-card strong {
+  max-width: 15ch;
+}
+
+.storefront-home .service-story-card p {
+  max-width: 32ch;
+}
+
+.storefront-home .service-story-card img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 3 / 4;
+  align-self: stretch;
+  border-radius: 6px;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+}
+
+.storefront-home .service-story-card small {
+  width: fit-content;
+  margin-top: auto;
+}
+
+@media (max-width: 1024px) {
+  .storefront-home .service-story-rail .store-horizontal-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .storefront-home .service-story-rail {
+    padding-block: 3rem;
+  }
+
+  .storefront-home .service-story-rail .store-horizontal-rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .storefront-home .service-story-card {
+    min-height: 0;
+    grid-template-rows: auto auto auto;
+    padding: 1rem;
+  }
+
+  .storefront-home .service-story-card > div {
+    min-height: 9.25rem;
+  }
+
+  .storefront-home .service-story-card img {
+    max-height: none;
+  }
+}
