@@ -13873,3 +13873,97 @@ body {
     animation: none !important;
   }
 }
+
+/* Homepage alignment pass: preserve the approved composition while sharing one visual axis. */
+.storefront-home :where(.new-mac-launch, .store-launch) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.storefront-home :where(
+  .new-mac-launch-copy,
+  .store-launch-copy,
+  .store-launch-art,
+  .store-iphone-cinematic,
+  .store-phone-lineup,
+  .store-tile-copy
+) {
+  margin-inline: auto;
+}
+
+.storefront-home .new-mac-launch-art {
+  left: 50%;
+  justify-self: start;
+  margin-inline: 0;
+  translate: -50% 0;
+}
+
+.storefront-home .new-mac-launch-copy,
+.storefront-home .store-launch-copy,
+.storefront-home .store-tile-copy {
+  justify-items: center;
+  text-align: center;
+}
+
+.storefront-home .new-mac-launch-copy > :where(h1, h2, p),
+.storefront-home .store-launch-copy > :where(h2, p),
+.storefront-home .store-tile-copy > :where(h2, p) {
+  margin-inline: auto;
+}
+
+.storefront-home :where(.new-mac-launch-copy, .store-launch-copy, .store-tile-copy) .store-actions {
+  justify-content: center;
+}
+
+.storefront-home .store-launch-art {
+  justify-self: center;
+}
+
+.storefront-home .store-launch-iphone h2 {
+  max-width: 20ch;
+}
+
+.storefront-home .store-launch-iphone .store-launch-art {
+  margin-top: clamp(0.75rem, 1.4vw, 1.2rem);
+}
+
+.storefront-home .store-launch-art > img,
+.storefront-home .store-product-tile > img {
+  justify-self: center;
+  margin-inline: auto;
+  object-position: center bottom;
+}
+
+.storefront-home .store-product-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.storefront-home .store-product-tile {
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.storefront-home .store-product-tile > img {
+  align-self: end;
+}
+
+.storefront-home .store-product-trade-in h2 {
+  max-width: 14ch;
+}
+
+.storefront-home .service-story-card img {
+  margin-inline: auto;
+  object-position: center;
+}
+
+@media (max-width: 768px) {
+  .storefront-home .store-product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .storefront-home .store-product-tile {
+    width: 100%;
+    grid-column: auto;
+  }
+}
