@@ -26,6 +26,7 @@ import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.we
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
+import iphone17ProShowcase from "../assets/products/iphone-17-pro-premium.webp";
 import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 import { getLatestMacLaunch } from "../utils/latestMac";
@@ -201,16 +202,19 @@ export function HomePage() {
         </section>
 
         <section className="store-visa-section" aria-labelledby="store-visa-title">
-          <div className="store-section-copy">
-            <p className="store-eyebrow">Visa Card Trading</p>
-            <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
-            <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
-            <div className="store-actions">
-              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
-              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+          <div className="store-visa-content">
+            <div className="store-section-copy">
+              <p className="store-eyebrow">Visa Card Trading</p>
+              <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
+              <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
+              <div className="store-actions">
+                <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
+                <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+              </div>
             </div>
+            <img className="store-visa-card-art" src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
           </div>
-          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
+          <VisaProductShowcase />
         </section>
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
@@ -235,6 +239,26 @@ export function HomePage() {
         </section>
       </main>
     </>
+  );
+}
+
+function VisaProductShowcase() {
+  return (
+    <div
+      className="visa-product-showcase"
+      role="img"
+      aria-label="A rotating premium showcase featuring Apple Watch, iPhone 17 Pro and iPad Pro"
+    >
+      <figure className="visa-showcase-slide">
+        <img src={appleWatchCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+      </figure>
+      <figure className="visa-showcase-slide">
+        <img src={iphone17ProShowcase} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+      </figure>
+      <figure className="visa-showcase-slide">
+        <img src={ipadProCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+      </figure>
+    </div>
   );
 }
 
