@@ -194,8 +194,13 @@ export function HomePage() {
         <NewMacLaunchCampaign launch={newMacLaunches["mac-mini"]} priority />
         <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
-        {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
-        {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
+
+        {(featuredMacbookAirCampaign || featuredMacbookProCampaign) && (
+          <section className="store-feature-grid store-macbook-grid" aria-label="Featured MacBook lineup">
+            {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
+            {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
+          </section>
+        )}
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
