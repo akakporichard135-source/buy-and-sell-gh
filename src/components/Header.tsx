@@ -18,6 +18,7 @@ const navItems = [
   { label: "Electronics", to: "/electronics" },
   { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
+  { label: "Pre-order", to: "/pre-order" },
   { label: "Repairs", to: "/repairs" },
   { label: "Support", to: "/contact" },
 ];
@@ -26,7 +27,6 @@ const mobileUtilityItems = [
   { label: "Installment", to: "/installment" },
   { label: "Visa Cards", to: "/gift-cards" },
   { label: "Refer a Friend", to: "/refer-a-friend" },
-  { label: "Pre-Order", to: "/pre-order" },
 ];
 
 export function Header() {

@@ -14182,16 +14182,26 @@ body {
 }
 
 .storefront-home .service-story-rail .store-horizontal-rail {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   gap: var(--home-grid-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 0 0 0.85rem;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 0;
+  scroll-snap-type: x mandatory;
 }
 
 .storefront-home .service-story-card {
+  width: auto;
+  flex: 0 0 clamp(360px, 31vw, 430px);
   min-height: clamp(700px, 54vw, 780px);
   grid-template-rows: 12rem minmax(0, 1fr) auto;
   gap: clamp(1rem, 1.7vw, 1.5rem);
   padding: clamp(1.25rem, 2vw, 1.75rem);
   border-radius: 6px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .storefront-home .service-story-card > div {
@@ -14213,6 +14223,12 @@ body {
   aspect-ratio: auto;
   object-fit: contain;
   object-position: center;
+}
+
+@media (max-width: 1024px) {
+  .storefront-home .service-story-card {
+    flex-basis: min(430px, calc((100% - var(--home-grid-gap)) / 2));
+  }
 }
 
 @media (max-width: 768px) {
@@ -14255,19 +14271,28 @@ body {
   }
 
   .storefront-home .service-story-rail .store-horizontal-rail {
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
     gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.75rem;
   }
 
   .storefront-home .service-story-card {
+    flex-basis: min(430px, calc((100% - 1rem) / 2));
+  }
+}
+
+@media (max-width: 640px) {
+  .storefront-home .service-story-card {
+    flex: 0 0 min(430px, calc(100% - clamp(1.75rem, 10vw, 2.75rem)));
     min-height: 0;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: 10.5rem auto auto;
     padding: 1rem;
   }
 
   .storefront-home .service-story-card > div {
     min-height: 0;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto minmax(4.75rem, auto) minmax(3.25rem, auto);
   }
 
   .storefront-home .service-story-card img {

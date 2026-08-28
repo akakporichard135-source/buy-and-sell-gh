@@ -22,8 +22,7 @@ import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installme
 import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
-import preOrderCampaignArt from "../assets/homepage/homepage-preorder-premium.jpg";
-import referFriendCampaignArt from "../assets/homepage/homepage-refer-cinematic.webp";
+import ownerStoreFlyerCampaign from "../assets/homepage/owner-store-flyer.jpg";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
@@ -143,8 +142,7 @@ const serviceStories = [
   { label: "Sell for Cash", title: "Sell your old device.", description: "Request an assessment and confirm the next step with our team.", image: moreStoreSellCashArtwork, to: "/sell-or-trade?mode=sell", tone: "light" },
   { label: "Installment", title: "Own an iPhone today.", description: "Review current requirements before sending your request.", image: moreStoreInstallmentArtwork, to: "/installment", tone: "black" },
   { label: "Repairs", title: "Let the experts fix it.", description: "Support for phones, laptops and game consoles.", image: moreStoreRepairsArtwork, to: "/repairs", tone: "black" },
-  { label: "Refer a Friend", title: "Good tech is better shared.", description: "Send someone you trust directly to Buy & Sell GH.", image: referFriendCampaignArt, to: "/refer-a-friend", tone: "light" },
-  { label: "Pre-Order", title: "Request the exact device.", description: "Tell us the model you want and we will confirm sourcing details.", image: preOrderCampaignArt, to: "/pre-order", tone: "light" },
+  { label: "Buy & Sell", title: "Your next upgrade starts here.", description: "Browse original devices and get clear local support for your next purchase.", image: ownerStoreFlyerCampaign, to: "/shop", tone: "light" },
 ];
 
 const marketplaceCommitments = [
