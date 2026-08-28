@@ -1,5 +1,5 @@
-import { ArrowRight, ChevronRight, MessageCircle } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowRight, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
 import { NewMacLaunchCampaign } from "../components/NewMacLaunchCampaign";
+import topBrandArtwork from "../assets/brand/buy-sell-gh-logo-owner.jpeg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -27,13 +28,10 @@ import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp"
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import iphone17ProShowcase from "../assets/products/iphone-17-pro-premium.webp";
-import { business } from "../config/business";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
 import { newMacLaunches } from "../data/newMacLaunches";
-
-const whatsappHref = `https://wa.me/${business.whatsapp.primary}`;
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -191,7 +189,7 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <NewMacLaunchCampaign launch={newMacLaunches["mac-mini"]} priority />
+        <NewMacLaunchCampaign brandArtwork={topBrandArtwork} launch={newMacLaunches["mac-mini"]} priority />
         <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
 
@@ -232,16 +230,6 @@ export function HomePage() {
           ))}
         </StoreRail>
 
-        <section id="store-support" className="store-support-section" aria-labelledby="store-support-title">
-          <MessageCircle size={42} aria-hidden="true" />
-          <p className="store-eyebrow">Support</p>
-          <h2 id="store-support-title">We're here to help.</h2>
-          <p>Need help choosing a device, placing an order or arranging a repair?</p>
-          <div className="store-actions">
-            <a className="store-button store-button-primary" href={whatsappHref} target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a>
-            <Link className="store-button store-button-secondary" to="/contact">Contact Support</Link>
-          </div>
-        </section>
       </main>
     </>
   );
@@ -252,16 +240,13 @@ function VisaProductShowcase() {
     <div
       className="visa-product-showcase"
       role="img"
-      aria-label="A rotating premium showcase featuring Apple Watch, iPhone 17 Pro and iPad Pro"
+      aria-label="A rotating premium showcase featuring Apple Watch and iPhone 17 Pro"
     >
       <figure className="visa-showcase-slide">
         <img src={appleWatchCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
       </figure>
       <figure className="visa-showcase-slide">
         <img src={iphone17ProShowcase} alt="" loading="lazy" decoding="async" aria-hidden="true" />
-      </figure>
-      <figure className="visa-showcase-slide">
-        <img src={ipadProCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
       </figure>
     </div>
   );
@@ -407,6 +392,7 @@ function createCatalogueIphoneLayers(images: { src: string; alt: string }[]): Ci
 
 function ProductTile({ campaign }: { campaign: Campaign }) {
   const shouldShowImage = campaign.showImage !== false;
+  const isAppleWatch = campaign.eyebrow === "Apple Watch";
   return (
     <article className={`store-product-tile store-product-${campaign.theme} store-product-${slugify(campaign.eyebrow)}${!shouldShowImage ? " store-product-text-only" : ""}`}>
       <div className="store-tile-copy">
@@ -418,19 +404,92 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
           {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
         </div>
       </div>
-      {shouldShowImage && <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />}
+      {shouldShowImage && (isAppleWatch ? (
+        <div className="store-watch-visual">
+          <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
+          <span className="store-watch-screen-motion" aria-hidden="true" />
+        </div>
+      ) : (
+        <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
+      ))}
     </article>
   );
 }
 
 function StoreRail({ eyebrow, title, description, className, children, id }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode; id?: string }) {
+  const railRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let intervalId = 0;
+    let resumeId = 0;
+    let paused = false;
+
+    const start = () => {
+      window.clearInterval(intervalId);
+      intervalId = window.setInterval(() => {
+        if (paused || document.hidden) return;
+        const cards = Array.from(rail.children) as HTMLElement[];
+        if (cards.length < 2 || rail.scrollWidth <= rail.clientWidth) return;
+        const step = cards[1].offsetLeft - cards[0].offsetLeft;
+        const maxScroll = rail.scrollWidth - rail.clientWidth;
+        const nextLeft = rail.scrollLeft >= maxScroll - 4 ? 0 : Math.min(rail.scrollLeft + step, maxScroll);
+        rail.scrollTo({ left: nextLeft, behavior: "smooth" });
+      }, 5200);
+    };
+
+    const pause = () => {
+      paused = true;
+      window.clearInterval(intervalId);
+      window.clearTimeout(resumeId);
+    };
+    const resume = () => {
+      window.clearTimeout(resumeId);
+      resumeId = window.setTimeout(() => {
+        paused = false;
+        start();
+      }, 1800);
+    };
+    const handleVisibility = () => {
+      if (document.hidden) pause();
+      else resume();
+    };
+
+    rail.addEventListener("pointerenter", pause);
+    rail.addEventListener("pointerleave", resume);
+    rail.addEventListener("pointerdown", pause);
+    rail.addEventListener("pointerup", resume);
+    rail.addEventListener("touchstart", pause, { passive: true });
+    rail.addEventListener("touchend", resume, { passive: true });
+    rail.addEventListener("focusin", pause);
+    rail.addEventListener("focusout", resume);
+    document.addEventListener("visibilitychange", handleVisibility);
+    start();
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.clearTimeout(resumeId);
+      rail.removeEventListener("pointerenter", pause);
+      rail.removeEventListener("pointerleave", resume);
+      rail.removeEventListener("pointerdown", pause);
+      rail.removeEventListener("pointerup", resume);
+      rail.removeEventListener("touchstart", pause);
+      rail.removeEventListener("touchend", resume);
+      rail.removeEventListener("focusin", pause);
+      rail.removeEventListener("focusout", resume);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
   return (
     <section id={id} className={`store-rail-section ${className}`} aria-labelledby={`rail-${slugify(title)}`}>
       <div className="store-rail-heading">
         <div><p className="store-eyebrow">{eyebrow}</p><h2 id={`rail-${slugify(title)}`}>{title}</h2></div>
         <span>{description} <ArrowRight size={16} /></span>
       </div>
-      <div className="store-horizontal-rail">{children}</div>
+      <div ref={railRef} className="store-horizontal-rail">{children}</div>
     </section>
   );
 }

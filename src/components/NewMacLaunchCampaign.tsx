@@ -2,7 +2,15 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { NewMacLaunch } from "../data/newMacLaunches";
 
-export function NewMacLaunchCampaign({ launch, priority = false }: { launch: NewMacLaunch; priority?: boolean }) {
+export function NewMacLaunchCampaign({
+  brandArtwork,
+  launch,
+  priority = false,
+}: {
+  brandArtwork?: string;
+  launch: NewMacLaunch;
+  priority?: boolean;
+}) {
   const sectionRef = useRef<HTMLElement>(null);
   const HeadingTag = priority ? "h1" : "h2";
 
@@ -30,6 +38,18 @@ export function NewMacLaunchCampaign({ launch, priority = false }: { launch: New
       className={`new-mac-launch new-mac-launch-${launch.key} new-mac-launch-${launch.theme}`}
       aria-labelledby={`${launch.key}-launch-title`}
     >
+      {brandArtwork && (
+        <div className="new-mac-brand-opening" aria-label="Buy & Sell GH">
+          <span className="new-mac-brand-aura" aria-hidden="true" />
+          <img
+            src={brandArtwork}
+            alt="Buy & Sell GH"
+            loading={priority ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={priority ? "high" : "auto"}
+          />
+        </div>
+      )}
       <div className="new-mac-launch-copy">
         <p className="store-eyebrow">New Mac</p>
         <HeadingTag id={`${launch.key}-launch-title`}>{launch.name}</HeadingTag>
