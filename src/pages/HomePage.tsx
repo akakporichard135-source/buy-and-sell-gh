@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, ChevronRight, MapPin, MessageCircle, PackageCheck, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronRight, MessageCircle } from "lucide-react";
 import { useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import type { Product } from "../types/product";
@@ -22,8 +22,8 @@ import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installme
 import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
-import ownerStoreFlyerCampaign from "../assets/homepage/owner-store-flyer.jpg";
 import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
 import { business } from "../config/business";
@@ -142,26 +142,7 @@ const serviceStories = [
   { label: "Sell for Cash", title: "Sell your old device.", description: "Request an assessment and confirm the next step with our team.", image: moreStoreSellCashArtwork, to: "/sell-or-trade?mode=sell", tone: "light" },
   { label: "Installment", title: "Own an iPhone today.", description: "Review current requirements before sending your request.", image: moreStoreInstallmentArtwork, to: "/installment", tone: "black" },
   { label: "Repairs", title: "Let the experts fix it.", description: "Support for phones, laptops and game consoles.", image: moreStoreRepairsArtwork, to: "/repairs", tone: "black" },
-  { label: "Buy & Sell", title: "Your next upgrade starts here.", description: "Browse original devices and get clear local support for your next purchase.", image: ownerStoreFlyerCampaign, to: "/shop", tone: "light" },
 ];
-
-const marketplaceCommitments = [
-  {
-    label: "Availability confirmed",
-    description: "Availability, price, payment and delivery details are checked before an order is final.",
-    icon: BadgeCheck,
-  },
-  {
-    label: "Clear order requests",
-    description: "Your cart becomes an order request, not a claim that payment or purchase is complete.",
-    icon: PackageCheck,
-  },
-  {
-    label: "Local Accra support",
-    description: "Chat with Buy & Sell GH or visit Dome Pillar 2 for practical help with your next step.",
-    icon: MapPin,
-  },
-] as const;
 
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
@@ -219,7 +200,18 @@ export function HomePage() {
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
         </section>
 
-        <MarketplaceAssurance />
+        <section className="store-visa-section" aria-labelledby="store-visa-title">
+          <div className="store-section-copy">
+            <p className="store-eyebrow">Visa Card Trading</p>
+            <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
+            <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
+            <div className="store-actions">
+              <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
+              <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+            </div>
+          </div>
+          <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
+        </section>
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -243,38 +235,6 @@ export function HomePage() {
         </section>
       </main>
     </>
-  );
-}
-
-function MarketplaceAssurance() {
-  return (
-    <section className="marketplace-assurance" aria-labelledby="marketplace-assurance-title">
-      <div className="marketplace-assurance-main">
-        <div className="marketplace-assurance-copy">
-          <p className="store-eyebrow">Buy &amp; Sell with confidence</p>
-          <h2 id="marketplace-assurance-title">Real devices. Clear next steps.</h2>
-          <p>Browse original devices, submit a controlled order request, or get help selling and upgrading. Buy &amp; Sell GH confirms the important details before payment.</p>
-          <div className="store-actions">
-            <Link className="store-button store-button-primary" to="/shop">Shop devices</Link>
-            <Link className="store-button store-button-secondary" to="/sell-or-trade">Sell or trade</Link>
-          </div>
-        </div>
-        <div className="marketplace-assurance-path" aria-label="Customer journey">
-          <div className="marketplace-assurance-path-heading"><ShieldCheck size={26} aria-hidden="true" /><span>Clear customer process</span></div>
-          <Link to="/shop"><Search size={22} aria-hidden="true" /><span><strong>Browse verified listings</strong><small>Compare real catalogue products and availability states.</small></span><ChevronRight size={20} aria-hidden="true" /></Link>
-          <Link to="/cart"><PackageCheck size={22} aria-hidden="true" /><span><strong>Review your order request</strong><small>See selected variants, quantities and totals before submitting.</small></span><ChevronRight size={20} aria-hidden="true" /></Link>
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={22} aria-hidden="true" /><span><strong>Get local support</strong><small>Confirm product, payment, pickup or delivery details with the team.</small></span><ChevronRight size={20} aria-hidden="true" /></a>
-        </div>
-      </div>
-      <div className="marketplace-commitments" aria-label="Marketplace commitments">
-        {marketplaceCommitments.map(({ description, icon: Icon, label }) => (
-          <article className="marketplace-commitment" key={label}>
-            <Icon size={23} aria-hidden="true" />
-            <div><strong>{label}</strong><p>{description}</p></div>
-          </article>
-        ))}
-      </div>
-    </section>
   );
 }
 
