@@ -1,6 +1,6 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
+import type { CSSProperties, ReactElement, ReactNode } from "react";
 import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
@@ -242,10 +242,10 @@ function VisaProductShowcase() {
       role="img"
       aria-label="A rotating premium showcase featuring Apple Watch and iPhone 17 Pro"
     >
-      <figure className="visa-showcase-slide">
+      <figure className="visa-showcase-slide visa-showcase-watch">
         <img src={appleWatchCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
       </figure>
-      <figure className="visa-showcase-slide">
+      <figure className="visa-showcase-slide visa-showcase-iphone">
         <img src={iphone17ProShowcase} alt="" loading="lazy" decoding="async" aria-hidden="true" />
       </figure>
     </div>
@@ -418,6 +418,8 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
 
 function StoreRail({ eyebrow, title, description, className, children, id }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode; id?: string }) {
   const railRef = useRef<HTMLDivElement>(null);
+  const railItems = Children.toArray(children);
+  const wraparoundItem = railItems[0];
 
   useEffect(() => {
     const rail = railRef.current;
@@ -434,8 +436,12 @@ function StoreRail({ eyebrow, title, description, className, children, id }: { e
         const cards = Array.from(rail.children) as HTMLElement[];
         if (cards.length < 2 || rail.scrollWidth <= rail.clientWidth) return;
         const step = cards[1].offsetLeft - cards[0].offsetLeft;
+        const wraparoundCard = cards.find((card) => card.dataset.railWraparound === "true");
+        if (wraparoundCard && rail.scrollLeft >= wraparoundCard.offsetLeft - 4) {
+          rail.scrollTo({ left: 0, behavior: "auto" });
+        }
         const maxScroll = rail.scrollWidth - rail.clientWidth;
-        const nextLeft = rail.scrollLeft >= maxScroll - 4 ? 0 : Math.min(rail.scrollLeft + step, maxScroll);
+        const nextLeft = Math.min(rail.scrollLeft + step, maxScroll);
         rail.scrollTo({ left: nextLeft, behavior: "smooth" });
       }, 5200);
     };
@@ -489,7 +495,15 @@ function StoreRail({ eyebrow, title, description, className, children, id }: { e
         <div><p className="store-eyebrow">{eyebrow}</p><h2 id={`rail-${slugify(title)}`}>{title}</h2></div>
         <span>{description} <ArrowRight size={16} /></span>
       </div>
-      <div ref={railRef} className="store-horizontal-rail">{children}</div>
+      <div ref={railRef} className="store-horizontal-rail">
+        {railItems}
+        {isValidElement(wraparoundItem) && cloneElement(wraparoundItem as ReactElement<{ tabIndex?: number; "aria-hidden"?: boolean; "data-rail-wraparound"?: string }>, {
+          "aria-hidden": true,
+          "data-rail-wraparound": "true",
+          key: "rail-wraparound",
+          tabIndex: -1,
+        })}
+      </div>
     </section>
   );
 }
