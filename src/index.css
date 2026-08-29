@@ -15543,3 +15543,314 @@ body {
     animation: none !important;
   }
 }
+
+/* Visa now completes the iPad Pro row; the freed section becomes one wide product film. */
+.storefront-home .store-product-grid .store-product-visa-card-trading,
+.storefront-home .store-product-grid .store-product-tile:last-child:nth-child(odd).store-product-visa-card-trading {
+  width: auto;
+  min-height: 0;
+  height: 100%;
+  grid-column: auto;
+  grid-template-rows: 18.5rem minmax(0, 1fr);
+  justify-self: stretch;
+  padding: clamp(2.8rem, 4vw, 3.8rem) clamp(1.25rem, 2.7vw, 2.75rem) 0;
+  background:
+    radial-gradient(circle at 50% 72%, rgba(221, 170, 44, 0.14), transparent 34%),
+    #f7f3ec;
+}
+
+.storefront-home .store-product-grid .store-product-visa-card-trading .store-tile-copy {
+  height: 18.5rem;
+  min-height: 0;
+}
+
+.storefront-home .store-product-grid .store-product-visa-card-trading h2 {
+  max-width: 18ch;
+  font-size: clamp(2.35rem, 3.15vw, 3.35rem);
+  line-height: 1;
+}
+
+.storefront-home .store-visa-tile-art {
+  position: relative;
+  display: grid;
+  width: min(100%, 620px);
+  height: clamp(340px, 30vw, 430px);
+  align-self: end;
+  justify-self: center;
+  place-items: center;
+  margin-inline: auto;
+  isolation: isolate;
+}
+
+.storefront-home .store-visa-tile-art::before {
+  position: absolute;
+  inset: 24% 16% 12%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(218, 166, 38, 0.24), transparent 68%);
+  content: "";
+  filter: blur(24px);
+}
+
+.storefront-home .store-visa-tile-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 24px 30px rgba(38, 30, 20, 0.14));
+  -webkit-mask-image: radial-gradient(ellipse 76% 82% at 50% 55%, #000 52%, rgba(0, 0, 0, 0.94) 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 76% 82% at 50% 55%, #000 52%, rgba(0, 0, 0, 0.94) 70%, transparent 100%);
+  animation: store-visa-card-breathe 8s ease-in-out infinite alternate;
+}
+
+@keyframes store-visa-card-breathe {
+  from { transform: translate3d(0, 4px, 0) scale(0.985); }
+  to { transform: translate3d(0, -4px, 0) scale(1); }
+}
+
+.storefront-home .store-cinematic-showcase {
+  width: 100%;
+  padding: var(--home-grid-gap);
+  overflow: clip;
+  background: #fff;
+}
+
+.storefront-home .store-cinematic-stage {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 46% 68% at 50% 54%, rgba(224, 174, 48, 0.12), transparent 70%),
+    linear-gradient(180deg, #f7f3ec 0%, #f5f5f7 100%);
+  isolation: isolate;
+}
+
+.storefront-home .store-cinematic-stage::before,
+.storefront-home .store-cinematic-stage::after {
+  position: absolute;
+  inset-block: 0;
+  z-index: 3;
+  width: clamp(24px, 5vw, 90px);
+  content: "";
+  pointer-events: none;
+}
+
+.storefront-home .store-cinematic-stage::before {
+  left: 0;
+  background: linear-gradient(90deg, #f7f3ec, transparent);
+}
+
+.storefront-home .store-cinematic-stage::after {
+  right: 0;
+  background: linear-gradient(270deg, #f7f3ec, transparent);
+}
+
+.storefront-home .store-cinematic-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  opacity: 0;
+  animation: store-cinematic-scene-cycle 12s ease-in-out infinite;
+  will-change: opacity, transform, filter;
+}
+
+.storefront-home .store-cinematic-iphone {
+  animation-delay: -6s;
+}
+
+.storefront-home .store-cinematic-media {
+  position: relative;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 3 / 2;
+}
+
+.storefront-home .store-cinematic-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 78% 84% at center, #000 56%, rgba(0, 0, 0, 0.92) 72%, transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 84% at center, #000 56%, rgba(0, 0, 0, 0.92) 72%, transparent 100%);
+  animation: store-cinematic-camera 12s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+.storefront-home .store-cinematic-iphone .store-cinematic-media img {
+  transform-origin: 50% 58%;
+}
+
+.storefront-home .store-cinematic-scene figcaption {
+  position: absolute;
+  left: clamp(1.25rem, 4vw, 4.5rem);
+  bottom: clamp(1.1rem, 3vw, 3.25rem);
+  z-index: 4;
+  display: grid;
+  gap: 0.25rem;
+  color: #1d1d1f;
+  text-align: left;
+  text-shadow: 0 1px 18px rgba(255, 255, 255, 0.9);
+}
+
+.storefront-home .store-cinematic-scene figcaption span {
+  color: #a77908;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.storefront-home .store-cinematic-scene figcaption strong {
+  font-size: clamp(1.15rem, 2vw, 2rem);
+  letter-spacing: 0;
+}
+
+.storefront-home .store-cinematic-watch-glow {
+  position: absolute;
+  top: 29%;
+  left: 31%;
+  width: 21%;
+  aspect-ratio: 0.82;
+  border-radius: 32%;
+  background:
+    radial-gradient(circle at 52% 48%, rgba(103, 244, 226, 0.2), transparent 48%),
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.38) 48%, transparent 64%);
+  box-shadow: 0 0 34px rgba(86, 211, 201, 0.18);
+  mix-blend-mode: screen;
+  animation: store-watch-screen-alive 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.storefront-home .store-cinematic-progress {
+  position: absolute;
+  right: clamp(1.25rem, 4vw, 4.5rem);
+  bottom: clamp(1.35rem, 3vw, 3.45rem);
+  z-index: 5;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.storefront-home .store-cinematic-progress span {
+  width: 1.9rem;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(29, 29, 31, 0.18);
+}
+
+.storefront-home .store-cinematic-progress span::after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #d7a719;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: store-cinematic-progress 12s linear infinite;
+}
+
+.storefront-home .store-cinematic-progress span:nth-child(2)::after {
+  animation-delay: -6s;
+}
+
+@keyframes store-cinematic-scene-cycle {
+  0%, 44% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: brightness(1); }
+  50%, 94% { opacity: 0; transform: translate3d(0, -5px, 0) scale(1.015); filter: brightness(1.02); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: brightness(1); }
+}
+
+@keyframes store-cinematic-camera {
+  0%, 100% { transform: translate3d(-0.35%, 0.2%, 0) scale(0.985); filter: saturate(0.98) brightness(0.99); }
+  44% { transform: translate3d(0.45%, -0.2%, 0) scale(1.025); filter: saturate(1.02) brightness(1.02); }
+  50%, 94% { transform: translate3d(0, 0, 0) scale(1.01); }
+}
+
+@keyframes store-watch-screen-alive {
+  0%, 100% { opacity: 0.42; transform: scale(0.96); }
+  50% { opacity: 0.78; transform: scale(1.02); }
+}
+
+@keyframes store-cinematic-progress {
+  0% { transform: scaleX(0); }
+  44% { transform: scaleX(1); }
+  50%, 100% { transform: scaleX(0); }
+}
+
+@media (max-width: 768px) {
+  .storefront-home .store-product-grid .store-product-visa-card-trading,
+  .storefront-home .store-product-grid .store-product-tile:last-child:nth-child(odd).store-product-visa-card-trading {
+    min-height: clamp(610px, 160vw, 720px);
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: clamp(2.6rem, 11vw, 3.5rem) clamp(1rem, 5vw, 1.5rem) 0;
+  }
+
+  .storefront-home .store-product-grid .store-product-visa-card-trading .store-tile-copy {
+    height: auto;
+    min-height: 15rem;
+  }
+
+  .storefront-home .store-visa-tile-art {
+    height: clamp(300px, 86vw, 410px);
+  }
+
+  .storefront-home .store-cinematic-stage {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+
+  .storefront-home .store-cinematic-media {
+    width: 100%;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .storefront-home .store-cinematic-showcase {
+    padding-inline: 0;
+  }
+
+  .storefront-home .store-cinematic-stage {
+    aspect-ratio: 1 / 1;
+  }
+
+  .storefront-home .store-cinematic-scene figcaption {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1.15rem;
+    text-align: center;
+  }
+
+  .storefront-home .store-cinematic-scene figcaption strong {
+    font-size: clamp(1rem, 5vw, 1.25rem);
+  }
+
+  .storefront-home .store-cinematic-progress {
+    right: 1rem;
+    bottom: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-home .store-visa-tile-art img,
+  .storefront-home .store-cinematic-scene,
+  .storefront-home .store-cinematic-media img,
+  .storefront-home .store-cinematic-watch-glow,
+  .storefront-home .store-cinematic-progress span::after {
+    animation: none !important;
+  }
+
+  .storefront-home .store-cinematic-watch {
+    opacity: 1;
+  }
+
+  .storefront-home .store-cinematic-iphone {
+    display: none;
+  }
+}

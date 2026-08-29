@@ -23,7 +23,6 @@ import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installme
 import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
-import upgradeSaveArtwork from "../assets/homepage/homepage-upgrade-cinematic.webp";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
@@ -122,18 +121,6 @@ const productTiles: Campaign[] = [
     secondaryLabel: "Shop now",
     secondaryTo: "/shop?category=iPads",
   },
-  {
-    eyebrow: "Trade In",
-    title: "Turn the device you have into the one you want.",
-    description: "Get an estimate and upgrade through the real Buy & Sell GH trade flow.",
-    image: upgradeSaveArtwork,
-    imageAlt: "An older phone transitioning toward a newer flagship phone",
-    theme: "light",
-    primaryLabel: "Get estimate",
-    primaryTo: "/sell-or-trade",
-    secondaryLabel: "How it works",
-    secondaryTo: "/sell-or-trade",
-  },
 ];
 
 const serviceStories = [
@@ -202,23 +189,10 @@ export function HomePage() {
 
         <section className="store-product-grid" aria-label="Featured product families">
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
+          <VisaTradingTile />
         </section>
 
-        <section className="store-visa-section" aria-labelledby="store-visa-title">
-          <div className="store-visa-content">
-            <div className="store-section-copy">
-              <p className="store-eyebrow">Visa Card Trading</p>
-              <h2 id="store-visa-title">Turn supported Visa cards into value.</h2>
-              <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
-              <div className="store-actions">
-                <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
-                <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
-              </div>
-            </div>
-            <img className="store-visa-card-art" src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
-          </div>
-          <VisaProductShowcase />
-        </section>
+        <CinematicProductShowcase />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -235,20 +209,48 @@ export function HomePage() {
   );
 }
 
-function VisaProductShowcase() {
+function VisaTradingTile() {
   return (
-    <div
-      className="visa-product-showcase"
-      role="img"
-      aria-label="A rotating premium showcase featuring Apple Watch and iPhone 17 Pro"
-    >
-      <figure className="visa-showcase-slide visa-showcase-watch">
-        <img src={appleWatchCampaignArt} alt="" loading="lazy" decoding="async" aria-hidden="true" />
-      </figure>
-      <figure className="visa-showcase-slide visa-showcase-iphone">
-        <img src={iphone17ProShowcase} alt="" loading="lazy" decoding="async" aria-hidden="true" />
-      </figure>
-    </div>
+    <article className="store-product-tile store-product-warm store-product-visa-card-trading">
+      <div className="store-tile-copy">
+        <p className="store-eyebrow">Visa Card Trading</p>
+        <h2>Turn supported Visa cards into value.</h2>
+        <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
+        <div className="store-actions">
+          <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
+          <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
+        </div>
+      </div>
+      <div className="store-visa-tile-art">
+        <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
+      </div>
+    </article>
+  );
+}
+
+function CinematicProductShowcase() {
+  return (
+    <section className="store-cinematic-showcase" aria-label="A cinematic showcase featuring Apple Watch and iPhone 17 Pro">
+      <div className="store-cinematic-stage">
+        <figure className="store-cinematic-scene store-cinematic-watch">
+          <div className="store-cinematic-media">
+            <img src={appleWatchCampaignArt} alt="Apple Watch with its screen active in a warm premium studio" loading="lazy" decoding="async" />
+            <span className="store-cinematic-watch-glow" aria-hidden="true" />
+          </div>
+          <figcaption><span>Apple Watch</span><strong>Move. Connect. Keep going.</strong></figcaption>
+        </figure>
+        <figure className="store-cinematic-scene store-cinematic-iphone">
+          <div className="store-cinematic-media">
+            <img src={iphone17ProShowcase} alt="iPhone 17 Pro in a premium studio presentation" loading="lazy" decoding="async" />
+          </div>
+          <figcaption><span>iPhone 17 Pro</span><strong>Pro in every detail.</strong></figcaption>
+        </figure>
+        <div className="store-cinematic-progress" aria-hidden="true">
+          <span />
+          <span />
+        </div>
+      </div>
+    </section>
   );
 }
 
