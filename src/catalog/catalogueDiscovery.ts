@@ -1,7 +1,6 @@
 import type { Product } from "../types/product";
 
-export const primaryPhoneTabletBrands = ["Samsung", "Google", "Huawei", "Xiaomi", "Motorola"] as const;
-export const primaryMobilePhoneBrands = primaryPhoneTabletBrands;
+const primaryBrandLimit = 5;
 
 export type PhoneTabletCategoryKey = "mobile-phones" | "tablets" | "phone-accessories" | "tablet-accessories";
 export type ElectronicsCategoryKey =
@@ -12,7 +11,7 @@ export type ElectronicsCategoryKey =
   | "other-electronics";
 
 export const phoneTabletCategoryLabels: Record<PhoneTabletCategoryKey, string> = {
-  "mobile-phones": "Mobile Phones",
+  "mobile-phones": "Phones",
   tablets: "Tablets",
   "phone-accessories": "Phone Accessories",
   "tablet-accessories": "Tablet Accessories",
@@ -28,22 +27,24 @@ export const electronicsCategoryLabels: Record<ElectronicsCategoryKey, string> =
 
 const appleOnlyCategories = new Set(["iphones", "ipads", "macbooks", "apple watches", "airpods"]);
 const normalize = (value?: string) => value?.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() ?? "";
+const normalizeBrand = (value: string) => value.trim().toLowerCase();
 
 export function isAppleCatalogueProduct(product: Pick<Product, "brand" | "category">) {
   return normalize(product.brand) === "apple" || appleOnlyCategories.has(normalize(product.category));
 }
 
 export function getPhoneTabletCategory(product: Pick<Product, "brand" | "category" | "subcategory">): PhoneTabletCategoryKey | undefined {
-  if (isAppleCatalogueProduct(product)) return undefined;
   const category = normalize(product.category);
   const subcategory = normalize(product.subcategory);
 
-  if (["mobile phones", "mobile phone", "phones", "smartphones", "smartphone"].includes(category) || ["mobile phones", "mobile phone", "smartphones", "smartphone"].includes(subcategory)) {
+  if (["iphones", "iphone", "mobile phones", "mobile phone", "phones", "smartphones", "smartphone"].includes(category)) {
     return "mobile-phones";
   }
-  if (["tablets", "tablet"].includes(category) || ["tablets", "tablet"].includes(subcategory)) return "tablets";
+  if (["ipads", "ipad", "tablets", "tablet"].includes(category)) return "tablets";
   if (subcategory === "phone accessories" || subcategory === "mobile phone accessories") return "phone-accessories";
   if (subcategory === "tablet accessories") return "tablet-accessories";
+  if (["iphones", "iphone", "phones", "mobile phones", "mobile phone", "smartphones", "smartphone"].includes(subcategory)) return "mobile-phones";
+  if (["ipads", "ipad", "tablets", "tablet"].includes(subcategory)) return "tablets";
   if (category === "phones tablets") {
     if (subcategory.includes("tablet")) return subcategory.includes("accessor") ? "tablet-accessories" : "tablets";
     if (subcategory.includes("accessor")) return "phone-accessories";
@@ -62,10 +63,10 @@ export function isMobilePhoneProduct(product: Pick<Product, "brand" | "category"
 
 export function getPhoneTabletProducts(products: Product[], category?: string | null, brand?: string | null) {
   const selectedCategory = category && category in phoneTabletCategoryLabels ? category as PhoneTabletCategoryKey : undefined;
-  const selectedBrand = normalize(brand ?? undefined);
+  const selectedBrand = normalizeBrand(brand ?? "");
   return products.filter((product) => {
     const productCategory = getPhoneTabletCategory(product);
-    return Boolean(productCategory && (!selectedCategory || productCategory === selectedCategory) && (!selectedBrand || normalize(product.brand) === selectedBrand));
+    return !product.archived && product.available !== false && Boolean(productCategory && (!selectedCategory || productCategory === selectedCategory) && (!selectedBrand || normalizeBrand(product.brand) === selectedBrand));
   });
 }
 
@@ -78,16 +79,12 @@ function getBrands(products: Product[], predicate: (product: Product) => boolean
 }
 
 export function getPhoneTabletBrands(products: Product[]) {
-  return getBrands(products, isPhoneTabletProduct).sort((left, right) => {
-    const leftPriority = primaryPhoneTabletBrands.findIndex((brand) => normalize(brand) === normalize(left));
-    const rightPriority = primaryPhoneTabletBrands.findIndex((brand) => normalize(brand) === normalize(right));
-    if (leftPriority >= 0 || rightPriority >= 0) {
-      if (leftPriority < 0) return 1;
-      if (rightPriority < 0) return -1;
-      return leftPriority - rightPriority;
-    }
-    return left.localeCompare(right);
-  });
+  const brands = new Map<string, string>();
+  for (const product of getPhoneTabletProducts(products)) {
+    const brand = product.brand.trim();
+    if (brand && !brands.has(normalizeBrand(brand))) brands.set(normalizeBrand(brand), brand);
+  }
+  return [...brands.values()].sort((left, right) => left.localeCompare(right));
 }
 
 export function getMobilePhoneBrands(products: Product[]) {
@@ -95,19 +92,19 @@ export function getMobilePhoneBrands(products: Product[]) {
 }
 
 export function getPrimaryPhoneTabletBrands(products: Product[]) {
-  return getPhoneTabletBrands(products).filter((brand) => primaryPhoneTabletBrands.some((primary) => normalize(primary) === normalize(brand)));
+  return getPhoneTabletBrands(products).slice(0, primaryBrandLimit);
 }
 
 export function getOtherPhoneTabletBrands(products: Product[]) {
-  return getPhoneTabletBrands(products).filter((brand) => !primaryPhoneTabletBrands.some((primary) => normalize(primary) === normalize(brand)));
+  return getPhoneTabletBrands(products).slice(primaryBrandLimit);
 }
 
 export function getPrimaryMobilePhoneBrands(products: Product[]) {
-  return getMobilePhoneBrands(products).filter((brand) => primaryPhoneTabletBrands.some((primary) => normalize(primary) === normalize(brand)));
+  return getMobilePhoneBrands(products).slice(0, primaryBrandLimit);
 }
 
 export function getOtherMobilePhoneBrands(products: Product[]) {
-  return getMobilePhoneBrands(products).filter((brand) => !primaryPhoneTabletBrands.some((primary) => normalize(primary) === normalize(brand)));
+  return getMobilePhoneBrands(products).slice(primaryBrandLimit);
 }
 
 export function getElectronicsCategory(product: Pick<Product, "brand" | "category" | "subcategory">): ElectronicsCategoryKey | undefined {

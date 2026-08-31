@@ -14,6 +14,7 @@ import { MarketplaceCatalogue } from "../components/MarketplaceCatalogue";
 import { SEO } from "../components/SEO";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
+import "../styles/phones-tablets.css";
 
 const categoryIcons = {
   "mobile-phones": Smartphone,
@@ -23,22 +24,22 @@ const categoryIcons = {
 } as const;
 
 export function MobilePhonesPage() {
-  const { activeProducts, error, loading, refreshProducts } = useProductCatalog();
+  const { activeProducts, backendStatus, error, loading, refreshProducts } = useProductCatalog();
   const [params] = useSearchParams();
   const selectedBrand = params.get("brand")?.trim() ?? "";
-  const showOtherBrands = params.get("view") === "others" && !selectedBrand;
-  const marketplaceProducts = useMemo(() => getPhoneTabletProducts(activeProducts), [activeProducts]);
+  const marketplaceProducts = useMemo(() => backendStatus === "supabase" || backendStatus === "local-catalog" ? getPhoneTabletProducts(activeProducts) : [], [activeProducts, backendStatus]);
   const primaryBrands = useMemo(() => getPrimaryPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
   const otherBrands = useMemo(() => getOtherPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
+  const showOtherBrands = params.get("view") === "others" && !selectedBrand && otherBrands.length > 0;
   const availableCategories = useMemo(() => (Object.keys(phoneTabletCategoryLabels) as PhoneTabletCategoryKey[]).filter((key) => marketplaceProducts.some((product) => getPhoneTabletCategory(product) === key)), [marketplaceProducts]);
 
   return (
-    <>
-      <SEO title="Phones & Tablets in Ghana" description="Browse real non-Apple phones, tablets and related accessories published by Buy & Sell GH." />
+    <div className="phones-tablets-page">
+      <SEO title="Phones & Tablets in Ghana" description="Find phones and tablets across brands, including iPhone and iPad. Compare prices, conditions and storage at Buy & Sell GH." />
       <section className="marketplace-page-hero">
         <p className="eyebrow-dark">Phones &amp; Tablets</p>
-        <h1>Current non-Apple devices from one trusted store.</h1>
-        <p>Search owner-published inventory by category, brand, condition, price and storage. Every listing comes directly from Buy &amp; Sell GH.</p>
+        <h1>Find your next phone or tablet.</h1>
+        <p>Explore devices across brands. Compare conditions, storage and prices, with local support from Buy &amp; Sell GH in Accra.</p>
       </section>
 
       {availableCategories.length > 0 && (
@@ -65,7 +66,7 @@ export function MobilePhonesPage() {
           </div>
           {showOtherBrands && (
             <div className="other-brand-panel" aria-labelledby="other-phone-brands-title">
-              <div className="other-brand-panel-heading"><div><p className="eyebrow-dark">Others</p><h2 id="other-phone-brands-title">Additional phone and tablet brands</h2><p>Choose a brand to view only its real published products.</p></div><Link to="/phones-tablets">Back to all brands</Link></div>
+              <div className="other-brand-panel-heading"><div><p className="eyebrow-dark">Others</p><h2 id="other-phone-brands-title">More brands</h2></div><Link to="/phones-tablets">Back to all brands</Link></div>
               <div className="other-brand-name-list">{otherBrands.map((brand) => <Link to={`/phones-tablets?brand=${encodeURIComponent(brand)}`} key={brand}><span>{brand}</span><ChevronRight size={18} /></Link>)}</div>
             </div>
           )}
@@ -79,11 +80,11 @@ export function MobilePhonesPage() {
           getCategory={getPhoneTabletCategory}
           loading={loading}
           error={error}
-          emptyTitle="No non-Apple phones or tablets are available yet."
+          emptyTitle="No phones or tablets available right now."
           onRetry={() => void refreshProducts()}
         />
       )}
-    </>
+    </div>
   );
 }
 

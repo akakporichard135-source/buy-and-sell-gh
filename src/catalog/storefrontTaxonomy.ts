@@ -1,5 +1,5 @@
 import type { Product, ProductBrand } from "../types/product";
-import { isElectronicsProduct } from "./catalogueDiscovery";
+import { getPhoneTabletCategory, isElectronicsProduct } from "./catalogueDiscovery";
 
 export const storefrontCategories = [
   "Phones",
@@ -59,7 +59,11 @@ export function normalizeStorefrontCategory(value: string | null): StorefrontCat
   return legacyCategoryAliases[value] ?? "All";
 }
 
-export function getStorefrontCategory(product: Pick<Product, "category">): StorefrontCategory | undefined {
+export function getStorefrontCategory(product: Pick<Product, "category"> & Partial<Pick<Product, "brand" | "subcategory">>): StorefrontCategory | undefined {
+  if (product.category === "Phones & Tablets") {
+    const category = getPhoneTabletCategory({ ...product, brand: product.brand ?? "" });
+    return category === "tablets" ? "Tablets" : category === "mobile-phones" ? "Phones" : "Accessories";
+  }
   return legacyCategoryAliases[product.category];
 }
 

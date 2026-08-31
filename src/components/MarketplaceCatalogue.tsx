@@ -1,7 +1,8 @@
 import { Eye, MapPin, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
+import { filterMarketplaceProducts, marketplaceOptions } from "../catalog/marketplaceCatalogue";
 import { business } from "../config/business";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
@@ -20,7 +21,9 @@ type MarketplaceCatalogueProps = {
 
 export function MarketplaceCatalogue({ products, categoryLabels, getCategory, loading, error, emptyTitle, onRetry }: MarketplaceCatalogueProps) {
   const [params, setParams] = useSearchParams();
-  const search = params.get("q")?.trim() ?? "";
+  // Preserve rapid filter edits while React Router commits the preceding URL update.
+  const pendingParams = useRef(params);
+  useEffect(() => { pendingParams.current = params; }, [params]);
   const category = params.get("category") ?? "all";
   const brand = params.get("brand")?.trim() ?? "all";
   const condition = params.get("condition") ?? "all";
@@ -29,43 +32,26 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
   const maxPrice = params.get("maxPrice") ?? "";
   const sort = params.get("sort") ?? "newest";
 
-  const brands = useMemo(() => unique(products.map((product) => product.brand)), [products]);
-  const conditions = useMemo(() => unique(products.map((product) => product.condition)), [products]);
-  const storageOptions = useMemo(() => unique(products.flatMap((product) => product.storage)), [products]);
+  const brands = useMemo(() => marketplaceOptions(products.map((product) => product.brand)), [products]);
+  const conditions = useMemo(() => marketplaceOptions(products.map((product) => product.condition)), [products]);
+  const storageOptions = useMemo(() => marketplaceOptions(products.flatMap((product) => product.storage)), [products]);
   const availableCategories = useMemo(() => Object.entries(categoryLabels), [categoryLabels]);
 
-  const filteredProducts = useMemo(() => {
-    const normalizedSearch = search.toLowerCase();
-    const maximum = maxPrice ? Number(maxPrice) : undefined;
-    const next = products.filter((product) => {
-      const searchable = [product.name, product.brand, product.model, product.subcategory, ...(product.specifications ?? product.specs ?? [])].join(" ").toLowerCase();
-      if (normalizedSearch && !searchable.includes(normalizedSearch)) return false;
-      if (category !== "all" && getCategory(product) !== category) return false;
-      if (brand !== "all" && product.brand.toLowerCase() !== brand.toLowerCase()) return false;
-      if (condition !== "all" && product.condition !== condition) return false;
-      if (storage !== "all" && !product.storage.includes(storage)) return false;
-      if (availability === "in-stock" && !isProductPurchasable(product)) return false;
-      if (availability === "enquiry" && isProductPurchasable(product)) return false;
-      if (maximum !== undefined && (!Number.isFinite(maximum) || product.priceOnRequest || product.price <= 0 || product.price > maximum)) return false;
-      return true;
-    });
-
-    return next.sort((left, right) => {
-      if (sort === "price-low") return priceForSort(left) - priceForSort(right);
-      if (sort === "price-high") return priceForSort(right) - priceForSort(left);
-      return Date.parse(right.createdAt ?? "") - Date.parse(left.createdAt ?? "");
-    });
-  }, [availability, brand, category, condition, getCategory, maxPrice, products, search, sort, storage]);
+  const filteredProducts = useMemo(() => filterMarketplaceProducts(products, params, getCategory), [getCategory, params, products]);
 
   const updateParam = (key: string, value: string) => {
-    const next = new URLSearchParams(params);
+    const next = new URLSearchParams(pendingParams.current);
     if (!value || value === "all") next.delete(key);
     else next.set(key, value);
     next.delete("view");
+    pendingParams.current = next;
     setParams(next, { replace: true });
   };
 
-  const clearFilters = () => setParams(new URLSearchParams(), { replace: true });
+  const clearFilters = () => {
+    pendingParams.current = new URLSearchParams();
+    setParams(pendingParams.current, { replace: true });
+  };
 
   return (
     <section className="marketplace-catalogue" aria-labelledby="marketplace-results-title">
@@ -73,7 +59,7 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
         <label className="marketplace-search">
           <Search size={20} aria-hidden="true" />
           <span className="sr-only">Search products</span>
-          <input value={search} onChange={(event) => updateParam("q", event.target.value)} placeholder="Search brand, model or specification" />
+          <input type="search" value={params.get("q") ?? ""} onChange={(event) => updateParam("q", event.target.value)} placeholder="Search brand, model or storage" />
         </label>
         <div className="marketplace-filter-grid" aria-label="Product filters">
           <FilterSelect label="Category" value={category} onChange={(value) => updateParam("category", value)} options={availableCategories} />
@@ -86,7 +72,7 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
       </div>
 
       <div className="marketplace-results-toolbar">
-        <div><SlidersHorizontal size={18} aria-hidden="true" /><strong id="marketplace-results-title">{filteredProducts.length} {filteredProducts.length === 1 ? "listing" : "listings"}</strong></div>
+        <div><SlidersHorizontal size={18} aria-hidden="true" /><strong id="marketplace-results-title" role="status" aria-live="polite">{loading ? "Loading listings..." : `${filteredProducts.length} ${filteredProducts.length === 1 ? "listing" : "listings"}`}</strong></div>
         <div>
           <label><span>Sort</span><select value={sort} onChange={(event) => updateParam("sort", event.target.value)}><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
           <button type="button" onClick={clearFilters}>Clear filters</button>
@@ -100,7 +86,7 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
       ) : filteredProducts.length > 0 ? (
         <div className="marketplace-listing-grid">{filteredProducts.map((product) => <MarketplaceProductCard product={product} key={product.id} />)}</div>
       ) : (
-        <div className="marketplace-empty"><strong>{emptyTitle}</strong><p>Published products will appear here automatically when the owner adds them in Product Manager.</p>{products.length > 0 && <button className="btn-secondary" type="button" onClick={clearFilters}>Clear filters</button>}</div>
+        <div className="marketplace-empty"><strong>{products.length ? "No listings match your filters." : emptyTitle}</strong><p>{products.length ? "Try a different search or clear your filters." : "Check back soon or request the device you're looking for."}</p>{products.length > 0 ? <button className="btn-secondary" type="button" onClick={clearFilters}>Clear filters</button> : <Link className="btn-primary" to="/pre-order">Request a device</Link>}</div>
       )}
     </section>
   );
@@ -124,10 +110,10 @@ function MarketplaceProductCard({ product }: { product: Product }) {
         <p className="marketplace-listing-price">{product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</p>
         <h2><Link to={`/product/${product.slug}`}>{product.name}</Link></h2>
         <div className="marketplace-listing-facts">
-          <span>{product.brand}</span><span>{product.model}</span>{primaryStorage && <span>{primaryStorage}</span>}<span>{product.condition}</span>
+          <span>{product.brand}</span>{primaryStorage && <span>{primaryStorage}</span>}<span>{product.condition}</span>{product.newArrival && <span>New Arrival</span>}
         </div>
         <p className="marketplace-listing-location"><MapPin size={15} aria-hidden="true" /> {business.address}</p>
-        <p className={`marketplace-listing-status ${purchasable ? "is-available" : "is-enquiry"}`}>{purchasable ? product.stockStatus : "Confirm availability"}</p>
+        <p className={`marketplace-listing-status ${purchasable ? "is-available" : "is-enquiry"}`}>{purchasable || product.stockStatus === "Sold" || product.stockStatus === "Out of Stock" ? product.stockStatus : "Confirm availability"}</p>
         <div className="marketplace-listing-actions">
           <Link className="btn-secondary" to={`/product/${product.slug}`}><Eye size={16} /> View details</Link>
           <a className="btn-primary" href={productWhatsAppUrl(product, primaryStorage, primaryColour)} target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> WhatsApp</a>
@@ -136,6 +122,3 @@ function MarketplaceProductCard({ product }: { product: Product }) {
     </article>
   );
 }
-
-const unique = (items: string[]) => Array.from(new Set(items.map((item) => item.trim()).filter(Boolean))).sort((left, right) => left.localeCompare(right));
-const priceForSort = (product: Product) => product.priceOnRequest || product.price <= 0 ? Number.POSITIVE_INFINITY : product.price;

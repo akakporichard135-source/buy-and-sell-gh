@@ -84,7 +84,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotal: cartSubtotal(items),
       totalItems: cartTotalItems(items),
     }),
-    [items, toast],
+    [getProductBySlug, items, toast],
   );
 
   return (

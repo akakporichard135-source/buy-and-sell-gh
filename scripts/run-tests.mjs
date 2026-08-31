@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
+import { testMarketplace } from "./test-marketplace.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -14,6 +15,7 @@ const bundle = async (entry, outfile) => {
     bundle: true,
     entryPoints: [entry],
     define: {
+      "import.meta.env": "{}",
       "import.meta.env.DEV": "true",
       "import.meta.env.PROD": "false",
       "import.meta.env.VITE_SUPABASE_ANON_KEY": "\"\"",
@@ -40,6 +42,10 @@ try {
   const adminAuthMessages = await bundle(path.join(projectRoot, "src/admin/adminAuthMessages.ts"), path.join(outdir, "adminAuthMessages.mjs"));
   const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
+  const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
+  const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
+  const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
+  const productImages = await bundle(path.join(projectRoot, "src/utils/productImages.ts"), path.join(outdir, "productImages.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
   const product = {
@@ -194,10 +200,10 @@ try {
     { ...product, id: "television", brand: "LG", category: "Electronics", subcategory: "TV & Video Equipment" },
     { ...product, id: "console", brand: "Sony", category: "Game Consoles", subcategory: "" },
   ];
-  assert.deepEqual(catalogueDiscovery.getPrimaryMobilePhoneBrands(discoveryProducts), ["Samsung", "Google"], "Primary mobile-phone brands are data-driven and exclude unpublished brands");
-  assert.deepEqual(catalogueDiscovery.getOtherMobilePhoneBrands(discoveryProducts), ["Tecno"], "Others contains only additional published phone brands");
+  assert.deepEqual(catalogueDiscovery.getPrimaryMobilePhoneBrands(discoveryProducts), ["Apple", "Google", "Samsung", "Tecno"], "Primary phone brands come entirely from current inventory");
+  assert.deepEqual(catalogueDiscovery.getOtherMobilePhoneBrands(discoveryProducts), [], "Others never duplicates visible brands");
   assert.deepEqual(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts, "Tecno").map((item) => item.id), ["tecno-phone"], "Selecting an Other brand returns only that brand's real products");
-  assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Mobile Phones excludes Apple products");
+  assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), true, "Phones & Tablets includes Apple products");
   assert.deepEqual(catalogueDiscovery.getPhoneTabletProducts(discoveryProducts, "tablets").map((item) => item.id), ["samsung-tablet"], "Phones & Tablets supports non-Apple tablet inventory");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Only non-Apple computers map to Electronics");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Electronics excludes all Apple catalogue products");
@@ -205,6 +211,7 @@ try {
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "video-games-consoles").length, 1, "Existing console products map to Video Games & Consoles");
   assert.equal(catalogueDiscovery.getProductRam(discoveryProducts[1]), "12GB", "RAM remains compatible with the existing specifications field");
   assert.deepEqual(catalogueDiscovery.withProductRam(["RAM: 8GB", "Dual SIM"], "16GB"), ["RAM: 16GB", "Dual SIM"], "Admin RAM updates replace only the RAM specification");
+  testMarketplace({ product, productEditor, repository, catalogueDiscovery, marketplace, productImages, storefrontTaxonomy, productPresentation });
 
   const notificationStorageData = new Map();
   const notificationStorage = {
@@ -228,6 +235,12 @@ try {
   assert.match(productManagerSource, /useLayoutEffect[\s\S]*scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/, "Product editing scrolls only after the editor is rendered");
   assert.match(productManagerSource, /RAM, where applicable/, "Existing Admin Product Manager supports RAM without a schema change");
   assert.match(productManagerSource, /TV & Video Equipment/, "Existing Admin Product Manager exposes the requested electronics taxonomy");
+  assert.match(productManagerSource, /Device type<select/, "Phone and tablet entry reuses the existing subcategory field");
+  const phonesPageSource = await readFile(path.join(projectRoot, "src/pages/MobilePhonesPage.tsx"), "utf8");
+  const marketplaceSource = await readFile(path.join(projectRoot, "src/components/MarketplaceCatalogue.tsx"), "utf8");
+  assert.doesNotMatch(phonesPageSource + marketplaceSource, /non-Apple|Product Manager|owner-published/, "Marketplace copy never excludes Apple or exposes admin instructions");
+  const cartContextSource = await readFile(path.join(projectRoot, "src/context/CartContext.tsx"), "utf8");
+  assert.match(cartContextSource, /\[getProductBySlug, items, toast\]/, "Cart actions refresh their inventory lookup when admin products load or change");
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");

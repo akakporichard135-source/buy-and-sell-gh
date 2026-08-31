@@ -49,7 +49,7 @@ interface ProductFormState {
   createdAt?: string;
 }
 
-const productToForm = (product: Product): ProductFormState => ({
+export const productToForm = (product: Product): ProductFormState => ({
   id: product.id,
   slug: product.slug,
   name: product.name,
@@ -138,7 +138,7 @@ export function AdminProductManager() {
   const startAdd = () => {
     setMessage("");
     setActionError("");
-    const draft = productToForm(createDraftProduct());
+    const draft = productToForm({ ...createDraftProduct(), available: false });
     setEditing(draft);
     setPendingEditorTarget(draft.id);
   };
@@ -339,14 +339,18 @@ function ProductForm({ form, setForm, onSubmit, products, brandOptions, backendS
       <AdminFieldset title="Basic Information">
         <label>Product name<input ref={productNameRef} required value={form.name} onChange={(event) => update("name", event.target.value)} onBlur={() => update("slug", createProductSlug(form.name, products.filter((product) => product.id !== form.id), form.id))} /></label>
         <label>Brand<input required list="admin-product-brand-options" maxLength={80} value={form.brand} onChange={(event) => update("brand", event.target.value)} placeholder="Apple, Google, Tecno..." /><datalist id="admin-product-brand-options">{brandOptions.map((item) => <option key={item} value={item} />)}</datalist></label>
-        <label>Category<select value={form.category} onChange={(event) => update("category", event.target.value as Product["category"])}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label>Subcategory / family<input list="admin-product-subcategory-options" value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="Mobile Phones, Laptops & Computers..." /><datalist id="admin-product-subcategory-options"><option value="Mobile Phones" /><option value="Tablets" /><option value="Phone Accessories" /><option value="Tablet Accessories" /><option value="Laptops & Computers" /><option value="TV & Video Equipment" /><option value="Video Games & Consoles" /><option value="Audio Equipment" /><option value="Other Electronics" /></datalist></label>
+        <label>Category<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value as Product["category"], subcategory: event.target.value === "Phones & Tablets" ? "" : form.subcategory })}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
+        {form.category === "Phones & Tablets" ? (
+          <label>Device type<select value={form.subcategory} required onChange={(event) => update("subcategory", event.target.value)}><option value="">Choose phone or tablet</option><option value="Mobile Phones">Phone</option><option value="Tablets">Tablet</option><option value="Phone Accessories">Phone Accessories</option><option value="Tablet Accessories">Tablet Accessories</option>{form.subcategory && !["Mobile Phones", "Tablets", "Phone Accessories", "Tablet Accessories"].includes(form.subcategory) && <option value={form.subcategory}>{form.subcategory}</option>}</select></label>
+        ) : (
+          <label>Subcategory / family<input list="admin-product-subcategory-options" value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="Mobile Phones, Laptops & Computers..." /><datalist id="admin-product-subcategory-options"><option value="Mobile Phones" /><option value="Tablets" /><option value="Phone Accessories" /><option value="Tablet Accessories" /><option value="Laptops & Computers" /><option value="TV & Video Equipment" /><option value="Video Games & Consoles" /><option value="Audio Equipment" /><option value="Other Electronics" /></datalist></label>
+        )}
         <label>Model<input required value={form.model} onChange={(event) => update("model", event.target.value)} /></label>
         <label>Generation<input value={form.generation} onChange={(event) => update("generation", event.target.value)} /></label>
         <label>Product URL slug<input required readOnly value={form.slug} aria-describedby="product-slug-help" /></label>
         <label className="admin-field-wide">Description<textarea required value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Customer-facing product description" /></label>
         <p className="admin-field-help admin-field-wide" id="product-slug-help">The URL slug is generated from the product name and protected from accidental edits.</p>
-        <p className="admin-field-help admin-field-wide">Use <strong>Phones &amp; Tablets</strong> for non-Apple phones, tablets and their accessories. Use <strong>Electronics</strong> for non-Apple computers, TV/video, gaming, audio and other electronics. Apple products remain in their dedicated Apple categories.</p>
+        <p className="admin-field-help admin-field-wide">Use <strong>Phones &amp; Tablets</strong> for any brand, including Apple, and choose the device type. Type a new brand directly into Brand. Existing iPhones and iPads also appear in this marketplace without moving categories. Use <strong>Electronics</strong> for non-Apple computers, TV/video, gaming, audio and other electronics.</p>
       </AdminFieldset>
 
       <AdminFieldset title="Pricing">
@@ -449,7 +453,7 @@ function AdminFieldset({ title, children }: { title: string; children: React.Rea
   );
 }
 
-function formToProduct(form: ProductFormState, products: Product[]): Product {
+export function formToProduct(form: ProductFormState, products: Product[]): Product {
   const existing = products.find((product) => product.id === form.id);
   const storage = textToList(form.storage);
   const colors = textToList(form.colors);

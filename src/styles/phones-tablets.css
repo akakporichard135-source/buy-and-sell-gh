@@ -1,0 +1,211 @@
+.phones-tablets-page {
+  background: #fff;
+  color: #1d1d1f;
+}
+
+.phones-tablets-page :is(.marketplace-page-hero, .marketplace-navigation, .marketplace-catalogue) {
+  width: min(1280px, calc(100% - 48px));
+}
+
+.phones-tablets-page .marketplace-page-hero {
+  padding-block: 32px 20px;
+}
+
+.phones-tablets-page .marketplace-page-hero h1 {
+  max-width: none;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.phones-tablets-page .marketplace-page-hero > p:not(.eyebrow-dark) {
+  max-width: 760px;
+  margin-top: 12px;
+  font-size: 16px;
+}
+
+.phones-tablets-page .marketplace-navigation {
+  padding-block: 8px 20px;
+}
+
+.phones-tablets-page .marketplace-section-heading {
+  margin-bottom: 12px;
+}
+
+.phones-tablets-page .marketplace-section-heading .eyebrow-dark {
+  display: none;
+}
+
+.phones-tablets-page .marketplace-section-heading h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.phones-tablets-page .marketplace-category-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
+  gap: 12px;
+}
+
+.phones-tablets-page .marketplace-category-card {
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-rows: 1fr 1fr;
+  column-gap: 12px;
+  align-items: end;
+  border-radius: 8px;
+}
+
+.phones-tablets-page .marketplace-category-image {
+  grid-row: span 2;
+  width: 72px;
+  height: 72px;
+  background: #fff;
+}
+
+.phones-tablets-page .marketplace-category-card small {
+  align-self: start;
+}
+
+.phones-tablets-page .phone-brand-grid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.phones-tablets-page .phone-brand-card {
+  grid-template-columns: 56px minmax(0, 1fr) 16px;
+  min-height: 90px;
+  padding: 12px;
+  gap: 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: #1d1d1f;
+}
+
+.phones-tablets-page :is(.phone-brand-image, .phone-brand-other-mark) {
+  width: 56px;
+  height: 56px;
+  background: #fff;
+}
+
+.phones-tablets-page .phone-brand-card small {
+  color: #626269;
+  font-size: 12px;
+}
+
+.phones-tablets-page .phone-brand-card strong {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.phones-tablets-page .marketplace-filter-shell {
+  padding: 16px 0;
+  border: 0;
+  border-block: 1px solid #e5e5e7;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.phones-tablets-page .marketplace-filter-field > span {
+  font-size: 13px;
+}
+
+.phones-tablets-page .marketplace-search {
+  margin: 0;
+  box-shadow: none;
+}
+
+.phones-tablets-page .marketplace-listing-image {
+  background: #f5f5f7;
+  padding: 12px;
+}
+
+.phones-tablets-page .marketplace-listing-image img {
+  min-height: 0;
+  object-position: center;
+}
+
+.phones-tablets-page .marketplace-listing-body h2 {
+  font-size: 17px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.phones-tablets-page .marketplace-listing-facts span {
+  display: inline-block;
+  font-size: 12px;
+}
+
+.phones-tablets-page .marketplace-listing-status {
+  font-size: 12px;
+}
+
+.phones-tablets-page .marketplace-listing-actions a {
+  padding-inline: 10px;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .phones-tablets-page :is(.marketplace-page-hero, .marketplace-navigation, .marketplace-catalogue) {
+    width: calc(100% - 32px);
+  }
+
+  .phones-tablets-page .marketplace-page-hero h1 {
+    font-size: 30px;
+  }
+
+  .phones-tablets-page .marketplace-category-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .phones-tablets-page .marketplace-category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .phones-tablets-page .marketplace-category-card small {
+    align-self: center;
+  }
+
+  .phones-tablets-page .phone-brand-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .phones-tablets-page .phone-brand-card {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .phones-tablets-page :is(.phone-brand-image, .phone-brand-other-mark) {
+    width: 36px;
+    height: 48px;
+  }
+
+  .phones-tablets-page .phone-brand-card > svg {
+    display: none;
+  }
+
+  .phones-tablets-page .marketplace-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .phones-tablets-page .marketplace-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .phones-tablets-page .marketplace-results-toolbar > div:last-child {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 540px) {
+  .phones-tablets-page .marketplace-listing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

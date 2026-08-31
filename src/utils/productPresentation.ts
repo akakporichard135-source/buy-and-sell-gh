@@ -1,4 +1,5 @@
 import type { Product, ProductCategory, StockStatus } from "../types/product";
+import { getPhoneTabletCategory } from "../catalog/catalogueDiscovery";
 
 export const categorySlugs: Partial<Record<ProductCategory, string>> = {
   iPhones: "iphones",
@@ -221,8 +222,8 @@ export function getProductBadges(product: Product, limit = 3) {
 }
 
 export function productMatchesCategorySlug(product: Product, slug: string) {
-  if (slug === "iphones") return product.category === "iPhones";
-  if (slug === "ipads") return product.category === "iPads";
+  if (slug === "iphones") return product.category === "iPhones" || (product.brand.trim().toLowerCase() === "apple" && getPhoneTabletCategory(product) === "mobile-phones");
+  if (slug === "ipads") return product.category === "iPads" || (product.brand.trim().toLowerCase() === "apple" && getPhoneTabletCategory(product) === "tablets");
   if (slug === "macbooks") return product.category === "MacBooks";
   if (slug === "apple-watch") return product.category === "Apple Watches";
   if (slug === "airpods") return product.category === "AirPods";
