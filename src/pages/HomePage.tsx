@@ -7,13 +7,16 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
 import { NewMacLaunchCampaign } from "../components/NewMacLaunchCampaign";
+import { IphoneCinematicShowcase } from "../components/IphoneCinematicShowcase";
+import "../styles/homepage-surfaces.css";
+import macMiniWhiteArtwork from "../assets/homepage/homepage-mac-mini-white.webp";
 import topBrandArtwork from "../assets/brand/buy-sell-gh-logo-owner.jpeg";
-import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-cinematic.webp";
+import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-white.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import iphoneAirCutoutRight from "../assets/homepage/iphone-air-cutout-right.webp";
 import iphone17LightCampaign from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
-import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-cinematic.webp";
+import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-white.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
 import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
@@ -23,10 +26,9 @@ import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installme
 import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
-import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
+import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
 
 import iphone17Story from "../assets/products/iphone-17-pro-max-premium.webp";
-import iphone17ProShowcase from "../assets/products/iphone-17-pro-premium.webp";
 import { getLatestIphoneLineup } from "../utils/latestIphone";
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
@@ -102,7 +104,7 @@ const productTiles: Campaign[] = [
     title: "Move. Connect. Keep going.",
     description: "A capable everyday companion, right on your wrist.",
     image: appleWatchCampaignArt,
-    imageAlt: "Apple Watch in a warm premium presentation",
+    imageAlt: "Apple Watch with its screen on against a clean white background",
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/apple-watch",
@@ -176,7 +178,7 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <NewMacLaunchCampaign brandArtwork={topBrandArtwork} launch={newMacLaunches["mac-mini"]} priority />
+        <NewMacLaunchCampaign brandArtwork={topBrandArtwork} launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} priority />
         <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
 
@@ -192,7 +194,7 @@ export function HomePage() {
           <VisaTradingTile />
         </section>
 
-        <CinematicProductShowcase />
+        <IphoneCinematicShowcase products={activeProducts} />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -225,32 +227,6 @@ function VisaTradingTile() {
         <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
       </div>
     </article>
-  );
-}
-
-function CinematicProductShowcase() {
-  return (
-    <section className="store-cinematic-showcase" aria-label="A cinematic showcase featuring Apple Watch and iPhone 17 Pro">
-      <div className="store-cinematic-stage">
-        <figure className="store-cinematic-scene store-cinematic-watch">
-          <div className="store-cinematic-media">
-            <img src={appleWatchCampaignArt} alt="Apple Watch with its screen active in a warm premium studio" loading="lazy" decoding="async" />
-            <span className="store-cinematic-watch-glow" aria-hidden="true" />
-          </div>
-          <figcaption><span>Apple Watch</span><strong>Move. Connect. Keep going.</strong></figcaption>
-        </figure>
-        <figure className="store-cinematic-scene store-cinematic-iphone">
-          <div className="store-cinematic-media">
-            <img src={iphone17ProShowcase} alt="iPhone 17 Pro in a premium studio presentation" loading="lazy" decoding="async" />
-          </div>
-          <figcaption><span>iPhone 17 Pro</span><strong>Pro in every detail.</strong></figcaption>
-        </figure>
-        <div className="store-cinematic-progress" aria-hidden="true">
-          <span />
-          <span />
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -395,6 +371,7 @@ function createCatalogueIphoneLayers(images: { src: string; alt: string }[]): Ci
 function ProductTile({ campaign }: { campaign: Campaign }) {
   const shouldShowImage = campaign.showImage !== false;
   const isAppleWatch = campaign.eyebrow === "Apple Watch";
+  const isIpadAir = campaign.eyebrow === "iPad Air";
   return (
     <article className={`store-product-tile store-product-${campaign.theme} store-product-${slugify(campaign.eyebrow)}${!shouldShowImage ? " store-product-text-only" : ""}`}>
       <div className="store-tile-copy">
@@ -410,6 +387,11 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
         <div className="store-watch-visual">
           <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
           <span className="store-watch-screen-motion" aria-hidden="true" />
+        </div>
+      ) : isIpadAir ? (
+        <div className="store-ipad-air-scene">
+          <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
+          <span className="store-ipad-air-light" aria-hidden="true" />
         </div>
       ) : (
         <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />

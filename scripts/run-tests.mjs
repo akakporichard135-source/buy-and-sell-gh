@@ -235,6 +235,13 @@ try {
   assert.match(headerSource, /\{ label: "Phones & Tablets", to: "\/phones-tablets" \}/, "Phones & Tablets appears in the shared desktop and mobile navigation");
   assert.match(headerSource, /\{ label: "Electronics", to: "\/electronics" \}/, "Electronics appears in the shared desktop and mobile navigation");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
+  const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
+  const showcaseSlugs = ["iphone-16", "iphone-16-plus", "iphone-16-pro", "iphone-16-pro-max", "iphone-17", "iphone-17-pro", "iphone-17-pro-max"];
+  assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes(showcaseSlugs.slice().reverse().map((slug) => ({ slug }))).map((scene) => scene.slug), showcaseSlugs, "Cinematic iPhones stay in generation order and end on 17 Pro Max");
+  assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes([{ slug: "iphone-16-pro" }, { slug: "apple-watch" }, { slug: "iphone-18" }]).map((scene) => scene.slug), ["iphone-16-pro"], "Showcase uses only supported models present in the active catalogue");
+  assert.equal(iphoneShowcase.getIphoneShowcaseScenes([]).length, 0, "Empty catalogue does not invent showcase models");
+  assert.match(homepageSource, /eyebrow: "Apple Watch"/, "The normal Watch campaign stays on the homepage");
+  assert.match(homepageSource, /<VisaTradingTile \/>/, "Visa trading stays in the existing product grid");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
