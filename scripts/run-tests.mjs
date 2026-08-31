@@ -5,6 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import { testMarketplace } from "./test-marketplace.mjs";
+import { testStore } from "./test-store.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -46,6 +47,7 @@ try {
   const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
   const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
   const productImages = await bundle(path.join(projectRoot, "src/utils/productImages.ts"), path.join(outdir, "productImages.mjs"));
+  const storePresentation = await bundle(path.join(projectRoot, "src/utils/storePresentation.ts"), path.join(outdir, "storePresentation.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 
   const product = {
@@ -212,6 +214,10 @@ try {
   assert.equal(catalogueDiscovery.getProductRam(discoveryProducts[1]), "12GB", "RAM remains compatible with the existing specifications field");
   assert.deepEqual(catalogueDiscovery.withProductRam(["RAM: 8GB", "Dual SIM"], "16GB"), ["RAM: 16GB", "Dual SIM"], "Admin RAM updates replace only the RAM specification");
   testMarketplace({ product, productEditor, repository, catalogueDiscovery, marketplace, productImages, storefrontTaxonomy, productPresentation });
+  testStore({ presentation: storePresentation, product, productEditor, repository, catalogueDiscovery, productImages,
+    shopSource: await readFile(path.join(projectRoot, "src/pages/ShopPage.tsx"), "utf8"),
+    cardSource: await readFile(path.join(projectRoot, "src/components/StoreProductCard.tsx"), "utf8"),
+  });
 
   const notificationStorageData = new Map();
   const notificationStorage = {

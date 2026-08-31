@@ -1,19 +1,19 @@
 import { Filter, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ProductGrid } from "../components/ProductGrid";
+import { StoreProductCard } from "../components/StoreProductCard";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
-import { conditions, stockStatuses } from "../catalog/productCatalog";
+import { conditions } from "../catalog/productCatalog";
 import {
   categorySupportsStorage,
   getBrandFilterValue,
   getBrandOptions,
+  getStorefrontCategory,
   normalizeStorefrontCategory,
   productMatchesStorefrontCategory,
-  storefrontCategories,
 } from "../catalog/storefrontTaxonomy";
 import {
   accessoryFamilyOptions,
@@ -28,6 +28,8 @@ import {
 import type { Product } from "../types/product";
 import { compareProductsNewest, mixProductsDeterministically } from "../utils/shopOrdering";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
+import { STORE_BATCH_SIZE, storeFilterChoices } from "../utils/storePresentation";
+import "../styles/store.css";
 
 type SortOption = "Recommended" | "Newest" | "Price: Low to High" | "Price: High to Low" | "Popular";
 
@@ -64,7 +66,6 @@ const defaultFilters: FiltersState = {
   popular: false,
 };
 
-const storageOptions = ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB", "4TB", "8TB", "GPS", "GPS + Cellular", "USB-C Case"];
 export function ShopPage() {
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const products = useMemo(() => activeProducts.filter(isAppleCatalogueProduct), [activeProducts]);
@@ -83,10 +84,14 @@ export function ShopPage() {
   });
   const [sort, setSort] = useState<SortOption>("Recommended");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const [batch, setBatch] = useState({ key: "", count: STORE_BATCH_SIZE });
   const paramsKey = params.toString();
 
   useEffect(() => {
     const nextCategory = params.get("category") ?? "All";
+    setBatch({ key: "", count: STORE_BATCH_SIZE });
     const nextBrand = params.get("brand");
     setFilters((current) => ({
       ...current,
@@ -105,11 +110,19 @@ export function ShopPage() {
     document.body.style.overflow = "hidden";
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setDrawerOpen(false);
+      if (event.key === "Tab") {
+        const controls = Array.from(drawerRef.current?.querySelectorAll<HTMLElement>("button, input, select, a[href]") ?? []).filter((element) => element.getClientRects().length);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", onKeyDown);
+      filterButtonRef.current?.focus();
     };
   }, [drawerOpen]);
 
@@ -128,6 +141,12 @@ export function ShopPage() {
     return options.length ? options : iphoneGenerationOptions;
   }, [products]);
   const dynamicMacbookGenerationOptions = useMemo(() => getMacbookGenerationOptions(products), [products]);
+  const inventoryChoices = useMemo(() => ({
+    categories: storeFilterChoices(products.map(getStorefrontCategory), filters.category),
+    storage: storeFilterChoices(products.filter((product) => matchesShopCategory(product, filters.category)).flatMap((product) => product.storage), filters.storage),
+    conditions: storeFilterChoices(products.map((product) => product.condition), filters.condition),
+    availability: storeFilterChoices(products.map((product) => product.stockStatus), filters.availability),
+  }), [products, filters.category, filters.storage, filters.condition, filters.availability]);
 
   const filtered = useMemo(() => {
     const terms = filters.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -185,42 +204,55 @@ export function ShopPage() {
     });
   }, [filters, products, sort]);
 
+  const resultKey = JSON.stringify([filters, sort]);
+  const visibleCount = batch.key === resultKey ? batch.count : STORE_BATCH_SIZE;
+  const visibleProducts = filtered.slice(0, visibleCount);
+
   const updateFilter = <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => {
+    setBatch({ key: "", count: STORE_BATCH_SIZE });
     setFilters((current) => ({ ...current, [key]: value }));
   };
 
-  const clearFilters = () => setFilters(defaultFilters);
+  const clearFilters = () => {
+    setBatch({ key: "", count: STORE_BATCH_SIZE });
+    setFilters(defaultFilters);
+  };
   const removeFilter = (key: keyof FiltersState) => {
+    setBatch({ key: "", count: STORE_BATCH_SIZE });
     setFilters((current) => ({ ...current, [key]: defaultFilters[key] }));
   };
 
   return (
-    <>
+    <div className="store-page">
       <SEO title="Shop Phones, Tablets, Laptops and Accessories in Ghana" description="Browse confirmed phones, tablets, laptops, watches, audio and accessories from Buy & Sell GH in Accra." />
       <section className="page-hero shop-hero">
-        <p className="eyebrow-dark">Shop</p>
-        <h1>Original devices catalogue</h1>
-        <p>Search and compare confirmed phones, tablets, laptops, watches, audio and accessories. Buy & Sell GH verifies availability, final details and payment instructions before payment.</p>
-        <div className="shop-trust-line">Inspected devices | Clear condition labels | WhatsApp support</div>
+        <div className="store-hero-inner">
+          <p className="eyebrow-dark">Store</p>
+          <h1>Original devices.<br />One trusted store.</h1>
+          <p>Browse original devices, accessories and technology available directly from Buy &amp; Sell GH.</p>
+        </div>
       </section>
       <section className="section shop-section">
         <div className="shop-layout">
           <aside className="filter-panel hidden lg:block">
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} inventoryChoices={inventoryChoices} />
           </aside>
           <div className="shop-results">
             <div className="catalogue-toolbar">
-              <p className="catalogue-count">{filtered.length} {filtered.length === 1 ? "product" : "products"}</p>
+              <p className="catalogue-count" role="status">{loading ? "Loading products..." : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}</p>
               <label className="search-inline catalogue-search">
                 <Search size={18} />
-                <input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search product, brand, model or colour..." />
+                <input type="search" aria-label="Search Store" value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search the Store" />
                 {filters.search && <button type="button" aria-label="Clear search" onClick={() => updateFilter("search", "")}><X size={18} /></button>}
               </label>
-              <button className="btn-secondary catalogue-filter-button lg:hidden" type="button" onClick={() => setDrawerOpen(true)}>
+              <button ref={filterButtonRef} className="btn-secondary catalogue-filter-button lg:hidden" type="button" aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}>
                 <Filter size={17} /> Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
               </button>
               <label className="catalogue-sort">Sort
-                <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+                <select value={sort} onChange={(e) => {
+                  setBatch({ key: "", count: STORE_BATCH_SIZE });
+                  setSort(e.target.value as SortOption);
+                }}>
                   <option>Recommended</option>
                   <option>Newest</option>
                   <option>Price: Low to High</option>
@@ -239,7 +271,15 @@ export function ShopPage() {
               </div>
             ) : filtered.length > 0 ? (
               <>
-                <ProductGrid products={filtered} />
+                <div className="store-catalogue-grid" id="store-products">
+                  {visibleProducts.map((product) => <StoreProductCard key={product.id} product={product} />)}
+                </div>
+                {filtered.length > STORE_BATCH_SIZE && <div className="store-load-more">
+                  <p role="status">Showing {visibleProducts.length} of {filtered.length} products</p>
+                  <button className="btn-secondary" type="button" aria-controls="store-products" disabled={visibleProducts.length === filtered.length} onClick={() => setBatch({ key: resultKey, count: visibleCount + STORE_BATCH_SIZE })}>
+                    {visibleProducts.length === filtered.length ? "All products shown" : "Load more"}
+                  </button>
+                </div>}
                 {filtered.length <= 3 && <ShortResultsCta />}
               </>
             ) : (
@@ -251,7 +291,7 @@ export function ShopPage() {
       {drawerOpen && (
         <div className="filter-drawer" role="dialog" aria-modal="true" aria-label="Product filters">
           <button className="filter-drawer-backdrop" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)} />
-          <div className="filter-drawer-panel">
+          <div className="filter-drawer-panel" ref={drawerRef}>
             <div className="filter-drawer-header">
               <div>
                 <p className="text-lg font-black text-ink">Filters</p>
@@ -259,7 +299,7 @@ export function ShopPage() {
               </div>
               <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
             </div>
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} />
+            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} inventoryChoices={inventoryChoices} />
             <div className="filter-drawer-actions">
               <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Show {filtered.length} Products</button>
               <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
@@ -267,7 +307,7 @@ export function ShopPage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -279,6 +319,7 @@ function FilterControls({
   brandOptions,
   iphoneGenerationChoices,
   macbookGenerationChoices,
+  inventoryChoices,
 }: {
   filters: FiltersState;
   updateFilter: <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => void;
@@ -287,6 +328,7 @@ function FilterControls({
   brandOptions: string[];
   iphoneGenerationChoices: string[];
   macbookGenerationChoices: string[];
+  inventoryChoices: { categories: string[]; storage: string[]; conditions: string[]; availability: string[] };
 }) {
   return (
     <div className="filter-controls">
@@ -295,13 +337,12 @@ function FilterControls({
         {activeFilterCount > 0 && <button type="button" onClick={clearFilters}>Clear All</button>}
       </div>
       <div className="filter-group">
-        <label className="filter-label">Search<input value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Product, brand or model..." /></label>
         <label className="filter-label">Product type<select value={filters.category} onChange={(e) => {
           updateFilter("category", e.target.value);
           updateFilter("generation", "All");
           updateFilter("accessoryFamily", "All");
           updateFilter("storage", "All");
-        }}><option>All</option>{storefrontCategories.map((item) => <option key={item}>{item}</option>)}</select></label>
+        }}><option>All</option>{inventoryChoices.categories.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Brand<select value={filters.brand} onChange={(e) => {
           updateFilter("brand", e.target.value);
           updateFilter("generation", "All");
@@ -314,11 +355,11 @@ function FilterControls({
       </div>
       <div className="filter-group">
         <label className="filter-label">Price: up to GHS {filters.maxPrice.toLocaleString()}<input type="range" min="2000" max={maxCataloguePrice} step="500" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", Number(e.target.value))} /></label>
-        <label className="filter-label">Condition<select value={filters.condition} onChange={(e) => updateFilter("condition", e.target.value)}><option>All</option>{conditions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Stock<select value={filters.availability} onChange={(e) => updateFilter("availability", e.target.value)}><option>All</option>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className="filter-label">Condition<select value={filters.condition} onChange={(e) => updateFilter("condition", e.target.value)}><option>All</option>{inventoryChoices.conditions.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className="filter-label">Availability<select value={filters.availability} onChange={(e) => updateFilter("availability", e.target.value)}><option>All</option>{inventoryChoices.availability.map((item) => <option key={item}>{item}</option>)}</select></label>
       </div>
       {categorySupportsStorage(filters.category) && <div className="filter-group">
-        <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{storageOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{inventoryChoices.storage.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label className="filter-label">Colour<input value={filters.color} maxLength={80} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
       </div>}
       <div className="filter-group filter-check-grid">
@@ -380,7 +421,7 @@ function NoResultsState({ clearFilters }: { clearFilters: () => void }) {
   return (
     <section className="catalogue-empty-state">
       <Search size={28} />
-      <h2>No devices match these filters.</h2>
+      <h2>No products match your filters.</h2>
       <p>Try removing a filter or pre-order the exact device that is not currently available.</p>
       <div>
         <button className="btn-secondary" type="button" onClick={clearFilters}>Clear Filters</button>
