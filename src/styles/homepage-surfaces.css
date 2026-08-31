@@ -78,7 +78,7 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   isolation: isolate;
-  background: #101011;
+  background: #fff;
 }
 
 .iphone-showcase-scene {
@@ -93,6 +93,17 @@
 .iphone-showcase-scene.is-active {
   opacity: 1;
   z-index: 1;
+}
+
+/* Feather only the scene perimeter; preserve the gold-lit product composition. */
+.iphone-showcase-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.6) 2%, transparent 8%, transparent 90%, rgba(255, 255, 255, 0.6) 98%, #fff 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.45), transparent 9%, transparent 91%, rgba(255, 255, 255, 0.45));
 }
 
 .iphone-showcase-scene img {
@@ -118,6 +129,7 @@
 
 .iphone-showcase-scene figcaption {
   position: absolute;
+  z-index: 1;
   inset: 1.5rem 1rem auto;
   color: #1d1d1f;
   font-size: 1rem;
