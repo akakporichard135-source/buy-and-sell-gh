@@ -58,6 +58,14 @@
   object-position: center;
 }
 
+.storefront-home .store-macbook-grid .store-launch-macbook-air .store-launch-art > img {
+  translate: -1.5% -2%;
+}
+
+.storefront-home .store-macbook-grid .store-launch-macbook-pro .store-launch-art > img {
+  transform: translateX(-1.75%);
+}
+
 .storefront-home .store-product-grid .store-ipad-air-light {
   position: absolute;
   inset: 0;
@@ -69,6 +77,172 @@
 @keyframes ipad-white-light {
   0%, 60%, 100% { opacity: 0; }
   76% { opacity: 0.7; }
+}
+
+/* Paired cards share text tracks so longer catalogue copy cannot displace a CTA. */
+.storefront-home .store-macbook-grid,
+.storefront-home .store-product-grid {
+  gap: 12px;
+  padding: 12px;
+  grid-auto-rows: auto;
+}
+
+.storefront-home .store-macbook-grid + .store-product-grid {
+  padding-top: 0;
+}
+
+.storefront-home .store-macbook-grid .store-launch,
+.storefront-home .store-product-grid .store-product-tile {
+  min-height: 0;
+  grid-template-rows: subgrid;
+  row-gap: 12px;
+  padding: 48px 32px 16px;
+}
+
+.storefront-home .store-macbook-grid .store-launch { grid-row: span 6; }
+.storefront-home .store-product-grid .store-product-tile { grid-row: span 5; }
+
+.storefront-home .store-macbook-grid .store-launch-copy,
+.storefront-home .store-product-grid .store-product-tile .store-tile-copy {
+  height: auto;
+  min-height: 0;
+  grid-template-rows: subgrid;
+  padding: 0;
+  row-gap: 12px;
+  align-content: stretch;
+  align-items: start;
+}
+
+.storefront-home .store-macbook-grid .store-launch-copy { grid-row: span 5; }
+.storefront-home .store-product-grid .store-product-tile .store-tile-copy { grid-row: span 4; }
+
+.storefront-home .store-macbook-grid .store-launch-copy > *,
+.storefront-home .store-product-grid .store-product-tile .store-tile-copy > * {
+  margin-block: 0;
+}
+
+.storefront-home .store-macbook-grid .store-launch-copy > p:not(.store-eyebrow) {
+  margin-block: 0;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+}
+
+.storefront-home .store-product-grid .store-product-tile .store-tile-copy > p:not(.store-eyebrow) {
+  margin-block: 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.storefront-home .store-macbook-grid .store-launch-copy .store-actions,
+.storefront-home .store-product-grid .store-product-tile .store-actions {
+  gap: 10px;
+  align-self: start;
+  margin-top: 0;
+}
+
+.storefront-home .store-macbook-grid .store-button,
+.storefront-home .store-product-grid .store-button {
+  flex: 0 1 auto;
+  min-height: 46px;
+  padding: 12px 20px;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+}
+
+.storefront-home .store-macbook-grid .store-button-primary,
+.storefront-home .store-product-grid .store-button-primary {
+  border-color: var(--brand-gold);
+}
+
+.storefront-home .store-product-grid .store-ipad-air-scene,
+.storefront-home .store-product-grid .store-watch-visual {
+  width: min(114%, 720px);
+  max-width: none;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  align-self: end;
+  justify-self: center;
+  margin: 8px 0 0;
+}
+
+.storefront-home .store-product-grid .store-visa-tile-art {
+  width: min(116%, 730px);
+  align-self: center;
+  justify-self: center;
+  margin: 0;
+  transform: translateY(-20px);
+}
+
+.storefront-home .store-product-grid .store-visa-tile-art img {
+  width: 100%;
+  height: 112%;
+  object-position: center;
+}
+
+.storefront-home .new-mac-brand-opening {
+  min-height: clamp(280px, 27vw, 390px);
+  margin-bottom: clamp(24px, 2.5vw, 36px);
+}
+
+@media (max-width: 900px) {
+  .storefront-home .store-macbook-grid .store-launch {
+    padding: 40px 24px 16px;
+  }
+
+  .storefront-home .store-macbook-grid .store-launch .store-launch-art {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .storefront-home .store-product-grid .store-product-tile {
+    padding: 40px 24px 16px;
+  }
+
+  .storefront-home .store-product-grid .store-product-ipad-pro > img,
+  .storefront-home .store-product-grid .store-visa-tile-art {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .storefront-home .store-product-grid .store-visa-tile-art {
+    transform: translateY(-8px);
+  }
+
+  .storefront-home .store-product-grid .store-visa-tile-art img {
+    height: 100%;
+  }
+
+  .storefront-home .store-macbook-grid .store-launch-copy > p:not(.store-eyebrow) {
+    font-size: 1.0625rem;
+  }
+
+  .storefront-home .new-mac-brand-opening {
+    min-height: clamp(220px, 62vw, 315px);
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .storefront-home .store-macbook-grid .store-launch,
+  .storefront-home .store-product-grid .store-product-tile {
+    padding: 32px 16px 12px;
+  }
+
+  .storefront-home .store-macbook-grid .store-button,
+  .storefront-home .store-product-grid .store-button {
+    padding-inline: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .storefront-home .store-macbook-grid .store-launch h2 {
+    font-size: 2.25rem;
+  }
 }
 
 /* The source photographs fill the whole cinematic surface, never a nested media card. */
@@ -196,8 +370,8 @@
 
 @media (max-width: 768px) {
   .storefront-home .store-product-grid .store-ipad-air-scene {
-    width: 110%;
-    max-width: calc(100% + 2rem);
+    width: 114%;
+    max-width: calc(100% + 2.5rem);
     align-self: center;
     margin-top: 1rem;
   }
