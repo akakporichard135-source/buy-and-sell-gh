@@ -193,24 +193,30 @@ try {
 
   const discoveryProducts = [
     { ...product, id: "apple-phone", brand: "Apple", category: "iPhones", subcategory: "" },
-    { ...product, id: "samsung-phone", brand: "Samsung", category: "Mobile Phones", subcategory: "", specifications: ["RAM: 12GB", "Dual SIM"] },
-    { ...product, id: "google-phone", brand: "Google", category: "Phones", subcategory: "" },
-    { ...product, id: "tecno-phone", brand: "Tecno", category: "Mobile Phones", subcategory: "" },
+    { ...product, id: "samsung-phone", brand: "Samsung", category: "Phones & Tablets", subcategory: "Mobile Phones", specifications: ["RAM: 12GB", "Dual SIM"] },
+    { ...product, id: "google-phone", brand: "Google", category: "Phones & Tablets", subcategory: "Mobile Phones" },
+    { ...product, id: "tecno-phone", brand: "Tecno", category: "Phones & Tablets", subcategory: "Mobile Phones" },
     { ...product, id: "samsung-tablet", brand: "Samsung", category: "Phones & Tablets", subcategory: "Tablets" },
+    { ...product, id: "watch", brand: "Garmin", category: "Phones & Tablets", subcategory: "Smart Watches" },
+    { ...product, id: "case", brand: "Spigen", category: "Phones & Tablets", subcategory: "Accessories for Phones & Tablets" },
     { ...product, id: "macbook-electronics", brand: "Apple", category: "MacBooks", subcategory: "MacBook Air" },
     { ...product, id: "dell-laptop", brand: "Dell", category: "Electronics", subcategory: "Laptops & Computers" },
     { ...product, id: "television", brand: "LG", category: "Electronics", subcategory: "TV & Video Equipment" },
-    { ...product, id: "console", brand: "Sony", category: "Game Consoles", subcategory: "" },
+    { ...product, id: "console", brand: "Sony", category: "Electronics", subcategory: "Video Game Consoles" },
+    { ...product, id: "speaker", brand: "JBL", category: "Electronics", subcategory: "Audio & Music Equipment" },
   ];
-  assert.deepEqual(catalogueDiscovery.getPrimaryMobilePhoneBrands(discoveryProducts), ["Apple", "Google", "Samsung", "Tecno"], "Primary phone brands come entirely from current inventory");
+  assert.deepEqual(catalogueDiscovery.getPrimaryMobilePhoneBrands(discoveryProducts), ["Google", "Samsung", "Tecno"], "Primary phone brands come only from explicit marketplace listings");
   assert.deepEqual(catalogueDiscovery.getOtherMobilePhoneBrands(discoveryProducts), [], "Others never duplicates visible brands");
   assert.deepEqual(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts, "Tecno").map((item) => item.id), ["tecno-phone"], "Selecting an Other brand returns only that brand's real products");
-  assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), true, "Phones & Tablets includes Apple products");
+  assert.equal(catalogueDiscovery.getMobilePhoneProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Store Apple products stay out of Phones & Tablets");
   assert.deepEqual(catalogueDiscovery.getPhoneTabletProducts(discoveryProducts, "tablets").map((item) => item.id), ["samsung-tablet"], "Phones & Tablets supports non-Apple tablet inventory");
-  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Only non-Apple computers map to Electronics");
+  assert.deepEqual(catalogueDiscovery.getPhoneTabletProducts(discoveryProducts, "smart-watches").map((item) => item.id), ["watch"], "Smart Watches uses the marketplace taxonomy");
+  assert.deepEqual(catalogueDiscovery.getPhoneTabletProducts(discoveryProducts, "phone-tablet-accessories").map((item) => item.id), ["case"], "Phone and tablet accessories share the requested category");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "laptops-computers").length, 1, "Explicit marketplace computers map to Electronics");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts).some((item) => item.brand === "Apple"), false, "Electronics excludes all Apple catalogue products");
   assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "tv-video-equipment").length, 1, "TV products map through the Electronics subcategory");
-  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "video-games-consoles").length, 1, "Existing console products map to Video Games & Consoles");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "video-game-consoles").length, 1, "Explicit console listings map to Video Game Consoles");
+  assert.equal(catalogueDiscovery.getElectronicsProducts(discoveryProducts, "audio-music-equipment").length, 1, "Explicit audio listings map to Audio & Music Equipment");
   assert.equal(catalogueDiscovery.getProductRam(discoveryProducts[1]), "12GB", "RAM remains compatible with the existing specifications field");
   assert.deepEqual(catalogueDiscovery.withProductRam(["RAM: 8GB", "Dual SIM"], "16GB"), ["RAM: 16GB", "Dual SIM"], "Admin RAM updates replace only the RAM specification");
   testMarketplace({ product, productEditor, repository, catalogueDiscovery, marketplace, productImages, storefrontTaxonomy, productPresentation });
@@ -241,7 +247,8 @@ try {
   assert.match(productManagerSource, /useLayoutEffect[\s\S]*scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/, "Product editing scrolls only after the editor is rendered");
   assert.match(productManagerSource, /RAM, where applicable/, "Existing Admin Product Manager supports RAM without a schema change");
   assert.match(productManagerSource, /TV & Video Equipment/, "Existing Admin Product Manager exposes the requested electronics taxonomy");
-  assert.match(productManagerSource, /Device type<select/, "Phone and tablet entry reuses the existing subcategory field");
+  assert.match(productManagerSource, /Accessories for Phones &amp; Tablets/, "Product Manager exposes the requested phone and tablet taxonomy");
+  assert.match(productManagerSource, /Audio &amp; Music Equipment/, "Product Manager exposes the requested electronics taxonomy");
   const phonesPageSource = await readFile(path.join(projectRoot, "src/pages/MobilePhonesPage.tsx"), "utf8");
   const marketplaceSource = await readFile(path.join(projectRoot, "src/components/MarketplaceCatalogue.tsx"), "utf8");
   assert.doesNotMatch(phonesPageSource + marketplaceSource, /non-Apple|Product Manager|owner-published/, "Marketplace copy never excludes Apple or exposes admin instructions");
@@ -250,9 +257,11 @@ try {
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
-  assert.doesNotMatch(headerSource, /\{ label: "Others", to: "\/#marketplace-discovery" \}/, "Global navigation does not duplicate the marketplace Others control");
-  assert.match(headerSource, /\{ label: "Phones & Tablets", to: "\/phones-tablets" \}/, "Phones & Tablets appears in the shared desktop and mobile navigation");
-  assert.match(headerSource, /\{ label: "Electronics", to: "\/electronics" \}/, "Electronics appears in the shared desktop and mobile navigation");
+  assert.match(headerSource, /label: "Others", children:/, "Global navigation has one Others category");
+  assert.match(headerSource, /label: "Phones & Tablets", to: "\/phones-tablets"/, "Others links to Phones & Tablets");
+  assert.match(headerSource, /label: "Electronics", to: "\/electronics"/, "Others links to Electronics");
+  assert.equal((headerSource.match(/label: "Phones & Tablets"/g) ?? []).length, 1, "Phones & Tablets is not duplicated as a standalone navigation item");
+  assert.equal((headerSource.match(/label: "Electronics"/g) ?? []).length, 1, "Electronics is not duplicated as a standalone navigation item");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
   const showcaseSlugs = ["iphone-16", "iphone-16-plus", "iphone-16-pro", "iphone-16-pro-max", "iphone-17", "iphone-17-pro", "iphone-17-pro-max"];

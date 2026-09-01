@@ -1,4 +1,4 @@
-import { Cable, ChevronRight, Smartphone, Tablet } from "lucide-react";
+import { Cable, ChevronRight, Smartphone, Tablet, Watch } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -18,9 +18,9 @@ import "../styles/phones-tablets.css";
 
 const categoryIcons = {
   "mobile-phones": Smartphone,
+  "phone-tablet-accessories": Cable,
+  "smart-watches": Watch,
   tablets: Tablet,
-  "phone-accessories": Cable,
-  "tablet-accessories": Cable,
 } as const;
 
 export function MobilePhonesPage() {
@@ -31,25 +31,23 @@ export function MobilePhonesPage() {
   const primaryBrands = useMemo(() => getPrimaryPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
   const otherBrands = useMemo(() => getOtherPhoneTabletBrands(marketplaceProducts), [marketplaceProducts]);
   const showOtherBrands = params.get("view") === "others" && !selectedBrand && otherBrands.length > 0;
-  const availableCategories = useMemo(() => (Object.keys(phoneTabletCategoryLabels) as PhoneTabletCategoryKey[]).filter((key) => marketplaceProducts.some((product) => getPhoneTabletCategory(product) === key)), [marketplaceProducts]);
+  const availableCategories = Object.keys(phoneTabletCategoryLabels) as PhoneTabletCategoryKey[];
 
   return (
     <div className="phones-tablets-page">
-      <SEO title="Phones & Tablets in Ghana" description="Find phones and tablets across brands, including iPhone and iPad. Compare prices, conditions and storage at Buy & Sell GH." />
+      <SEO title="Phones & Tablets Marketplace in Ghana" description="Browse marketplace listings for mobile phones, phone and tablet accessories, smart watches and tablets at Buy & Sell GH." />
       <section className="marketplace-page-hero">
         <p className="eyebrow-dark">Phones &amp; Tablets</p>
-        <h1>Find your next phone or tablet.</h1>
-        <p>Explore devices across brands. Compare conditions, storage and prices, with local support from Buy &amp; Sell GH in Accra.</p>
+        <h1>Phones &amp; Tablets marketplace.</h1>
+        <p>Browse mobile phones, accessories, smart watches and tablets listed in the Buy &amp; Sell GH marketplace.</p>
       </section>
 
-      {availableCategories.length > 0 && (
-        <section className="marketplace-navigation" aria-labelledby="phone-tablet-categories-title">
+      <section className="marketplace-navigation" aria-labelledby="phone-tablet-categories-title">
           <div className="marketplace-section-heading"><div><p className="eyebrow-dark">Categories</p><h2 id="phone-tablet-categories-title">Browse phones and tablets.</h2></div></div>
           <div className="marketplace-category-rail">
             {availableCategories.map((category) => <MarketplaceCategoryCard category={category} products={marketplaceProducts} key={category} />)}
           </div>
-        </section>
-      )}
+      </section>
 
       {(primaryBrands.length > 0 || otherBrands.length > 0) && (
         <section className="marketplace-navigation" aria-labelledby="phone-tablet-brands-title">
@@ -80,7 +78,7 @@ export function MobilePhonesPage() {
           getCategory={getPhoneTabletCategory}
           loading={loading}
           error={error}
-          emptyTitle="No phones or tablets available right now."
+          emptyTitle="No marketplace listings are available in this category yet."
           onRetry={() => void refreshProducts()}
         />
       )}

@@ -62,12 +62,12 @@ export function testMarketplace({ product, productEditor, repository, catalogueD
   assert.equal(primaryBrands.length, 5, "Brand shortcuts remain bounded");
   assert.ok(otherBrands.every((brand) => !primaryBrands.includes(brand)), "Others contains only additional brands");
   assert.equal(discovery.getPhoneTabletBrands([{ ...samsung, available: false, brand: "Hidden Brand" }]).length, 0, "Unpublished brands do not leak into navigation");
-  assert.equal(discovery.getPhoneTabletCategory({ ...apple, category: "iPhones" }), "mobile-phones", "Legacy iPhone category remains supported");
-  assert.equal(discovery.getPhoneTabletCategory({ ...apple, category: "iPads" }), "tablets", "Legacy iPad category remains supported");
-  assert.equal(storefrontTaxonomy.getStorefrontCategory(apple), "Phones", "New marketplace phones also appear in Store phone filters");
-  assert.equal(storefrontTaxonomy.getStorefrontCategory(tablet), "Tablets", "New marketplace tablets also appear in Store tablet filters");
-  assert.ok(productPresentation.productMatchesCategorySlug(apple, "iphones"), "An Apple marketplace phone remains on the dedicated iPhone page");
-  assert.ok(productPresentation.productMatchesCategorySlug({ ...tablet, brand: "Apple" }, "ipads"), "An Apple marketplace tablet remains on the dedicated iPad page");
+  assert.equal(discovery.getPhoneTabletCategory({ ...apple, category: "iPhones" }), undefined, "Store iPhones never fall back into the marketplace");
+  assert.equal(discovery.getPhoneTabletCategory({ ...apple, category: "iPads" }), undefined, "Store iPads never fall back into the marketplace");
+  assert.equal(storefrontTaxonomy.getStorefrontCategory(apple), undefined, "Marketplace phones stay out of Store filters");
+  assert.equal(storefrontTaxonomy.getStorefrontCategory(tablet), undefined, "Marketplace tablets stay out of Store filters");
+  assert.equal(productPresentation.productMatchesCategorySlug(apple, "iphones"), false, "An Apple marketplace listing stays off the dedicated iPhone page");
+  assert.equal(productPresentation.productMatchesCategorySlug({ ...tablet, brand: "Apple" }, "ipads"), false, "An Apple marketplace listing stays off the dedicated iPad page");
   assert.equal(productPresentation.productMatchesCategorySlug(samsung, "iphones"), false, "Non-Apple phones do not leak into the dedicated iPhone page");
   assert.equal(discovery.getPhoneTabletProducts([{ ...samsung, category: "Electronics", subcategory: "Laptops & Computers" }]).length, 0, "Unrelated Electronics inventory stays out of phone results");
   assert.deepEqual(marketplace.marketplaceOptions(["Samsung", " samsung ", "Tecno"]), ["Samsung", "Tecno"], "Filter options use the same deduplication discipline");

@@ -4,7 +4,6 @@ import audioImage from "../assets/categories/audio-premium.webp";
 import gameConsolesImage from "../assets/categories/game-consoles-premium.webp";
 import tvVideoImage from "../assets/categories/tv-video-equipment-premium.png";
 import laptopsImage from "../assets/homepage/homepage-laptop-tablet-story.jpg";
-import otherElectronicsImage from "../assets/homepage/sticker-collage/camera.webp";
 import {
   electronicsCategoryLabels,
   getElectronicsBrands,
@@ -17,11 +16,10 @@ import { MarketplaceCatalogue } from "../components/MarketplaceCatalogue";
 import { SEO } from "../components/SEO";
 
 const categoryCards: Array<{ key: ElectronicsCategoryKey; description: string; image: string }> = [
-  { key: "laptops-computers", description: "Non-Apple laptops, desktops and computing equipment.", image: laptopsImage },
+  { key: "laptops-computers", description: "Laptops, desktops and computing equipment.", image: laptopsImage },
   { key: "tv-video-equipment", description: "Televisions, displays and video equipment.", image: tvVideoImage },
-  { key: "video-games-consoles", description: "Consoles, controllers and gaming hardware.", image: gameConsolesImage },
-  { key: "audio-equipment", description: "Speakers, headphones and home audio equipment.", image: audioImage },
-  { key: "other-electronics", description: "Other electronic products published by the owner.", image: otherElectronicsImage },
+  { key: "video-game-consoles", description: "Consoles, controllers and gaming hardware.", image: gameConsolesImage },
+  { key: "audio-music-equipment", description: "Speakers, headphones and music equipment.", image: audioImage },
 ];
 
 export function ElectronicsPage() {
@@ -31,11 +29,11 @@ export function ElectronicsPage() {
 
   return (
     <>
-      <SEO title="Electronics in Ghana" description="Browse real non-Apple electronics published by Buy & Sell GH, including computers, TV equipment, gaming and audio products." />
+      <SEO title="Electronics Marketplace in Ghana" description="Browse marketplace listings for computers, TV and video equipment, game consoles, audio and music equipment at Buy & Sell GH." />
       <section className="marketplace-page-hero">
         <p className="eyebrow-dark">Electronics</p>
         <h1>Electronics for work, home and play.</h1>
-        <p>Browse real inventory published by Buy &amp; Sell GH. Apple storefront products stay in their dedicated Mac, iPhone, iPad, Watch and AirPods sections.</p>
+        <p>Browse laptops and computers, TV and video equipment, game consoles, and audio and music equipment listed in the marketplace.</p>
         <span>{products.length} published {products.length === 1 ? "product" : "products"} across {brandCount} {brandCount === 1 ? "brand" : "brands"}</span>
       </section>
 
@@ -60,7 +58,7 @@ export function ElectronicsPage() {
         getCategory={getElectronicsCategory}
         loading={loading}
         error={error}
-        emptyTitle="No non-Apple electronics are available yet."
+        emptyTitle="No marketplace listings are available in this category yet."
         onRetry={() => void refreshProducts()}
       />
     </>

@@ -1,4 +1,4 @@
-import { Menu, MessageCircle, Search, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, Menu, MessageCircle, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -7,15 +7,21 @@ import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
 import { WhatsAppButton } from "./WhatsAppButton";
 
-const navItems = [
+type HeaderNavItem =
+  | { label: string; to: string; children?: never }
+  | { label: string; children: Array<{ label: string; to: string }>; to?: never };
+
+const navItems: HeaderNavItem[] = [
   { label: "Store", to: "/shop" },
   { label: "iPhone", to: "/iphones" },
   { label: "iPad", to: "/ipads" },
   { label: "Mac", to: "/macbooks" },
   { label: "Watch", to: "/apple-watch" },
   { label: "AirPods", to: "/airpods" },
-  { label: "Phones & Tablets", to: "/phones-tablets" },
-  { label: "Electronics", to: "/electronics" },
+  { label: "Others", children: [
+    { label: "Phones & Tablets", to: "/phones-tablets" },
+    { label: "Electronics", to: "/electronics" },
+  ] },
   { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
   { label: "Pre-order", to: "/pre-order" },
@@ -81,6 +87,20 @@ export function Header() {
         <Logo />
         <nav className="hidden items-center gap-1 2xl:gap-2 xl:flex" aria-label="Main navigation">
           {navItems.map((item) => {
+            if (item.children) {
+              const active = item.children.some((child) => isNavItemActive(child.to));
+              return (
+                <details className={`site-nav-dropdown ${active ? "is-active" : ""}`} key={item.label}>
+                  <summary className={linkClass(active)}>{item.label}<ChevronDown size={14} aria-hidden="true" /></summary>
+                  <div className="site-nav-dropdown-menu">
+                    {item.children.map((child) => {
+                      const childActive = isNavItemActive(child.to);
+                      return <Link key={child.to} to={child.to} className={childActive ? "is-active" : ""} aria-current={childActive ? "page" : undefined}>{child.label}</Link>;
+                    })}
+                  </div>
+                </details>
+              );
+            }
             const active = isNavItemActive(item.to);
             return (
               <Link key={item.to} to={item.to} className={linkClass(active)} aria-current={active ? "page" : undefined}>
@@ -164,6 +184,20 @@ function MobileMenuOverlay({
         </div>
         <nav className="mobile-menu-nav" aria-label="Mobile navigation">
           {navItems.map((item) => {
+            if (item.children) {
+              const active = item.children.some((child) => isNavItemActive(child.to));
+              return (
+                <details className="mobile-menu-group" key={item.label} open={active || undefined}>
+                  <summary className={`mobile-menu-link ${active ? "is-active" : ""}`}>{item.label}<ChevronDown size={18} aria-hidden="true" /></summary>
+                  <div className="mobile-menu-subnav">
+                    {item.children.map((child) => {
+                      const childActive = isNavItemActive(child.to);
+                      return <Link key={child.to} to={child.to} className={`mobile-menu-sublink ${childActive ? "is-active" : ""}`} aria-current={childActive ? "page" : undefined} onClick={onClose}>{child.label}</Link>;
+                    })}
+                  </div>
+                </details>
+              );
+            }
             const active = isNavItemActive(item.to);
             return (
               <Link key={item.to} to={item.to} className={`mobile-menu-link ${active ? "is-active" : ""}`} aria-current={active ? "page" : undefined} onClick={onClose}>

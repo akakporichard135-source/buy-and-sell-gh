@@ -2,27 +2,25 @@ import type { Product } from "../types/product";
 
 const primaryBrandLimit = 5;
 
-export type PhoneTabletCategoryKey = "mobile-phones" | "tablets" | "phone-accessories" | "tablet-accessories";
+export type PhoneTabletCategoryKey = "mobile-phones" | "phone-tablet-accessories" | "smart-watches" | "tablets";
 export type ElectronicsCategoryKey =
   | "laptops-computers"
   | "tv-video-equipment"
-  | "video-games-consoles"
-  | "audio-equipment"
-  | "other-electronics";
+  | "video-game-consoles"
+  | "audio-music-equipment";
 
 export const phoneTabletCategoryLabels: Record<PhoneTabletCategoryKey, string> = {
-  "mobile-phones": "Phones",
+  "mobile-phones": "Mobile Phones",
+  "phone-tablet-accessories": "Accessories for Phones & Tablets",
+  "smart-watches": "Smart Watches",
   tablets: "Tablets",
-  "phone-accessories": "Phone Accessories",
-  "tablet-accessories": "Tablet Accessories",
 };
 
 export const electronicsCategoryLabels: Record<ElectronicsCategoryKey, string> = {
   "laptops-computers": "Laptops & Computers",
   "tv-video-equipment": "TV & Video Equipment",
-  "video-games-consoles": "Video Games & Consoles",
-  "audio-equipment": "Audio Equipment",
-  "other-electronics": "Other Electronics",
+  "video-game-consoles": "Video Game Consoles",
+  "audio-music-equipment": "Audio & Music Equipment",
 };
 
 const appleOnlyCategories = new Set(["iphones", "ipads", "macbooks", "apple watches", "airpods"]);
@@ -30,6 +28,7 @@ const normalize = (value?: string) => value?.trim().toLowerCase().replace(/[^a-z
 const normalizeBrand = (value: string) => value.trim().toLowerCase();
 
 export function isAppleCatalogueProduct(product: Pick<Product, "brand" | "category">) {
+  if (["phones tablets", "electronics"].includes(normalize(product.category))) return false;
   return normalize(product.brand) === "apple" || appleOnlyCategories.has(normalize(product.category));
 }
 
@@ -37,19 +36,11 @@ export function getPhoneTabletCategory(product: Pick<Product, "brand" | "categor
   const category = normalize(product.category);
   const subcategory = normalize(product.subcategory);
 
-  if (["iphones", "iphone", "mobile phones", "mobile phone", "phones", "smartphones", "smartphone"].includes(category)) {
-    return "mobile-phones";
-  }
-  if (["ipads", "ipad", "tablets", "tablet"].includes(category)) return "tablets";
-  if (subcategory === "phone accessories" || subcategory === "mobile phone accessories") return "phone-accessories";
-  if (subcategory === "tablet accessories") return "tablet-accessories";
+  if (category !== "phones tablets") return undefined;
   if (["iphones", "iphone", "phones", "mobile phones", "mobile phone", "smartphones", "smartphone"].includes(subcategory)) return "mobile-phones";
   if (["ipads", "ipad", "tablets", "tablet"].includes(subcategory)) return "tablets";
-  if (category === "phones tablets") {
-    if (subcategory.includes("tablet")) return subcategory.includes("accessor") ? "tablet-accessories" : "tablets";
-    if (subcategory.includes("accessor")) return "phone-accessories";
-    return "mobile-phones";
-  }
+  if (["smart watches", "smart watch", "smartwatches", "smartwatch", "wearables", "wearable"].includes(subcategory)) return "smart-watches";
+  if (["accessories for phones tablets", "phone tablet accessories", "phone accessories", "mobile phone accessories", "tablet accessories"].includes(subcategory)) return "phone-tablet-accessories";
   return undefined;
 }
 
@@ -108,15 +99,14 @@ export function getOtherMobilePhoneBrands(products: Product[]) {
 }
 
 export function getElectronicsCategory(product: Pick<Product, "brand" | "category" | "subcategory">): ElectronicsCategoryKey | undefined {
-  if (isAppleCatalogueProduct(product)) return undefined;
   const category = normalize(product.category);
   const subcategory = normalize(product.subcategory);
 
-  if (["laptops computers", "laptop computers", "desktop computers", "computers"].includes(subcategory) || ["laptops", "computers"].includes(category)) return "laptops-computers";
+  if (category !== "electronics") return undefined;
+  if (["laptops computers", "laptop computers", "desktop computers", "computers"].includes(subcategory)) return "laptops-computers";
   if (["tv video equipment", "televisions", "tv displays", "video equipment"].includes(subcategory)) return "tv-video-equipment";
-  if (["video games consoles", "gaming consoles", "games consoles"].includes(subcategory) || category === "game consoles") return "video-games-consoles";
-  if (["audio equipment", "speakers", "headphones"].includes(subcategory) || category === "audio") return "audio-equipment";
-  if (category === "electronics") return "other-electronics";
+  if (["video game consoles", "video games consoles", "gaming consoles", "games consoles"].includes(subcategory)) return "video-game-consoles";
+  if (["audio music equipment", "audio equipment", "speakers", "headphones"].includes(subcategory)) return "audio-music-equipment";
   return undefined;
 }
 
