@@ -1,0 +1,81 @@
+.catalogue-white-page {
+  min-height: 100%;
+  background: #ffffff;
+  color: #1d1d1f;
+}
+
+.catalogue-white-page .category-page-hero,
+.catalogue-white-page .category-results-section {
+  background: #ffffff;
+}
+
+.catalogue-white-page .category-trust-panel {
+  border-color: #e2e2e5;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.catalogue-white-page .category-trust-panel span {
+  border: 1px solid #ececef;
+  background: #ffffff;
+}
+
+.catalogue-white-page .choice-label select {
+  border-color: #d7d7db;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.catalogue-white-page .choice-label select:focus-visible {
+  border-color: #b18416;
+  outline: 2px solid rgb(224 172 34 / 24%);
+  outline-offset: 2px;
+}
+
+.catalogue-white-page .product-card {
+  border: 1px solid #e2e2e5 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.catalogue-white-page .product-card:hover,
+.catalogue-white-page .product-card:focus-within {
+  border-color: #c8c8cc !important;
+  box-shadow: 0 12px 28px rgb(29 29 31 / 7%) !important;
+}
+
+.catalogue-white-page .product-card .product-visual {
+  border: 1px solid #ededf0;
+  background: #ffffff !important;
+  background-image: none !important;
+  box-shadow: none;
+}
+
+.catalogue-white-page .product-card .product-visual::before,
+.catalogue-white-page .product-card .product-visual::after {
+  display: none;
+}
+
+.catalogue-white-page .product-card .product-visual > .absolute {
+  display: none;
+}
+
+.catalogue-white-page .product-image-frame .product-render-image {
+  -webkit-mask-image: radial-gradient(ellipse 94% 90% at center, #000 60%, rgb(0 0 0 / 92%) 74%, transparent 100%);
+  mask-image: radial-gradient(ellipse 94% 90% at center, #000 60%, rgb(0 0 0 / 92%) 74%, transparent 100%);
+}
+
+.catalogue-white-page .product-card-heading,
+.catalogue-white-page .product-card-actions {
+  border-color: #ededf0;
+}
+
+.catalogue-white-page .product-card-price-row p {
+  color: #1d1d1f;
+}
+
+.catalogue-white-page .product-grid-empty {
+  border-color: #e2e2e5;
+  background: #ffffff;
+  box-shadow: none;
+}

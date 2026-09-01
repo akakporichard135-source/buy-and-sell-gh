@@ -5,6 +5,7 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
+import "../styles/catalogue-white.css";
 import {
   airpodsFamilyOptions,
   airpodsGenerationOptions,
@@ -73,6 +74,16 @@ const categoryCopy: Record<string, { title: string; eyebrow: string; description
   },
 };
 
+const whiteCatalogueSlugs = new Set([
+  "iphones",
+  "ipads",
+  "macbooks",
+  "apple-watch",
+  "airpods",
+  "accessories",
+  "uk-used-devices",
+]);
+
 export function CategoryPage() {
   const { categorySlug = "" } = useParams();
   const [searchParams] = useSearchParams();
@@ -112,7 +123,7 @@ export function CategoryPage() {
   }
 
   return (
-    <>
+    <div className={whiteCatalogueSlugs.has(categorySlug) ? "catalogue-white-page" : undefined}>
       <SEO title={`${copy.eyebrow} in Ghana`} description={`${copy.description} Buy & Sell GH confirms availability, price and delivery details before payment.`} />
       <section className="category-page-hero">
         <div>
@@ -211,6 +222,6 @@ export function CategoryPage() {
           <ProductGrid products={products} />
         )}
       </section>
-    </>
+    </div>
   );
 }
