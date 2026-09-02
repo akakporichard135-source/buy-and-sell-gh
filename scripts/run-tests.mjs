@@ -264,7 +264,7 @@ try {
   assert.equal((headerSource.match(/label: "Electronics"/g) ?? []).length, 1, "Electronics is not duplicated as a standalone navigation item");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
-  const showcaseSlugs = ["iphone-16", "iphone-16-plus", "iphone-16-pro", "iphone-16-pro-max", "iphone-17", "iphone-17-pro", "iphone-17-pro-max"];
+  const showcaseSlugs = ["iphone-16", "iphone-16-plus", "iphone-16-pro", "iphone-16-pro-max", "iphone-17", "iphone-17-pro", "iphone-air", "iphone-17-pro-max"];
   assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes(showcaseSlugs.slice().reverse().map((slug) => ({ slug }))).map((scene) => scene.slug), showcaseSlugs, "Cinematic iPhones stay in generation order and end on 17 Pro Max");
   assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes([{ slug: "iphone-16-pro" }, { slug: "apple-watch" }, { slug: "iphone-18" }]).map((scene) => scene.slug), ["iphone-16-pro"], "Showcase uses only supported models present in the active catalogue");
   assert.equal(iphoneShowcase.getIphoneShowcaseScenes([]).length, 0, "Empty catalogue does not invent showcase models");

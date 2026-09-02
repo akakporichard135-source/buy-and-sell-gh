@@ -1,13 +1,14 @@
 import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "../types/product";
-import iphone16 from "../assets/products/iphone-16-premium.webp";
-import iphone16Plus from "../assets/products/iphone-16-plus-premium.webp";
-import iphone16Pro from "../assets/products/iphone-16-pro-premium.webp";
-import iphone16ProMax from "../assets/products/iphone-16-pro-max-premium.webp";
-import iphone17 from "../assets/products/iphone-17-premium.webp";
-import iphone17Pro from "../assets/products/iphone-17-pro-premium.webp";
-import iphone17ProMax from "../assets/products/iphone-17-pro-max-premium.webp";
+import iphone16 from "../assets/catalogue-products/iphone-16-premium.webp";
+import iphone16Plus from "../assets/catalogue-products/iphone-16-plus-premium.webp";
+import iphone16Pro from "../assets/catalogue-products/iphone-16-pro-premium.webp";
+import iphone16ProMax from "../assets/catalogue-products/iphone-16-pro-max-premium.webp";
+import iphone17 from "../assets/catalogue-products/iphone-17-premium.webp";
+import iphone17Pro from "../assets/catalogue-products/iphone-17-pro-premium.webp";
+import iphone17ProMax from "../assets/catalogue-products/iphone-17-pro-max-premium.webp";
+import iphoneAir from "../assets/catalogue-products/iphone-air-premium.webp";
 
 const approvedScenes = [
   { slug: "iphone-16", name: "iPhone 16", image: iphone16 },
@@ -16,6 +17,7 @@ const approvedScenes = [
   { slug: "iphone-16-pro-max", name: "iPhone 16 Pro Max", image: iphone16ProMax },
   { slug: "iphone-17", name: "iPhone 17", image: iphone17 },
   { slug: "iphone-17-pro", name: "iPhone 17 Pro", image: iphone17Pro },
+  { slug: "iphone-air", name: "iPhone Air", image: iphoneAir },
   { slug: "iphone-17-pro-max", name: "iPhone 17 Pro Max", image: iphone17ProMax },
 ];
 
@@ -24,13 +26,13 @@ export function getIphoneShowcaseScenes(products: Pick<Product, "slug">[]) {
   return approvedScenes.filter((scene) => slugs.has(scene.slug));
 }
 
-export function IphoneCinematicShowcase({ products }: { products: Product[] }) {
+export function IphoneCinematicShowcase({ products, priority = false }: { products: Product[]; priority?: boolean }) {
   const scenes = useMemo(() => getIphoneShowcaseScenes(products), [products]);
   if (!scenes.length) return null;
-  return <IphoneSequence key={scenes.map((scene) => scene.slug).join(",")} scenes={scenes} />;
+  return <IphoneSequence key={scenes.map((scene) => scene.slug).join(",")} scenes={scenes} priority={priority} />;
 }
 
-function IphoneSequence({ scenes }: { scenes: typeof approvedScenes }) {
+function IphoneSequence({ scenes, priority }: { scenes: typeof approvedScenes; priority: boolean }) {
   const sectionRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(0);
   const [furthest, setFurthest] = useState(0);
@@ -79,10 +81,11 @@ function IphoneSequence({ scenes }: { scenes: typeof approvedScenes }) {
 
   return (
     <section ref={sectionRef} className={`iphone-showcase${playing ? " is-playing" : ""}`} aria-label="iPhone cinematic showcase" aria-roledescription="carousel">
+      <h1 className="iphone-showcase-title">Latest iPhone</h1>
       {scenes.map((scene, index) => (
-        <figure className={`iphone-showcase-scene${index === active ? " is-active" : ""}${scene.slug === "iphone-17-pro-max" ? " is-finale" : ""}`} aria-hidden={index !== active} key={scene.slug}>
+        <figure className={`iphone-showcase-scene iphone-showcase-scene-${scene.slug}${index === active ? " is-active" : ""}${scene.slug === "iphone-17-pro-max" ? " is-finale" : ""}`} aria-hidden={index !== active} key={scene.slug}>
           {(index === 0 || (inView && (reducedMotion || paused || index <= furthest + 1))) && (
-            <img src={scene.image} alt={`${scene.name} in a studio product scene`} loading={inView ? "eager" : "lazy"} decoding="async" onLoad={async (event) => {
+            <img src={scene.image} alt={`${scene.name} in a studio product scene`} loading={priority && index === 0 ? "eager" : "lazy"} decoding="async" fetchPriority={priority && index === 0 ? "high" : "auto"} onLoad={async (event) => {
               await event.currentTarget.decode().catch(() => undefined);
               setReady((value) => value[scene.slug] ? value : { ...value, [scene.slug]: true });
             }} />

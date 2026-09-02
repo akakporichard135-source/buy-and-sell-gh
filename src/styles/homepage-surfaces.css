@@ -245,14 +245,29 @@
   }
 }
 
-/* The source photographs fill the whole cinematic surface, never a nested media card. */
+/* The opening showcase uses a seamless white studio surface, never a nested media card. */
 .storefront-home .iphone-showcase {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  min-height: clamp(470px, 49vw, 700px);
+  aspect-ratio: 16 / 8;
   overflow: hidden;
   isolation: isolate;
-  background: #fff;
+  background:
+    radial-gradient(ellipse 45% 58% at 50% 63%, rgba(215, 169, 49, 0.12), transparent 72%),
+    linear-gradient(180deg, #fff 0%, #fdfdfc 72%, #fff 100%);
+}
+
+.iphone-showcase-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .iphone-showcase-scene {
@@ -269,15 +284,15 @@
   z-index: 1;
 }
 
-/* Feather only the scene perimeter; preserve the gold-lit product composition. */
+/* Feather only the scene perimeter so it dissolves into the white hero surface. */
 .iphone-showcase-scene::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.6) 2%, transparent 8%, transparent 90%, rgba(255, 255, 255, 0.6) 98%, #fff 100%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.45), transparent 9%, transparent 91%, rgba(255, 255, 255, 0.45));
+    linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.64) 3%, transparent 14%, transparent 86%, rgba(255, 255, 255, 0.68) 98%, #fff 100%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.64), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.64));
 }
 
 .iphone-showcase-scene img {
@@ -286,7 +301,9 @@
   height: 100%;
   object-fit: cover;
   object-position: 50% 50%;
+  --iphone-scene-scale: 1;
   transform: scale(1);
+  will-change: transform, opacity;
 }
 
 .iphone-showcase-scene.is-active img {
@@ -296,6 +313,14 @@
 .iphone-showcase-scene.is-finale img {
   object-position: 50% 52%;
 }
+
+.iphone-showcase-scene-iphone-16 img { object-position: 47% 52%; }
+.iphone-showcase-scene-iphone-16-plus img { object-position: 54% 51%; }
+.iphone-showcase-scene-iphone-16-pro img { --iphone-scene-scale: 1.08; object-position: 48% 48%; }
+.iphone-showcase-scene-iphone-16-pro-max img { --iphone-scene-scale: 1.08; object-position: 52% 58%; }
+.iphone-showcase-scene-iphone-17 img { object-position: 48% 54%; }
+.iphone-showcase-scene-iphone-17-pro img { object-position: 53% 50%; }
+.iphone-showcase-scene-iphone-air img { --iphone-scene-scale: 1.04; object-position: 52% 53%; }
 
 .iphone-showcase:not(.is-playing) .iphone-showcase-scene img {
   animation-play-state: paused;
@@ -364,8 +389,9 @@
 .iphone-showcase-controls button:focus-visible { outline: 2px solid #a77908; outline-offset: 2px; }
 
 @keyframes iphone-campaign-camera {
-  from { transform: scale(1); }
-  to { transform: scale(1.025); }
+  from { transform: scale(var(--iphone-scene-scale, 1)) translate3d(0, 1.25%, 0); }
+  52% { transform: scale(calc(var(--iphone-scene-scale, 1) + 0.018)) translate3d(0, 0, 0); }
+  to { transform: scale(calc(var(--iphone-scene-scale, 1) + 0.03)) translate3d(0, -0.75%, 0); }
 }
 
 @media (max-width: 768px) {
@@ -376,7 +402,10 @@
     margin-top: 1rem;
   }
 
-  .storefront-home .iphone-showcase { aspect-ratio: 1 / 1; }
+  .storefront-home .iphone-showcase {
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+  }
   .iphone-showcase-scene figcaption { top: 1rem; font-size: 0.875rem; }
   .iphone-showcase-controls { bottom: 0.5rem; gap: 0.25rem; }
   .iphone-showcase-dots button { width: 28px; }

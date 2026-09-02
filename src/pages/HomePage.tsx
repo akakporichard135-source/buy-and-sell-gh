@@ -10,7 +10,6 @@ import { NewMacLaunchCampaign } from "../components/NewMacLaunchCampaign";
 import { IphoneCinematicShowcase } from "../components/IphoneCinematicShowcase";
 import "../styles/homepage-surfaces.css";
 import macMiniWhiteArtwork from "../assets/homepage/homepage-mac-mini-white.webp";
-import topBrandArtwork from "../assets/brand/buy-sell-gh-logo-owner.jpeg";
 import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-white.webp";
 import iphone17CutoutLeft from "../assets/homepage/iphone-17-cutout-left.webp";
 import iphone17ProMaxCutoutCenter from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
@@ -178,9 +177,10 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <NewMacLaunchCampaign brandArtwork={topBrandArtwork} launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} priority />
-        <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
+        <IphoneCinematicShowcase products={activeProducts} priority />
         <ProductLaunch campaign={latestIphoneCampaign} priority />
+        <NewMacLaunchCampaign launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} />
+        <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
 
         {(featuredMacbookAirCampaign || featuredMacbookProCampaign) && (
           <section className="store-feature-grid store-macbook-grid" aria-label="Featured MacBook lineup">
@@ -193,8 +193,6 @@ export function HomePage() {
           {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
           <VisaTradingTile />
         </section>
-
-        <IphoneCinematicShowcase products={activeProducts} />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
