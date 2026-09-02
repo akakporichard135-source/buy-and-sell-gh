@@ -8,7 +8,7 @@ import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productB
 import { productWhatsAppUrl } from "../utils/whatsapp";
 import { ProductVisual } from "./ProductVisual";
 
-export function ProductCard({ product, variant = "default" }: { product: Product; variant?: "default" | "compact" }) {
+export function ProductCard({ product, variant = "default", imageVariant = "default" }: { product: Product; variant?: "default" | "compact"; imageVariant?: "default" | "catalogue" }) {
   const { addItem } = useCart();
   const storage = product.storage[0];
   const color = product.colors[0];
@@ -38,7 +38,7 @@ export function ProductCard({ product, variant = "default" }: { product: Product
 
   return (
     <article className={`product-card ${isCompact ? "compact-product-card" : ""} group flex h-full min-w-0 flex-col rounded-lg border border-black/7 bg-white p-3 shadow-card transition hover:-translate-y-1 hover:shadow-xl`}>
-      <ProductVisual product={product} />
+      <ProductVisual product={product} imageVariant={imageVariant} />
       <div className="product-card-body">
         <div className="product-card-badges">
           {badges.map((badge) => (

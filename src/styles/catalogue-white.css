@@ -60,11 +60,6 @@
   display: none;
 }
 
-.catalogue-white-page .product-image-frame .product-render-image {
-  -webkit-mask-image: radial-gradient(ellipse 94% 90% at center, #000 60%, rgb(0 0 0 / 92%) 74%, transparent 100%);
-  mask-image: radial-gradient(ellipse 94% 90% at center, #000 60%, rgb(0 0 0 / 92%) 74%, transparent 100%);
-}
-
 .catalogue-white-page .product-card-heading,
 .catalogue-white-page .product-card-actions {
   border-color: #ededf0;

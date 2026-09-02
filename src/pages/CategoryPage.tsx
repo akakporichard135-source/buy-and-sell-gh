@@ -86,6 +86,7 @@ const whiteCatalogueSlugs = new Set([
 
 export function CategoryPage() {
   const { categorySlug = "" } = useParams();
+  const usesWhiteCatalogue = whiteCatalogueSlugs.has(categorySlug);
   const [searchParams] = useSearchParams();
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const [generation, setGeneration] = useState("All");
@@ -123,7 +124,7 @@ export function CategoryPage() {
   }
 
   return (
-    <div className={whiteCatalogueSlugs.has(categorySlug) ? "catalogue-white-page" : undefined}>
+    <div className={usesWhiteCatalogue ? "catalogue-white-page" : undefined}>
       <SEO title={`${copy.eyebrow} in Ghana`} description={`${copy.description} Buy & Sell GH confirms availability, price and delivery details before payment.`} />
       <section className="category-page-hero">
         <div>
@@ -219,7 +220,7 @@ export function CategoryPage() {
             <button className="btn-secondary mt-4" type="button" onClick={() => void refreshProducts()}>Retry</button>
           </div>
         ) : (
-          <ProductGrid products={products} />
+          <ProductGrid products={products} imageVariant={usesWhiteCatalogue ? "catalogue" : "default"} />
         )}
       </section>
     </div>

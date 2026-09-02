@@ -2,7 +2,7 @@ import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
 import { ProductCard } from "./ProductCard";
 
-export function ProductGrid({ products, variant = "default", className = "" }: { products: Product[]; variant?: "default" | "compact"; className?: string }) {
+export function ProductGrid({ products, variant = "default", className = "", imageVariant = "default" }: { products: Product[]; variant?: "default" | "compact"; className?: string; imageVariant?: "default" | "catalogue" }) {
   if (!products.length) {
     return (
       <div className="rounded-lg border border-black/7 bg-white p-8 text-center text-ink/70">
@@ -19,7 +19,7 @@ export function ProductGrid({ products, variant = "default", className = "" }: {
   return (
     <div className={`product-grid ${className}`}>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} variant={variant} />
+        <ProductCard key={product.id} product={product} variant={variant} imageVariant={imageVariant} />
       ))}
     </div>
   );

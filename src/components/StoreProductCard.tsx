@@ -19,7 +19,7 @@ export function StoreProductCard({ product }: { product: Product }) {
   return (
     <article className="store-product-card" aria-label={product.name}>
       <Link className="store-product-art" to={`/product/${product.slug}`} aria-label={`View ${product.name}`} tabIndex={-1}>
-        <ProductVisual product={product} />
+        <ProductVisual product={product} imageVariant="catalogue" />
       </Link>
       <div className="store-product-body">
         <h2 title={product.name}><Link to={`/product/${product.slug}`}>{product.name}</Link></h2>

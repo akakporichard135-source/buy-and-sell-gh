@@ -1,9 +1,9 @@
 import { ImageOff } from "lucide-react";
 import type { Product } from "../types/product";
-import { requiresRealProductPhotos, resolveProductImage } from "../utils/productImages";
+import { requiresRealProductPhotos, resolveCatalogueProductImage, resolveProductImage } from "../utils/productImages";
 
-export function ProductVisual({ product, size = "card", priority = false }: { product: Product; size?: "card" | "large"; priority?: boolean }) {
-  const image = resolveProductImage(product);
+export function ProductVisual({ product, size = "card", priority = false, imageVariant = "default" }: { product: Product; size?: "card" | "large"; priority?: boolean; imageVariant?: "default" | "catalogue" }) {
+  const image = imageVariant === "catalogue" ? resolveCatalogueProductImage(product) : resolveProductImage(product);
   if (image) {
     return (
       <div

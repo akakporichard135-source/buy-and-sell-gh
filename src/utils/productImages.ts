@@ -112,6 +112,7 @@ import macbookPro14M5Premium from "../assets/products/macbook-pro-14-inch-m5-pre
 import macbookPro14M5ProMaxPremium from "../assets/products/macbook-pro-14-inch-m5-pro-max-premium.webp";
 import macbookPro16M5Premium from "../assets/products/macbook-pro-16-inch-m5-pro-max-premium.webp";
 import type { Product, ProductImage } from "../types/product";
+import { localCatalogueImageBySlug } from "./catalogueProductImages";
 
 const localPremiumImageBySlug: Record<string, string> = {
   "apple-20w-usb-c-power-adapter": adapter20WPremium,
@@ -294,4 +295,13 @@ export function resolveProductGallery(product: Product): ProductImage[] {
 
 export function resolveProductImage(product: Product): ProductImage | undefined {
   return resolveProductGallery(product)[0];
+}
+
+export function resolveCatalogueProductImage(product: Product): ProductImage | undefined {
+  const image = resolveProductImage(product);
+  if (!image) return undefined;
+  const localPremiumSource = localPremiumImageBySlug[product.slug];
+  if (!localPremiumSource || image.src !== localPremiumSource) return image;
+  const catalogueSource = localCatalogueImageBySlug[product.slug];
+  return catalogueSource ? { ...image, src: catalogueSource } : image;
 }
