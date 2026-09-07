@@ -1,0 +1,304 @@
+/* Final cascade for the single product-led iPhone opening. */
+.storefront-home .iphone-showcase {
+  position: relative;
+  width: 100%;
+  min-height: clamp(650px, calc(100svh - 78px), 820px);
+  aspect-ratio: auto;
+  overflow: hidden;
+  isolation: isolate;
+  color: #1d1d1f;
+  background: #fff;
+  outline: none;
+  touch-action: pan-y;
+}
+
+.iphone-showcase .iphone-showcase-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  margin: 0;
+  padding: clamp(34px, 4vw, 58px) max(16px, calc((100vw - 1440px) / 2)) clamp(38px, 4vw, 56px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(1.2%, 0, 0);
+  transition: opacity 900ms ease, transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.iphone-showcase .iphone-showcase-scene::after {
+  display: none;
+}
+
+.iphone-showcase .iphone-showcase-scene.is-active {
+  z-index: 1;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+}
+
+.iphone-showcase .iphone-showcase-copy {
+  position: relative;
+  inset: auto;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: #1d1d1f;
+  text-align: center;
+}
+
+.iphone-showcase-copy p,
+.iphone-showcase-copy h1,
+.iphone-showcase-copy span {
+  margin: 0;
+}
+
+.iphone-showcase-copy p {
+  color: #9b7200;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.iphone-showcase-copy h1 {
+  max-width: 1200px;
+  font-size: clamp(3.4rem, 6.8vw, 6.75rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.iphone-showcase-copy > span {
+  color: #6e6e73;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.iphone-showcase-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.iphone-showcase-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 21px;
+  border: 1px solid #d5a315;
+  border-radius: 999px;
+  color: #111;
+  background: #e2b122;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.iphone-showcase-actions a + a {
+  border-color: #98989d;
+  background: transparent;
+}
+
+.iphone-showcase-actions a:hover {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+.iphone-showcase-actions a:focus-visible,
+.iphone-showcase-controls button:focus-visible {
+  outline: 2px solid #9b7200;
+  outline-offset: 3px;
+}
+
+.iphone-showcase .iphone-showcase-media {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  place-items: end center;
+  margin-top: clamp(8px, 1.5vw, 20px);
+}
+
+.iphone-showcase-media::before {
+  content: "";
+  position: absolute;
+  right: 14%;
+  bottom: 1.5%;
+  left: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: rgba(20, 20, 22, 0.11);
+  filter: blur(34px);
+  transform: scaleX(0.8);
+}
+
+.iphone-showcase .iphone-showcase-media img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(96vw, 1120px);
+  height: 100%;
+  max-height: clamp(390px, 51vw, 610px);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+  transform: translate3d(0, 2.2%, 0) scale(0.985);
+  will-change: transform, opacity;
+}
+
+.iphone-showcase .iphone-showcase-scene.is-active .iphone-showcase-media img {
+  animation: iphone-product-reveal 6.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.iphone-showcase:not(.is-playing) .iphone-showcase-media img {
+  animation-play-state: paused;
+}
+
+.iphone-showcase .iphone-showcase-controls {
+  position: absolute;
+  inset: auto 18px 18px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.iphone-showcase-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.iphone-showcase-progress button,
+.iphone-showcase .iphone-showcase-toggle {
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  color: #1d1d1f;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iphone-showcase-progress button {
+  width: clamp(44px, 6vw, 68px);
+}
+
+.iphone-showcase-progress button > span {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #d2d2d7;
+}
+
+.iphone-showcase-progress button i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #1d1d1f;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.iphone-showcase-progress button[aria-pressed="true"] i {
+  transform: scaleX(1);
+}
+
+.iphone-showcase.is-progressing .iphone-showcase-progress button[aria-pressed="true"] i {
+  animation: iphone-progress 6.4s linear both;
+}
+
+.iphone-showcase .iphone-showcase-toggle {
+  width: 36px;
+  border-radius: 50%;
+  background: rgba(232, 232, 237, 0.92);
+}
+
+@keyframes iphone-product-reveal {
+  from { opacity: 0.76; transform: translate3d(0, 2.2%, 0) scale(0.985); }
+  38% { opacity: 1; }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1.012); }
+}
+
+@keyframes iphone-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (max-width: 700px) {
+  .storefront-home .iphone-showcase {
+    min-height: clamp(600px, calc(100svh - 66px), 720px);
+  }
+
+  .iphone-showcase .iphone-showcase-scene {
+    padding: 30px 14px 46px;
+  }
+
+  .iphone-showcase .iphone-showcase-copy {
+    gap: 7px;
+  }
+
+  .iphone-showcase-copy h1 {
+    max-width: 11ch;
+    font-size: clamp(2.75rem, 13vw, 4.5rem);
+    line-height: 0.98;
+  }
+
+  .iphone-showcase-copy > span {
+    max-width: 28ch;
+    font-size: 1rem;
+  }
+
+  .iphone-showcase-actions {
+    margin-top: 7px;
+  }
+
+  .iphone-showcase-actions a {
+    min-height: 42px;
+    padding: 0 17px;
+    font-size: 0.82rem;
+  }
+
+  .iphone-showcase .iphone-showcase-media {
+    margin: 3px -25% 0;
+  }
+
+  .iphone-showcase .iphone-showcase-media img {
+    width: min(150vw, 600px);
+    max-height: min(46svh, 410px);
+  }
+
+  .iphone-showcase .iphone-showcase-controls {
+    bottom: 8px;
+    gap: 4px;
+  }
+
+  .iphone-showcase-progress {
+    gap: 4px;
+  }
+
+  .iphone-showcase-progress button {
+    width: clamp(38px, 13vw, 54px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iphone-showcase .iphone-showcase-scene { transition: none; }
+  .iphone-showcase .iphone-showcase-scene.is-active .iphone-showcase-media img,
+  .iphone-showcase.is-progressing .iphone-showcase-progress button[aria-pressed="true"] i {
+    animation: none;
+  }
+}

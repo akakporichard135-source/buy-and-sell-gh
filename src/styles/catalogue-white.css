@@ -33,15 +33,19 @@
 }
 
 .catalogue-white-page .product-card {
+  overflow: hidden;
   border: 1px solid #e2e2e5 !important;
+  border-radius: 8px !important;
   background: #ffffff !important;
   box-shadow: none !important;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .catalogue-white-page .product-card:hover,
 .catalogue-white-page .product-card:focus-within {
   border-color: #c8c8cc !important;
   box-shadow: 0 12px 28px rgb(29 29 31 / 7%) !important;
+  transform: translateY(-2px);
 }
 
 .catalogue-white-page .product-card .product-visual {
@@ -73,4 +77,10 @@
   border-color: #e2e2e5;
   background: #ffffff;
   box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalogue-white-page .product-card {
+    transition: none;
+  }
 }
