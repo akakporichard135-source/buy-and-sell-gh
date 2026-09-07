@@ -2,7 +2,7 @@
 .storefront-home .iphone-showcase {
   position: relative;
   width: 100%;
-  min-height: clamp(650px, calc(100svh - 78px), 820px);
+  min-height: clamp(720px, 88svh, 940px);
   aspect-ratio: auto;
   overflow: hidden;
   isolation: isolate;
@@ -16,9 +16,10 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.18fr);
+  align-items: center;
   margin: 0;
-  padding: clamp(34px, 4vw, 58px) max(16px, calc((100vw - 1440px) / 2)) clamp(38px, 4vw, 56px);
+  padding: clamp(36px, 5vw, 72px) max(28px, calc((100vw - 1440px) / 2)) 76px;
   opacity: 0;
   pointer-events: none;
   transform: translate3d(1.2%, 0, 0);
@@ -41,10 +42,13 @@
   inset: auto;
   z-index: 2;
   display: grid;
-  justify-items: center;
-  gap: 8px;
+  width: min(100%, 580px);
+  justify-items: start;
+  justify-self: end;
+  gap: 10px;
+  padding-left: clamp(20px, 4vw, 64px);
   color: #1d1d1f;
-  text-align: center;
+  text-align: left;
 }
 
 .iphone-showcase-copy p,
@@ -63,14 +67,15 @@
 }
 
 .iphone-showcase-copy h1 {
-  max-width: 1200px;
-  font-size: clamp(3.4rem, 6.8vw, 6.75rem);
+  max-width: 8ch;
+  font-size: clamp(3.6rem, 5.6vw, 5.7rem);
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: 0;
 }
 
 .iphone-showcase-copy > span {
+  max-width: 28ch;
   color: #6e6e73;
   font-size: clamp(1.05rem, 1.6vw, 1.35rem);
   font-weight: 500;
@@ -79,22 +84,22 @@
 
 .iphone-showcase-actions {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px;
   margin-top: 10px;
 }
 
 .iphone-showcase-actions a {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 48px;
   align-items: center;
   justify-content: center;
-  padding: 0 21px;
+  padding: 0 24px;
   border: 1px solid #d5a315;
   border-radius: 999px;
   color: #111;
   background: #e2b122;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
   font-weight: 800;
   line-height: 1;
   text-decoration: none;
@@ -121,18 +126,21 @@
 .iphone-showcase .iphone-showcase-media {
   position: relative;
   display: grid;
+  width: 100%;
+  height: 100%;
   min-height: 0;
-  place-items: end center;
-  margin-top: clamp(8px, 1.5vw, 20px);
+  place-items: center;
+  margin: 0;
+  transform: translateX(-4.5%);
 }
 
 .iphone-showcase-media::before {
   content: "";
   position: absolute;
-  right: 14%;
-  bottom: 1.5%;
-  left: 14%;
-  height: 14%;
+  right: 5%;
+  bottom: 8%;
+  left: 5%;
+  height: 18%;
   border-radius: 50%;
   background: rgba(20, 20, 22, 0.11);
   filter: blur(34px);
@@ -143,14 +151,22 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: min(96vw, 1120px);
+  width: min(86vw, 1240px);
   height: 100%;
-  max-height: clamp(390px, 51vw, 610px);
+  max-width: none;
+  max-height: min(78svh, 760px);
   object-fit: contain;
   object-position: center bottom;
   mix-blend-mode: multiply;
-  transform: translate3d(0, 2.2%, 0) scale(0.985);
+  --iphone-hero-start: 1.035;
+  --iphone-hero-end: 1.075;
+  transform: translate3d(0, 1.5%, 0) scale(var(--iphone-hero-start));
   will-change: transform, opacity;
+}
+
+.iphone-showcase .iphone-showcase-scene-iphone-17-pro-max img {
+  --iphone-hero-start: 1.065;
+  --iphone-hero-end: 1.11;
 }
 
 .iphone-showcase .iphone-showcase-scene.is-active .iphone-showcase-media img {
@@ -163,12 +179,21 @@
 
 .iphone-showcase .iphone-showcase-controls {
   position: absolute;
-  inset: auto 18px 18px;
+  right: auto;
+  bottom: 16px;
+  left: 50%;
   z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 3px 6px 3px 10px;
+  border: 1px solid rgba(29, 29, 31, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 24px rgba(29, 29, 31, 0.07);
+  backdrop-filter: blur(14px) saturate(160%);
+  transform: translateX(-50%);
 }
 
 .iphone-showcase-progress {
@@ -228,9 +253,9 @@
 }
 
 @keyframes iphone-product-reveal {
-  from { opacity: 0.76; transform: translate3d(0, 2.2%, 0) scale(0.985); }
+  from { opacity: 0.76; transform: translate3d(0, 1.5%, 0) scale(var(--iphone-hero-start)); }
   38% { opacity: 1; }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1.012); }
+  to { opacity: 1; transform: translate3d(0, -0.45%, 0) scale(var(--iphone-hero-end)); }
 }
 
 @keyframes iphone-progress {
@@ -240,20 +265,28 @@
 
 @media (max-width: 700px) {
   .storefront-home .iphone-showcase {
-    min-height: clamp(600px, calc(100svh - 66px), 720px);
+    min-height: clamp(650px, 86svh, 780px);
   }
 
   .iphone-showcase .iphone-showcase-scene {
-    padding: 30px 14px 46px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+    padding: 28px 14px 70px;
   }
 
   .iphone-showcase .iphone-showcase-copy {
+    width: 100%;
+    justify-items: center;
+    justify-self: center;
     gap: 7px;
+    padding-left: 0;
+    text-align: center;
   }
 
   .iphone-showcase-copy h1 {
     max-width: 11ch;
-    font-size: clamp(2.75rem, 13vw, 4.5rem);
+    font-size: clamp(2.65rem, 12vw, 4.2rem);
     line-height: 0.98;
   }
 
@@ -263,26 +296,31 @@
   }
 
   .iphone-showcase-actions {
+    justify-content: center;
     margin-top: 7px;
   }
 
   .iphone-showcase-actions a {
-    min-height: 42px;
-    padding: 0 17px;
-    font-size: 0.82rem;
+    min-height: 46px;
+    padding: 0 20px;
+    font-size: 0.88rem;
   }
 
   .iphone-showcase .iphone-showcase-media {
-    margin: 3px -25% 0;
+    width: auto;
+    height: auto;
+    margin: 2px -30% 0;
+    place-items: end center;
+    transform: none;
   }
 
   .iphone-showcase .iphone-showcase-media img {
-    width: min(150vw, 600px);
-    max-height: min(46svh, 410px);
+    width: min(160vw, 640px);
+    max-height: min(50svh, 450px);
   }
 
   .iphone-showcase .iphone-showcase-controls {
-    bottom: 8px;
+    bottom: 12px;
     gap: 4px;
   }
 
@@ -292,6 +330,18 @@
 
   .iphone-showcase-progress button {
     width: clamp(38px, 13vw, 54px);
+  }
+}
+
+@media (max-width: 360px) {
+  .iphone-showcase .iphone-showcase-media {
+    margin-right: -20%;
+    margin-left: -20%;
+    place-items: center;
+  }
+
+  .iphone-showcase .iphone-showcase-media img {
+    width: min(138vw, 500px);
   }
 }
 

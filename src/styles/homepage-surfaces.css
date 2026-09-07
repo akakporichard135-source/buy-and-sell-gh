@@ -416,3 +416,73 @@
   .iphone-showcase-scene.is-active img,
   .storefront-home .store-product-grid .store-ipad-air-light { animation: none; }
 }
+
+/* Final premium rhythm: shared sizing without changing the approved section structure. */
+.storefront-home :where(.store-button, .new-mac-launch .store-button) {
+  min-height: 48px;
+  padding: 0 24px;
+  border-width: 1px;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 800;
+  line-height: 1;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.storefront-home :where(.store-button, .new-mac-launch .store-button):hover {
+  transform: translateY(-1px);
+}
+
+.storefront-home :where(.store-macbook-grid, .store-product-grid) {
+  gap: 14px;
+  padding-right: 14px;
+  padding-left: 14px;
+}
+
+.storefront-home .store-macbook-grid .store-launch,
+.storefront-home .store-product-grid .store-product-tile {
+  padding-top: clamp(44px, 4vw, 58px);
+}
+
+.storefront-home .service-story-rail {
+  padding-top: clamp(64px, 7vw, 96px);
+  padding-bottom: clamp(68px, 7vw, 100px);
+}
+
+.storefront-home .service-story-card {
+  border-color: rgba(29, 29, 31, 0.1);
+  box-shadow: 0 12px 32px rgba(29, 29, 31, 0.055);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.storefront-home .service-story-card:hover {
+  border-color: rgba(29, 29, 31, 0.18);
+  box-shadow: 0 18px 42px rgba(29, 29, 31, 0.085);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .storefront-home :where(.store-button, .new-mac-launch .store-button) {
+    min-height: 46px;
+    padding: 0 20px;
+    font-size: 0.9rem;
+  }
+
+  .storefront-home :where(.store-macbook-grid, .store-product-grid) {
+    gap: 12px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-home :where(.store-button, .new-mac-launch .store-button),
+  .storefront-home .service-story-card {
+    transition: none;
+  }
+
+  .storefront-home :where(.store-button, .new-mac-launch .store-button):hover,
+  .storefront-home .service-story-card:hover {
+    transform: none;
+  }
+}
