@@ -118,6 +118,11 @@ export function HomePage() {
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
         <IphoneCinematicShowcase products={activeProducts} priority />
+        <div className="home-trust-strip" role="note" aria-label="Buy and Sell GH service benefits">
+          <Link to="/sell-or-trade">Trade in and upgrade for less <ChevronRight size={14} /></Link>
+          <span>Original devices, trusted service</span>
+          <Link to="/contact">Local support in Accra <ChevronRight size={14} /></Link>
+        </div>
         <NewMacLaunchCampaign launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} />
         <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
 

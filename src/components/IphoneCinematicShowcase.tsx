@@ -142,7 +142,7 @@ function IphoneSequence({ scenes, priority }: { scenes: typeof approvedScenes; p
               <span>{scene.tagline}</span>
               <div className="iphone-showcase-actions">
                 <Link to={`/product/${scene.slug}`} tabIndex={isActive ? 0 : -1}>Explore</Link>
-                <Link to="/iphones" tabIndex={isActive ? 0 : -1}>Shop iPhone</Link>
+                <Link to="/iphones" tabIndex={isActive ? 0 : -1}>Shop now</Link>
               </div>
             </figcaption>
             <div className="iphone-showcase-media">

@@ -41,6 +41,7 @@ export function Header() {
   const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const { totalItems } = useCart();
   const location = useLocation();
+  const isHomePage = location.pathname === "/";
   const currentRoute = `${location.pathname}${location.search}`;
   const isNavItemActive = (to: string) => {
     if (to.includes("?")) return currentRoute === to;
@@ -79,10 +80,12 @@ export function Header() {
 
   return (
     <header className="site-header sticky top-0 z-50 border-b border-black/8 bg-white/96 shadow-sm backdrop-blur-xl">
-      <div className="site-promo-bar" role="note">
-        <span>Trade in your current device and upgrade for less.</span>
-        <Link to="/sell-or-trade">Get estimate</Link>
-      </div>
+      {!isHomePage && (
+        <div className="site-promo-bar" role="note">
+          <span>Trade in your current device and upgrade for less.</span>
+          <Link to="/sell-or-trade">Get estimate</Link>
+        </div>
+      )}
       <div className="site-header-inner mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
         <Logo />
         <nav className="hidden items-center gap-1 2xl:gap-2 xl:flex" aria-label="Main navigation">
