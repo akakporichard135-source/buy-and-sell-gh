@@ -183,7 +183,7 @@ function EditorialDeviceGuide() {
       <header className="home-editorial-heading">
         <p className="store-eyebrow">Find your perfect device</p>
         <h2 id="built-around-you-title">Built Around You.</h2>
-        <p>Explore devices selected around the way you work, create and live.</p>
+        <p>Explore technology selected around the way you work, create and live.</p>
       </header>
       <div className="home-editorial-grid">
         <EditorialPanel
