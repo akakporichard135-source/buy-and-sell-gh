@@ -208,26 +208,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 2px 5px 2px 9px;
-  border: 1px solid rgba(29, 29, 31, 0.08);
+  gap: 4px;
+  padding: 1px 3px 1px 7px;
+  border: 1px solid rgba(29, 29, 31, 0.055);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(14px) saturate(160%);
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(12px) saturate(140%);
   transform: translateX(-50%);
 }
 
 .iphone-showcase-progress {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 0 3px;
+  gap: 4px;
+  padding: 0 2px;
 }
 
 .iphone-showcase-progress button,
 .iphone-showcase .iphone-showcase-toggle {
   display: grid;
-  height: 34px;
+  height: 28px;
   place-items: center;
   padding: 0;
   border: 0;
@@ -237,7 +237,7 @@
 }
 
 .iphone-showcase-progress button {
-  width: clamp(40px, 5vw, 60px);
+  width: clamp(26px, 2.7vw, 38px);
 }
 
 .iphone-showcase-progress button > span {
@@ -268,7 +268,7 @@
 }
 
 .iphone-showcase .iphone-showcase-toggle {
-  width: 34px;
+  width: 28px;
   border-radius: 50%;
   background: rgba(232, 232, 237, 0.9);
 }
@@ -399,7 +399,7 @@
   }
 
   .iphone-showcase-progress button {
-    width: clamp(34px, 11vw, 48px);
+    width: clamp(25px, 8vw, 32px);
   }
 
   .home-trust-strip {
