@@ -43,10 +43,11 @@
 }
 
 .iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
-  --scene-width: min(82vw, 1140px);
-  --scene-x: -18px;
-  --scene-top: clamp(-128px, -8vw, -84px);
-  --scene-end-scale: 1.045;
+  --scene-width: min(86vw, 1200px);
+  --scene-x: -20px;
+  --scene-top: clamp(-138px, -8.5vw, -90px);
+  --scene-start-scale: 0.975;
+  --scene-end-scale: 1.055;
 }
 
 .iphone-showcase .iphone-showcase-scene-iphone-17-pro {
@@ -117,20 +118,20 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .iphone-showcase-actions a {
   display: inline-flex;
-  min-height: 46px;
+  min-height: 48px;
   align-items: center;
   justify-content: center;
-  padding: 0 22px;
+  padding: 0 24px;
   border: 1px solid #d5a315;
   border-radius: 999px;
   color: #111;
   background: #e2b122;
-  font-size: 0.9rem;
+  font-size: 0.94rem;
   font-weight: 800;
   line-height: 1;
   text-decoration: none;
@@ -209,11 +210,10 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 1px 3px 1px 7px;
-  border: 1px solid rgba(29, 29, 31, 0.055);
+  padding: 1px 3px 1px 5px;
+  border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(12px) saturate(140%);
+  background: transparent;
   transform: translateX(-50%);
 }
 
@@ -237,14 +237,14 @@
 }
 
 .iphone-showcase-progress button {
-  width: clamp(26px, 2.7vw, 38px);
+  width: clamp(24px, 2.4vw, 34px);
 }
 
 .iphone-showcase-progress button > span {
   position: relative;
   display: block;
   width: 100%;
-  height: 3px;
+  height: 2px;
   overflow: hidden;
   border-radius: 3px;
   background: #d2d2d7;
@@ -270,7 +270,7 @@
 .iphone-showcase .iphone-showcase-toggle {
   width: 28px;
   border-radius: 50%;
-  background: rgba(232, 232, 237, 0.9);
+  background: rgba(232, 232, 237, 0.76);
 }
 
 .home-trust-strip {
@@ -343,7 +343,7 @@
   }
 
   .iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
-    --scene-width: min(158vw, 620px);
+    --scene-width: min(164vw, 650px);
     --scene-x: -5px;
     --scene-top: -42px;
   }
@@ -380,13 +380,13 @@
   }
 
   .iphone-showcase-actions {
-    margin-top: 6px;
+    margin-top: 8px;
   }
 
   .iphone-showcase-actions a {
-    min-height: 44px;
-    padding: 0 19px;
-    font-size: 0.86rem;
+    min-height: 46px;
+    padding: 0 20px;
+    font-size: 0.9rem;
   }
 
   .iphone-showcase .iphone-showcase-controls {
@@ -399,7 +399,7 @@
   }
 
   .iphone-showcase-progress button {
-    width: clamp(25px, 8vw, 32px);
+    width: clamp(22px, 7vw, 28px);
   }
 
   .home-trust-strip {
@@ -417,7 +417,7 @@
   }
 
   .iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
-    --scene-width: min(calc(100vw + 240px), 560px);
+    --scene-width: min(calc(100vw + 260px), 590px);
     --scene-x: -2px;
     --scene-top: -10px;
   }

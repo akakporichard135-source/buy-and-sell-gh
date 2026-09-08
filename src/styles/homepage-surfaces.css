@@ -419,6 +419,7 @@
 
 /* Final premium rhythm: shared sizing without changing the approved section structure. */
 .storefront-home :where(.store-button, .new-mac-launch .store-button) {
+  height: 48px;
   min-height: 48px;
   padding: 0 24px;
   border-width: 1px;
@@ -463,6 +464,7 @@
 
 @media (max-width: 768px) {
   .storefront-home :where(.store-button, .new-mac-launch .store-button) {
+    height: 46px;
     min-height: 46px;
     padding: 0 20px;
     font-size: 0.9rem;
@@ -487,7 +489,7 @@
 .storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art {
   width: min(1540px, 110vw);
   min-height: clamp(410px, 41vw, 590px);
-  margin-top: clamp(-48px, -3vw, -24px);
+  margin-top: clamp(-58px, -3.5vw, -30px);
 }
 
 .storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art::before {
@@ -504,7 +506,7 @@
 }
 
 .storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art img {
-  width: 116%;
+  width: 120%;
   max-height: 610px;
   filter: drop-shadow(0 24px 30px rgba(29, 29, 31, 0.085));
 }
@@ -546,25 +548,30 @@
 }
 
 .storefront-home > .new-mac-launch-mac-studio .new-mac-launch-art img {
-  width: 114%;
+  width: 117%;
   max-height: 620px;
   -webkit-mask-image: radial-gradient(ellipse 72% 90% at 50% 61%, #000 48%, rgba(0, 0, 0, 0.96) 65%, transparent 100%);
   mask-image: radial-gradient(ellipse 72% 90% at 50% 61%, #000 48%, rgba(0, 0, 0, 0.96) 65%, transparent 100%);
 }
 
 .storefront-home :where(.store-eyebrow, .new-mac-launch .store-eyebrow) {
-  font-size: clamp(0.76rem, 0.68vw, 0.84rem);
+  font-size: clamp(0.8rem, 0.7vw, 0.86rem);
   line-height: 1.3;
 }
 
+.storefront-home :where(.store-launch-availability, .new-mac-launch-status) {
+  font-size: clamp(0.96rem, 0.92vw, 1.05rem);
+  line-height: 1.5;
+}
+
 .storefront-home :where(.store-macbook-grid, .store-product-grid) {
-  gap: clamp(6px, 0.55vw, 9px);
-  padding-right: clamp(6px, 0.55vw, 9px);
-  padding-left: clamp(6px, 0.55vw, 9px);
+  gap: clamp(4px, 0.42vw, 6px);
+  padding-right: clamp(4px, 0.42vw, 6px);
+  padding-left: clamp(4px, 0.42vw, 6px);
 }
 
 .storefront-home .new-mac-launch-mac-studio + .store-macbook-grid {
-  padding-top: clamp(6px, 0.55vw, 9px);
+  padding-top: clamp(4px, 0.42vw, 6px);
 }
 
 .storefront-home .store-macbook-grid .store-launch,
@@ -594,6 +601,19 @@
   justify-self: center;
 }
 
+.storefront-home .store-product-grid .store-ipad-air-scene {
+  width: min(116%, 740px);
+}
+
+.storefront-home .store-product-grid .store-watch-visual {
+  width: min(120%, 760px);
+}
+
+.storefront-home .store-product-grid .store-visa-tile-art {
+  width: min(120%, 760px);
+  transform: translateY(-24px);
+}
+
 .storefront-home .service-story-rail {
   padding-top: clamp(88px, 8.5vw, 122px);
   border-top: 0;
@@ -611,14 +631,19 @@
     padding-top: clamp(38px, 11vw, 56px);
   }
 
+  .storefront-home > .new-mac-launch-mac-mini {
+    min-height: clamp(620px, 158vw, 740px);
+  }
+
   .storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art {
-    width: min(132vw, 680px);
+    width: min(136vw, 700px);
     min-height: clamp(360px, 96vw, 500px);
     margin-top: -54px;
+    translate: -50% -42px;
   }
 
   .storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art img {
-    width: 124%;
+    width: 132%;
   }
 
   .storefront-home > .new-mac-launch-mac-studio .new-mac-launch-art {
@@ -628,9 +653,14 @@
   }
 
   .storefront-home :where(.store-macbook-grid, .store-product-grid) {
-    gap: 8px;
-    padding-right: 8px;
-    padding-left: 8px;
+    gap: 6px;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .storefront-home .store-product-grid .store-watch-visual,
+  .storefront-home .store-product-grid .store-visa-tile-art {
+    width: min(116%, calc(100% + 2rem));
   }
 
   .storefront-home .store-macbook-grid .store-launch,
