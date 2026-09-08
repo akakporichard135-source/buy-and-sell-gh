@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, ChevronRight, MessageCircle, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
 import type { Product } from "../types/product";
@@ -23,10 +23,13 @@ import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
+import conciergeArtwork from "../assets/homepage/homepage-iphone-story.jpg";
+import everydayEditorialArtwork from "../assets/homepage/homepage-apple-watch-cinematic.webp";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
 import { newMacLaunches } from "../data/newMacLaunches";
+import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -118,11 +121,7 @@ export function HomePage() {
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
         <IphoneCinematicShowcase products={activeProducts} priority />
-        <div className="home-trust-strip" role="note" aria-label="Buy and Sell GH service benefits">
-          <Link to="/sell-or-trade">Trade in and upgrade for less <ChevronRight size={14} /></Link>
-          <span>Original devices, trusted service</span>
-          <Link to="/contact">Local support in Accra <ChevronRight size={14} /></Link>
-        </div>
+        <PremiumTrustStrip />
         <NewMacLaunchCampaign launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} />
         <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
 
@@ -138,6 +137,9 @@ export function HomePage() {
           <VisaTradingTile />
         </section>
 
+        <EditorialDeviceGuide />
+        <ConciergeSection />
+
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
             <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
@@ -150,6 +152,117 @@ export function HomePage() {
 
       </main>
     </>
+  );
+}
+
+function PremiumTrustStrip() {
+  return (
+    <section className="premium-trust-strip" aria-label="Buy and Sell GH customer benefits">
+      <div className="premium-trust-strip-inner">
+        <TrustPoint icon={<BadgeCheck aria-hidden="true" />} title="Original Devices" description="Genuine and carefully verified devices." />
+        <TrustPoint icon={<ShieldCheck aria-hidden="true" />} title="Warranty Support" description="Support after your purchase." />
+        <TrustPoint icon={<Truck aria-hidden="true" />} title="Secure Delivery" description="Reliable delivery across supported locations." />
+        <TrustPoint icon={<RefreshCcw aria-hidden="true" />} title="Trade-In Available" description="Upgrade using your current device." />
+      </div>
+    </section>
+  );
+}
+
+function TrustPoint({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
+  return (
+    <div className="premium-trust-point">
+      <span className="premium-trust-icon">{icon}</span>
+      <span><strong>{title}</strong><small>{description}</small></span>
+    </div>
+  );
+}
+
+function EditorialDeviceGuide() {
+  return (
+    <section className="home-editorial premium-reveal" aria-labelledby="built-around-you-title">
+      <header className="home-editorial-heading">
+        <p className="store-eyebrow">Find your perfect device</p>
+        <h2 id="built-around-you-title">Built Around You.</h2>
+        <p>Explore devices selected around the way you work, create and live.</p>
+      </header>
+      <div className="home-editorial-grid">
+        <EditorialPanel
+          className="editorial-panel-creators"
+          eyebrow="For creators"
+          products="MacBook Pro · iPad Pro · iPhone Pro"
+          title="Power for ideas without limits."
+          cta="Explore Creator Devices"
+          to="/shop"
+          image={macbookProCampaignArt}
+          imageAlt="MacBook Pro in a dark cinematic studio scene"
+        />
+        <EditorialPanel
+          className="editorial-panel-work"
+          eyebrow="For work"
+          products="MacBook Air · Mac mini · iPad"
+          title="Everything you need to get more done."
+          cta="Explore Work Essentials"
+          to="/macbooks"
+          image={macbookAirCampaignArt}
+          imageAlt="MacBook Air in a bright premium studio scene"
+        />
+        <EditorialPanel
+          className="editorial-panel-everyday"
+          eyebrow="For everyday"
+          products="iPhone · Apple Watch · AirPods"
+          title="Technology that fits naturally into your day."
+          cta="Explore Everyday Tech"
+          to="/iphones"
+          image={everydayEditorialArtwork}
+          imageAlt="Apple Watch in a clean premium studio scene"
+        />
+      </div>
+    </section>
+  );
+}
+
+function EditorialPanel({ className, eyebrow, products, title, cta, to, image, imageAlt }: { className: string; eyebrow: string; products: string; title: string; cta: string; to: string; image: string; imageAlt: string }) {
+  return (
+    <Link className={`editorial-panel ${className}`} to={to}>
+      <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
+      <span className="editorial-panel-copy">
+        <span className="editorial-panel-eyebrow">{eyebrow}</span>
+        <strong>{title}</strong>
+        <small>{products}</small>
+        <span className="editorial-panel-cta">{cta} <ChevronRight size={16} aria-hidden="true" /></span>
+      </span>
+    </Link>
+  );
+}
+
+function ConciergeSection() {
+  return (
+    <section className="home-concierge premium-reveal" aria-labelledby="concierge-title">
+      <div className="home-concierge-inner">
+        <div className="home-concierge-copy">
+          <p className="store-eyebrow">Personal shopping</p>
+          <h2 id="concierge-title">Buy &amp; Sell GH Concierge</h2>
+          <p className="home-concierge-lead">Not sure which device is right for you? We&apos;ll help you choose, source, trade in and upgrade with confidence.</p>
+          <ul aria-label="Concierge services">
+            {[
+              "Device recommendations",
+              "Product sourcing",
+              "Trade-in guidance",
+              "Purchase assistance",
+            ].map((service) => <li key={service}><Check aria-hidden="true" /> {service}</li>)}
+          </ul>
+          <div className="home-concierge-actions">
+            <Link className="store-button store-button-primary" to="/contact">Talk to a Specialist</Link>
+            <a className="store-button home-concierge-whatsapp" href={intentWhatsAppUrl("general")} target="_blank" rel="noopener noreferrer">
+              <MessageCircle size={17} aria-hidden="true" /> Chat on WhatsApp
+            </a>
+          </div>
+        </div>
+        <div className="home-concierge-art" aria-hidden="true">
+          <img src={conciergeArtwork} alt="" loading="lazy" decoding="async" />
+        </div>
+      </div>
+    </section>
   );
 }
 
