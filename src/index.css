@@ -10969,6 +10969,27 @@ body {
   font-size: clamp(0.68rem, 0.68vw, 0.78rem);
 }
 
+/* Shared public chrome: a clean white canvas and a lighter, quieter header. */
+.public-shell,
+.public-main,
+.route-loading {
+  background: #fff;
+}
+
+.site-header {
+  border-bottom-color: rgba(29, 29, 31, 0.09);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(160%) blur(20px);
+}
+
+.site-header-inner {
+  min-height: 48px;
+}
+
+.site-nav-link {
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
 .site-nav-dropdown {
   position: relative;
 }

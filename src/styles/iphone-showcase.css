@@ -441,3 +441,96 @@
     transition: none;
   }
 }
+
+/* Final flagship polish: stronger product presence with quieter controls. */
+.iphone-showcase .iphone-showcase-copy {
+  gap: 8px;
+}
+
+.iphone-showcase-actions {
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
+  --scene-width: min(89vw, 1240px);
+  --scene-start-scale: 0.97;
+  --scene-end-scale: 1.026;
+}
+
+.iphone-showcase .iphone-showcase-scene-iphone-17-pro {
+  --scene-width: min(81vw, 1120px);
+}
+
+.iphone-showcase-media::before {
+  right: 29%;
+  left: 29%;
+  background: rgba(20, 20, 22, 0.085);
+  filter: blur(40px);
+}
+
+.iphone-showcase .iphone-showcase-controls {
+  bottom: 12px;
+  gap: 3px;
+  opacity: 0.72;
+  transition: opacity 180ms ease;
+}
+
+.iphone-showcase .iphone-showcase-controls:hover,
+.iphone-showcase .iphone-showcase-controls:focus-within {
+  opacity: 1;
+}
+
+.iphone-showcase-progress {
+  gap: 3px;
+}
+
+.iphone-showcase-progress button {
+  width: clamp(22px, 2vw, 30px);
+}
+
+.iphone-showcase-progress button > span {
+  height: 1px;
+  background: #c7c7cc;
+}
+
+.iphone-showcase .iphone-showcase-toggle {
+  width: 26px;
+  height: 26px;
+  background: rgba(232, 232, 237, 0.58);
+}
+
+@media (max-width: 768px) {
+  .iphone-showcase-actions {
+    margin-top: 13px;
+  }
+
+  .iphone-showcase .iphone-showcase-controls {
+    bottom: 10px;
+  }
+
+  .iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
+    --scene-width: min(164vw, 650px);
+    --scene-x: -5px;
+    --scene-top: -42px;
+  }
+
+  .iphone-showcase .iphone-showcase-scene-iphone-17-pro {
+    --scene-width: min(152vw, 590px);
+    --scene-x: 7px;
+  }
+}
+
+@media (max-width: 360px) {
+  .iphone-showcase .iphone-showcase-scene-iphone-17-pro-max {
+    --scene-width: min(calc(100vw + 260px), 590px);
+    --scene-x: -2px;
+    --scene-top: -10px;
+  }
+
+  .iphone-showcase .iphone-showcase-scene-iphone-17-pro {
+    --scene-width: min(calc(100vw + 210px), 540px);
+    --scene-x: 4px;
+    --scene-top: -4px;
+  }
+}

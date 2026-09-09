@@ -23,8 +23,9 @@ import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
-import conciergeArtwork from "../assets/homepage/homepage-iphone-story.jpg";
-import everydayEditorialArtwork from "../assets/homepage/homepage-apple-watch-cinematic.webp";
+import everydayEditorialArtwork from "../assets/products/airpods-3rd-generation-premium.webp";
+import conciergeRearArtwork from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
+import conciergeFrontArtwork from "../assets/catalogue-products/iphone-17-pro-max-premium.webp";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
@@ -214,7 +215,7 @@ function EditorialDeviceGuide() {
           cta="Explore Everyday Tech"
           to="/iphones"
           image={everydayEditorialArtwork}
-          imageAlt="Apple Watch in a clean premium studio scene"
+          imageAlt="AirPods 3rd generation with an open charging case in a premium studio scene"
         />
       </div>
     </section>
@@ -259,7 +260,12 @@ function ConciergeSection() {
           </div>
         </div>
         <div className="home-concierge-art" aria-hidden="true">
-          <img src={conciergeArtwork} alt="" loading="lazy" decoding="async" />
+          <span className="home-concierge-device home-concierge-device-rear">
+            <img src={conciergeRearArtwork} alt="" loading="lazy" decoding="async" />
+          </span>
+          <span className="home-concierge-device home-concierge-device-front">
+            <img src={conciergeFrontArtwork} alt="" loading="lazy" decoding="async" />
+          </span>
         </div>
       </div>
     </section>

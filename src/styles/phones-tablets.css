@@ -231,3 +231,47 @@
     transition: none;
   }
 }
+
+/* Marketplace stays listing-first while sharing the clean public visual system. */
+.phones-tablets-page .marketplace-search,
+.phones-tablets-page .marketplace-search input,
+.phones-tablets-page .marketplace-filter-field :is(input, select) {
+  background: #fff;
+}
+
+.phones-tablets-page .marketplace-search,
+.phones-tablets-page .marketplace-filter-field :is(input, select) {
+  border-color: #dcdce0;
+  box-shadow: none;
+}
+
+.phones-tablets-page .marketplace-category-card,
+.phones-tablets-page .phone-brand-card,
+.phones-tablets-page .marketplace-listing-card {
+  border-color: #e7e7ea;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.phones-tablets-page .marketplace-listing-card:hover,
+.phones-tablets-page .marketplace-listing-card:focus-within {
+  border-color: #cfcfd3;
+  box-shadow: 0 12px 28px rgba(29, 29, 31, 0.055);
+}
+
+.phones-tablets-page .marketplace-listing-image {
+  border-bottom: 1px solid #ededf0;
+  background: #fff;
+}
+
+.phones-tablets-page .marketplace-listing-actions a {
+  min-height: 46px;
+  padding-inline: 14px;
+}
+
+.phones-tablets-page .marketplace-empty,
+.phones-tablets-page .marketplace-empty-state {
+  border-color: #e5e5e7;
+  background: #fff;
+  box-shadow: none;
+}
