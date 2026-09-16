@@ -1,0 +1,375 @@
+/* Homepage-only product stories. Catalogue cards and their layout remain unchanged. */
+.storefront-home > .home-product-campaign {
+  position: relative;
+  display: flex;
+  min-height: max(720px, 88svh);
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: clamp(54px, 5.2vh, 78px) 24px 0;
+  background: #fff;
+  color: #1d1d1f;
+  text-align: center;
+  isolation: isolate;
+}
+
+.storefront-home > .home-product-campaign-black {
+  background: #050506;
+  color: #fff;
+}
+
+.storefront-home > .home-product-campaign-ipad-pro {
+  background: #0b0b0b;
+}
+
+.storefront-home > .home-product-campaign-warm {
+  background: #f8f8f9;
+}
+
+.storefront-home > .home-product-campaign-top {
+  min-height: max(700px, 90svh);
+  padding-top: clamp(56px, 6vh, 88px);
+}
+
+.storefront-home > .home-product-campaign-watch-series-12 {
+  background: #000;
+}
+
+.storefront-home > .home-product-campaign-iphone-duo {
+  background: #ededee;
+}
+
+.storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, #ededee 0%, transparent 9%, transparent 91%, #ededee 100%),
+    linear-gradient(180deg, #ededee 0%, transparent 10%, transparent 92%, #ededee 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.storefront-home > .home-product-campaign.home-product-campaign-top h2 {
+  font-size: clamp(3.2rem, 5.7vw, 6.25rem);
+}
+
+.storefront-home > .home-product-campaign.home-product-campaign-top .home-product-campaign-art {
+  width: min(100%, 1600px);
+  min-height: 370px;
+  margin-top: 8px;
+}
+
+.storefront-home > .home-product-campaign.home-product-campaign-top .home-product-campaign-art > img {
+  height: min(68svh, 700px);
+  min-height: 370px;
+}
+
+.storefront-home > .home-product-campaign-top.home-product-campaign-black .home-product-campaign-art > img {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 6%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent), linear-gradient(180deg, transparent, #000 6%, #000 100%);
+  mask-composite: intersect;
+}
+
+.storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art > img {
+  object-fit: contain;
+  filter: saturate(0.92) contrast(1.02);
+}
+
+.storefront-home > .home-product-campaign .home-product-campaign-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(100%, 900px);
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 650ms ease, transform 800ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.storefront-home > .home-product-campaign.is-visible .home-product-campaign-copy,
+.storefront-home > .home-product-campaign-visa .home-product-campaign-copy {
+  opacity: 1;
+  transform: none;
+}
+
+.storefront-home > .home-product-campaign .store-eyebrow {
+  margin: 0;
+  color: #a67808;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.storefront-home > .home-product-campaign-black .store-eyebrow {
+  color: #e5b438;
+}
+
+.storefront-home > .home-product-campaign h2 {
+  max-width: 100%;
+  margin: 8px 0 0;
+  font-size: clamp(3.25rem, 5.7vw, 6.5rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.storefront-home > .home-product-campaign-visa h2 {
+  max-width: 850px;
+  font-size: clamp(2.8rem, 5.3vw, 5.7rem);
+}
+
+.storefront-home > .home-product-campaign .home-product-campaign-copy > p:not(.store-eyebrow) {
+  max-width: 660px;
+  margin: 14px 0 0;
+  color: #56565b;
+  font-size: clamp(1.0625rem, 1.45vw, 1.3125rem);
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.storefront-home > .home-product-campaign .home-product-campaign-copy > .store-launch-availability {
+  margin-top: 5px;
+  font-size: 0.95rem;
+}
+
+.storefront-home > .home-product-campaign-black .home-product-campaign-copy > p:not(.store-eyebrow) {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.storefront-home > .home-product-campaign.home-product-campaign-top .home-product-campaign-copy > .store-launch-availability {
+  color: #717177;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.storefront-home > .home-product-campaign.home-product-campaign-top.home-product-campaign-black .home-product-campaign-copy > .store-launch-availability {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.storefront-home > .home-product-campaign .store-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.storefront-home > .home-product-campaign .store-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 21px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.storefront-home > .home-product-campaign .store-button-primary {
+  border-color: #e5b438;
+  background: #e5b438;
+  color: #111;
+}
+
+.storefront-home > .home-product-campaign .store-button-secondary {
+  border-color: rgba(29, 29, 31, 0.28);
+  background: transparent;
+  color: #1d1d1f;
+}
+
+.storefront-home > .home-product-campaign-black .store-button-secondary {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+.storefront-home > .home-product-campaign .home-product-campaign-art {
+  position: relative;
+  display: flex;
+  width: min(100%, 1380px);
+  min-height: 400px;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 18px;
+  opacity: 0;
+  transform: translateY(22px) scale(0.98);
+  transition: opacity 850ms 120ms ease, transform 1100ms 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.storefront-home > .home-product-campaign.is-visible .home-product-campaign-art,
+.storefront-home > .home-product-campaign-visa .home-product-campaign-art {
+  opacity: 1;
+  transform: none;
+}
+
+.storefront-home > .home-product-campaign .home-product-campaign-art > img {
+  display: block;
+  width: 100%;
+  height: min(62svh, 620px);
+  min-height: 390px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.storefront-home > .home-product-campaign-macbook-air .home-product-campaign-art > img,
+.storefront-home > .home-product-campaign-macbook-pro .home-product-campaign-art > img {
+  width: min(100%, 1200px);
+}
+
+.storefront-home > .home-product-campaign-ipad-air .home-product-campaign-art > img,
+.storefront-home > .home-product-campaign-apple-watch .home-product-campaign-art > img,
+.storefront-home > .home-product-campaign-ipad-pro .home-product-campaign-art > img {
+  width: min(100%, 1120px);
+}
+
+.storefront-home > .home-product-campaign-ipad-pro .home-product-campaign-art > img {
+  mix-blend-mode: lighten;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 13%, #000 87%, transparent 100%), linear-gradient(180deg, transparent 0, #000 17%, #000 87%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 13%, #000 87%, transparent 100%), linear-gradient(180deg, transparent 0, #000 17%, #000 87%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.storefront-home > .home-product-campaign-apple-watch .home-product-campaign-art > img {
+  scale: 1.2;
+  transform-origin: center bottom;
+}
+
+.storefront-home > .home-product-campaign-visa .home-product-campaign-art > img {
+  width: min(100%, 1080px);
+  scale: 1.28;
+  transform-origin: center bottom;
+}
+
+.storefront-home > .new-mac-launch-mac-mini .new-mac-launch-art img {
+  filter: brightness(1.045) contrast(1.025) drop-shadow(0 24px 34px rgba(29, 29, 31, 0.09));
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 24%, #000 76%, transparent 100%), linear-gradient(180deg, transparent 0, #000 22%, #000 76%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 24%, #000 76%, transparent 100%), linear-gradient(180deg, transparent 0, #000 22%, #000 76%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.storefront-home > .new-mac-launch-mac-studio {
+  background: radial-gradient(ellipse 45% 38% at 50% 76%, rgba(190, 143, 28, 0.095), transparent 72%), #0a0a0a;
+}
+
+.storefront-home > .new-mac-launch-mac-studio .new-mac-launch-art::after {
+  background: linear-gradient(180deg, #0a0a0a 0%, rgba(10, 10, 10, 0.76) 8%, transparent 24%, transparent 84%, rgba(10, 10, 10, 0.5) 100%), linear-gradient(90deg, #0a0a0a 0%, transparent 18%, transparent 82%, #0a0a0a 100%);
+}
+
+.storefront-home > .new-mac-launch-mac-studio .new-mac-launch-art img {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 19%, #000 81%, transparent 100%), linear-gradient(180deg, transparent 0, #000 18%, #000 83%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 19%, #000 81%, transparent 100%), linear-gradient(180deg, transparent 0, #000 18%, #000 83%, transparent 100%);
+  mask-composite: intersect;
+}
+
+@media (max-width: 768px) {
+  .storefront-home > .home-product-campaign {
+    min-height: 0;
+    padding: 52px 16px 0;
+  }
+
+  .storefront-home > .home-product-campaign-top {
+    min-height: 0;
+    padding-top: 54px;
+  }
+
+  .storefront-home > .home-product-campaign.home-product-campaign-top .home-product-campaign-art {
+    width: calc(100% + 32px);
+    min-height: 0;
+    margin-top: 16px;
+  }
+
+  .storefront-home > .home-product-campaign.home-product-campaign-top .home-product-campaign-art > img {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art {
+    background: #ededee;
+  }
+
+  .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art > img {
+    aspect-ratio: 1.22;
+    object-fit: contain;
+  }
+
+  .storefront-home > .home-product-campaign h2 {
+    font-size: clamp(2.6rem, 8vw, 4.5rem);
+  }
+
+  .storefront-home > .home-product-campaign-visa h2 {
+    font-size: clamp(2.4rem, 7vw, 4rem);
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-art {
+    width: 100%;
+    min-height: 0;
+    margin-top: 28px;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-art > img {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1.25;
+    object-fit: contain;
+  }
+
+  .storefront-home > .home-product-campaign-apple-watch .home-product-campaign-art > img {
+    scale: 1.48;
+  }
+
+  .storefront-home > .home-product-campaign-visa .home-product-campaign-art > img {
+    scale: 1.42;
+  }
+}
+
+@media (max-width: 430px) {
+  .storefront-home > .home-product-campaign {
+    padding-top: 44px;
+  }
+
+  .storefront-home > .home-product-campaign-top {
+    padding-top: 46px;
+  }
+
+  .storefront-home > .home-product-campaign.home-product-campaign-top h2 {
+    font-size: clamp(2.35rem, 10vw, 2.75rem);
+  }
+
+  .storefront-home > .home-product-campaign h2 {
+    font-size: 2.65rem;
+  }
+
+  .storefront-home > .home-product-campaign-visa h2 {
+    font-size: 2.35rem;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-copy > p:not(.store-eyebrow) {
+    font-size: 1rem;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-art > img {
+    aspect-ratio: 1.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storefront-home > .home-product-campaign .home-product-campaign-copy,
+  .storefront-home > .home-product-campaign .home-product-campaign-art {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

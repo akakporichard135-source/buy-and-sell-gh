@@ -6,12 +6,9 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import { NewMacLaunchCampaign } from "../components/NewMacLaunchCampaign";
-import { IphoneCinematicShowcase } from "../components/IphoneCinematicShowcase";
+import { HomepageVideoShowcase } from "../components/HomepageVideoShowcase";
 import "../styles/homepage-surfaces.css";
-import "../styles/iphone-showcase.css";
-import macMiniWhiteArtwork from "../assets/homepage/homepage-mac-mini-white.webp";
-import appleWatchCampaignArt from "../assets/homepage/homepage-apple-watch-white.webp";
+import "../styles/homepage-campaigns.css";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-white.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
@@ -23,13 +20,11 @@ import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
-import everydayEditorialArtwork from "../assets/products/airpods-3rd-generation-premium.webp";
 import conciergeRearArtwork from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
 import conciergeFrontArtwork from "../assets/catalogue-products/iphone-17-pro-max-premium.webp";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
-import { newMacLaunches } from "../data/newMacLaunches";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 type CampaignTheme = "black" | "light" | "warm";
@@ -52,8 +47,8 @@ type Campaign = {
 };
 
 const ipadAirCampaign: Campaign = {
-  eyebrow: "iPad Air",
-  title: "Fresh. Powerful. Colourful.",
+  eyebrow: "Fresh. Powerful. Colourful.",
+  title: "iPad Air",
   description: "Made for work, study, creativity and everything in between.",
   image: ipadAirCampaignArt,
   imageAlt: "iPad Air in a layered premium product presentation",
@@ -64,23 +59,38 @@ const ipadAirCampaign: Campaign = {
   secondaryTo: "/shop?category=iPads",
 };
 
+const topCampaigns: Campaign[] = [
+  {
+    eyebrow: "A wider perspective",
+    title: "iPhone Duo",
+    description: "Open up more room for everything you do.",
+    image: "/products/homepage/iphone-duo.webp",
+    imageAlt: "Original concept rendering of an open, unbranded foldable smartphone",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/iphones",
+    secondaryLabel: "View pricing",
+    secondaryTo: "/pre-order?model=iPhone%20Duo",
+  },
+  {
+    eyebrow: "Everyday momentum",
+    title: "Apple Watch Series 12",
+    description: "Stay connected to what moves you.",
+    image: "/products/homepage/watch-series-12.webp",
+    imageAlt: "Original concept rendering of a rectangular everyday smartwatch",
+    theme: "black",
+    primaryLabel: "Learn more",
+    primaryTo: "/apple-watch",
+    secondaryLabel: "View pricing",
+    secondaryTo: "/pre-order?model=Apple%20Watch%20Series%2012",
+  },
+];
+
 const productTiles: Campaign[] = [
   ipadAirCampaign,
   {
-    eyebrow: "Apple Watch",
-    title: "Move. Connect. Keep going.",
-    description: "A capable everyday companion, right on your wrist.",
-    image: appleWatchCampaignArt,
-    imageAlt: "Apple Watch with its screen on against a clean white background",
-    theme: "light",
-    primaryLabel: "Learn more",
-    primaryTo: "/apple-watch",
-    secondaryLabel: "Shop now",
-    secondaryTo: "/shop?category=Apple%20Watches",
-  },
-  {
-    eyebrow: "iPad Pro",
-    title: "Big ideas. Pro power.",
+    eyebrow: "Big ideas. Pro power.",
+    title: "iPad Pro",
     description: "A premium canvas for advanced creative work.",
     image: ipadProCampaignArt,
     imageAlt: "iPad Pro in a premium black studio presentation",
@@ -105,7 +115,7 @@ export function HomePage() {
   const latestMacbookPro = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Pro"), [activeProducts]);
 
   const featuredMacbookAirCampaign = latestMacbookAir
-    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "warm", macbookAirCampaignArt, "macbook-air", {
+    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "light", macbookAirCampaignArt, "macbook-air", {
       image: macbookAirM5Cutout,
       slug: "macbook-air-15-m5",
     })
@@ -121,22 +131,16 @@ export function HomePage() {
     <>
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
-        <IphoneCinematicShowcase products={activeProducts} priority />
+        <Iphone18Hero />
+        <HomepageVideoShowcase />
+        {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
+        <UltraAirpodsStory />
+
+        {featuredMacbookAirCampaign && <ProductCampaign campaign={featuredMacbookAirCampaign} />}
+        {featuredMacbookProCampaign && <ProductCampaign campaign={featuredMacbookProCampaign} />}
+        {productTiles.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} />)}
+        <VisaTradingCampaign />
         <PremiumTrustStrip />
-        <NewMacLaunchCampaign launch={{ ...newMacLaunches["mac-mini"], image: macMiniWhiteArtwork }} />
-        <NewMacLaunchCampaign launch={newMacLaunches["mac-studio"]} />
-
-        {(featuredMacbookAirCampaign || featuredMacbookProCampaign) && (
-          <section className="store-feature-grid store-macbook-grid" aria-label="Featured MacBook lineup">
-            {featuredMacbookAirCampaign && <ProductLaunch campaign={featuredMacbookAirCampaign} />}
-            {featuredMacbookProCampaign && <ProductLaunch campaign={featuredMacbookProCampaign} />}
-          </section>
-        )}
-
-        <section className="store-product-grid" aria-label="Featured product families">
-          {productTiles.map((campaign) => <ProductTile campaign={campaign} key={campaign.eyebrow} />)}
-          <VisaTradingTile />
-        </section>
 
         <EditorialDeviceGuide />
         <ConciergeSection />
@@ -153,6 +157,98 @@ export function HomePage() {
 
       </main>
     </>
+  );
+}
+
+function Iphone18Hero() {
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+
+  useEffect(() => {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPlayback = () => {
+      videoRefs.current.forEach((video) => {
+        if (!video) return;
+        if (motionQuery.matches) {
+          video.pause();
+          return;
+        }
+        void video.play().catch(() => {});
+      });
+    };
+    syncPlayback();
+    motionQuery.addEventListener("change", syncPlayback);
+    return () => motionQuery.removeEventListener("change", syncPlayback);
+  }, []);
+
+  return (
+    <section className="iphone18-launch-hero" aria-labelledby="iphone18-launch-title">
+      <div className="iphone18-launch-copy">
+        <p>A new era of Pro</p>
+        <h1 id="iphone18-launch-title">iPhone 18 Pro</h1>
+        <span>Bold by design. Built to go further.</span>
+        <div className="iphone18-launch-actions">
+          <Link to="/iphones">Learn more</Link>
+          <Link to="/pre-order?model=iPhone%2018%20Pro">View pricing</Link>
+        </div>
+      </div>
+      <video
+        ref={(element) => { videoRefs.current[0] = element; }}
+        className="iphone18-launch-video-backdrop"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
+      </video>
+      <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
+      <video
+        ref={(element) => { videoRefs.current[1] = element; }}
+        className="iphone18-launch-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        aria-label="iPhone 18 Pro cinematic product film"
+      >
+        <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
+      </video>
+    </section>
+  );
+}
+
+function UltraAirpodsStory() {
+  return (
+    <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
+      <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
+        <div className="ultra-airpods-copy">
+          <p>Built for beyond</p>
+          <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
+          <span>Rugged capability. Precision without compromise.</span>
+          <div className="ultra-airpods-actions">
+            <Link to="/apple-watch">Learn more</Link>
+            <Link to="/pre-order?model=Apple%20Watch%20Ultra%204">View pricing</Link>
+          </div>
+        </div>
+        <img src="/products/homepage/watch-ultra-4.webp" alt="Original concept rendering of a rugged titanium smartwatch with an orange band" loading="lazy" decoding="async" />
+      </article>
+      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title">
+        <div className="ultra-airpods-copy">
+          <p>Move with your music</p>
+          <h2 id="airpods-story-title">AirPods 5</h2>
+          <span>Freedom to listen wherever the rhythm takes you.</span>
+          <div className="ultra-airpods-actions">
+            <Link to="/airpods">Learn more</Link>
+            <Link to="/pre-order?model=AirPods%205">View pricing</Link>
+          </div>
+        </div>
+        <img src="/products/homepage/airpods-5-lifestyle.webp" alt="A woman enjoying music with a white wireless earbud" loading="lazy" decoding="async" />
+      </article>
+    </section>
   );
 }
 
@@ -186,7 +282,7 @@ function EditorialDeviceGuide() {
         <h2 id="built-around-you-title">Built Around You.</h2>
         <p>Explore technology selected around the way you work, create and live.</p>
       </header>
-      <div className="home-editorial-grid">
+      <div className="home-editorial-grid home-editorial-grid-two">
         <EditorialPanel
           className="editorial-panel-creators"
           eyebrow="For creators"
@@ -206,16 +302,6 @@ function EditorialDeviceGuide() {
           to="/macbooks"
           image={macbookAirCampaignArt}
           imageAlt="MacBook Air in a bright premium studio scene"
-        />
-        <EditorialPanel
-          className="editorial-panel-everyday"
-          eyebrow="For everyday"
-          products="iPhone · Apple Watch · AirPods"
-          title="Technology that fits naturally into your day."
-          cta="Explore Everyday Tech"
-          to="/iphones"
-          image={everydayEditorialArtwork}
-          imageAlt="AirPods 3rd generation with an open charging case in a premium studio scene"
         />
       </div>
     </section>
@@ -272,31 +358,50 @@ function ConciergeSection() {
   );
 }
 
-function VisaTradingTile() {
+function VisaTradingCampaign() {
   return (
-    <article className="store-product-tile store-product-warm store-product-visa-card-trading">
-      <div className="store-tile-copy">
+    <section className="home-product-campaign home-product-campaign-light home-product-campaign-visa" aria-labelledby="home-visa-title">
+      <div className="home-product-campaign-copy">
         <p className="store-eyebrow">Visa Card Trading</p>
-        <h2>Turn supported Visa cards into value.</h2>
+        <h2 id="home-visa-title">Turn supported Visa cards into value.</h2>
         <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
         <div className="store-actions">
           <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
           <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
         </div>
       </div>
-      <div className="store-visa-tile-art">
+      <div className="home-product-campaign-art home-product-campaign-visa-art">
         <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
       </div>
-    </article>
+    </section>
   );
 }
 
-function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
+function ProductCampaign({ campaign, top = false, priority = false }: { campaign: Campaign; top?: boolean; priority?: boolean }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const slug = slugify(campaign.title);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    if (!window.IntersectionObserver) {
+      section.classList.add("is-visible");
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      section.classList.add("is-visible");
+      observer.disconnect();
+    }, { threshold: 0.12 });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className={`store-launch store-launch-${campaign.theme}${campaign.variant ? ` store-launch-${campaign.variant}` : ""}`} aria-labelledby={`launch-${slugify(campaign.eyebrow)}`}>
-      <div className="store-launch-copy">
+    <section ref={sectionRef} className={`home-product-campaign home-product-campaign-${campaign.theme} home-product-campaign-${slug}${top ? " home-product-campaign-top" : ""}`} aria-labelledby={`home-campaign-${slug}`}>
+      <div className="home-product-campaign-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
-        <h2 id={`launch-${slugify(campaign.eyebrow)}`}>{campaign.title}</h2>
+        <h2 id={`home-campaign-${slug}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
         {campaign.availabilityText && <p className="store-launch-availability">{campaign.availabilityText}</p>}
         <div className="store-actions">
@@ -304,13 +409,13 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
           {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
         </div>
       </div>
-      <div className="store-launch-art">
+      <div className="home-product-campaign-art">
         <img
           src={campaign.image}
           alt={campaign.imageAlt}
           loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
           decoding="async"
-          fetchPriority={priority ? "high" : "auto"}
           onError={(event) => {
             if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
             event.currentTarget.dataset.fallbackApplied = "true";
@@ -319,38 +424,6 @@ function ProductLaunch({ campaign, priority }: { campaign: Campaign; priority?: 
         />
       </div>
     </section>
-  );
-}
-
-function ProductTile({ campaign }: { campaign: Campaign }) {
-  const shouldShowImage = campaign.showImage !== false;
-  const isAppleWatch = campaign.eyebrow === "Apple Watch";
-  const isIpadAir = campaign.eyebrow === "iPad Air";
-  return (
-    <article className={`store-product-tile store-product-${campaign.theme} store-product-${slugify(campaign.eyebrow)}${!shouldShowImage ? " store-product-text-only" : ""}`}>
-      <div className="store-tile-copy">
-        <p className="store-eyebrow">{campaign.eyebrow}</p>
-        <h2>{campaign.title}</h2>
-        <p>{campaign.description}</p>
-        <div className="store-actions">
-          <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
-          {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
-        </div>
-      </div>
-      {shouldShowImage && (isAppleWatch ? (
-        <div className="store-watch-visual">
-          <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
-          <span className="store-watch-screen-motion" aria-hidden="true" />
-        </div>
-      ) : isIpadAir ? (
-        <div className="store-ipad-air-scene">
-          <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
-          <span className="store-ipad-air-light" aria-hidden="true" />
-        </div>
-      ) : (
-        <img src={campaign.image} alt={campaign.imageAlt} loading="lazy" decoding="async" />
-      ))}
-    </article>
   );
 }
 

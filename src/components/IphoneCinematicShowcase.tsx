@@ -13,7 +13,7 @@ const approvedScenes = [
   {
     slug: "iphone-17-pro-max",
     name: "iPhone 17 Pro Max",
-    eyebrow: "The latest",
+    eyebrow: "Pro, proven",
     tagline: "Made for your next big move.",
     image: iphone17ProMax,
   },
@@ -114,7 +114,7 @@ function IphoneSequence({ scenes, priority }: { scenes: typeof approvedScenes; p
     <section
       ref={sectionRef}
       className={`iphone-showcase${playing ? " is-playing" : ""}${progressing ? " is-progressing" : ""}`}
-      aria-label="Latest iPhone showcase"
+      aria-label="iPhone showcase"
       aria-roledescription="carousel"
       tabIndex={0}
       onKeyDown={(event) => {

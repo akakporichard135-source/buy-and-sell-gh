@@ -795,6 +795,15 @@
   margin: 0 auto;
 }
 
+.storefront-home .home-editorial-grid-two {
+  grid-template-rows: minmax(0, 1fr);
+  min-height: clamp(590px, 48vw, 760px);
+}
+
+.storefront-home .home-editorial-grid-two .editorial-panel-creators {
+  grid-row: auto;
+}
+
 .storefront-home .editorial-panel {
   position: relative;
   display: block;
