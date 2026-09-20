@@ -31,12 +31,16 @@
   padding-top: clamp(56px, 6vh, 88px);
 }
 
-.storefront-home > .home-product-campaign-watch-series-12 {
+.storefront-home > .home-product-campaign-apple-watch-series-12 {
+  min-height: max(600px, 76svh);
+  padding-top: clamp(50px, 5vh, 68px);
   background: #000;
 }
 
 .storefront-home > .home-product-campaign-iphone-duo {
-  background: #ededee;
+  min-height: max(680px, 78svh);
+  padding-top: clamp(56px, 5vh, 72px);
+  background: #fff;
 }
 
 .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art::after {
@@ -44,8 +48,8 @@
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, #ededee 0%, transparent 9%, transparent 91%, #ededee 100%),
-    linear-gradient(180deg, #ededee 0%, transparent 10%, transparent 92%, #ededee 100%);
+    linear-gradient(90deg, #fff 0%, transparent 5%, transparent 95%, #fff 100%),
+    linear-gradient(180deg, #fff 0%, transparent 16%, transparent 94%, #fff 100%);
   content: "";
   pointer-events: none;
 }
@@ -72,9 +76,38 @@
   mask-composite: intersect;
 }
 
-.storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art > img {
+.storefront-home > .home-product-campaign.home-product-campaign-iphone-duo .home-product-campaign-art > img {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: min(56svh, 620px);
+  min-height: 480px;
   object-fit: contain;
-  filter: saturate(0.92) contrast(1.02);
+  object-position: center bottom;
+  filter: saturate(0.98) contrast(1.015);
+  transform-origin: center;
+}
+
+.storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art {
+  width: calc(100% + 48px);
+  max-width: none;
+  min-height: 470px;
+  margin-top: -42px;
+  margin-inline: -24px;
+}
+
+.storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art {
+  min-height: 340px;
+  margin-top: 0;
+}
+
+.storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art > img {
+  height: min(58svh, 600px);
+  min-height: 340px;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: scale(1.14);
+  transform-origin: center bottom;
 }
 
 .storefront-home > .home-product-campaign .home-product-campaign-copy {
@@ -162,7 +195,7 @@
 
 .storefront-home > .home-product-campaign .store-button {
   display: inline-flex;
-  min-height: 44px;
+  min-height: 46px;
   align-items: center;
   justify-content: center;
   padding: 0 21px;
@@ -297,12 +330,43 @@
   }
 
   .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art {
-    background: #ededee;
+    width: calc(100% + 32px);
+    min-height: 0;
+    margin-top: -12px;
+    margin-inline: -16px;
+    background: #fff;
   }
 
-  .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art > img {
-    aspect-ratio: 1.22;
+  .storefront-home > .home-product-campaign.home-product-campaign-iphone-duo .home-product-campaign-art > img {
+    width: 108%;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: auto;
     object-fit: contain;
+    object-position: center;
+    transform: none;
+  }
+
+  .storefront-home > .home-product-campaign-apple-watch-series-12 {
+    min-height: 0;
+    padding-top: 48px;
+  }
+
+  .storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art {
+    width: calc(100% + 32px);
+    min-height: 0;
+    margin-top: 12px;
+  }
+
+  .storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art > img {
+    width: 118%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1.18;
+    object-fit: cover;
+    object-position: center 58%;
+    transform: scale(1.08);
   }
 
   .storefront-home > .home-product-campaign h2 {

@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Check, ChevronRight, MessageCircle, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
 import type { Product } from "../types/product";
@@ -6,9 +6,9 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import { HomepageVideoShowcase } from "../components/HomepageVideoShowcase";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
+import "../styles/homepage-video-showcase.css";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-white.webp";
 import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
@@ -20,12 +20,9 @@ import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
-import conciergeRearArtwork from "../assets/homepage/iphone-17-pro-max-cutout-center.webp";
-import conciergeFrontArtwork from "../assets/catalogue-products/iphone-17-pro-max-premium.webp";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
-import { intentWhatsAppUrl } from "../utils/whatsapp";
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -61,11 +58,11 @@ const ipadAirCampaign: Campaign = {
 
 const topCampaigns: Campaign[] = [
   {
-    eyebrow: "A wider perspective",
+    eyebrow: "A new way to unfold",
     title: "iPhone Duo",
     description: "Open up more room for everything you do.",
     image: "/products/homepage/iphone-duo.webp",
-    imageAlt: "Original concept rendering of an open, unbranded foldable smartphone",
+    imageAlt: "An open premium foldable phone held naturally in two hands",
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/iphones",
@@ -132,7 +129,6 @@ export function HomePage() {
       <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
       <main className="storefront-home">
         <Iphone18Hero />
-        <HomepageVideoShowcase />
         {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
         <UltraAirpodsStory />
 
@@ -140,10 +136,6 @@ export function HomePage() {
         {featuredMacbookProCampaign && <ProductCampaign campaign={featuredMacbookProCampaign} />}
         {productTiles.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} />)}
         <VisaTradingCampaign />
-        <PremiumTrustStrip />
-
-        <EditorialDeviceGuide />
-        <ConciergeSection />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -154,6 +146,7 @@ export function HomePage() {
             </Link>
           ))}
         </StoreRail>
+        <PremiumTrustStrip />
 
       </main>
     </>
@@ -161,23 +154,68 @@ export function HomePage() {
 }
 
 function Iphone18Hero() {
-  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const loopStart = 4.4;
+    const loopEnd = 5.65;
+    const reducedMotionFrame = 5;
+    const playbackRate = 0.38;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let resetTimer: number | undefined;
+    let revealTimer: number | undefined;
+    let isResetting = false;
+
     const syncPlayback = () => {
-      videoRefs.current.forEach((video) => {
-        if (!video) return;
-        if (motionQuery.matches) {
-          video.pause();
-          return;
-        }
-        void video.play().catch(() => {});
-      });
+      window.clearTimeout(resetTimer);
+      window.clearTimeout(revealTimer);
+      isResetting = false;
+      video.classList.remove("is-loop-resetting");
+      video.playbackRate = playbackRate;
+      video.currentTime = motionQuery.matches ? reducedMotionFrame : loopStart;
+      if (motionQuery.matches) {
+        video.pause();
+        return;
+      }
+      void video.play().catch(() => {});
     };
-    syncPlayback();
+
+    const restartProductSequence = () => {
+      if (motionQuery.matches || isResetting || video.currentTime < loopEnd) return;
+      isResetting = true;
+      video.classList.add("is-loop-resetting");
+      video.pause();
+
+      resetTimer = window.setTimeout(() => {
+        const reveal = () => {
+          if (!isResetting) return;
+          window.clearTimeout(revealTimer);
+          video.classList.remove("is-loop-resetting");
+          video.playbackRate = playbackRate;
+          isResetting = false;
+          void video.play().catch(() => {});
+        };
+
+        video.addEventListener("seeked", reveal, { once: true });
+        video.currentTime = loopStart;
+        revealTimer = window.setTimeout(reveal, 450);
+      }, 220);
+    };
+
+    video.addEventListener("loadedmetadata", syncPlayback);
+    video.addEventListener("timeupdate", restartProductSequence);
+    if (video.readyState >= 1) syncPlayback();
     motionQuery.addEventListener("change", syncPlayback);
-    return () => motionQuery.removeEventListener("change", syncPlayback);
+    return () => {
+      window.clearTimeout(resetTimer);
+      window.clearTimeout(revealTimer);
+      video.removeEventListener("loadedmetadata", syncPlayback);
+      video.removeEventListener("timeupdate", restartProductSequence);
+      motionQuery.removeEventListener("change", syncPlayback);
+    };
   }, []);
 
   return (
@@ -191,26 +229,12 @@ function Iphone18Hero() {
           <Link to="/pre-order?model=iPhone%2018%20Pro">View pricing</Link>
         </div>
       </div>
-      <video
-        ref={(element) => { videoRefs.current[0] = element; }}
-        className="iphone18-launch-video-backdrop"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-        tabIndex={-1}
-      >
-        <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
-      </video>
       <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
       <video
-        ref={(element) => { videoRefs.current[1] = element; }}
+        ref={videoRef}
         className="iphone18-launch-video"
         autoPlay
         muted
-        loop
         playsInline
         preload="auto"
         aria-label="iPhone 18 Pro cinematic product film"
@@ -271,90 +295,6 @@ function TrustPoint({ icon, title, description }: { icon: ReactNode; title: stri
       <span className="premium-trust-icon">{icon}</span>
       <span><strong>{title}</strong><small>{description}</small></span>
     </div>
-  );
-}
-
-function EditorialDeviceGuide() {
-  return (
-    <section className="home-editorial premium-reveal" aria-labelledby="built-around-you-title">
-      <header className="home-editorial-heading">
-        <p className="store-eyebrow">Find your perfect device</p>
-        <h2 id="built-around-you-title">Built Around You.</h2>
-        <p>Explore technology selected around the way you work, create and live.</p>
-      </header>
-      <div className="home-editorial-grid home-editorial-grid-two">
-        <EditorialPanel
-          className="editorial-panel-creators"
-          eyebrow="For creators"
-          products="MacBook Pro · iPad Pro · iPhone Pro"
-          title="Power for ideas without limits."
-          cta="Explore Creator Devices"
-          to="/shop"
-          image={macbookProCampaignArt}
-          imageAlt="MacBook Pro in a dark cinematic studio scene"
-        />
-        <EditorialPanel
-          className="editorial-panel-work"
-          eyebrow="For work"
-          products="MacBook Air · Mac mini · iPad"
-          title="Everything you need to get more done."
-          cta="Explore Work Essentials"
-          to="/macbooks"
-          image={macbookAirCampaignArt}
-          imageAlt="MacBook Air in a bright premium studio scene"
-        />
-      </div>
-    </section>
-  );
-}
-
-function EditorialPanel({ className, eyebrow, products, title, cta, to, image, imageAlt }: { className: string; eyebrow: string; products: string; title: string; cta: string; to: string; image: string; imageAlt: string }) {
-  return (
-    <Link className={`editorial-panel ${className}`} to={to}>
-      <img src={image} alt={imageAlt} loading="lazy" decoding="async" />
-      <span className="editorial-panel-copy">
-        <span className="editorial-panel-eyebrow">{eyebrow}</span>
-        <strong>{title}</strong>
-        <small>{products}</small>
-        <span className="editorial-panel-cta">{cta} <ChevronRight size={16} aria-hidden="true" /></span>
-      </span>
-    </Link>
-  );
-}
-
-function ConciergeSection() {
-  return (
-    <section className="home-concierge premium-reveal" aria-labelledby="concierge-title">
-      <div className="home-concierge-inner">
-        <div className="home-concierge-copy">
-          <p className="store-eyebrow">Personal shopping</p>
-          <h2 id="concierge-title">Buy &amp; Sell GH Concierge</h2>
-          <p className="home-concierge-lead">Not sure which device is right for you? We&apos;ll help you choose, source, trade in and upgrade with confidence.</p>
-          <ul aria-label="Concierge services">
-            {[
-              "Device recommendations",
-              "Product sourcing",
-              "Trade-in guidance",
-              "Purchase assistance",
-            ].map((service) => <li key={service}><Check aria-hidden="true" /> {service}</li>)}
-          </ul>
-          <div className="home-concierge-actions">
-            <Link className="store-button store-button-primary" to="/contact">Talk to a Specialist</Link>
-            <a className="store-button home-concierge-whatsapp" href={intentWhatsAppUrl("general")} target="_blank" rel="noopener noreferrer">
-              <MessageCircle size={17} aria-hidden="true" /> Chat on WhatsApp
-            </a>
-          </div>
-        </div>
-        <div className="home-concierge-art" aria-hidden="true">
-          <span className="home-concierge-device home-concierge-device-rear">
-            <img src={conciergeRearArtwork} alt="" loading="lazy" decoding="async" />
-          </span>
-          <span className="home-concierge-device home-concierge-device-front">
-            <img src={conciergeFrontArtwork} alt="" loading="lazy" decoding="async" />
-          </span>
-        </div>
-      </div>
-    </section>
   );
 }
 

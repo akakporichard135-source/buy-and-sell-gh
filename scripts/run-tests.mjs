@@ -263,7 +263,6 @@ try {
   assert.equal((headerSource.match(/label: "Phones & Tablets"/g) ?? []).length, 1, "Phones & Tablets is not duplicated as a standalone navigation item");
   assert.equal((headerSource.match(/label: "Electronics"/g) ?? []).length, 1, "Electronics is not duplicated as a standalone navigation item");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
-  const videoShowcaseSource = await readFile(path.join(projectRoot, "src/components/HomepageVideoShowcase.tsx"), "utf8");
   const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
   const showcaseSlugs = ["iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-16-plus"];
   assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes(showcaseSlugs.slice().reverse().map((slug) => ({ slug }))).map((scene) => scene.slug), showcaseSlugs, "Cinematic iPhones keep the approved product-led scene order");
@@ -271,8 +270,8 @@ try {
   assert.equal(iphoneShowcase.getIphoneShowcaseScenes([]).length, 0, "Empty catalogue does not invent showcase models");
   assert.equal((homepageSource.match(/<IphoneCinematicShowcase/g) ?? []).length, 0, "The former iPhone 17 cinematic showcase is removed from the homepage");
   assert.equal((homepageSource.match(/<Iphone18Hero \/>/g) ?? []).length, 1, "Homepage renders exactly one iPhone 18 Pro launch hero");
-  assert.equal((homepageSource.match(/<HomepageVideoShowcase \/>/g) ?? []).length, 1, "Homepage renders exactly one clean product-story reel");
-  assert.match(homepageSource, /<Iphone18Hero \/>[\s\S]*<HomepageVideoShowcase \/>[\s\S]*topCampaigns\.map\([\s\S]*<UltraAirpodsStory \/>/, "The corrected launch stack keeps the approved order");
+  assert.doesNotMatch(homepageSource, /HomepageVideoShowcase|home-product-reel/, "The story-player reel is removed from the homepage");
+  assert.match(homepageSource, /<Iphone18Hero \/>[\s\S]*topCampaigns\.map\([\s\S]*<UltraAirpodsStory \/>/, "The corrected launch stack keeps the approved order");
   assert.doesNotMatch(homepageSource, /latestIphoneCampaign|variant:\s*"iphone"/, "The duplicate iPhone product launch is removed");
   const topCampaignNames = ["iPhone Duo", "Apple Watch Series 12"];
   let priorCampaignIndex = -1;
@@ -283,38 +282,25 @@ try {
   }
   assert.doesNotMatch(homepageSource, /title: "Apple Watch"/, "The generic Watch homepage campaign is removed");
   assert.match(homepageSource, /<UltraAirpodsStory \/>/, "Watch Ultra 4 and AirPods 5 share the approved split campaign");
-  assert.match(homepageSource, /Power for ideas without limits\./, "The creator editorial panel remains on the homepage");
-  assert.match(homepageSource, /Everything you need to get more done\./, "The work editorial panel remains on the homepage");
-  assert.doesNotMatch(homepageSource, /For everyday|Technology that fits naturally into your day\./, "The former everyday editorial panel is removed");
+  assert.doesNotMatch(homepageSource, /Built Around You\.|Power for ideas without limits\.|Everything you need to get more done\.|Buy &amp; Sell GH Concierge|EditorialDeviceGuide|ConciergeSection/, "The removed editorial and Concierge area does not return");
   assert.doesNotMatch(homepageSource, /NewMacLaunchCampaign|newMacLaunches\[/, "Mac mini and Mac Studio are removed from the homepage without changing their routes");
-  assert.match(videoShowcaseSource, /video: "\/videos\/homepage\/iphone-duo\.mp4"/, "The product reel uses the uploaded iPhone Duo film");
-  assert.match(videoShowcaseSource, /video: "\/videos\/homepage\/watch-series-12\.mp4"/, "The product reel uses the uploaded Series 12 film");
-  assert.match(videoShowcaseSource, /video: "\/videos\/homepage\/watch-ultra-4\.mp4"/, "The product reel uses the uploaded Ultra 4 film");
-  assert.doesNotMatch(videoShowcaseSource, /iphone-18-pro\.mp4/, "The product reel never repeats the iPhone 18 Pro hero film");
   assert.match(homepageSource, /<video[\s\S]*\/videos\/homepage\/iphone-18-pro\.mp4[\s\S]*<\/video>/, "The uploaded iPhone 18 Pro film is the top hero media");
+  assert.doesNotMatch(homepageSource, /<video[^>]*\scontrols(?:\s|=|>)/i, "The flagship hero video does not expose native controls");
+  assert.doesNotMatch(homepageSource, /home-(?:video|story)-(?:controls|progress)|aria-label="Pause/i, "The flagship hero exposes no player-style controls");
   assert.doesNotMatch(homepageSource, /iphone-18-pro-hero\.webp/, "The generated iPhone 18 Pro still is not used by the hero");
-  const reelStoryNames = ["iPhone Duo", "Apple Watch Series 12", "Apple Watch Ultra 4", "AirPods 5"];
-  let priorStoryIndex = -1;
-  for (const name of reelStoryNames) {
-    const storyIndex = videoShowcaseSource.indexOf(`name: "${name}"`);
-    assert.ok(storyIndex > priorStoryIndex, `${name} keeps the approved product-story reel order`);
-    priorStoryIndex = storyIndex;
-  }
-  const homepageMediaSource = homepageSource + videoShowcaseSource;
+  assert.doesNotMatch(homepageSource, /iphone-18-pro-cinematic\.webp/, "The rejected generated iPhone 18 Pro hardware is not used");
+  const homepageMediaSource = homepageSource;
   for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp", "airpods-5-lifestyle.webp"]) {
     const image = await readFile(path.join(projectRoot, "public/products/homepage", filename));
     assert.equal(image.toString("ascii", 0, 4), "RIFF", `${filename} is a real WebP asset`);
     assert.equal(image.toString("ascii", 8, 12), "WEBP", `${filename} is a real WebP asset`);
     assert.match(homepageMediaSource, new RegExp(`/products/homepage/${filename}`), `${filename} is used by the homepage`);
   }
-  for (const filename of ["iphone-18-pro.mp4", "iphone-duo.mp4", "watch-series-12.mp4", "watch-ultra-4.mp4"]) {
-    const video = await readFile(path.join(projectRoot, "public/videos/homepage", filename));
-    assert.equal(video.toString("ascii", 4, 8), "ftyp", `${filename} is a real MP4 asset`);
-    assert.match(homepageMediaSource, new RegExp(`/videos/homepage/${filename.replace(".", "\\.")}`), `${filename} is used by the approved homepage stack`);
-  }
+  const heroVideo = await readFile(path.join(projectRoot, "public/videos/homepage/iphone-18-pro.mp4"));
+  assert.equal(heroVideo.toString("ascii", 4, 8), "ftyp", "The iPhone 18 Pro hero source is a real MP4 asset");
   assert.match(homepageSource, /<VisaTradingCampaign \/>/, "Visa trading keeps its own homepage campaign");
   assert.doesNotMatch(homepageSource, /<section className="store-(?:feature|product)-grid"/, "Homepage product campaigns no longer use paired grids");
-  assert.match(homepageSource, /<VisaTradingCampaign \/>[\s\S]*<PremiumTrustStrip \/>[\s\S]*<EditorialDeviceGuide \/>/, "Trust benefits follow the uninterrupted product campaigns");
+  assert.match(homepageSource, /<VisaTradingCampaign \/>[\s\S]*<StoreRail[\s\S]*<\/StoreRail>[\s\S]*<PremiumTrustStrip \/>/, "Store services and trust benefits close the compact homepage stack");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
