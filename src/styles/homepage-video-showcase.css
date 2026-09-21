@@ -48,6 +48,15 @@
   animation: iphone18-copy-reveal 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.iphone18-launch-copy::before {
+  position: absolute;
+  z-index: -1;
+  inset: -34px -12vw -58px;
+  background: radial-gradient(ellipse 54% 70% at 50% 38%, rgba(2, 2, 3, 0.98) 0 38%, rgba(2, 2, 3, 0.86) 54%, rgba(2, 2, 3, 0.4) 68%, transparent 84%);
+  content: "";
+  pointer-events: none;
+}
+
 .iphone18-launch-copy p,
 .iphone18-launch-copy h1,
 .iphone18-launch-copy > span {
@@ -151,27 +160,30 @@
 .iphone18-launch-video {
   position: absolute;
   z-index: 1;
-  top: 92%;
-  left: 50%;
+  inset: 0;
   display: block;
-  width: auto;
+  width: 100%;
   max-width: none;
-  height: 195%;
-  aspect-ratio: 9 / 16;
+  height: 100%;
   object-fit: cover;
-  object-position: center 51%;
-  filter: saturate(0.98) contrast(1.045);
-  -webkit-mask-image:
-    linear-gradient(90deg, transparent 0 16%, #000 21%, #000 79%, transparent 84% 100%),
-    linear-gradient(180deg, transparent 0%, #000 7%, #000 91%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(90deg, transparent 0 16%, #000 21%, #000 79%, transparent 84% 100%),
-    linear-gradient(180deg, transparent 0%, #000 7%, #000 91%, transparent 100%);
-  mask-composite: intersect;
+  object-position: center 52%;
+  filter: saturate(1.02) contrast(1.06);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
   animation: iphone18-video-reveal 1.6s 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
   transition: opacity 280ms ease;
   transform-origin: center;
+}
+
+.iphone18-source-mask {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: clamp(280px, 27vw, 420px);
+  height: clamp(220px, 31vh, 330px);
+  background: radial-gradient(ellipse 112% 105% at 0 0, #020203 0 58%, rgba(2, 2, 3, 0.98) 69%, rgba(2, 2, 3, 0.7) 82%, transparent 100%);
+  pointer-events: none;
 }
 
 .iphone18-launch-video.is-loop-resetting {
@@ -342,8 +354,8 @@
 }
 
 @keyframes iphone18-video-reveal {
-  from { opacity: 0; transform: translate(-50%, -40%) scale(0.985); }
-  to { opacity: 1; transform: translate(-50%, -43%); }
+  from { opacity: 0; transform: scale(1.065); }
+  to { opacity: 1; transform: scale(1.025); }
 }
 
 @keyframes split-story-breathe {
@@ -376,11 +388,7 @@
       radial-gradient(ellipse 74% 80% at 50% 67%, transparent 34%, rgba(2, 2, 3, 0.34) 100%);
   }
 
-  .iphone18-launch-video {
-    top: 86%;
-    height: 154%;
-    object-position: center 52%;
-  }
+  .iphone18-launch-video { object-position: center 52%; }
 
   .ultra-airpods-story {
     grid-template-columns: 1fr;
@@ -458,11 +466,9 @@
     font-size: clamp(6rem, 35vw, 9rem);
   }
 
-  .iphone18-launch-video {
-    top: 88%;
-    height: 150%;
-    object-position: center 52%;
-  }
+  .iphone18-launch-video { object-position: center 52%; }
+
+  .iphone18-source-mask { display: none; }
 
   .ultra-airpods-story {
     gap: 6px;
@@ -506,6 +512,6 @@
   }
 
   .iphone18-launch-video {
-    transform: translate(-50%, -43%);
+    transform: scale(1.025);
   }
 }

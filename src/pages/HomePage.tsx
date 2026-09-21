@@ -160,10 +160,10 @@ function Iphone18Hero() {
     const video = videoRef.current;
     if (!video) return;
 
-    const loopStart = 4.4;
-    const loopEnd = 5.65;
-    const reducedMotionFrame = 5;
-    const playbackRate = 0.38;
+    const loopStart = 0.08;
+    const loopEnd = 3.96;
+    const reducedMotionFrame = 2.75;
+    const playbackRate = 0.82;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let resetTimer: number | undefined;
     let revealTimer: number | undefined;
@@ -230,6 +230,7 @@ function Iphone18Hero() {
         </div>
       </div>
       <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
+      <span className="iphone18-source-mask" aria-hidden="true" />
       <video
         ref={videoRef}
         className="iphone18-launch-video"
