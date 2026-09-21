@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cart
+Disallow: /order-success/
+
+Sitemap: https://buyandsellgh.com/sitemap.xml

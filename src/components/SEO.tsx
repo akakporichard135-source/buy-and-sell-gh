@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { business } from "../config/business";
 
 interface SEOProps {
   title: string;
@@ -8,7 +9,7 @@ interface SEOProps {
 export function SEO({ title, description }: SEOProps) {
   useEffect(() => {
     const fullTitle = `${title} | Buy & Sell GH`;
-    const canonicalUrl = `${window.location.origin}${window.location.pathname}`;
+    const canonicalUrl = new URL(window.location.pathname, `${business.siteUrl}/`).href;
     document.title = fullTitle;
     setMeta("name", "description", description);
     setMeta("property", "og:title", fullTitle);
@@ -18,6 +19,7 @@ export function SEO({ title, description }: SEOProps) {
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:title", fullTitle);
     setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:url", canonicalUrl);
 
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonical) {

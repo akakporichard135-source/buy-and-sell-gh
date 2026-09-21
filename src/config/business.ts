@@ -1,5 +1,6 @@
 export const business = {
   name: "Buy & Sell GH",
+  siteUrl: "https://buyandsellgh.com",
   username: "@buyandsell_gh",
   tagline: "Original iPhones. Trusted Deals. Better Prices.",
   type: "iPhones, iPads and original gadgets",
