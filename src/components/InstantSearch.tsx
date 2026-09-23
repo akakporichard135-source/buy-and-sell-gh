@@ -2,6 +2,7 @@ import { MessageCircle, Plus, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { useCart } from "../context/CartContext";
 import { formatGhs } from "../utils/format";
@@ -35,8 +36,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
 
   const results = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return products.slice(0, 5);
-    return products
+    const matches = terms.length ? products
       .filter((product) => {
         const searchable = [
           product.name,
@@ -52,7 +52,10 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
         ].join(" ").toLowerCase();
         return terms.every((term) => searchable.includes(term));
       })
-      .slice(0, 8);
+      : products;
+    return [...matches]
+      .sort((left, right) => Number(isAppleCatalogueProduct(right)) - Number(isAppleCatalogueProduct(left)))
+      .slice(0, terms.length ? 8 : 5);
   }, [products, query]);
 
   if (!open) return null;
@@ -71,11 +74,13 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
             results.map((product) => {
               const image = resolveProductImage(product);
               const stockLabel = normalizeDisplayBadge(product.stockStatus);
+              const resultType = isAppleCatalogueProduct(product) ? "Store" : "Marketplace";
               return (
               <article className="instant-search-result" key={product.id}>
                 <Link className="instant-search-product-link" to={`/product/${product.slug}`} onClick={onClose}>
                   {image ? <img src={image.src} alt={image.alt} loading="lazy" /> : <span className="instant-search-empty-image">No image</span>}
                   <span>
+                    <b className={`instant-search-scope instant-search-scope-${resultType.toLowerCase()}`}>{resultType}</b>
                     <strong>{product.name}</strong>
                     <small>{product.brand} | {product.condition} | {product.storage.join(", ")} | {product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</small>
                   </span>

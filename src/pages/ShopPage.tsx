@@ -2,6 +2,7 @@ import { Filter, MessageCircle, Search, SlidersHorizontal, X } from "lucide-reac
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { StoreProductCard } from "../components/StoreProductCard";
+import { StoreDiscovery } from "../components/StoreDiscovery";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
@@ -228,10 +229,11 @@ export function ShopPage() {
       <section className="page-hero shop-hero">
         <div className="store-hero-inner">
           <p className="eyebrow-dark">Store</p>
-          <h1>Original devices.<br />One trusted store.</h1>
-          <p>Browse original devices, accessories and technology available directly from Buy &amp; Sell GH.</p>
+          <h1>The best place to explore Buy &amp; Sell GH products.</h1>
+          <p>Discover curated product families first, then browse real Store inventory with clear pricing and availability.</p>
         </div>
       </section>
+      <StoreDiscovery products={products} />
       <section className="section shop-section">
         <div className="shop-layout">
           <aside className="filter-panel hidden lg:block">

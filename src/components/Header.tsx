@@ -1,4 +1,4 @@
-import { ChevronDown, Menu, MessageCircle, Search, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, Menu, MessageCircle, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -12,17 +12,18 @@ type HeaderNavItem =
   | { label: string; children: Array<{ label: string; to: string }>; to?: never };
 
 const navItems: HeaderNavItem[] = [
+  { label: "Home", to: "/" },
   { label: "Store", to: "/shop" },
-  { label: "iPhone", to: "/iphones" },
-  { label: "iPad", to: "/ipads" },
-  { label: "Mac", to: "/macbooks" },
-  { label: "Watch", to: "/apple-watch" },
+  { label: "Mac", to: "/mac" },
+  { label: "iPad", to: "/ipad" },
+  { label: "iPhone", to: "/iphone" },
+  { label: "Watch", to: "/watch" },
   { label: "AirPods", to: "/airpods" },
+  { label: "Accessories", to: "/accessories" },
   { label: "Others", children: [
     { label: "Phones & Tablets", to: "/phones-tablets" },
     { label: "Electronics", to: "/electronics" },
   ] },
-  { label: "Accessories", to: "/accessories" },
   { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
   { label: "Pre-order", to: "/pre-order" },
   { label: "Repairs", to: "/repairs" },
@@ -46,7 +47,8 @@ export function Header() {
   const isNavItemActive = (to: string) => {
     if (to.includes("?")) return currentRoute === to;
     if (to === "/shop") return location.pathname === "/shop" && !location.search;
-    return location.pathname === to;
+    if (to === "/") return location.pathname === "/";
+    return location.pathname === to || location.pathname.startsWith(`${to}/`);
   };
   const linkClass = (isActive: boolean) => `site-nav-link ${isActive ? "is-active" : ""}`;
 
@@ -120,6 +122,9 @@ export function Header() {
             <ShoppingBag size={19} />
             {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
           </NavLink>
+          <NavLink to="/account" className="icon-button" aria-label="Account and order support">
+            <UserRound size={19} />
+          </NavLink>
           <a className="icon-button" href="https://wa.me/233244182149" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
             <MessageCircle size={19} />
           </a>
@@ -133,6 +138,7 @@ export function Header() {
             <ShoppingBag size={19} />
             {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
           </NavLink>
+          <NavLink to="/account" className="icon-button" aria-label="Account and order support"><UserRound size={19} /></NavLink>
           <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger shrink-0" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <Menu size={22} />
           </button>
@@ -173,7 +179,8 @@ function MobileMenuOverlay({
   const isNavItemActive = (to: string) => {
     if (to.includes("?")) return currentRoute === to;
     if (to === "/shop") return pathname === "/shop" && !currentRoute.includes("?");
-    return pathname === to;
+    if (to === "/") return pathname === "/";
+    return pathname === to || pathname.startsWith(`${to}/`);
   };
 
   return (
@@ -221,6 +228,9 @@ function MobileMenuOverlay({
           </button>
           <NavLink to="/cart" className={({ isActive }) => `mobile-menu-link ${isActive ? "is-active" : ""}`} onClick={onClose}>
             Cart ({totalItems})
+          </NavLink>
+          <NavLink to="/account" className={({ isActive }) => `mobile-menu-link ${isActive ? "is-active" : ""}`} onClick={onClose}>
+            Account &amp; order support
           </NavLink>
         </nav>
         <div className="mobile-menu-footer">

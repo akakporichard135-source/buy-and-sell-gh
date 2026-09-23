@@ -5,6 +5,7 @@ import App from "./App";
 import { ProductCatalogProvider } from "./catalog/ProductCatalogContext";
 import { CartProvider } from "./context/CartContext";
 import "./index.css";
+import "./styles/product-experience.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

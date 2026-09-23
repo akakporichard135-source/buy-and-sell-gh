@@ -8,6 +8,7 @@ import { WhatsAppButton } from "./components/WhatsAppButton";
 import { AdminLayout } from "./layouts/AdminLayout";
 
 const AboutPage = lazy(() => import("./pages/AboutPage").then((module) => ({ default: module.AboutPage })));
+const AccountPage = lazy(() => import("./pages/AccountPage").then((module) => ({ default: module.AccountPage })));
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage").then((module) => ({ default: module.AdminDashboardPage })));
 const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage").then((module) => ({ default: module.AdminLoginPage })));
 const AdminMfaPage = lazy(() => import("./pages/admin/AdminMfaPage").then((module) => ({ default: module.AdminMfaPage })));
@@ -29,6 +30,9 @@ const ReferFriendPage = lazy(() => import("./pages/ReferFriendPage").then((modul
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage").then((module) => ({ default: module.OrderSuccessPage })));
 const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage").then((module) => ({ default: module.ProductDetailsPage })));
+const ProductFamilyPage = lazy(() => import("./pages/ProductFamilyPage").then((module) => ({ default: module.ProductFamilyPage })));
+const ProductStoryPage = lazy(() => import("./pages/ProductStoryPage").then((module) => ({ default: module.ProductStoryPage })));
+const ProductBuyPage = lazy(() => import("./pages/ProductBuyPage").then((module) => ({ default: module.ProductBuyPage })));
 const SellTradePage = lazy(() => import("./pages/SellTradePage").then((module) => ({ default: module.SellTradePage })));
 const ShopPage = lazy(() => import("./pages/ShopPage").then((module) => ({ default: module.ShopPage })));
 const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPage").then((module) => ({ default: module.ShoppingInformationPage })));
@@ -72,6 +76,28 @@ function PublicShell() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
+          <Route path="/iphone" element={<ProductFamilyPage family="iphone" />} />
+          <Route path="/mac" element={<ProductFamilyPage family="mac" />} />
+          <Route path="/ipad" element={<ProductFamilyPage family="ipad" />} />
+          <Route path="/watch" element={<ProductFamilyPage family="watch" />} />
+          <Route path="/airpods" element={<ProductFamilyPage family="airpods" />} />
+          <Route path="/accessories" element={<ProductFamilyPage family="accessories" />} />
+          <Route path="/iphone/:slug" element={<ProductStoryPage family="iphone" />} />
+          <Route path="/mac/:slug" element={<ProductStoryPage family="mac" />} />
+          <Route path="/ipad/:slug" element={<ProductStoryPage family="ipad" />} />
+          <Route path="/watch/:slug" element={<ProductStoryPage family="watch" />} />
+          <Route path="/airpods/:slug" element={<ProductStoryPage family="airpods" />} />
+          <Route path="/accessories/:slug" element={<ProductStoryPage family="accessories" />} />
+          <Route path="/shop/buy-iphone/:slug" element={<ProductBuyPage family="iphone" />} />
+          <Route path="/shop/buy-mac/:slug" element={<ProductBuyPage family="mac" />} />
+          <Route path="/shop/buy-ipad/:slug" element={<ProductBuyPage family="ipad" />} />
+          <Route path="/shop/buy-watch/:slug" element={<ProductBuyPage family="watch" />} />
+          <Route path="/shop/buy-airpods/:slug" element={<ProductBuyPage family="airpods" />} />
+          <Route path="/shop/buy-accessory/:slug" element={<ProductBuyPage family="accessories" />} />
+          <Route path="/iphones" element={<Navigate to="/iphone" replace />} />
+          <Route path="/macbooks" element={<Navigate to="/mac" replace />} />
+          <Route path="/ipads" element={<Navigate to="/ipad" replace />} />
+          <Route path="/apple-watch" element={<Navigate to="/watch" replace />} />
           <Route path="/phones-tablets" element={<MobilePhonesPage />} />
           <Route path="/mobile-phones" element={<Navigate to="/phones-tablets" replace />} />
           <Route path="/electronics" element={<ElectronicsPage />} />
@@ -90,6 +116,7 @@ function PublicShell() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/shopping-information" element={<ShoppingInformationPage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order-success/:reference" element={<OrderSuccessPage />} />
           <Route path="*" element={<NotFoundPage />} />

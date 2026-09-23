@@ -8,6 +8,8 @@ import { useSearchParams } from "react-router-dom";
 export function DeviceRequestPage() {
   const [searchParams] = useSearchParams();
   const requestedModel = searchParams.get("model")?.trim() ?? "";
+  const requestedStorage = searchParams.get("storage")?.trim() ?? "";
+  const requestedColor = searchParams.get("color")?.trim() ?? "";
 
   return (
     <>
@@ -23,8 +25,8 @@ export function DeviceRequestPage() {
       <section className="section device-request-layout grid gap-8">
         <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
           <FormField label="Device model" name="model" required defaultValue={requestedModel} maxLength={160} />
-          <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
-          <FormField label="Colour" name="color" maxLength={80} />
+          <FormField label="Storage" name="storage" defaultValue={requestedStorage} maxLength={80} />
+          <FormField label="Colour" name="color" defaultValue={requestedColor} maxLength={80} />
           <FormField label="Preferred condition" name="condition" options={["Brand New", "UK Used", "Either"]} />
           <FormField label="Budget" name="budget" required maxLength={80} />
           <FormField label="Preferred payment method" name="payment" options={["Cash", "Mobile Money", "Bank transfer", "To confirm"]} />

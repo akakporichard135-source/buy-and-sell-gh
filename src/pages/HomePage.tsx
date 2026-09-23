@@ -50,9 +50,9 @@ const ipadAirCampaign: Campaign = {
   imageAlt: "iPad Air in a layered premium product presentation",
   theme: "light",
   primaryLabel: "Learn more",
-  primaryTo: "/ipads?family=iPad%20Air",
+  primaryTo: "/ipad/ipad-air",
   secondaryLabel: "Shop now",
-  secondaryTo: "/shop?category=iPads",
+  secondaryTo: "/shop/buy-ipad/ipad-air",
 };
 
 const visaTradingCampaign: Campaign = {
@@ -77,9 +77,9 @@ const topCampaigns: Campaign[] = [
     imageAlt: "An open premium foldable phone held naturally in two hands",
     theme: "light",
     primaryLabel: "Learn more",
-    primaryTo: "/iphones",
+    primaryTo: "/iphone/iphone-duo",
     secondaryLabel: "View pricing",
-    secondaryTo: "/pre-order?model=iPhone%20Duo",
+    secondaryTo: "/shop/buy-iphone/iphone-duo",
   },
   {
     eyebrow: "Everyday momentum",
@@ -89,9 +89,9 @@ const topCampaigns: Campaign[] = [
     imageAlt: "Original concept rendering of a rectangular everyday smartwatch",
     theme: "black",
     primaryLabel: "Learn more",
-    primaryTo: "/apple-watch",
+    primaryTo: "/watch/apple-watch-series-12",
     secondaryLabel: "View pricing",
-    secondaryTo: "/pre-order?model=Apple%20Watch%20Series%2012",
+    secondaryTo: "/shop/buy-watch/apple-watch-series-12",
   },
 ];
 
@@ -299,8 +299,8 @@ function Iphone18Hero() {
         <h1 id="iphone18-launch-title">iPhone 18 Pro</h1>
         <span>Bold by design. Built to go further.</span>
         <div className="iphone18-launch-actions">
-          <Link to="/iphones">Learn more</Link>
-          <Link to="/pre-order?model=iPhone%2018%20Pro">View pricing</Link>
+          <Link to="/iphone/iphone-18-pro">Learn more</Link>
+          <Link to="/shop/buy-iphone/iphone-18-pro">View pricing</Link>
         </div>
       </div>
       <div className="iphone18-launch-media">
@@ -331,8 +331,8 @@ function UltraAirpodsStory() {
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
           <div className="ultra-airpods-actions">
-            <Link to="/apple-watch">Learn more</Link>
-            <Link to="/pre-order?model=Apple%20Watch%20Ultra%204">View pricing</Link>
+            <Link to="/watch/apple-watch-ultra-4">Learn more</Link>
+            <Link to="/shop/buy-watch/apple-watch-ultra-4">View pricing</Link>
           </div>
         </div>
         <img src="/products/homepage/watch-ultra-4.webp" alt="Original concept rendering of a rugged titanium smartwatch with an orange band" loading="lazy" decoding="async" />
@@ -343,8 +343,8 @@ function UltraAirpodsStory() {
           <h2 id="airpods-story-title">AirPods 5</h2>
           <span>Freedom to listen wherever the rhythm takes you.</span>
           <div className="ultra-airpods-actions">
-            <Link to="/airpods">Learn more</Link>
-            <Link to="/pre-order?model=AirPods%205">View pricing</Link>
+            <Link to="/airpods/airpods-5">Learn more</Link>
+            <Link to="/shop/buy-airpods/airpods-5">View pricing</Link>
           </div>
         </div>
         <img src="/products/homepage/airpods-5-lifestyle.webp" alt="A woman enjoying music with a white wireless earbud" loading="lazy" decoding="async" />
@@ -548,9 +548,9 @@ function createMacCampaign(
     imageAlt: launch.imageAlt,
     theme,
     primaryLabel: "Learn more",
-    primaryTo: launch.learnMoreTo,
+    primaryTo: variant === "macbook-air" ? "/mac/macbook-air" : "/mac/macbook-pro",
     secondaryLabel: "Shop now",
-    secondaryTo: "/macbooks",
+    secondaryTo: variant === "macbook-air" ? "/shop/buy-mac/macbook-air" : "/shop/buy-mac/macbook-pro",
     fallbackImage,
     variant,
   };

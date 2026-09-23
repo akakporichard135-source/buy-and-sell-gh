@@ -43,6 +43,7 @@ try {
   const adminAuthMessages = await bundle(path.join(projectRoot, "src/admin/adminAuthMessages.ts"), path.join(outdir, "adminAuthMessages.mjs"));
   const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
+  const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
   const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
   const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
   const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
@@ -257,6 +258,7 @@ try {
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
+  assert.ok(headerSource.indexOf('{ label: "Home", to: "/" }') < headerSource.indexOf('{ label: "Store", to: "/shop" }'), "Home is the first global navigation destination");
   assert.match(headerSource, /label: "Others", children:/, "Global navigation has one Others category");
   assert.match(headerSource, /label: "Phones & Tablets", to: "\/phones-tablets"/, "Others links to Phones & Tablets");
   assert.match(headerSource, /label: "Electronics", to: "\/electronics"/, "Others links to Electronics");
@@ -306,6 +308,22 @@ try {
   assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
   const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
+  for (const familyPath of ["iphone", "mac", "ipad", "watch", "airpods", "accessories"]) {
+    assert.match(appSource, new RegExp(`path="/${familyPath}"`), `${familyPath} has a canonical product-family route`);
+    assert.match(appSource, new RegExp(`path="/${familyPath}/:slug"`), `${familyPath} has an editorial product-story route`);
+  }
+  assert.match(appSource, /path="\/shop\/buy-iphone\/:slug"/, "iPhone buying is separated from editorial storytelling");
+  assert.match(appSource, /path="\/shop\/buy-mac\/:slug"/, "Mac buying is separated from editorial storytelling");
+  assert.equal(productExperience.productFamilies.iphone.path, "/iphone", "Product experience exposes the canonical iPhone family path");
+  assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").buyPath, "/shop/buy-iphone/iphone-18-pro", "iPhone 18 Pro story links to the dedicated buying flow");
+  assert.equal(productExperience.getProductStory("accessories", "charging-and-power").buyPath, "/shop/buy-accessory/charging-and-power", "Accessories featured Learn More route has a matching enquiry journey");
+  const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
+  assert.match(productFamilySource, /showCompare=\{comparisonProducts\.length > 1\}/, "Family navigation shows Compare only when reliable comparison data exists");
+  const instantSearchSource = await readFile(path.join(projectRoot, "src/components/InstantSearch.tsx"), "utf8");
+  assert.match(instantSearchSource, /isAppleCatalogueProduct\(product\) \? "Store" : "Marketplace"/, "Search labels Store and Marketplace results distinctly");
+  const storeDiscoverySource = await readFile(path.join(projectRoot, "src/components/StoreDiscovery.tsx"), "utf8");
+  assert.match(storeDiscoverySource, /IntersectionObserver/, "Below-fold Store campaign video pauses outside the viewport");
+  assert.match(storeDiscoverySource, /prefers-reduced-motion: reduce/, "Store campaign media respects reduced-motion preferences");
   assert.match(appSource, /path="\/phones-tablets"/, "Phones & Tablets has a dedicated public route");
   assert.match(appSource, /path="\/electronics"/, "Electronics has a dedicated public route");
   assert.match(appSource, /path="\/mac-mini"/, "Mac mini has a dedicated launch route");
