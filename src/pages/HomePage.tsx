@@ -10,7 +10,6 @@ import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
 import "../styles/homepage-video-showcase.css";
 import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-white.webp";
-import ipadProCampaignArt from "../assets/homepage/homepage-ipad-pro-cinematic.webp";
 import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
 import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
@@ -56,6 +55,19 @@ const ipadAirCampaign: Campaign = {
   secondaryTo: "/shop?category=iPads",
 };
 
+const visaTradingCampaign: Campaign = {
+  eyebrow: "Visa Card Trading",
+  title: "Turn supported Visa cards into value.",
+  description: "Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.",
+  image: visaCardCampaign,
+  imageAlt: "One original unbranded black and gold card for supported card review",
+  theme: "light",
+  primaryLabel: "Check a Card",
+  primaryTo: "/gift-cards",
+  secondaryLabel: "Contact Us",
+  secondaryTo: "/contact",
+};
+
 const topCampaigns: Campaign[] = [
   {
     eyebrow: "A new way to unfold",
@@ -85,18 +97,7 @@ const topCampaigns: Campaign[] = [
 
 const productTiles: Campaign[] = [
   ipadAirCampaign,
-  {
-    eyebrow: "Big ideas. Pro power.",
-    title: "iPad Pro",
-    description: "A premium canvas for advanced creative work.",
-    image: ipadProCampaignArt,
-    imageAlt: "iPad Pro in a premium black studio presentation",
-    theme: "black",
-    primaryLabel: "Learn more",
-    primaryTo: "/ipads?family=iPad%20Pro",
-    secondaryLabel: "Shop now",
-    secondaryTo: "/shop?category=iPads",
-  },
+  visaTradingCampaign,
 ];
 
 const serviceStories = [
@@ -123,6 +124,8 @@ export function HomePage() {
       slug: "macbook-pro-16-m5-pro-max",
     })
     : null;
+  const featuredMacbookCampaigns = [featuredMacbookAirCampaign, featuredMacbookProCampaign]
+    .filter((campaign): campaign is Campaign => campaign !== null);
 
   return (
     <>
@@ -132,10 +135,10 @@ export function HomePage() {
         {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
         <UltraAirpodsStory />
 
-        {featuredMacbookAirCampaign && <ProductCampaign campaign={featuredMacbookAirCampaign} />}
-        {featuredMacbookProCampaign && <ProductCampaign campaign={featuredMacbookProCampaign} />}
-        {productTiles.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} />)}
-        <VisaTradingCampaign />
+        {featuredMacbookCampaigns.length > 0 && (
+          <CampaignPair campaigns={featuredMacbookCampaigns} label="MacBook Air and MacBook Pro" className="home-product-pair-macbooks" />
+        )}
+        <CampaignPair campaigns={productTiles} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
           {serviceStories.map((story) => (
@@ -159,61 +162,132 @@ function Iphone18Hero() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    const hero = video.closest<HTMLElement>(".iphone18-launch-hero");
 
     const loopStart = 0.08;
-    const loopEnd = 3.96;
-    const reducedMotionFrame = 2.75;
-    const playbackRate = 0.82;
+    const blueStageHoldAt = 1.15;
+    const blueStageHoldDuration = 3000;
+    const loopEnd = 2.88;
+    const reducedMotionFrame = blueStageHoldAt;
+    const playbackRate = 0.72;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let resetTimer: number | undefined;
     let revealTimer: number | undefined;
+    let holdTimer: number | undefined;
+    let timelineFrame = 0;
     let isResetting = false;
+    let isHolding = false;
+    let hasHeldBlueStage = false;
+    let isVisible = true;
+
+    const canPlay = () => !motionQuery.matches && isVisible && !document.hidden && !isResetting && !isHolding;
+
+    const playWhenReady = () => {
+      if (!canPlay()) return;
+      video.playbackRate = playbackRate;
+      void video.play().catch(() => {});
+    };
+
+    const revealMedia = () => {
+      video.classList.add("is-ready");
+      playWhenReady();
+    };
 
     const syncPlayback = () => {
       window.clearTimeout(resetTimer);
       window.clearTimeout(revealTimer);
+      window.clearTimeout(holdTimer);
       isResetting = false;
+      isHolding = false;
+      hasHeldBlueStage = false;
       video.classList.remove("is-loop-resetting");
       video.playbackRate = playbackRate;
       video.currentTime = motionQuery.matches ? reducedMotionFrame : loopStart;
       if (motionQuery.matches) {
         video.pause();
+        video.classList.add("is-ready");
         return;
       }
-      void video.play().catch(() => {});
+      playWhenReady();
     };
 
     const restartProductSequence = () => {
       if (motionQuery.matches || isResetting || video.currentTime < loopEnd) return;
       isResetting = true;
-      video.classList.add("is-loop-resetting");
+      isHolding = false;
+      window.clearTimeout(holdTimer);
       video.pause();
+      video.classList.add("is-loop-resetting");
 
       resetTimer = window.setTimeout(() => {
         const reveal = () => {
           if (!isResetting) return;
           window.clearTimeout(revealTimer);
-          video.classList.remove("is-loop-resetting");
           video.playbackRate = playbackRate;
           isResetting = false;
-          void video.play().catch(() => {});
+          hasHeldBlueStage = false;
+          video.classList.remove("is-loop-resetting");
+          playWhenReady();
         };
 
         video.addEventListener("seeked", reveal, { once: true });
         video.currentTime = loopStart;
-        revealTimer = window.setTimeout(reveal, 450);
-      }, 220);
+        revealTimer = window.setTimeout(reveal, 280);
+      }, 240);
     };
 
+    const holdBlueStage = () => {
+      if (motionQuery.matches || hasHeldBlueStage || isHolding || isResetting || video.currentTime < blueStageHoldAt || video.currentTime >= loopEnd) return;
+      hasHeldBlueStage = true;
+      isHolding = true;
+      video.pause();
+      holdTimer = window.setTimeout(() => {
+        isHolding = false;
+        playWhenReady();
+      }, blueStageHoldDuration);
+    };
+
+    const monitorTimeline = () => {
+      if (!motionQuery.matches && !isResetting) {
+        if (!isHolding && video.currentTime >= loopEnd) restartProductSequence();
+        else if (!hasHeldBlueStage && video.currentTime >= blueStageHoldAt) holdBlueStage();
+      }
+      timelineFrame = window.requestAnimationFrame(monitorTimeline);
+    };
+
+    const syncVisibility = () => {
+      if (document.hidden) {
+        video.pause();
+        return;
+      }
+      playWhenReady();
+    };
+
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting && entry.intersectionRatio > 0.08;
+      if (isVisible) playWhenReady();
+      else video.pause();
+    }, { threshold: [0, 0.08, 0.35] });
+
     video.addEventListener("loadedmetadata", syncPlayback);
-    video.addEventListener("timeupdate", restartProductSequence);
+    video.addEventListener("loadeddata", revealMedia);
+    video.addEventListener("canplay", revealMedia);
     if (video.readyState >= 1) syncPlayback();
+    if (video.readyState >= 2) revealMedia();
+    if (hero) observer.observe(hero);
+    timelineFrame = window.requestAnimationFrame(monitorTimeline);
+    document.addEventListener("visibilitychange", syncVisibility);
     motionQuery.addEventListener("change", syncPlayback);
     return () => {
       window.clearTimeout(resetTimer);
       window.clearTimeout(revealTimer);
+      window.clearTimeout(holdTimer);
+      window.cancelAnimationFrame(timelineFrame);
+      observer.disconnect();
       video.removeEventListener("loadedmetadata", syncPlayback);
-      video.removeEventListener("timeupdate", restartProductSequence);
+      video.removeEventListener("loadeddata", revealMedia);
+      video.removeEventListener("canplay", revealMedia);
+      document.removeEventListener("visibilitychange", syncVisibility);
       motionQuery.removeEventListener("change", syncPlayback);
     };
   }, []);
@@ -229,19 +303,21 @@ function Iphone18Hero() {
           <Link to="/pre-order?model=iPhone%2018%20Pro">View pricing</Link>
         </div>
       </div>
-      <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
-      <span className="iphone18-source-mask" aria-hidden="true" />
-      <video
-        ref={videoRef}
-        className="iphone18-launch-video"
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        aria-label="iPhone 18 Pro cinematic product film"
-      >
-        <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
-      </video>
+      <div className="iphone18-launch-media">
+        <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
+        <span className="iphone18-source-mask" aria-hidden="true" />
+        <video
+          ref={videoRef}
+          className="iphone18-launch-video"
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          aria-label="iPhone 18 Pro cinematic product film"
+        >
+          <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
+        </video>
+      </div>
     </section>
   );
 }
@@ -299,25 +375,6 @@ function TrustPoint({ icon, title, description }: { icon: ReactNode; title: stri
   );
 }
 
-function VisaTradingCampaign() {
-  return (
-    <section className="home-product-campaign home-product-campaign-light home-product-campaign-visa" aria-labelledby="home-visa-title">
-      <div className="home-product-campaign-copy">
-        <p className="store-eyebrow">Visa Card Trading</p>
-        <h2 id="home-visa-title">Turn supported Visa cards into value.</h2>
-        <p>Send card details for review and confirmation. Buy &amp; Sell GH does not issue payment cards.</p>
-        <div className="store-actions">
-          <Link className="store-button store-button-primary" to="/gift-cards">Check a Card</Link>
-          <Link className="store-button store-button-secondary" to="/contact">Contact Us</Link>
-        </div>
-      </div>
-      <div className="home-product-campaign-art home-product-campaign-visa-art">
-        <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="lazy" decoding="async" />
-      </div>
-    </section>
-  );
-}
-
 function ProductCampaign({ campaign, top = false, priority = false }: { campaign: Campaign; top?: boolean; priority?: boolean }) {
   const sectionRef = useRef<HTMLElement>(null);
   const slug = slugify(campaign.title);
@@ -365,6 +422,14 @@ function ProductCampaign({ campaign, top = false, priority = false }: { campaign
         />
       </div>
     </section>
+  );
+}
+
+function CampaignPair({ campaigns, label, className }: { campaigns: Campaign[]; label: string; className: string }) {
+  return (
+    <div className={`home-product-pair ${className}${campaigns.length === 1 ? " home-product-pair-single" : ""}`} role="group" aria-label={label}>
+      {campaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} />)}
+    </div>
   );
 }
 

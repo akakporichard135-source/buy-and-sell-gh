@@ -298,9 +298,10 @@ try {
   }
   const heroVideo = await readFile(path.join(projectRoot, "public/videos/homepage/iphone-18-pro.mp4"));
   assert.equal(heroVideo.toString("ascii", 4, 8), "ftyp", "The iPhone 18 Pro hero source is a real MP4 asset");
-  assert.match(homepageSource, /<VisaTradingCampaign \/>/, "Visa trading keeps its own homepage campaign");
+  assert.match(homepageSource, /const productTiles: Campaign\[\] = \[\s*ipadAirCampaign,\s*visaTradingCampaign,\s*\]/, "Visa trading replaces iPad Pro in the paired homepage campaign data");
+  assert.doesNotMatch(homepageSource, /ipadProCampaignArt|title:\s*"iPad Pro"/, "The iPad Pro campaign is removed from the homepage");
   assert.doesNotMatch(homepageSource, /<section className="store-(?:feature|product)-grid"/, "Homepage product campaigns no longer use paired grids");
-  assert.match(homepageSource, /<VisaTradingCampaign \/>[\s\S]*<StoreRail[\s\S]*<\/StoreRail>[\s\S]*<PremiumTrustStrip \/>/, "Store services and trust benefits close the compact homepage stack");
+  assert.match(homepageSource, /<CampaignPair campaigns=\{productTiles\} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" \/>[\s\S]*<StoreRail[\s\S]*<\/StoreRail>[\s\S]*<PremiumTrustStrip \/>/, "The iPad and Visa pair is followed by store services and trust benefits");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
