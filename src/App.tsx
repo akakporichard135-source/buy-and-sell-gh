@@ -29,6 +29,7 @@ const GiftCardsPage = lazy(() => import("./pages/GiftCardsPage").then((module) =
 const ReferFriendPage = lazy(() => import("./pages/ReferFriendPage").then((module) => ({ default: module.ReferFriendPage })));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage").then((module) => ({ default: module.OrderSuccessPage })));
+const OthersPage = lazy(() => import("./pages/OthersPage").then((module) => ({ default: module.OthersPage })));
 const ProductDetailsPage = lazy(() => import("./pages/ProductDetailsPage").then((module) => ({ default: module.ProductDetailsPage })));
 const ProductFamilyPage = lazy(() => import("./pages/ProductFamilyPage").then((module) => ({ default: module.ProductFamilyPage })));
 const ProductStoryPage = lazy(() => import("./pages/ProductStoryPage").then((module) => ({ default: module.ProductStoryPage })));
@@ -75,6 +76,7 @@ function PublicShell() {
       <main className="public-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/store" element={<ShopPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/iphone" element={<ProductFamilyPage family="iphone" />} />
           <Route path="/mac" element={<ProductFamilyPage family="mac" />} />
@@ -99,6 +101,7 @@ function PublicShell() {
           <Route path="/ipads" element={<Navigate to="/ipad" replace />} />
           <Route path="/apple-watch" element={<Navigate to="/watch" replace />} />
           <Route path="/phones-tablets" element={<MobilePhonesPage />} />
+          <Route path="/others" element={<OthersPage />} />
           <Route path="/mobile-phones" element={<Navigate to="/phones-tablets" replace />} />
           <Route path="/electronics" element={<ElectronicsPage />} />
           <Route path="/mac-mini" element={<MacLaunchPage product="mac-mini" />} />
@@ -114,6 +117,7 @@ function PublicShell() {
           <Route path="/device-request" element={<Navigate to="/pre-order" replace />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/support" element={<Navigate to="/contact" replace />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/shopping-information" element={<ShoppingInformationPage />} />
           <Route path="/account" element={<AccountPage />} />

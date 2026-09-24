@@ -1,7 +1,7 @@
 import type { Product } from "../types/product";
 import { getMacbookGeneration } from "./productPresentation";
 
-export const STORE_BATCH_SIZE = 24;
+export const STORE_BATCH_SIZE = 12;
 
 export function storeCardFacts(product: Product): string[] {
   const laptop = product.category === "MacBooks" || product.category === "Laptops";

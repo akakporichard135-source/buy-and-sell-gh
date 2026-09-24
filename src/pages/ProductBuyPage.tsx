@@ -49,7 +49,7 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   }, [selectedProduct?.id]);
 
   const name = selectedProduct?.name ?? story?.name ?? humanizeSlug(slug);
-  const gallery = selectedProduct ? resolveProductGallery(selectedProduct) : [];
+  const gallery = selectedProduct ? resolveProductGallery(selectedProduct) : story?.galleryMedia ?? [];
   const purchasable = selectedProduct ? isProductPurchasable(selectedProduct) : false;
   const priceLabel = selectedProduct && !selectedProduct.priceOnRequest && selectedProduct.price > 0
     ? formatGhs(selectedProduct.price)
@@ -96,11 +96,12 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
             activeImage={activeImage}
             onChange={setActiveImage}
             fallbackMedia={story?.designMedia ?? story?.media}
+            darkStage={story?.theme === "ink"}
           />
 
           <div className="buy-options">
             <div className="buy-status-row">
-              <span>{purchasable ? selectedProduct?.stockStatus : "Available for enquiry"}</span>
+              <span>{selectedProduct?.condition === "UK Used" ? "UK USED" : purchasable ? "IN STOCK" : "AVAILABLE ON REQUEST"}</span>
               {selectedProduct && <small>{selectedProduct.condition}</small>}
             </div>
             <h2>{name}</h2>
@@ -160,7 +161,7 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
                   <button className="experience-button experience-button-secondary" type="button" onClick={() => addSelectedToCart(true)}>Buy now</button>
                 </>
               ) : (
-                <Link className="experience-button experience-button-primary" to={preorderPath}>Send a device request</Link>
+                <Link className="experience-button experience-button-primary" to={preorderPath}>Check availability</Link>
               )}
               <a className="experience-button experience-button-secondary" href={enquiryHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={18} /> Ask on WhatsApp</a>
             </div>
@@ -188,12 +189,14 @@ function BuyGallery({
   activeImage,
   onChange,
   fallbackMedia,
+  darkStage,
 }: {
   name: string;
   gallery: ProductImage[];
   activeImage: number;
   onChange: (index: number) => void;
   fallbackMedia?: { type: "image" | "video"; src: string; alt: string };
+  darkStage?: boolean;
 }) {
   const active = gallery[activeImage];
   const previous = () => onChange((activeImage - 1 + gallery.length) % gallery.length);
@@ -201,10 +204,10 @@ function BuyGallery({
 
   return (
     <div className="buy-gallery">
-      <div className={`buy-gallery-stage ${fallbackMedia?.src.includes("clean-frame") ? "buy-gallery-stage-cinematic" : ""}`}>
+      <div className={`buy-gallery-stage ${darkStage || fallbackMedia?.src.includes("clean-frame") ? "buy-gallery-stage-cinematic" : ""}`}>
         {active ? <img src={active.src} alt={active.alt} decoding="async" /> : fallbackMedia?.type === "video" ? (
           <><video muted playsInline preload="metadata" aria-label={fallbackMedia.alt} onLoadedMetadata={(event) => { event.currentTarget.pause(); event.currentTarget.currentTime = 1.15; }}><source src={fallbackMedia.src} type="video/mp4" /></video><span className="experience-source-mask" aria-hidden="true" /></>
-        ) : fallbackMedia ? <img src={fallbackMedia.src} alt={fallbackMedia.alt} decoding="async" /> : <span>Product media pending</span>}
+        ) : fallbackMedia ? <img src={fallbackMedia.src} alt={fallbackMedia.alt} decoding="async" /> : <span>Image coming soon</span>}
         {gallery.length > 1 && (
           <div className="buy-gallery-arrows">
             <button type="button" aria-label="Previous product image" onClick={previous}><ChevronLeft /></button>

@@ -86,7 +86,18 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
       ) : filteredProducts.length > 0 ? (
         <div className="marketplace-listing-grid">{filteredProducts.map((product) => <MarketplaceProductCard product={product} key={product.id} />)}</div>
       ) : (
-        <div className="marketplace-empty"><strong>{products.length ? "No listings match your filters." : emptyTitle}</strong><p>{products.length ? "Try a different search or clear your filters." : "Check back soon or request the device you're looking for."}</p>{products.length > 0 ? <button className="btn-secondary" type="button" onClick={clearFilters}>Clear filters</button> : <Link className="btn-primary" to="/pre-order">Request a device</Link>}</div>
+        <div className="marketplace-empty">
+          <strong>{products.length ? "No listings match your filters." : emptyTitle}</strong>
+          <p>{products.length ? "Try a different search or clear your filters." : "No listings yet. Request the device you need, or list one to sell."}</p>
+          {products.length > 0 ? (
+            <button className="btn-secondary" type="button" onClick={clearFilters}>Clear filters</button>
+          ) : (
+            <div className="marketplace-empty-actions">
+              <Link className="btn-primary" to="/pre-order">Request a device</Link>
+              <Link className="btn-secondary" to="/sell-or-trade?mode=sell">Sell a device</Link>
+            </div>
+          )}
+        </div>
       )}
     </section>
   );

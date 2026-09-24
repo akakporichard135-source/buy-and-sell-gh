@@ -4,10 +4,11 @@ import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import repairsCampaign from "../assets/homepage/owner-repairs.jpg";
+import "../styles/service-experience.css";
 
 export function RepairsPage() {
   return (
-    <>
+    <div className="service-experience-page repairs-experience">
       <SEO title="Device Repairs" description="Book a phone, laptop or game console repair enquiry with Buy & Sell GH in Accra." />
       <section className="service-hero service-hero-light">
         <div>
@@ -17,7 +18,7 @@ export function RepairsPage() {
         </div>
         <img src={repairsCampaign} alt="Premium repair workspace with a technician fixing a smartphone" loading="eager" decoding="async" />
       </section>
-      <section className="section service-layout">
+      <section className="service-request-layout">
         <SuccessForm buttonLabel="Prepare Repair Enquiry" successIntent="general">
           <FormField label="Customer name" name="name" required maxLength={120} />
           <FormField label="Phone number" name="phone" required maxLength={32} />
@@ -33,13 +34,13 @@ export function RepairsPage() {
             <span>Optional. You can attach clear photos after opening WhatsApp.</span>
           </label>
         </SuccessForm>
-        <aside className="service-side-card">
+        <aside className="service-guidance">
           <Wrench size={24} />
           <h2>Repair support</h2>
           <p>Final repair cost and timing are confirmed only after Buy & Sell GH inspects the device and issue.</p>
           <WhatsAppButton className="mt-6 w-full">Repair WhatsApp</WhatsAppButton>
         </aside>
       </section>
-    </>
+    </div>
   );
 }

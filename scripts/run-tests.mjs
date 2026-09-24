@@ -258,7 +258,7 @@ try {
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
-  assert.ok(headerSource.indexOf('{ label: "Home", to: "/" }') < headerSource.indexOf('{ label: "Store", to: "/shop" }'), "Home is the first global navigation destination");
+  assert.ok(headerSource.indexOf('{ label: "Home", to: "/" }') < headerSource.indexOf('{ label: "Store", to: "/store" }'), "Home is the first global navigation destination");
   assert.match(headerSource, /label: "Others", children:/, "Global navigation has one Others category");
   assert.match(headerSource, /label: "Phones & Tablets", to: "\/phones-tablets"/, "Others links to Phones & Tablets");
   assert.match(headerSource, /label: "Electronics", to: "\/electronics"/, "Others links to Electronics");

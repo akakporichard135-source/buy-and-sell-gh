@@ -1,9 +1,9 @@
 import type { Product } from "../types/product";
 import accessoriesHero from "../assets/catalogue-products/apple-magsafe-charger-premium.webp";
 import ipadAirHero from "../assets/homepage/homepage-ipad-air-white.webp";
-import iphoneFamilyHero from "../assets/homepage/homepage-iphone-17-lineup-light.webp";
 import macbookAirHero from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 import macbookProHero from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
+import { campaignAssets } from "./campaignAssets";
 
 export type ProductFamilyKey = "iphone" | "mac" | "ipad" | "watch" | "airpods" | "accessories";
 
@@ -27,6 +27,7 @@ export interface StoryHighlight {
   title: string;
   description: string;
   tone: "ink" | "light" | "gold" | "blue";
+  media?: { src: string; alt: string; position?: string };
 }
 
 export interface ProductStoryDefinition {
@@ -38,6 +39,13 @@ export interface ProductStoryDefinition {
   introduction: string;
   media: { type: "image" | "video"; src: string; alt: string };
   designMedia?: { type: "image"; src: string; alt: string };
+  galleryMedia?: Array<{ src: string; alt: string }>;
+  colorStory?: {
+    title: string;
+    copy: string;
+    media: { src: string; alt: string };
+  };
+  campaignStatus?: string;
   theme: "ink" | "light" | "blue";
   buyPath: string;
   highlights: StoryHighlight[];
@@ -55,9 +63,9 @@ export const productFamilies: Record<ProductFamilyKey, ProductFamilyDefinition> 
     eyebrow: "iPhone",
     title: "Find the iPhone that fits your day.",
     description: "Explore the latest campaign devices and real iPhone inventory available from Buy & Sell GH.",
-    heroMedia: iphoneFamilyHero,
-    heroAlt: "A lineup of current iPhone models",
-    heroTone: "light",
+    heroMedia: campaignAssets.iphone18.lineup.src,
+    heroAlt: campaignAssets.iphone18.lineup.alt,
+    heroTone: "dark",
     featuredStorySlug: "iphone-18-pro",
     featuredStoryName: "iPhone 18 Pro",
   },
@@ -83,8 +91,8 @@ export const productFamilies: Record<ProductFamilyKey, ProductFamilyDefinition> 
     eyebrow: "iPad",
     title: "A flexible canvas for every kind of day.",
     description: "Compare iPad models for study, creativity, entertainment and professional work.",
-    heroMedia: ipadAirHero,
-    heroAlt: "iPad Air in a layered product presentation",
+    heroMedia: campaignAssets.ipad.colors.src,
+    heroAlt: campaignAssets.ipad.colors.alt,
     heroTone: "light",
     featuredStorySlug: "ipad-air",
     featuredStoryName: "iPad Air",
@@ -111,9 +119,9 @@ export const productFamilies: Record<ProductFamilyKey, ProductFamilyDefinition> 
     eyebrow: "AirPods",
     title: "Your sound, wherever the day takes you.",
     description: "Explore wireless listening options and confirm current model availability with Buy & Sell GH.",
-    heroMedia: "/products/homepage/airpods-5-lifestyle.webp",
-    heroAlt: "A listener wearing a white wireless earbud",
-    heroTone: "dark",
+    heroMedia: campaignAssets.airpods.lifestyle.src,
+    heroAlt: campaignAssets.airpods.lifestyle.alt,
+    heroTone: "blue",
     featuredStorySlug: "airpods-5",
     featuredStoryName: "AirPods 5",
   },
@@ -125,8 +133,8 @@ export const productFamilies: Record<ProductFamilyKey, ProductFamilyDefinition> 
     eyebrow: "Accessories",
     title: "The right finishing touch.",
     description: "Browse genuine charging, protection and productivity accessories from the Store catalogue.",
-    heroMedia: accessoriesHero,
-    heroAlt: "Apple MagSafe charger on a clean white background",
+    heroMedia: campaignAssets.accessories.chargingStand.src,
+    heroAlt: campaignAssets.accessories.chargingStand.alt,
     heroTone: "light",
     featuredStorySlug: "charging-and-power",
     featuredStoryName: "Charging & Power",
@@ -143,13 +151,26 @@ export const productStories: ProductStoryDefinition[] = [
     introduction: "A flagship iPhone experience with a Pro display, a new generation of Apple silicon and a versatile Pro Fusion camera system.",
     media: { type: "video", src: "/videos/homepage/iphone-18-pro.mp4", alt: "iPhone 18 Pro cinematic product film" },
     designMedia: { type: "image", src: "/products/story/iphone-18-pro-clean-frame.webp", alt: "iPhone 18 Pro shown in a clean horizontal product profile" },
+    galleryMedia: [
+      campaignAssets.iphone18.lineup,
+      campaignAssets.iphone18.coffee,
+      campaignAssets.iphone18.front,
+      campaignAssets.iphone18.silver,
+      campaignAssets.iphone18.colors,
+    ],
+    colorStory: {
+      title: "A campaign study in four finishes.",
+      copy: "These finishes appear in supplied concept media. Buy & Sell GH confirms the exact finish that can be sourced before payment.",
+      media: campaignAssets.iphone18.colors,
+    },
+    campaignStatus: "Campaign concept · availability confirmed on request",
     theme: "ink",
     buyPath: "/shop/buy-iphone/iphone-18-pro",
     highlights: [
-      { label: "Display", title: "Made to feel immediate.", description: "The announced Pro lineup pairs Super Retina XDR displays with ProMotion and Always-On technology.", tone: "blue" },
-      { label: "Camera", title: "More room to shape the shot.", description: "A three-camera 48MP Pro Fusion system is designed for wide, ultrawide and telephoto perspectives.", tone: "ink" },
-      { label: "Performance", title: "Pro power, thoughtfully focused.", description: "A20 Pro brings a new generation of CPU, GPU and neural processing capability.", tone: "gold" },
-      { label: "Everyday", title: "A flagship that keeps moving.", description: "Exact storage, finish, price and availability are confirmed by Buy & Sell GH before payment.", tone: "light" },
+      { label: "Display", title: "Made to feel immediate.", description: "The announced Pro lineup pairs Super Retina XDR displays with ProMotion and Always-On technology.", tone: "blue", media: campaignAssets.iphone18.front },
+      { label: "Camera", title: "More room to shape the shot.", description: "A three-camera 48MP Pro Fusion system is designed for wide, ultrawide and telephoto perspectives.", tone: "ink", media: campaignAssets.iphone18.silver },
+      { label: "Performance", title: "Pro power, thoughtfully focused.", description: "A20 Pro brings a new generation of CPU, GPU and neural processing capability.", tone: "gold", media: campaignAssets.iphone18.lineup },
+      { label: "Everyday", title: "A flagship that keeps moving.", description: "Exact storage, finish, price and availability are confirmed by Buy & Sell GH before payment.", tone: "light", media: campaignAssets.iphone18.coffee },
     ],
     designTitle: "A focused Pro design.",
     designCopy: "The unibody form brings the controls, display and camera system into one confident silhouette. Final finish and size availability are confirmed during enquiry.",
@@ -168,12 +189,22 @@ export const productStories: ProductStoryDefinition[] = [
     tagline: "Open up more room for everything you do.",
     introduction: "A foldable iPhone format presented through the approved Buy & Sell GH campaign. Exact configurations are confirmed during enquiry.",
     media: { type: "image", src: "/products/homepage/iphone-duo.webp", alt: "An open foldable phone held naturally in two hands" },
+    designMedia: { type: "image", src: campaignAssets.duo.open.src, alt: campaignAssets.duo.open.alt },
+    galleryMedia: [
+      campaignAssets.duo.open,
+      campaignAssets.duo.folded,
+      campaignAssets.duo.side,
+      campaignAssets.duo.pair,
+      { src: "/products/homepage/iphone-duo.webp", alt: "Open foldable phone held naturally in two hands" },
+    ],
+    campaignStatus: "Campaign concept · availability confirmed on request",
     theme: "light",
     buyPath: "/shop/buy-iphone/iphone-duo",
     highlights: [
-      { label: "Form", title: "Compact when closed. Expansive when open.", description: "A flexible format designed to give everyday tasks more room.", tone: "light" },
-      { label: "Experience", title: "One device, two ways to work.", description: "Move from quick interactions to a broader canvas without changing devices.", tone: "blue" },
-      { label: "Availability", title: "Configured through enquiry.", description: "Buy & Sell GH confirms exact specifications, pricing and timing before payment.", tone: "ink" },
+      { label: "Form", title: "Compact when closed. Expansive when open.", description: "A flexible format designed to give everyday tasks more room.", tone: "light", media: campaignAssets.duo.folded },
+      { label: "Experience", title: "One device, two ways to work.", description: "Move from quick interactions to a broader canvas without changing devices.", tone: "blue", media: campaignAssets.duo.open },
+      { label: "Detail", title: "A fold you can see from every angle.", description: "Supplied concept media presents the closed profile and open canvas without claiming final production specifications.", tone: "ink", media: campaignAssets.duo.side },
+      { label: "Availability", title: "Configured through enquiry.", description: "Buy & Sell GH confirms exact specifications, pricing and timing before payment.", tone: "ink", media: campaignAssets.duo.pair },
     ],
     designTitle: "Designed around the fold.",
     designCopy: "The campaign focuses on a device that changes shape without losing the directness of an iPhone experience.",
@@ -187,11 +218,20 @@ export const productStories: ProductStoryDefinition[] = [
     tagline: "Stay connected to what moves you.",
     introduction: "An everyday Apple Watch campaign centered on movement, connection and a glanceable experience.",
     media: { type: "image", src: "/products/homepage/watch-series-12.webp", alt: "Apple Watch Series 12 campaign presentation" },
+    designMedia: { type: "image", src: campaignAssets.watch.series12.src, alt: campaignAssets.watch.series12.alt },
+    galleryMedia: [
+      { src: "/products/homepage/watch-series-12.webp", alt: "Apple Watch Series 12 campaign presentation" },
+      campaignAssets.watch.series12,
+      campaignAssets.watch.sensor,
+      campaignAssets.watch.comparison,
+    ],
+    campaignStatus: "Campaign concept · availability confirmed on request",
     theme: "ink",
     buyPath: "/shop/buy-watch/apple-watch-series-12",
     highlights: [
-      { label: "Everyday", title: "Important information, close at hand.", description: "A wearable format for notifications, movement and daily routines.", tone: "ink" },
-      { label: "Fit", title: "Choose the configuration that works for you.", description: "Case, band, connectivity and availability are confirmed during enquiry.", tone: "light" },
+      { label: "Everyday", title: "Important information, close at hand.", description: "A wearable format for notifications, movement and daily routines.", tone: "ink", media: campaignAssets.watch.series12 },
+      { label: "Sensing", title: "A closer look at the campaign sensor story.", description: "The supplied demonstration is shown as campaign media, without adding unverified health claims.", tone: "gold", media: campaignAssets.watch.sensor },
+      { label: "Fit", title: "Choose the configuration that works for you.", description: "Case, band, connectivity and availability are confirmed during enquiry.", tone: "light", media: campaignAssets.watch.comparison },
     ],
     designTitle: "Made to live on your wrist.",
     designCopy: "The approved campaign gives the display and case a clean, direct visual focus.",
@@ -205,11 +245,19 @@ export const productStories: ProductStoryDefinition[] = [
     tagline: "Rugged capability. Precision without compromise.",
     introduction: "A larger, adventure-focused Apple Watch campaign with a bold case and high-visibility details.",
     media: { type: "image", src: "/products/homepage/watch-ultra-4.webp", alt: "A rugged titanium smartwatch with an orange band" },
+    designMedia: { type: "image", src: campaignAssets.watch.ultraHero.src, alt: campaignAssets.watch.ultraHero.alt },
+    galleryMedia: [
+      { src: "/products/homepage/watch-ultra-4.webp", alt: "Rugged titanium smartwatch campaign concept with an orange band" },
+      campaignAssets.watch.ultraHero,
+      campaignAssets.watch.ultraInterface,
+    ],
+    campaignStatus: "Campaign concept · availability confirmed on request",
     theme: "ink",
     buyPath: "/shop/buy-watch/apple-watch-ultra-4",
     highlights: [
-      { label: "Purpose", title: "Ready for demanding days.", description: "A rugged visual direction for customers who want a larger, more capable watch format.", tone: "gold" },
-      { label: "Configuration", title: "Details confirmed one to one.", description: "Buy & Sell GH confirms the exact model, band, connectivity and price before payment.", tone: "ink" },
+      { label: "Purpose", title: "Ready for demanding days.", description: "A rugged visual direction for customers who want a larger, more capable watch format.", tone: "gold", media: campaignAssets.watch.ultraHero },
+      { label: "Interface", title: "Information designed for a quick glance.", description: "Campaign interface media demonstrates the larger watch format without adding unverified specifications.", tone: "ink", media: campaignAssets.watch.ultraInterface },
+      { label: "Configuration", title: "Details confirmed one to one.", description: "Buy & Sell GH confirms the exact model, band, connectivity and price before payment.", tone: "light" },
     ],
     designTitle: "A bold tool-watch silhouette.",
     designCopy: "The campaign balances a substantial case with clear controls and a bright orange action detail.",
@@ -222,12 +270,22 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Move with your music",
     tagline: "Freedom to listen wherever the rhythm takes you.",
     introduction: "A lifestyle-focused AirPods campaign built around effortless wireless listening.",
-    media: { type: "image", src: "/products/homepage/airpods-5-lifestyle.webp", alt: "A listener wearing a white wireless earbud" },
+    media: { type: "image", src: campaignAssets.airpods.lifestyle.src, alt: campaignAssets.airpods.lifestyle.alt },
+    designMedia: { type: "image", src: campaignAssets.airpods.product.src, alt: campaignAssets.airpods.product.alt },
+    galleryMedia: [
+      campaignAssets.airpods.lifestyle,
+      campaignAssets.airpods.product,
+      campaignAssets.airpods.dark,
+      campaignAssets.airpods.cases,
+    ],
+    campaignStatus: "Campaign concept · availability confirmed on request",
     theme: "ink",
     buyPath: "/shop/buy-airpods/airpods-5",
     highlights: [
-      { label: "Listening", title: "Sound that travels lightly.", description: "A compact wireless format designed to move naturally through the day.", tone: "ink" },
-      { label: "Availability", title: "The right model, clearly confirmed.", description: "Buy & Sell GH confirms the exact model, case and current price before payment.", tone: "light" },
+      { label: "Listening", title: "Sound that travels lightly.", description: "A compact wireless format designed to move naturally through the day.", tone: "ink", media: campaignAssets.airpods.lifestyle },
+      { label: "Product", title: "Small enough to disappear into the day.", description: "The supplied product view keeps the earbuds and charging case clear and direct.", tone: "light", media: campaignAssets.airpods.product },
+      { label: "Cases", title: "Protection with a little personality.", description: "Accessory case colours are presented separately from the AirPods product itself.", tone: "blue", media: campaignAssets.airpods.cases },
+      { label: "Availability", title: "The right model, clearly confirmed.", description: "Buy & Sell GH confirms the exact model, case and current price before payment.", tone: "gold", media: campaignAssets.airpods.dark },
     ],
     designTitle: "Small product. Easy presence.",
     designCopy: "The approved campaign keeps the earbud visible while letting the listening experience lead.",
@@ -241,11 +299,19 @@ export const productStories: ProductStoryDefinition[] = [
     tagline: "A focused Mac for work, study and everyday creativity.",
     introduction: "Explore the MacBook Air family through real Store configurations and imagery already in the Buy & Sell GH catalogue.",
     media: { type: "image", src: macbookAirHero, alt: "MacBook Air in a clean product presentation" },
+    designMedia: { type: "image", src: campaignAssets.mac.midnight.src, alt: campaignAssets.mac.midnight.alt },
+    galleryMedia: [
+      { src: macbookAirHero, alt: "MacBook Air in a clean product presentation" },
+      campaignAssets.mac.midnight,
+      campaignAssets.mac.floating,
+      campaignAssets.mac.lineup,
+    ],
     theme: "blue",
     buyPath: "/shop/buy-mac/macbook-air",
     highlights: [
-      { label: "Portable", title: "Built to move with the work.", description: "A thin notebook format for flexible desks, classrooms and creative sessions.", tone: "blue" },
-      { label: "Catalogue", title: "Choose from real listed configurations.", description: "Chip, memory, storage, condition and availability come directly from Store data.", tone: "light" },
+      { label: "Portable", title: "Built to move with the work.", description: "A thin notebook format for flexible desks, classrooms and creative sessions.", tone: "blue", media: campaignAssets.mac.floating },
+      { label: "Design", title: "Thin from every angle.", description: "The supplied profile view keeps the enclosure and keyboard relationship in focus.", tone: "ink", media: campaignAssets.mac.midnight },
+      { label: "Lineup", title: "Choose from real listed configurations.", description: "Chip, memory, storage, condition and availability come directly from Store data.", tone: "light", media: campaignAssets.mac.lineup },
     ],
     designTitle: "A clean, portable workspace.",
     designCopy: "MacBook Air keeps the screen, keyboard and trackpad in a restrained form that works almost anywhere.",
@@ -259,6 +325,7 @@ export const productStories: ProductStoryDefinition[] = [
     tagline: "Power for ideas without limits.",
     introduction: "Explore MacBook Pro models for creative, technical and professional work using real Store catalogue information.",
     media: { type: "image", src: macbookProHero, alt: "MacBook Pro in a dark cinematic product presentation" },
+    galleryMedia: [{ src: macbookProHero, alt: "MacBook Pro in a dark cinematic product presentation" }],
     theme: "ink",
     buyPath: "/shop/buy-mac/macbook-pro",
     highlights: [
@@ -276,12 +343,22 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Fresh. Powerful. Colourful.",
     tagline: "Made for work, study, creativity and everything in between.",
     introduction: "Explore iPad Air models through real Store listings and approved Buy & Sell GH campaign media.",
-    media: { type: "image", src: ipadAirHero, alt: "iPad Air in a layered product presentation" },
+    media: { type: "image", src: campaignAssets.ipad.colors.src, alt: campaignAssets.ipad.colors.alt },
+    designMedia: { type: "image", src: campaignAssets.ipad.blue.src, alt: campaignAssets.ipad.blue.alt },
+    galleryMedia: [
+      campaignAssets.ipad.colors,
+      campaignAssets.ipad.blue,
+      campaignAssets.ipad.spaceGray,
+      campaignAssets.ipad.detail,
+      { src: ipadAirHero, alt: "iPad Air in a layered product presentation" },
+    ],
     theme: "light",
     buyPath: "/shop/buy-ipad/ipad-air",
     highlights: [
-      { label: "Flexible", title: "A canvas that changes with the task.", description: "Move between notes, study, entertainment and creative work in one portable format.", tone: "light" },
-      { label: "Catalogue", title: "Choose a real listed iPad Air.", description: "Screen size, generation, storage, finish and availability come from Store data.", tone: "blue" },
+      { label: "Flexible", title: "A canvas that changes with the task.", description: "Move between notes, study, entertainment and creative work in one portable format.", tone: "light", media: campaignAssets.ipad.blue },
+      { label: "Finishes", title: "Colour, carefully considered.", description: "Available finish and storage combinations come from the selected Store listing.", tone: "blue", media: campaignAssets.ipad.colors },
+      { label: "Design", title: "Every detail serves the canvas.", description: "A close product view gives the slim enclosure and camera area room to breathe.", tone: "ink", media: campaignAssets.ipad.detail },
+      { label: "Catalogue", title: "Choose a real listed iPad Air.", description: "Screen size, generation, storage, finish and availability come from Store data.", tone: "gold", media: campaignAssets.ipad.spaceGray },
     ],
     designTitle: "Light in the hand. Open in possibility.",
     designCopy: "The approved campaign layers the iPad display and finishes into one clean product composition.",
@@ -294,13 +371,24 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Accessories",
     tagline: "Power for the devices you use every day.",
     introduction: "Explore charging accessories through real Buy & Sell GH Store listings, with the exact product, compatibility and availability confirmed before payment.",
-    media: { type: "image", src: accessoriesHero, alt: "Apple MagSafe charger on a clean white background" },
+    media: { type: "image", src: campaignAssets.accessories.chargingStand.src, alt: campaignAssets.accessories.chargingStand.alt },
+    designMedia: { type: "image", src: campaignAssets.accessories.usbC.src, alt: campaignAssets.accessories.usbC.alt },
+    galleryMedia: [
+      campaignAssets.accessories.chargingStand,
+      campaignAssets.accessories.usbC,
+      campaignAssets.accessories.magneticCharger,
+      campaignAssets.accessories.colorCables,
+      campaignAssets.accessories.macCharger,
+      { src: accessoriesHero, alt: "Magnetic charger on a clean white background" },
+    ],
     theme: "light",
     buyPath: "/shop/buy-accessory/charging-and-power",
     highlights: [
-      { label: "Catalogue", title: "Start with the device you need to charge.", description: "Choose only from chargers, cables and adapters currently published in the Store catalogue.", tone: "light" },
-      { label: "Compatibility", title: "The right connection, clearly confirmed.", description: "Compatibility and power details come from the selected listing or are confirmed directly by the team.", tone: "gold" },
-      { label: "Support", title: "Ask before you connect.", description: "Buy & Sell GH can help check the intended device and current accessory availability before payment.", tone: "ink" },
+      { label: "Charging", title: "Start with the device you need to charge.", description: "Choose only from chargers, cables and adapters currently published in the Store catalogue.", tone: "light", media: campaignAssets.accessories.chargingStand },
+      { label: "Cables", title: "The right connection, clearly confirmed.", description: "Compatibility and power details come from the selected listing or are confirmed directly by the team.", tone: "blue", media: campaignAssets.accessories.usbC },
+      { label: "Magnetic charging", title: "A simpler place to land.", description: "Magnetic charging compatibility is confirmed for the intended device before payment.", tone: "gold", media: campaignAssets.accessories.magneticCharger },
+      { label: "Options", title: "Colour where it is useful.", description: "Adapter and cable options are shown as campaign media; the exact listed item is confirmed separately.", tone: "light", media: campaignAssets.accessories.colorCables },
+      { label: "Mac", title: "Power for a portable workspace.", description: "Mac charging accessories are matched to the intended notebook and connector before payment.", tone: "ink", media: campaignAssets.accessories.macCharger },
     ],
     designTitle: "Useful accessories, simply presented.",
     designCopy: "The Store keeps product photography and compatibility details in focus so it is easier to choose the right charging accessory.",

@@ -4,27 +4,28 @@ import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { business } from "../config/business";
+import "../styles/service-experience.css";
 
 export function ContactPage() {
   return (
-    <>
+    <div className="service-experience-page contact-experience">
       <SEO title="Contact Buy & Sell GH" description="Contact Buy & Sell GH by phone or WhatsApp, visit Accra Dome Pillar 2 No Visa, or submit a contact form." />
-      <section className="page-hero">
+      <section className="contact-experience-hero">
         <p className="eyebrow-dark">Contact</p>
         <h1>Talk to Buy & Sell GH</h1>
-        <p>Call, WhatsApp, or visit the shop location listed by the business profile.</p>
+        <p>Call, WhatsApp, send a message, or confirm a visit to the shop in Accra.</p>
       </section>
-      <section className="section grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-        <div className="grid gap-4">
-          <a className="contact-card" href={`tel:${business.whatsapp.primary}`}><Phone /> <div><strong>{business.phones[0]}</strong><span>Primary phone and WhatsApp</span></div></a>
-          <a className="contact-card" href={`tel:${business.whatsapp.secondary}`}><Phone /> <div><strong>{business.phones[1]}</strong><span>Secondary phone and WhatsApp</span></div></a>
-          <div className="contact-card"><MapPin /> <div><strong>{business.location}</strong><span>Visit or contact the shop before setting off.</span></div></div>
-          <div className="rounded-lg border border-black/7 bg-white p-5 shadow-card">
+      <section className="contact-experience-layout">
+        <aside className="contact-experience-details">
+          <a href={`tel:${business.whatsapp.primary}`}><Phone /> <div><strong>{business.phones[0]}</strong><span>Primary phone and WhatsApp</span></div></a>
+          <a href={`tel:${business.whatsapp.secondary}`}><Phone /> <div><strong>{business.phones[1]}</strong><span>Secondary phone and WhatsApp</span></div></a>
+          <div><MapPin /> <div><strong>{business.location}</strong><span>Confirm product availability and pickup timing before setting off.</span></div></div>
+          <div className="contact-experience-hours">
             <h2 className="text-xl font-black">Opening hours</h2>
             {business.hours.map((hour) => <p className="mt-3 text-sm font-bold text-ink/70" key={hour.day}>{hour.day}: {hour.time}</p>)}
           </div>
           <WhatsAppButton className="w-full">Open WhatsApp</WhatsAppButton>
-        </div>
+        </aside>
         <div>
           <SuccessForm buttonLabel="Prepare contact message" successIntent="general">
             <FormField label="Name" name="name" required maxLength={120} />
@@ -32,7 +33,7 @@ export function ContactPage() {
             <FormField label="Subject" name="subject" maxLength={160} />
             <FormField label="Message" name="message" textarea required maxLength={2000} />
           </SuccessForm>
-          <div className="mt-5 rounded-lg border border-black/7 bg-white p-5 shadow-card">
+          <div className="contact-visit-details">
             <p className="eyebrow-dark">Visit the shop</p>
             <h2 className="mt-2 text-2xl font-black">Accra, Dome Pillar 2, No Visa</h2>
             <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Contact Buy & Sell GH before setting off so product availability and pickup timing can be confirmed.</p>
@@ -47,6 +48,6 @@ export function ContactPage() {
           <p className="mt-4 text-sm font-black text-ink">Social media: {business.username}</p>
         </div>
       </section>
-    </>
+    </div>
   );
 }

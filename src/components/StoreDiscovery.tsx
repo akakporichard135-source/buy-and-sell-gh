@@ -6,19 +6,23 @@ import {
   productStories,
   type ProductFamilyKey,
 } from "../catalog/productExperience";
+import { campaignAssets } from "../catalog/campaignAssets";
 import type { Product } from "../types/product";
-import { resolveProductImage } from "../utils/productImages";
 
 const familyOrder: ProductFamilyKey[] = ["mac", "iphone", "ipad", "watch", "airpods", "accessories"];
 const newStoryKeys = [
   ["iphone", "iphone-18-pro"],
-  ["mac", "macbook-air"],
+  ["iphone", "iphone-duo"],
   ["watch", "apple-watch-series-12"],
+  ["watch", "apple-watch-ultra-4"],
+  ["airpods", "airpods-5"],
+  ["mac", "macbook-air"],
+  ["mac", "macbook-pro"],
+  ["ipad", "ipad-air"],
 ] as const;
 
 export function StoreDiscovery({ products }: { products: Product[] }) {
-  const accessory = products.find((product) => product.category === "Accessories");
-  const accessoryImage = accessory ? resolveProductImage(accessory) : undefined;
+  const accessoryCount = products.filter((product) => product.category === "Accessories").length;
 
   return (
     <div className="store-discovery">
@@ -49,7 +53,11 @@ export function StoreDiscovery({ products }: { products: Product[] }) {
           {newStoryKeys.map(([family, slug], index) => {
             const story = productStories.find((item) => item.family === family && item.slug === slug);
             if (!story) return null;
-            const campaignMedia = story.designMedia ?? story.media;
+            const campaignMedia = index === 0
+              ? story.media
+              : story.galleryMedia?.[0]
+                ? { type: "image" as const, ...story.galleryMedia[0] }
+                : story.designMedia ?? story.media;
             return (
               <article className={`store-new-campaign store-new-campaign-${story.theme}${index === 0 ? " store-new-campaign-featured" : ""}`} key={slug}>
                 <div className="store-new-campaign-copy">
@@ -76,12 +84,12 @@ export function StoreDiscovery({ products }: { products: Product[] }) {
           <h2 id="store-category-title">Start with what you need.</h2>
         </div>
         <div className="store-category-links">
-          <Link to="/shop?category=Phones"><span>Phones</span><ArrowRight /></Link>
-          <Link to="/shop?category=Tablets"><span>Tablets</span><ArrowRight /></Link>
-          <Link to="/shop?category=Laptops"><span>Laptops</span><ArrowRight /></Link>
-          <Link to="/shop?category=Watches"><span>Watches</span><ArrowRight /></Link>
-          <Link to="/shop?category=Audio"><span>Audio</span><ArrowRight /></Link>
-          <Link to="/shop?category=Accessories"><span>Accessories</span><ArrowRight /></Link>
+          <Link to="/store?category=Phones"><span>Phones</span><ArrowRight /></Link>
+          <Link to="/store?category=Tablets"><span>Tablets</span><ArrowRight /></Link>
+          <Link to="/store?category=Laptops"><span>Laptops</span><ArrowRight /></Link>
+          <Link to="/store?category=Watches"><span>Watches</span><ArrowRight /></Link>
+          <Link to="/store?category=Audio"><span>Audio</span><ArrowRight /></Link>
+          <Link to="/store?category=Accessories"><span>Accessories</span><ArrowRight /></Link>
         </div>
       </section>
 
@@ -89,11 +97,11 @@ export function StoreDiscovery({ products }: { products: Product[] }) {
         <div>
           <p>Accessories</p>
           <h2>Complete the setup.</h2>
-          <span>Explore charging, protection and productivity accessories already listed in the Store catalogue.</span>
+          <span>Explore charging, protection and productivity accessories{accessoryCount ? ` across ${accessoryCount} current Store listings` : " with compatibility confirmed by the team"}.</span>
           <Link className="experience-button experience-button-primary" to="/accessories">Explore accessories</Link>
         </div>
         <div className="store-accessory-media">
-          <img src={accessoryImage?.src ?? productFamilies.accessories.heroMedia} alt={accessoryImage?.alt ?? productFamilies.accessories.heroAlt} loading="lazy" decoding="async" />
+          <img src={campaignAssets.accessories.chargingStand.src} alt={campaignAssets.accessories.chargingStand.alt} loading="lazy" decoding="async" />
         </div>
       </section>
 

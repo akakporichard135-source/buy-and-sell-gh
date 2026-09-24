@@ -357,9 +357,9 @@ function PremiumTrustStrip() {
   return (
     <section className="premium-trust-strip" aria-label="Buy and Sell GH customer benefits">
       <div className="premium-trust-strip-inner">
-        <TrustPoint icon={<BadgeCheck aria-hidden="true" />} title="Original Devices" description="Genuine and carefully verified devices." />
-        <TrustPoint icon={<ShieldCheck aria-hidden="true" />} title="Warranty Support" description="Support after your purchase." />
-        <TrustPoint icon={<Truck aria-hidden="true" />} title="Secure Delivery" description="Reliable delivery across supported locations." />
+        <TrustPoint icon={<BadgeCheck aria-hidden="true" />} title="Clear Availability" description="Stock and enquiry products are labelled separately." />
+        <TrustPoint icon={<ShieldCheck aria-hidden="true" />} title="Order Review" description="Details are reviewed before payment instructions." />
+        <TrustPoint icon={<Truck aria-hidden="true" />} title="Pickup & Delivery" description="Final arrangements are confirmed directly." />
         <TrustPoint icon={<RefreshCcw aria-hidden="true" />} title="Trade-In Available" description="Upgrade using your current device." />
       </div>
     </section>

@@ -33,7 +33,7 @@ export function ProductVisual({ product, size = "card", priority = false, imageV
         role="img"
         aria-label={`${product.name} photos are coming soon`}
       >
-        <span><ImageOff size={28} /> {requiresRealProductPhotos(product) ? "Real photos coming soon" : "Product photos coming soon"}</span>
+        <span><ImageOff size={28} /> {requiresRealProductPhotos(product) ? "Photos coming soon" : "Image coming soon"}</span>
       </div>
     );
   }

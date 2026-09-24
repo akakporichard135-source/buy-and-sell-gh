@@ -50,6 +50,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
           <p>{story.eyebrow}</p>
           <h1>{story.name}</h1>
           <span>{story.tagline}</span>
+          {story.campaignStatus && <small className="story-campaign-status">{story.campaignStatus}</small>}
           <div className="experience-actions">
             <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy or view pricing</Link>
             {story.media.type === "video" && <button className="experience-button experience-button-secondary" type="button" onClick={() => setFilmOpen(true)}>Watch the film</button>}
@@ -70,11 +71,14 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         </div>
         <div className="story-highlight-rail" tabIndex={0} aria-label={`${story.name} highlights`}>
           {story.highlights.map((highlight, index) => (
-            <article className={`story-highlight story-highlight-${highlight.tone}`} id={highlightAnchor(highlight.label)} key={highlight.title}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <p>{highlight.label}</p>
-              <h3>{highlight.title}</h3>
-              <strong>{highlight.description}</strong>
+            <article className={`story-highlight story-highlight-${highlight.tone}${highlight.media ? " story-highlight-media" : ""}`} id={highlightAnchor(highlight.label)} key={highlight.title}>
+              {highlight.media && <img src={highlight.media.src} alt={highlight.media.alt} loading="lazy" decoding="async" style={highlight.media.position ? { objectPosition: highlight.media.position } : undefined} />}
+              <div className="story-highlight-copy">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <p>{highlight.label}</p>
+                <h3>{highlight.title}</h3>
+                <strong>{highlight.description}</strong>
+              </div>
             </article>
           ))}
         </div>
@@ -110,6 +114,17 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
             : <><StoryDesignFrame src={story.media.src} label={story.media.alt} /><span className="experience-source-mask" aria-hidden="true" /></>}
         </div>
       </section>
+
+      {story.colorStory && (
+        <section className="story-color-section" id="colors">
+          <div className="story-color-copy">
+            <p>Colors</p>
+            <h2>{story.colorStory.title}</h2>
+            <span>{story.colorStory.copy}</span>
+          </div>
+          <img src={story.colorStory.media.src} alt={story.colorStory.media.alt} loading="lazy" decoding="async" />
+        </section>
+      )}
 
       <section className="story-details" id="tech-specs">
         <div className="experience-heading">
@@ -158,6 +173,7 @@ function StoryLocalNav({ story }: { story: ProductStoryDefinition }) {
     ["#highlights", "Highlights"],
     ["#design", "Design"],
     ...(story.family === "iphone" && story.slug === "iphone-18-pro" ? [["#cameras", "Cameras"], ["#performance", "Performance"]] : []),
+    ...(story.colorStory ? [["#colors", "Colors"]] : []),
     ["#tech-specs", "Tech Specs"],
   ];
   return (
@@ -193,54 +209,11 @@ function StoryMedia({ media, priority = false }: { media: ProductStoryDefinition
 function StoryHeroVideo({ media }: { media: ProductStoryDefinition["media"] }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(true);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const restartCleanSequence = () => {
-      if (video.currentTime < 2.88) return;
-      video.currentTime = 0.08;
-    };
-    const sync = () => {
-      if (reducedMotion.matches) {
-        video.pause();
-        video.currentTime = 1.15;
-        setPlaying(false);
-      } else {
-        video.playbackRate = 0.72;
-        void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-      }
-    };
-    const initialize = () => {
-      video.playbackRate = 0.72;
-      video.currentTime = reducedMotion.matches ? 1.15 : 0.08;
-      sync();
-    };
-    if (video.readyState >= 1) initialize();
-    video.addEventListener("loadedmetadata", initialize);
-    video.addEventListener("timeupdate", restartCleanSequence);
-    reducedMotion.addEventListener("change", sync);
-    return () => {
-      video.removeEventListener("loadedmetadata", initialize);
-      video.removeEventListener("timeupdate", restartCleanSequence);
-      reducedMotion.removeEventListener("change", sync);
-    };
-  }, []);
-
-  const toggle = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    else {
-      video.pause();
-      setPlaying(false);
-    }
-  };
+  const toggle = useCinematicPlayback(videoRef, playing, setPlaying, true);
 
   return (
     <div className="story-hero-media story-hero-video">
-      <video ref={videoRef} autoPlay muted loop playsInline preload="auto" aria-label={media.alt}>
+      <video ref={videoRef} autoPlay muted playsInline preload="auto" aria-label={media.alt}>
         <source src={media.src} type="video/mp4" />
       </video>
       <span className="story-video-mask" aria-hidden="true" />
@@ -258,6 +231,7 @@ function StoryDesignFrame({ src, label }: { src: string; label: string }) {
 function FilmModal({ name, src, onClose }: { name: string; src: string; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(true);
+  const toggle = useCinematicPlayback(videoRef, playing, setPlaying, false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -266,37 +240,11 @@ function FilmModal({ name, src, onClose }: { name: string; src: string; onClose:
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKeyDown);
-    const video = videoRef.current;
-    const initialize = () => {
-      if (!video) return;
-      video.playbackRate = 0.72;
-      video.currentTime = 0.08;
-      void video.play().catch(() => setPlaying(false));
-    };
-    const restartCleanSequence = () => {
-      if (!video || video.currentTime < 2.88) return;
-      video.currentTime = 0.08;
-    };
-    if (video?.readyState && video.readyState >= 1) initialize();
-    video?.addEventListener("loadedmetadata", initialize);
-    video?.addEventListener("timeupdate", restartCleanSequence);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
-      video?.removeEventListener("loadedmetadata", initialize);
-      video?.removeEventListener("timeupdate", restartCleanSequence);
     };
   }, [onClose]);
-
-  const toggle = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    else {
-      video.pause();
-      setPlaying(false);
-    }
-  };
 
   return (
     <div className="film-modal" role="dialog" aria-modal="true" aria-label={`${name} product film`}>
@@ -311,6 +259,137 @@ function FilmModal({ name, src, onClose }: { name: string; src: string; onClose:
       </div>
     </div>
   );
+}
+
+function useCinematicPlayback(
+  videoRef: React.RefObject<HTMLVideoElement | null>,
+  playing: boolean,
+  setPlaying: (value: boolean) => void,
+  observeVisibility: boolean,
+) {
+  const manuallyPaused = useRef(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const loopStart = 0.08;
+    const holdAt = 1.15;
+    const loopEnd = 2.88;
+    const playbackRate = 0.72;
+    let holdTimer = 0;
+    let resetTimer = 0;
+    let revealTimer = 0;
+    let timelineFrame = 0;
+    let isHolding = false;
+    let isResetting = false;
+    let hasHeld = false;
+    let isVisible = true;
+
+    const canPlay = () => !motionQuery.matches && !manuallyPaused.current && !document.hidden && isVisible && !isHolding && !isResetting;
+    const playWhenReady = () => {
+      if (!canPlay()) return;
+      video.playbackRate = playbackRate;
+      void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    };
+    const initialize = () => {
+      window.clearTimeout(holdTimer);
+      window.clearTimeout(resetTimer);
+      window.clearTimeout(revealTimer);
+      manuallyPaused.current = false;
+      isHolding = false;
+      isResetting = false;
+      hasHeld = false;
+      video.classList.remove("is-loop-resetting");
+      video.playbackRate = playbackRate;
+      video.currentTime = motionQuery.matches ? holdAt : loopStart;
+      if (motionQuery.matches) {
+        video.pause();
+        setPlaying(false);
+      } else {
+        playWhenReady();
+      }
+    };
+    const holdProductFrame = () => {
+      if (motionQuery.matches || hasHeld || isHolding || isResetting || video.currentTime < holdAt || video.currentTime >= loopEnd) return;
+      hasHeld = true;
+      isHolding = true;
+      video.pause();
+      holdTimer = window.setTimeout(() => {
+        isHolding = false;
+        playWhenReady();
+      }, 3000);
+    };
+    const restartSequence = () => {
+      if (motionQuery.matches || isResetting || video.currentTime < loopEnd) return;
+      isResetting = true;
+      isHolding = false;
+      window.clearTimeout(holdTimer);
+      video.pause();
+      video.classList.add("is-loop-resetting");
+      resetTimer = window.setTimeout(() => {
+        const reveal = () => {
+          window.clearTimeout(revealTimer);
+          isResetting = false;
+          hasHeld = false;
+          video.classList.remove("is-loop-resetting");
+          playWhenReady();
+        };
+        video.addEventListener("seeked", reveal, { once: true });
+        video.currentTime = loopStart;
+        revealTimer = window.setTimeout(reveal, 280);
+      }, 240);
+    };
+    const monitorTimeline = () => {
+      if (!motionQuery.matches && !isResetting && !manuallyPaused.current) {
+        if (!isHolding && video.currentTime >= loopEnd) restartSequence();
+        else holdProductFrame();
+      }
+      timelineFrame = window.requestAnimationFrame(monitorTimeline);
+    };
+    const syncVisibility = () => {
+      if (document.hidden) video.pause();
+      else playWhenReady();
+    };
+    const observer = observeVisibility && "IntersectionObserver" in window
+      ? new IntersectionObserver(([entry]) => {
+        isVisible = entry.isIntersecting && entry.intersectionRatio > 0.08;
+        if (isVisible) playWhenReady();
+        else video.pause();
+      }, { threshold: [0, 0.08, 0.35] })
+      : undefined;
+
+    if (video.readyState >= 1) initialize();
+    video.addEventListener("loadedmetadata", initialize);
+    motionQuery.addEventListener("change", initialize);
+    document.addEventListener("visibilitychange", syncVisibility);
+    observer?.observe(video);
+    timelineFrame = window.requestAnimationFrame(monitorTimeline);
+    return () => {
+      window.clearTimeout(holdTimer);
+      window.clearTimeout(resetTimer);
+      window.clearTimeout(revealTimer);
+      window.cancelAnimationFrame(timelineFrame);
+      observer?.disconnect();
+      video.removeEventListener("loadedmetadata", initialize);
+      motionQuery.removeEventListener("change", initialize);
+      document.removeEventListener("visibilitychange", syncVisibility);
+    };
+  }, [observeVisibility, setPlaying, videoRef]);
+
+  return () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (playing) {
+      manuallyPaused.current = true;
+      video.pause();
+      setPlaying(false);
+      return;
+    }
+    manuallyPaused.current = false;
+    video.playbackRate = 0.72;
+    void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+  };
 }
 
 function storyFromProduct(product: Product, family: ProductFamilyKey): ProductStoryDefinition {

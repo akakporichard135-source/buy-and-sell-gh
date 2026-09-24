@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 export function testStore({ presentation, product, productEditor, repository, catalogueDiscovery, productImages, shopSource, cardSource }) {
-  assert.equal(presentation.STORE_BATCH_SIZE, 24, "Initial Store render is bounded for a large catalogue");
+  assert.equal(presentation.STORE_BATCH_SIZE, 12, "Initial Store render stays secondary to the discovery experience");
   assert.deepEqual(presentation.storeFilterChoices(["256GB", "128GB", "256GB", "", undefined]), ["128GB", "256GB"], "Filter options derive from real inventory without duplicates");
   assert.ok(presentation.storeFilterChoices(["256GB"], "512GB").includes("512GB"), "Deep-linked selected values remain clear even when no products match");
   assert.deepEqual(presentation.storeCardFacts({ ...product, storage: ["128GB", "256GB", "512GB", "1TB"] }), ["128GB / 256GB / 512GB", "UK Used"], "Phone facts stay concise and preserve real condition");
@@ -23,7 +23,8 @@ export function testStore({ presentation, product, productEditor, repository, ca
   assert.ok(shopSource.includes("activeProducts.filter(isAppleCatalogueProduct)"), "Store preserves its existing inventory selector");
   assert.ok(shopSource.includes("filtered.slice(0, visibleCount)"), "Batching occurs after search, filtering and sorting");
   assert.ok(shopSource.includes('JSON.stringify([filters, sort])'), "Changing filters or sorting resets the visible batch");
-  assert.ok(cardSource.includes("productWhatsAppUrl(product, product.storage[0], product.colors[0])"), "WhatsApp retains product and variant context");
+  assert.ok(cardSource.includes("productStoryPath(family, product.slug)"), "Learn More routes to the editorial product experience");
+  assert.ok(cardSource.includes("productBuyPath(family, product.slug)"), "Buy and View Pricing route to the purchasing experience");
   assert.ok(cardSource.includes("isProductPurchasable(product)"), "Direct cart actions retain existing availability checks");
-  assert.equal(cardSource.includes("Enquiry only"), false, "Disabled enquiry buttons are replaced by real details and WhatsApp actions");
+  assert.equal(cardSource.includes("Enquiry only"), false, "Disabled enquiry buttons are replaced by real Learn More and View Pricing actions");
 }

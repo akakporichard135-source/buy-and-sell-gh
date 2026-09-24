@@ -13,7 +13,7 @@ type HeaderNavItem =
 
 const navItems: HeaderNavItem[] = [
   { label: "Home", to: "/" },
-  { label: "Store", to: "/shop" },
+  { label: "Store", to: "/store" },
   { label: "Mac", to: "/mac" },
   { label: "iPad", to: "/ipad" },
   { label: "iPhone", to: "/iphone" },
@@ -21,13 +21,17 @@ const navItems: HeaderNavItem[] = [
   { label: "AirPods", to: "/airpods" },
   { label: "Accessories", to: "/accessories" },
   { label: "Others", children: [
+    { label: "Explore Others", to: "/others" },
     { label: "Phones & Tablets", to: "/phones-tablets" },
     { label: "Electronics", to: "/electronics" },
   ] },
-  { label: "UK Used", to: "/shop?category=UK%20Used%20Devices" },
-  { label: "Pre-order", to: "/pre-order" },
-  { label: "Repairs", to: "/repairs" },
-  { label: "Support", to: "/contact" },
+  { label: "Services", children: [
+    { label: "UK Used", to: "/uk-used-devices" },
+    { label: "Pre-order", to: "/pre-order" },
+    { label: "Repairs", to: "/repairs" },
+    { label: "Support", to: "/support" },
+    { label: "Contact", to: "/contact" },
+  ] },
 ];
 
 const mobileUtilityItems = [
@@ -46,7 +50,7 @@ export function Header() {
   const currentRoute = `${location.pathname}${location.search}`;
   const isNavItemActive = (to: string) => {
     if (to.includes("?")) return currentRoute === to;
-    if (to === "/shop") return location.pathname === "/shop" && !location.search;
+    if (to === "/store") return location.pathname === "/store" || location.pathname === "/shop" || location.pathname.startsWith("/shop/");
     if (to === "/") return location.pathname === "/";
     return location.pathname === to || location.pathname.startsWith(`${to}/`);
   };
@@ -178,7 +182,7 @@ function MobileMenuOverlay({
 }) {
   const isNavItemActive = (to: string) => {
     if (to.includes("?")) return currentRoute === to;
-    if (to === "/shop") return pathname === "/shop" && !currentRoute.includes("?");
+    if (to === "/store") return pathname === "/store" || pathname === "/shop" || pathname.startsWith("/shop/");
     if (to === "/") return pathname === "/";
     return pathname === to || pathname.startsWith(`${to}/`);
   };
