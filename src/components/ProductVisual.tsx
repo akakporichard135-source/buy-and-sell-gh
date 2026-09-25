@@ -1,6 +1,25 @@
-import { ImageOff } from "lucide-react";
+import { Headphones, Laptop, Smartphone, Sparkles, Tablet, Watch } from "lucide-react";
 import type { Product } from "../types/product";
 import { requiresRealProductPhotos, resolveCatalogueProductImage, resolveProductImage } from "../utils/productImages";
+
+function DeviceSilhouetteIcon({ category }: { category: string }) {
+  if (category === "iPhones" || category === "Phones & Tablets") {
+    return <Smartphone size={30} className="text-black/35 stroke-[1.25]" />;
+  }
+  if (category === "MacBooks" || category === "Laptops & Computers") {
+    return <Laptop size={30} className="text-black/35 stroke-[1.25]" />;
+  }
+  if (category === "iPads" || category === "Tablets") {
+    return <Tablet size={30} className="text-black/35 stroke-[1.25]" />;
+  }
+  if (category === "Apple Watches" || category === "Smart Watches") {
+    return <Watch size={30} className="text-black/35 stroke-[1.25]" />;
+  }
+  if (category === "AirPods" || category.includes("Audio")) {
+    return <Headphones size={30} className="text-black/35 stroke-[1.25]" />;
+  }
+  return <Sparkles size={28} className="text-black/35 stroke-[1.25]" />;
+}
 
 export function ProductVisual({ product, size = "card", priority = false, imageVariant = "default" }: { product: Product; size?: "card" | "large"; priority?: boolean; imageVariant?: "default" | "catalogue" }) {
   const image = imageVariant === "catalogue" ? resolveCatalogueProductImage(product) : resolveProductImage(product);
@@ -27,13 +46,18 @@ export function ProductVisual({ product, size = "card", priority = false, imageV
   if (requiresRealProductPhotos(product) || !supportsDeviceIllustration) {
     return (
       <div
-        className={`product-visual product-photo-placeholder relative grid min-w-0 overflow-hidden rounded-2xl ${
+        className={`product-visual product-photo-placeholder relative flex flex-col items-center justify-center gap-2.5 min-w-0 overflow-hidden rounded-2xl bg-[#f5f5f7] ${
           size === "large" ? "min-h-[360px]" : "min-h-[230px]"
-        } place-items-center`}
+        } p-6 text-center`}
         role="img"
         aria-label={`${product.name} photos are coming soon`}
       >
-        <span><ImageOff size={28} /> {requiresRealProductPhotos(product) ? "Photos coming soon" : "Image coming soon"}</span>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-xs">
+          <DeviceSilhouetteIcon category={product.category} />
+        </div>
+        <span className="text-xs font-medium text-[#86868b] tracking-tight">
+          {requiresRealProductPhotos(product) ? "Photos coming soon" : "Image coming soon"}
+        </span>
       </div>
     );
   }

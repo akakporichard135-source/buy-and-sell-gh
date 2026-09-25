@@ -102,6 +102,7 @@ function PublicShell() {
           <Route path="/apple-watch" element={<Navigate to="/watch" replace />} />
           <Route path="/phones-tablets" element={<MobilePhonesPage />} />
           <Route path="/others" element={<OthersPage />} />
+          <Route path="/uk-used" element={<Navigate to="/uk-used-devices" replace />} />
           <Route path="/mobile-phones" element={<Navigate to="/phones-tablets" replace />} />
           <Route path="/electronics" element={<ElectronicsPage />} />
           <Route path="/mac-mini" element={<MacLaunchPage product="mac-mini" />} />

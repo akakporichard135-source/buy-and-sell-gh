@@ -286,10 +286,9 @@ try {
   assert.match(homepageSource, /<UltraAirpodsStory \/>/, "Watch Ultra 4 and AirPods 5 share the approved split campaign");
   assert.doesNotMatch(homepageSource, /Built Around You\.|Power for ideas without limits\.|Everything you need to get more done\.|Buy &amp; Sell GH Concierge|EditorialDeviceGuide|ConciergeSection/, "The removed editorial and Concierge area does not return");
   assert.doesNotMatch(homepageSource, /NewMacLaunchCampaign|newMacLaunches\[/, "Mac mini and Mac Studio are removed from the homepage without changing their routes");
-  assert.match(homepageSource, /<video[\s\S]*\/videos\/homepage\/iphone-18-pro\.mp4[\s\S]*<\/video>/, "The uploaded iPhone 18 Pro film is the top hero media");
-  assert.doesNotMatch(homepageSource, /<video[^>]*\scontrols(?:\s|=|>)/i, "The flagship hero video does not expose native controls");
+  assert.match(homepageSource, /iphone18-hero-still-img|campaignAssets\.iphone18\.hero/, "The homepage hero uses the approved still image hero");
+  assert.doesNotMatch(homepageSource, /<video[^>]*\scontrols(?:\s|=|>)/i, "The flagship hero does not expose native controls");
   assert.doesNotMatch(homepageSource, /home-(?:video|story)-(?:controls|progress)|aria-label="Pause/i, "The flagship hero exposes no player-style controls");
-  assert.doesNotMatch(homepageSource, /iphone-18-pro-hero\.webp/, "The generated iPhone 18 Pro still is not used by the hero");
   assert.doesNotMatch(homepageSource, /iphone-18-pro-cinematic\.webp/, "The rejected generated iPhone 18 Pro hardware is not used");
   const homepageMediaSource = homepageSource;
   for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp", "airpods-5-lifestyle.webp"]) {

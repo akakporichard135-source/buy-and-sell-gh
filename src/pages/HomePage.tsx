@@ -19,6 +19,7 @@ import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
 import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
+import { campaignAssets } from "../catalog/campaignAssets";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
 import type { LatestMacLaunch } from "../utils/latestMac";
@@ -74,7 +75,7 @@ const topCampaigns: Campaign[] = [
     title: "iPhone Duo",
     description: "Open up more room for everything you do.",
     image: "/products/homepage/iphone-duo.webp",
-    imageAlt: "An open premium foldable phone held naturally in two hands",
+    imageAlt: campaignAssets.duo.hero.alt,
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/iphone/iphone-duo",
@@ -86,8 +87,9 @@ const topCampaigns: Campaign[] = [
     title: "Apple Watch Series 12",
     description: "Stay connected to what moves you.",
     image: "/products/homepage/watch-series-12.webp",
-    imageAlt: "Original concept rendering of a rectangular everyday smartwatch",
-    theme: "black",
+    fallbackImage: campaignAssets.watch.series12.fallback,
+    imageAlt: campaignAssets.watch.series12.alt,
+    theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/watch/apple-watch-series-12",
     secondaryLabel: "View pricing",
@@ -134,6 +136,7 @@ export function HomePage() {
         <Iphone18Hero />
         {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
         <UltraAirpodsStory />
+        <ProductFamilyStrip />
 
         {featuredMacbookCampaigns.length > 0 && (
           <CampaignPair campaigns={featuredMacbookCampaigns} label="MacBook Air and MacBook Pro" className="home-product-pair-macbooks" />
@@ -157,178 +160,37 @@ export function HomePage() {
 }
 
 function Iphone18Hero() {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const hero = video.closest<HTMLElement>(".iphone18-launch-hero");
-
-    let loopStart = 0.08;
-    let blueStageHoldAt = 1.15;
-    const blueStageHoldDuration = 3000;
-    let loopEnd = 2.88;
-    let reducedMotionFrame = blueStageHoldAt;
-    let playbackRate = 0.72;
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let resetTimer: number | undefined;
-    let revealTimer: number | undefined;
-    let holdTimer: number | undefined;
-    let timelineFrame = 0;
-    let isResetting = false;
-    let isHolding = false;
-    let hasHeldBlueStage = false;
-    let isVisible = true;
-
-    const syncSourceTiming = () => {
-      const portraitFilm = video.currentSrc.includes("iphone-18-pro-mobile.webm");
-      const sourceDuration = Number.isFinite(video.duration) ? video.duration : 3;
-      loopStart = portraitFilm ? 0.02 : 0.08;
-      blueStageHoldAt = portraitFilm ? Math.min(1.15, Math.max(0.65, sourceDuration - 1.1)) : 1.15;
-      loopEnd = portraitFilm ? Math.max(loopStart + 0.6, sourceDuration - 0.12) : 2.88;
-      reducedMotionFrame = portraitFilm ? blueStageHoldAt : 1.15;
-      playbackRate = portraitFilm ? 1 : 0.72;
-    };
-
-    const canPlay = () => !motionQuery.matches && isVisible && !document.hidden && !isResetting && !isHolding;
-
-    const playWhenReady = () => {
-      if (!canPlay()) return;
-      video.playbackRate = playbackRate;
-      void video.play().catch(() => {});
-    };
-
-    const revealMedia = () => {
-      video.classList.add("is-ready");
-      playWhenReady();
-    };
-
-    const syncPlayback = () => {
-      syncSourceTiming();
-      window.clearTimeout(resetTimer);
-      window.clearTimeout(revealTimer);
-      window.clearTimeout(holdTimer);
-      isResetting = false;
-      isHolding = false;
-      hasHeldBlueStage = false;
-      video.classList.remove("is-loop-resetting");
-      video.playbackRate = playbackRate;
-      video.currentTime = motionQuery.matches ? reducedMotionFrame : loopStart;
-      if (motionQuery.matches) {
-        video.pause();
-        video.classList.add("is-ready");
-        return;
-      }
-      playWhenReady();
-    };
-
-    const restartProductSequence = () => {
-      if (motionQuery.matches || isResetting || video.currentTime < loopEnd) return;
-      isResetting = true;
-      isHolding = false;
-      window.clearTimeout(holdTimer);
-      video.pause();
-      video.classList.add("is-loop-resetting");
-
-      resetTimer = window.setTimeout(() => {
-        const reveal = () => {
-          if (!isResetting) return;
-          window.clearTimeout(revealTimer);
-          video.playbackRate = playbackRate;
-          isResetting = false;
-          hasHeldBlueStage = false;
-          video.classList.remove("is-loop-resetting");
-          playWhenReady();
-        };
-
-        video.addEventListener("seeked", reveal, { once: true });
-        video.currentTime = loopStart;
-        revealTimer = window.setTimeout(reveal, 280);
-      }, 240);
-    };
-
-    const holdBlueStage = () => {
-      if (motionQuery.matches || hasHeldBlueStage || isHolding || isResetting || video.currentTime < blueStageHoldAt || video.currentTime >= loopEnd) return;
-      hasHeldBlueStage = true;
-      isHolding = true;
-      video.pause();
-      holdTimer = window.setTimeout(() => {
-        isHolding = false;
-        playWhenReady();
-      }, blueStageHoldDuration);
-    };
-
-    const monitorTimeline = () => {
-      if (!motionQuery.matches && !isResetting) {
-        if (!isHolding && video.currentTime >= loopEnd) restartProductSequence();
-        else if (!hasHeldBlueStage && video.currentTime >= blueStageHoldAt) holdBlueStage();
-      }
-      timelineFrame = window.requestAnimationFrame(monitorTimeline);
-    };
-
-    const syncVisibility = () => {
-      if (document.hidden) {
-        video.pause();
-        return;
-      }
-      playWhenReady();
-    };
-
-    const observer = new IntersectionObserver(([entry]) => {
-      isVisible = entry.isIntersecting && entry.intersectionRatio > 0.08;
-      if (isVisible) playWhenReady();
-      else video.pause();
-    }, { threshold: [0, 0.08, 0.35] });
-
-    video.addEventListener("loadedmetadata", syncPlayback);
-    video.addEventListener("loadeddata", revealMedia);
-    video.addEventListener("canplay", revealMedia);
-    if (video.readyState >= 1) syncPlayback();
-    if (video.readyState >= 2) revealMedia();
-    if (hero) observer.observe(hero);
-    timelineFrame = window.requestAnimationFrame(monitorTimeline);
-    document.addEventListener("visibilitychange", syncVisibility);
-    motionQuery.addEventListener("change", syncPlayback);
-    return () => {
-      window.clearTimeout(resetTimer);
-      window.clearTimeout(revealTimer);
-      window.clearTimeout(holdTimer);
-      window.cancelAnimationFrame(timelineFrame);
-      observer.disconnect();
-      video.removeEventListener("loadedmetadata", syncPlayback);
-      video.removeEventListener("loadeddata", revealMedia);
-      video.removeEventListener("canplay", revealMedia);
-      document.removeEventListener("visibilitychange", syncVisibility);
-      motionQuery.removeEventListener("change", syncPlayback);
-    };
-  }, []);
-
   return (
-    <section className="iphone18-launch-hero" aria-labelledby="iphone18-launch-title">
+    <section className="iphone18-launch-hero iphone18-still-hero" aria-labelledby="iphone18-launch-title">
       <div className="iphone18-launch-copy">
-        <p>A new era of Pro</p>
+        <p className="store-eyebrow">A new era of Pro</p>
         <h1 id="iphone18-launch-title">iPhone 18 Pro</h1>
-        <span>Bold by design. Built to go further.</span>
+        <span>Pro further.</span>
         <div className="iphone18-launch-actions">
-          <Link to="/iphone/iphone-18-pro">Learn more</Link>
-          <Link to="/shop/buy-iphone/iphone-18-pro">View pricing</Link>
+          <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
+          <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">View pricing</Link>
         </div>
       </div>
       <div className="iphone18-launch-media">
-        <strong className="iphone18-launch-pro" aria-hidden="true">PRO</strong>
-        <span className="iphone18-source-mask" aria-hidden="true" />
-        <video
-          ref={videoRef}
-          className="iphone18-launch-video"
-          autoPlay
-          muted
-          playsInline
-          preload="metadata"
-          aria-label="iPhone 18 Pro cinematic product film"
-        >
-          <source media="(max-width: 640px)" src="/videos/homepage/iphone-18-pro-mobile.webm" type="video/webm" />
-          <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
-        </video>
+        <picture>
+          {campaignAssets.iphone18.hero.mobileSrc && (
+            <source media="(max-width: 767px)" srcSet={campaignAssets.iphone18.hero.mobileSrc} />
+          )}
+          <img
+            src={campaignAssets.iphone18.hero.src}
+            alt={campaignAssets.iphone18.hero.alt}
+            className="iphone18-hero-still-img"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            onError={(event) => {
+              if (campaignAssets.iphone18.hero.fallback && !event.currentTarget.dataset.fallbackApplied) {
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = campaignAssets.iphone18.hero.fallback;
+              }
+            }}
+          />
+        </picture>
       </div>
     </section>
   );
@@ -339,28 +201,76 @@ function UltraAirpodsStory() {
     <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
       <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
         <div className="ultra-airpods-copy">
-          <p>Built for beyond</p>
+          <p className="store-eyebrow">Built for beyond</p>
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
           <div className="ultra-airpods-actions">
-            <Link to="/watch/apple-watch-ultra-4">Learn more</Link>
-            <Link to="/shop/buy-watch/apple-watch-ultra-4">View pricing</Link>
+            <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
+            <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">View pricing</Link>
           </div>
         </div>
-        <img src="/products/homepage/watch-ultra-4.webp" alt="Original concept rendering of a rugged titanium smartwatch with an orange band" loading="lazy" decoding="async" />
+        <img
+          src="/products/homepage/watch-ultra-4.webp"
+          alt={campaignAssets.watch.ultraHero.alt}
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            if (campaignAssets.watch.ultraHero.fallback && !event.currentTarget.dataset.fallbackApplied) {
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaignAssets.watch.ultraHero.fallback;
+            }
+          }}
+        />
       </article>
       <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title">
         <div className="ultra-airpods-copy">
-          <p>Move with your music</p>
+          <p className="store-eyebrow">Move with your music</p>
           <h2 id="airpods-story-title">AirPods 5</h2>
           <span>Freedom to listen wherever the rhythm takes you.</span>
           <div className="ultra-airpods-actions">
-            <Link to="/airpods/airpods-5">Learn more</Link>
-            <Link to="/shop/buy-airpods/airpods-5">View pricing</Link>
+            <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
+            <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">View pricing</Link>
           </div>
         </div>
-        <img src="/products/homepage/airpods-5-lifestyle.webp" alt="A woman enjoying music with a white wireless earbud" loading="lazy" decoding="async" />
+        <img
+          src="/products/homepage/airpods-5-lifestyle.webp"
+          alt={campaignAssets.airpods.lifestyle.alt}
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            if (campaignAssets.airpods.lifestyle.fallback && !event.currentTarget.dataset.fallbackApplied) {
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaignAssets.airpods.lifestyle.fallback;
+            }
+          }}
+        />
       </article>
+    </section>
+  );
+}
+
+function ProductFamilyStrip() {
+  const families = [
+    { label: "iPhone", to: "/iphone", iconSrc: "/products/campaigns/iphone-18-pro-front.webp" },
+    { label: "Mac", to: "/mac", iconSrc: "/products/campaigns/macbook-air-floating.webp" },
+    { label: "iPad", to: "/ipad", iconSrc: "/products/campaigns/ipad-air-colors.webp" },
+    { label: "Watch", to: "/watch", iconSrc: "/products/homepage/watch-series-12.webp" },
+    { label: "AirPods", to: "/airpods", iconSrc: "/products/campaigns/airpods-5-product.webp" },
+    { label: "Accessories", to: "/accessories", iconSrc: "/products/campaigns/accessory-belkin-3-in-1.webp" },
+  ];
+
+  return (
+    <section className="home-family-strip" aria-label="Explore Apple product families">
+      <div className="home-family-strip-inner">
+        {families.map((item) => (
+          <Link to={item.to} key={item.label} className="home-family-chip">
+            <div className="home-family-thumb">
+              <img src={item.iconSrc} alt="" loading="lazy" decoding="async" />
+            </div>
+            <span>{item.label}</span>
+          </Link>
+        ))}
+      </div>
     </section>
   );
 }

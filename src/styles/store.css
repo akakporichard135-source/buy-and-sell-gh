@@ -197,13 +197,14 @@
 }
 
 .store-page .store-product-card {
-  border-color: #e7e7ea;
-  border-radius: 6px;
+  border: 1px solid #e5e5ea;
+  border-radius: 18px;
 }
 
 .store-page .store-product-card:hover {
-  border-color: #cfcfd3;
-  box-shadow: 0 14px 34px rgba(29, 29, 31, 0.055);
+  border-color: #d2d2d7;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.06);
+  transform: translateY(-3px);
 }
 
 .store-page .store-product-art .product-visual {

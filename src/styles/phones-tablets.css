@@ -248,15 +248,16 @@
 .phones-tablets-page .marketplace-category-card,
 .phones-tablets-page .phone-brand-card,
 .phones-tablets-page .marketplace-listing-card {
-  border-color: #e7e7ea;
-  border-radius: 6px;
+  border: 1px solid #e5e5ea;
+  border-radius: 16px;
   box-shadow: none;
 }
 
 .phones-tablets-page .marketplace-listing-card:hover,
 .phones-tablets-page .marketplace-listing-card:focus-within {
-  border-color: #cfcfd3;
-  box-shadow: 0 12px 28px rgba(29, 29, 31, 0.055);
+  border-color: #d2d2d7;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
 }
 
 .phones-tablets-page .marketplace-listing-image {

@@ -287,12 +287,15 @@ function useCinematicPlayback(
     let hasHeld = false;
     let isVisible = true;
 
+    const isIphone18 = () => video.currentSrc.includes("iphone-18-pro");
+
     const syncSourceTiming = () => {
+      if (!isIphone18()) return;
       const portraitFilm = video.currentSrc.includes("iphone-18-pro-mobile.webm");
-      const sourceDuration = Number.isFinite(video.duration) ? video.duration : 3;
       loopStart = portraitFilm ? 0.02 : 0.08;
-      holdAt = portraitFilm ? Math.min(1.15, Math.max(0.65, sourceDuration - 1.1)) : 1.15;
-      loopEnd = portraitFilm ? Math.max(loopStart + 0.6, sourceDuration - 0.12) : 2.88;
+      holdAt = 1.15;
+      // The portrait film is authored to 8.1s; streamed WebM duration starts provisionally near zero.
+      loopEnd = portraitFilm ? 7.35 : 2.88;
       playbackRate = portraitFilm ? 1 : 0.72;
       reducedMotionFrame = portraitFilm ? holdAt : 1.15;
     };
@@ -300,11 +303,23 @@ function useCinematicPlayback(
     const canPlay = () => !motionQuery.matches && !manuallyPaused.current && !document.hidden && isVisible && !isHolding && !isResetting;
     const playWhenReady = () => {
       if (!canPlay()) return;
-      video.playbackRate = playbackRate;
+      video.playbackRate = isIphone18() ? playbackRate : 1;
       void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     };
     const initialize = () => {
+      if (!isIphone18()) {
+        video.loop = true;
+        video.playbackRate = 1;
+        if (motionQuery.matches) {
+          video.pause();
+          setPlaying(false);
+        } else {
+          playWhenReady();
+        }
+        return;
+      }
       syncSourceTiming();
+      video.loop = false;
       window.clearTimeout(holdTimer);
       window.clearTimeout(resetTimer);
       window.clearTimeout(revealTimer);
@@ -323,7 +338,7 @@ function useCinematicPlayback(
       }
     };
     const holdProductFrame = () => {
-      if (motionQuery.matches || hasHeld || isHolding || isResetting || video.currentTime < holdAt || video.currentTime >= loopEnd) return;
+      if (!isIphone18() || motionQuery.matches || hasHeld || isHolding || isResetting || video.currentTime < holdAt || video.currentTime >= loopEnd) return;
       hasHeld = true;
       isHolding = true;
       video.pause();
@@ -333,7 +348,7 @@ function useCinematicPlayback(
       }, 3000);
     };
     const restartSequence = () => {
-      if (motionQuery.matches || isResetting || video.currentTime < loopEnd) return;
+      if (!isIphone18() || motionQuery.matches || isResetting || (!video.ended && video.currentTime < loopEnd)) return;
       isResetting = true;
       isHolding = false;
       window.clearTimeout(holdTimer);
@@ -353,8 +368,8 @@ function useCinematicPlayback(
       }, 240);
     };
     const monitorTimeline = () => {
-      if (!motionQuery.matches && !isResetting && !manuallyPaused.current) {
-        if (!isHolding && video.currentTime >= loopEnd) restartSequence();
+      if (isIphone18() && !motionQuery.matches && !isResetting && !manuallyPaused.current) {
+        if (!isHolding && (video.ended || video.currentTime >= loopEnd)) restartSequence();
         else holdProductFrame();
       }
       timelineFrame = window.requestAnimationFrame(monitorTimeline);
@@ -399,7 +414,7 @@ function useCinematicPlayback(
       return;
     }
     manuallyPaused.current = false;
-    video.playbackRate = 0.72;
+    video.playbackRate = video.currentSrc.includes("iphone-18-pro.mp4") ? 0.72 : 1;
     void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
   };
 }

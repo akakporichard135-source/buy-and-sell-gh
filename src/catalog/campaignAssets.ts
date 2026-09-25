@@ -23,6 +23,12 @@ const root = "/products/campaigns";
 
 export const campaignAssets = {
   iphone18: {
+    hero: {
+      src: "/products/homepage/iphone-18-pro-hero.webp",
+      fallback: `${root}/iphone-18-pro-hero.webp`,
+      mobileSrc: "/products/homepage/iphone-18-pro-hero-mobile.webp",
+      alt: "iPhone 18 Pro in titanium finish with glowing PRO stage",
+    },
     lineup: { src: `${root}/iphone-18-pro-lineup.webp`, alt: "Three iPhone 18 Pro campaign concepts in dark, burgundy and blue" },
     coffee: { src: `${root}/iphone-18-pro-coffee.webp`, alt: "Coffee finish iPhone 18 Pro campaign concept shown in profile" },
     front: { src: `${root}/iphone-18-pro-front.webp`, alt: "Front view of an iPhone 18 Pro campaign concept" },
@@ -30,20 +36,21 @@ export const campaignAssets = {
     colors: { src: `${root}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro campaign finish concepts" },
   },
   duo: {
+    hero: { src: "/products/homepage/iphone-duo.webp", alt: "An open premium foldable phone held naturally in two hands" },
     folded: { src: `${root}/iphone-duo-folded.webp`, alt: "Folded white iPhone Duo campaign concept" },
     open: { src: `${root}/iphone-duo-open.webp`, alt: "Open iPhone Duo campaign concept with a two-panel display" },
     side: { src: `${root}/iphone-duo-side.webp`, alt: "Slim folded iPhone Duo campaign concept held from the side" },
     pair: { src: `${root}/iphone-duo-pair.webp`, alt: "Black and white foldable phone campaign concepts" },
   },
   watch: {
-    series12: { src: `${root}/watch-series-12-product.webp`, alt: "Dark Apple Watch Series 12 campaign concept" },
-    ultraHero: { src: `${root}/watch-ultra-4-hero.webp`, alt: "Close view of an Apple Watch Ultra 4 campaign concept" },
+    series12: { src: "/products/homepage/watch-series-12.webp", fallback: `${root}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 everyday smartwatch presentation" },
+    ultraHero: { src: "/products/homepage/watch-ultra-4.webp", fallback: `${root}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra 4 rugged titanium smartwatch with orange band" },
     ultraInterface: { src: `${root}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra campaign interface presentation" },
     sensor: { src: `${root}/watch-sensor-detail.webp`, alt: "Close product demonstration of watch sensor lights" },
     comparison: { src: `${root}/watch-generic-product.webp`, alt: "White-band Apple Watch product presentation" },
   },
   airpods: {
-    lifestyle: { src: `${root}/airpods-5-lifestyle.webp`, alt: "Woman wearing a wireless earbud and holding its charging case" },
+    lifestyle: { src: "/products/homepage/airpods-5-lifestyle.webp", fallback: `${root}/airpods-5-lifestyle.webp`, alt: "AirPods 5 wireless earbuds presentation" },
     product: { src: `${root}/airpods-5-product.webp`, alt: "White wireless earbuds in an open charging case" },
     dark: { src: `${root}/airpods-5-dark.webp`, alt: "AirPods 5 campaign case on a dark background" },
     cases: { src: `${root}/airpods-cases.webp`, alt: "Wireless earbud cases in several protective colours" },

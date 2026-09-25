@@ -84,6 +84,40 @@ export function Header() {
     };
   }, [open]);
 
+  useEffect(() => {
+    const closeAllDropdowns = () => {
+      document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((details) => {
+        details.removeAttribute("open");
+      });
+    };
+
+    const handleOutsideClick = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest(".site-nav-dropdown")) {
+        closeAllDropdowns();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeAllDropdowns();
+      }
+    };
+
+    window.addEventListener("pointerdown", handleOutsideClick);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handleOutsideClick);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((details) => {
+      details.removeAttribute("open");
+    });
+  }, [location.pathname, location.search]);
+
   return (
     <header className="site-header sticky top-0 z-50 border-b border-black/8 bg-white/96 shadow-sm backdrop-blur-xl">
       {!isHomePage && (
@@ -99,12 +133,35 @@ export function Header() {
             if (item.children) {
               const active = item.children.some((child) => isNavItemActive(child.to));
               return (
-                <details className={`site-nav-dropdown ${active ? "is-active" : ""}`} key={item.label}>
+                <details
+                  className={`site-nav-dropdown ${active ? "is-active" : ""}`}
+                  key={item.label}
+                  onToggle={(e) => {
+                    if (e.currentTarget.open) {
+                      document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((d) => {
+                        if (d !== e.currentTarget) d.removeAttribute("open");
+                      });
+                    }
+                  }}
+                >
                   <summary className={linkClass(active)}>{item.label}<ChevronDown size={14} aria-hidden="true" /></summary>
                   <div className="site-nav-dropdown-menu">
                     {item.children.map((child) => {
                       const childActive = isNavItemActive(child.to);
-                      return <Link key={child.to} to={child.to} className={childActive ? "is-active" : ""} aria-current={childActive ? "page" : undefined}>{child.label}</Link>;
+                      return (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          className={childActive ? "is-active" : ""}
+                          aria-current={childActive ? "page" : undefined}
+                          onClick={(e) => {
+                            const details = e.currentTarget.closest("details");
+                            if (details) details.removeAttribute("open");
+                          }}
+                        >
+                          {child.label}
+                        </Link>
+                      );
                     })}
                   </div>
                 </details>

@@ -71,7 +71,7 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
         </div>
         <div className={`family-feature-grid family-feature-grid-${campaigns.length}`}>
           {campaigns.map((campaign) => (
-            <article className={`family-feature-panel family-feature-${campaign.tone}`} key={campaign.title}>
+            <article className={`family-feature-panel family-feature-${campaign.tone} family-feature-for-${family}`} key={campaign.title}>
               <div className="family-feature-copy">
                 <p>{campaign.eyebrow}</p>
                 <h3>{campaign.title}</h3>
