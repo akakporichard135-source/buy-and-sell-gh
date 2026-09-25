@@ -6,6 +6,7 @@ import { ProductCatalogProvider } from "./catalog/ProductCatalogContext";
 import { CartProvider } from "./context/CartContext";
 import "./index.css";
 import "./styles/product-experience.css";
+import "./styles/mobile-premium.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

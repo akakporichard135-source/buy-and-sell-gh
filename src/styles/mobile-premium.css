@@ -1,0 +1,1270 @@
+.store-footer-accordions,
+.mobile-buy-bar,
+.marketplace-filter-trigger {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --mobile-gutter: 16px;
+    --mobile-section-space: 64px;
+    --mobile-header-height: 52px;
+  }
+
+  html {
+    scroll-padding-top: 8.5rem;
+  }
+
+  body,
+  #root,
+  .public-shell,
+  .public-main {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  :where(.public-shell h1, .public-shell h2, .public-shell h3, .public-shell h4, .public-shell strong) {
+    hyphens: none;
+    letter-spacing: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  :where(input, select, textarea) {
+    font-size: 16px !important;
+  }
+
+  :where(a, button, summary, input, select, textarea) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Mobile global header and menu */
+  .site-header-inner {
+    width: 100%;
+    min-height: var(--mobile-header-height);
+    padding-inline: 12px !important;
+  }
+
+  .site-header .site-logo {
+    min-width: 0;
+  }
+
+  .site-header .site-logo-mark {
+    width: 30px;
+    height: 30px;
+  }
+
+  .site-header .site-logo-text span:first-child {
+    font-size: 0.8rem;
+  }
+
+  .site-header .site-logo-text span:last-child {
+    display: none;
+  }
+
+  .mobile-header-actions {
+    flex: 0 0 auto;
+    gap: 1px;
+  }
+
+  .site-header .mobile-header-actions .icon-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border: 0;
+    background: transparent;
+  }
+
+  .site-promo-bar {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 0.72rem;
+  }
+
+  .mobile-menu-overlay {
+    align-items: stretch;
+    padding: 0;
+    background: #fff;
+  }
+
+  .mobile-menu-panel {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .mobile-menu-header {
+    min-height: calc(var(--mobile-header-height) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 14px 0;
+    border-bottom: 1px solid rgba(29, 29, 31, 0.1);
+  }
+
+  .mobile-menu-nav {
+    gap: 0;
+    padding: 22px max(22px, env(safe-area-inset-left)) 112px;
+  }
+
+  .mobile-menu-link {
+    min-height: 52px;
+    padding: 10px 2px;
+    border-bottom: 0;
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    font-weight: 750;
+    line-height: 1.1;
+  }
+
+  .mobile-menu-subnav {
+    padding: 4px 0 12px 16px;
+  }
+
+  .mobile-menu-sublink {
+    min-height: 44px;
+    padding: 11px 0;
+    border: 0;
+    font-size: 1rem;
+  }
+
+  .mobile-menu-footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(18px);
+  }
+
+  /* Homepage portrait flagship */
+  .iphone18-launch-hero {
+    width: 100%;
+    height: calc(100svh - var(--mobile-header-height));
+    min-height: 700px;
+    max-height: 900px;
+    background: #000;
+  }
+
+  .iphone18-launch-copy {
+    top: max(26px, env(safe-area-inset-top));
+    width: calc(100% - 28px);
+    gap: 7px;
+  }
+
+  .iphone18-launch-copy::before {
+    inset: -26px -12vw -52px;
+    background: radial-gradient(ellipse 78% 76% at 50% 32%, #000 0 48%, rgba(0, 0, 0, 0.92) 62%, rgba(0, 0, 0, 0.42) 78%, transparent 92%);
+  }
+
+  .iphone18-launch-copy p {
+    font-size: 0.72rem;
+  }
+
+  .iphone18-launch-copy h1 {
+    max-width: 100%;
+    font-size: clamp(2.55rem, 11.8vw, 3.15rem);
+    line-height: 0.95;
+    white-space: nowrap;
+  }
+
+  .iphone18-launch-copy > span {
+    max-width: 28ch;
+    font-size: 1rem;
+    line-height: 1.42;
+  }
+
+  .iphone18-launch-actions {
+    gap: 9px;
+    margin-top: 13px;
+  }
+
+  .iphone18-launch-actions a {
+    min-width: 116px;
+    min-height: 46px;
+    padding-inline: 17px;
+    font-size: 0.88rem;
+  }
+
+  .iphone18-launch-media {
+    inset: 222px 0 0;
+    background:
+      linear-gradient(180deg, #000 0%, transparent 14%, transparent 83%, #000 100%),
+      url("/products/campaigns/iphone-18-pro-coffee.webp") center 48% / cover no-repeat,
+      #000;
+  }
+
+  .iphone18-launch-pro {
+    display: none;
+  }
+
+  .storefront-home .iphone18-launch-hero .iphone18-launch-video,
+  .storefront-home .iphone18-launch-hero .iphone18-launch-video.is-ready {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 52%;
+    filter: brightness(1.1) saturate(1.03) contrast(1.03);
+    transform: scale(1.002);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 92%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 92%, transparent 100%);
+  }
+
+  .storefront-home .iphone18-launch-hero .iphone18-source-mask {
+    background:
+      linear-gradient(180deg, #000 0%, transparent 8% 91%, #000 100%),
+      radial-gradient(ellipse 82% 74% at 50% 54%, transparent 56%, rgba(0, 0, 0, 0.36) 100%);
+  }
+
+  .iphone18-launch-hero::before {
+    background: linear-gradient(180deg, #000 0 24%, rgba(0, 0, 0, 0.7) 30%, transparent 46%, rgba(0, 0, 0, 0.18) 80%, #000 100%);
+  }
+
+  .iphone18-launch-hero::after {
+    background: radial-gradient(ellipse 88% 72% at 50% 56%, transparent 42%, rgba(0, 0, 0, 0.34) 79%, #000 100%);
+  }
+
+  /* Homepage campaigns become independent mobile stages. */
+  .storefront-home > .home-product-campaign,
+  .home-product-pair > .home-product-campaign,
+  .ultra-airpods-panel {
+    min-height: 650px;
+    padding: 48px var(--mobile-gutter) 0;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-copy,
+  .home-product-pair > .home-product-campaign .home-product-campaign-copy {
+    width: min(100%, 390px);
+    height: auto;
+    min-height: 0;
+    margin-inline: auto;
+  }
+
+  .storefront-home > .home-product-campaign h2,
+  .home-product-pair > .home-product-campaign h2,
+  .ultra-airpods-copy h2 {
+    max-width: 100%;
+    font-size: clamp(2.4rem, 10.5vw, 3rem);
+    line-height: 0.96;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-art,
+  .home-product-pair > .home-product-campaign .home-product-campaign-art {
+    width: calc(100% + (var(--mobile-gutter) * 2));
+    min-height: 360px;
+    margin: 20px calc(var(--mobile-gutter) * -1) 0;
+  }
+
+  .storefront-home > .home-product-campaign .home-product-campaign-art > img,
+  .home-product-pair > .home-product-campaign .home-product-campaign-art > img {
+    width: 108%;
+    max-width: none;
+    height: 100%;
+    min-height: 360px;
+    aspect-ratio: auto;
+    object-fit: contain;
+  }
+
+  .storefront-home > .home-product-campaign-iphone-duo .home-product-campaign-art > img {
+    width: 112%;
+    object-position: center bottom;
+  }
+
+  .storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art > img {
+    width: 122%;
+    object-fit: cover;
+    object-position: center 60%;
+  }
+
+  .home-product-pair {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px 0;
+  }
+
+  .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy,
+  .home-product-pair-ipad-visa > .home-product-campaign .home-product-campaign-copy,
+  .home-product-pair-ipad-visa > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-copy {
+    height: auto;
+    min-height: 0;
+  }
+
+  .ultra-airpods-story {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 6px 0;
+  }
+
+  .ultra-airpods-copy > span {
+    min-height: 0;
+  }
+
+  .ultra-airpods-ultra > img {
+    right: -7%;
+    bottom: -1%;
+    width: 114%;
+    height: 58%;
+  }
+
+  .ultra-airpods-lifestyle > img {
+    width: 100%;
+    height: 58%;
+    object-position: 52% 35%;
+  }
+
+  .storefront-home .service-story-rail {
+    padding-block: var(--mobile-section-space);
+  }
+
+  .storefront-home .service-story-rail .store-horizontal-rail {
+    grid-auto-columns: min(86vw, 360px);
+    scroll-padding-inline: var(--mobile-gutter);
+    scroll-snap-type: x mandatory;
+  }
+
+  .storefront-home .service-story-card {
+    min-height: 540px;
+    scroll-snap-align: center;
+  }
+
+  /* Store discovery and catalogue */
+  .store-family-strip,
+  .store-new-section,
+  .store-shop-categories,
+  .store-why-section,
+  .store-accessory-feature {
+    padding: var(--mobile-section-space) var(--mobile-gutter);
+  }
+
+  .store-discovery-heading {
+    margin-bottom: 28px;
+  }
+
+  .store-discovery-heading h2,
+  .experience-heading h2 {
+    max-width: 13ch;
+    font-size: clamp(2rem, 9.5vw, 2.65rem);
+    line-height: 1;
+  }
+
+  .store-family-rail {
+    width: calc(100% + var(--mobile-gutter));
+    grid-auto-columns: min(42vw, 176px);
+    gap: 12px;
+    margin-right: calc(var(--mobile-gutter) * -1);
+    padding: 2px var(--mobile-gutter) 14px 0;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--mobile-gutter);
+    scrollbar-width: none;
+  }
+
+  .store-family-rail::-webkit-scrollbar,
+  .store-new-grid::-webkit-scrollbar,
+  .family-feature-grid::-webkit-scrollbar,
+  .family-lineup-grid::-webkit-scrollbar,
+  .story-highlight-rail::-webkit-scrollbar,
+  .marketplace-category-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .store-family-rail a > span {
+    border-radius: 6px;
+  }
+
+  .store-new-grid {
+    display: grid;
+    width: calc(100% + var(--mobile-gutter));
+    grid-template-columns: none;
+    grid-template-rows: none;
+    grid-auto-columns: min(86vw, 370px);
+    grid-auto-flow: column;
+    gap: 12px;
+    margin-right: calc(var(--mobile-gutter) * -1);
+    overflow-x: auto;
+    padding: 0 var(--mobile-gutter) 14px 0;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--mobile-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .store-new-campaign,
+  .store-new-campaign-featured,
+  .store-new-campaign:last-child:nth-child(even) {
+    min-height: min(660px, 76svh);
+    grid-column: auto;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .store-new-campaign-copy {
+    padding-inline: 18px;
+  }
+
+  .store-category-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .store-category-links a {
+    min-height: 72px;
+    padding: 16px 12px;
+  }
+
+  .store-accessory-feature {
+    gap: 24px;
+  }
+
+  .store-accessory-media {
+    min-height: 300px;
+  }
+
+  .store-why-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .store-page .store-hero-inner,
+  .store-page .shop-section {
+    width: calc(100% - (var(--mobile-gutter) * 2));
+  }
+
+  .store-page .shop-hero {
+    padding-block: 34px;
+  }
+
+  .store-page .shop-hero h1 {
+    max-width: 13ch;
+    font-size: clamp(2rem, 9vw, 2.5rem);
+  }
+
+  .store-page .catalogue-toolbar {
+    gap: 12px;
+  }
+
+  .store-page .catalogue-filter-button,
+  .store-page .catalogue-sort,
+  .store-page .catalogue-search {
+    min-height: 48px;
+  }
+
+  .store-page .filter-drawer {
+    z-index: 90;
+  }
+
+  .store-page .filter-drawer-panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(88dvh, 760px);
+    padding: 20px 18px calc(18px + env(safe-area-inset-bottom));
+    border-radius: 12px 12px 0 0;
+  }
+
+  .store-page .filter-drawer-actions {
+    position: sticky;
+    bottom: calc(-18px - env(safe-area-inset-bottom));
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin: 22px -18px calc(-18px - env(safe-area-inset-bottom));
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .store-page .store-catalogue-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .store-page .store-product-card {
+    border-radius: 6px;
+  }
+
+  .store-page .store-product-art {
+    aspect-ratio: 1 / 0.78;
+  }
+
+  .store-page .store-product-body h2 {
+    font-size: 1.35rem;
+  }
+
+  .store-page .store-product-price {
+    font-size: 1.25rem;
+  }
+
+  .store-page :is(.btn-primary, .btn-secondary),
+  .store-page .store-product-secondary a {
+    min-height: 48px;
+    font-size: 0.9rem;
+  }
+
+  /* Product family pages */
+  .product-local-nav {
+    top: 5.25rem;
+    min-height: 48px;
+    gap: 10px;
+    padding: 4px 8px 4px 12px;
+  }
+
+  .product-local-title {
+    max-width: 7.5rem;
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+  }
+
+  .product-local-nav > .product-local-links {
+    display: flex;
+    min-width: 0;
+    max-width: none;
+    flex: 1;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 3px 0;
+    scrollbar-width: none;
+  }
+
+  .product-local-nav > .product-local-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .product-local-nav > .product-local-links > a:not(.product-local-buy) {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    font-size: 0.75rem;
+  }
+
+  .product-local-nav .product-local-buy {
+    position: sticky;
+    right: 0;
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    padding-inline: 14px;
+    box-shadow: -14px 0 16px rgba(255, 255, 255, 0.96);
+  }
+
+  .product-local-mobile-menu {
+    display: none;
+  }
+
+  .family-hero {
+    min-height: calc(100svh - 8.25rem);
+    grid-template-rows: auto minmax(340px, 1fr);
+  }
+
+  .family-hero-copy {
+    max-width: 100%;
+    padding: 48px 18px 12px;
+  }
+
+  .family-hero-copy h1 {
+    max-width: 11ch;
+    margin-inline: auto;
+    font-size: clamp(2.7rem, 12vw, 3.35rem);
+    line-height: 0.94;
+  }
+
+  .family-hero-copy > span {
+    max-width: 31ch;
+    margin: 16px auto 20px;
+    font-size: 1rem;
+  }
+
+  .family-hero-media img {
+    width: 100%;
+    padding: 16px 8px 24px;
+  }
+
+  .product-family-airpods .family-hero-media img {
+    padding: 0;
+    object-position: 52% 39%;
+  }
+
+  .family-feature-section,
+  .family-lineup-section,
+  .family-compare-section,
+  .family-support-section,
+  .family-accessory-spotlight,
+  .accessory-browse {
+    padding: var(--mobile-section-space) var(--mobile-gutter);
+  }
+
+  .family-feature-grid:not(.family-feature-grid-1),
+  .family-lineup-grid {
+    display: grid;
+    width: calc(100% + var(--mobile-gutter));
+    grid-template-columns: none;
+    grid-auto-columns: min(87vw, 370px);
+    grid-auto-flow: column;
+    gap: 12px;
+    margin-right: calc(var(--mobile-gutter) * -1);
+    overflow-x: auto;
+    padding: 0 var(--mobile-gutter) 14px 0;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: var(--mobile-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .family-feature-panel,
+  .family-product {
+    min-height: min(650px, 78svh);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .family-feature-grid-1 .family-feature-panel {
+    min-height: 620px;
+  }
+
+  .family-feature-copy h3 {
+    font-size: clamp(2.2rem, 10.5vw, 2.85rem);
+  }
+
+  .family-product-copy {
+    min-height: 0;
+  }
+
+  .family-support-section {
+    gap: 26px;
+  }
+
+  /* Immersive product stories */
+  .story-hero {
+    min-height: calc(100svh - 8.25rem);
+    grid-template-rows: auto minmax(360px, 1fr);
+  }
+
+  .story-hero-copy {
+    padding: 34px 16px 10px;
+  }
+
+  .story-hero-copy h1 {
+    max-width: 10ch;
+    font-size: clamp(2.9rem, 13vw, 3.7rem);
+    line-height: 0.92;
+  }
+
+  .story-hero-copy > span {
+    max-width: 31ch;
+    margin: 14px 0 16px;
+    font-size: 1rem;
+  }
+
+  .story-hero-copy .experience-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .story-hero-copy .experience-button {
+    min-height: 46px;
+  }
+
+  .product-story-iphone .story-hero-video {
+    min-height: 430px;
+    background:
+      linear-gradient(180deg, #050505, transparent 14% 84%, #050505),
+      url("/products/campaigns/iphone-18-pro-coffee.webp") center / cover no-repeat,
+      #050505;
+  }
+
+  .product-story-iphone .story-hero-video video,
+  .product-story-iphone .story-hero-video video.is-loop-resetting {
+    object-fit: cover;
+    object-position: 50% 52%;
+    transform: scale(1.002);
+  }
+
+  .product-story-iphone .story-video-mask {
+    background:
+      linear-gradient(180deg, #050505 0%, transparent 12% 88%, #050505 100%),
+      radial-gradient(ellipse 72% 70% at 50% 52%, transparent 48%, rgba(5, 5, 5, 0.58) 100%);
+  }
+
+  .story-video-control {
+    right: 14px;
+    bottom: 14px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .story-introduction,
+  .story-highlights,
+  .story-film-section,
+  .story-design-copy,
+  .story-color-section,
+  .story-details,
+  .story-related,
+  .story-final-cta {
+    padding: var(--mobile-section-space) var(--mobile-gutter);
+  }
+
+  .story-introduction h2 {
+    max-width: 15ch;
+    font-size: clamp(2.2rem, 10.5vw, 3rem);
+  }
+
+  .story-highlight-rail {
+    width: calc(100% + var(--mobile-gutter));
+    grid-auto-columns: min(89vw, 380px);
+    margin-right: calc(var(--mobile-gutter) * -1);
+    padding-right: var(--mobile-gutter);
+    scroll-padding-inline: var(--mobile-gutter);
+    scrollbar-width: none;
+  }
+
+  .story-highlight {
+    min-height: min(570px, 72svh);
+    scroll-snap-stop: always;
+  }
+
+  .story-film-section {
+    gap: 28px;
+  }
+
+  .story-film-poster,
+  .story-design-media {
+    min-height: 360px;
+  }
+
+  .story-design-copy h2,
+  .story-color-copy h2,
+  .story-final-cta h2 {
+    font-size: clamp(2.25rem, 10.5vw, 3rem);
+  }
+
+  .story-detail-groups {
+    grid-template-columns: 1fr;
+  }
+
+  /* Buy flow */
+  .product-buy-page {
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .buy-breadcrumbs,
+  .buy-page-header,
+  .buy-configurator {
+    padding-inline: var(--mobile-gutter);
+  }
+
+  .buy-page-header {
+    padding-top: 34px;
+    padding-bottom: 28px;
+  }
+
+  .buy-page-header h1 {
+    max-width: 12ch;
+    font-size: clamp(2.55rem, 12vw, 3.35rem);
+  }
+
+  .buy-configurator {
+    grid-template-columns: 1fr;
+    gap: 38px;
+    padding-bottom: var(--mobile-section-space);
+  }
+
+  .buy-gallery-stage {
+    position: relative;
+    top: auto;
+    min-height: min(470px, 62svh);
+  }
+
+  .buy-gallery-thumbnails {
+    padding-bottom: 6px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .buy-gallery-thumbnails button {
+    flex: 0 0 70px;
+    min-width: 70px;
+    min-height: 70px;
+    scroll-snap-align: start;
+  }
+
+  .buy-choice-group button,
+  .buy-primary-actions .experience-button {
+    min-height: 48px;
+  }
+
+  .buy-support-band {
+    gap: 22px;
+    padding: var(--mobile-section-space) var(--mobile-gutter);
+  }
+
+  .mobile-buy-bar {
+    position: fixed;
+    z-index: 46;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    min-height: 70px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px var(--mobile-gutter) calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(29, 29, 31, 0.12);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  .mobile-buy-bar > span {
+    min-width: 0;
+  }
+
+  .mobile-buy-bar strong,
+  .mobile-buy-bar small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-buy-bar strong {
+    font-size: 0.88rem;
+  }
+
+  .mobile-buy-bar small {
+    margin-top: 2px;
+    color: #6e6e73;
+    font-size: 0.72rem;
+  }
+
+  .mobile-buy-bar > :is(a, button) {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 18px;
+    border: 0;
+    border-radius: 999px;
+    color: #111;
+    background: #e5b438;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .public-shell:has(.mobile-buy-bar) .floating-whatsapp {
+    display: none;
+  }
+
+  /* Marketplace */
+  .marketplace-page-hero,
+  .marketplace-navigation,
+  .marketplace-catalogue {
+    width: calc(100% - (var(--mobile-gutter) * 2));
+    padding-inline: 0;
+  }
+
+  .marketplace-page-hero {
+    padding-block: 46px 38px;
+  }
+
+  .marketplace-page-hero h1 {
+    max-width: 12ch;
+    font-size: clamp(2.5rem, 11vw, 3.1rem);
+    line-height: 0.96;
+  }
+
+  .marketplace-navigation,
+  .marketplace-catalogue {
+    padding-block: var(--mobile-section-space);
+  }
+
+  .marketplace-category-rail {
+    display: grid;
+    width: calc(100% + var(--mobile-gutter));
+    grid-template-columns: none;
+    grid-auto-columns: min(72vw, 290px);
+    grid-auto-flow: column;
+    gap: 12px;
+    margin-right: calc(var(--mobile-gutter) * -1);
+    overflow-x: auto;
+    padding-right: var(--mobile-gutter);
+    scroll-padding-inline: var(--mobile-gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .marketplace-category-card {
+    min-height: 280px;
+    scroll-snap-align: start;
+  }
+
+  .marketplace-filter-grid-desktop {
+    display: none;
+  }
+
+  .marketplace-results-toolbar {
+    align-items: stretch;
+    gap: 12px;
+    flex-direction: column;
+  }
+
+  .marketplace-results-toolbar > div,
+  .marketplace-results-toolbar > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .marketplace-filter-trigger {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border: 1px solid #d7d7db;
+    border-radius: 6px;
+    color: #1d1d1f;
+    background: #fff;
+    font-weight: 700;
+  }
+
+  .marketplace-results-toolbar > div:last-child > button:last-child {
+    display: none;
+  }
+
+  .marketplace-listing-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 18px;
+  }
+
+  .marketplace-listing-card {
+    border-radius: 6px;
+  }
+
+  .marketplace-listing-image {
+    min-height: 280px;
+  }
+
+  .marketplace-listing-actions a {
+    min-height: 48px;
+  }
+
+  .marketplace-filter-drawer {
+    position: fixed;
+    z-index: 95;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .marketplace-filter-backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(3px);
+  }
+
+  .marketplace-filter-sheet {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    max-height: min(88dvh, 760px);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+    background: #fff;
+    box-shadow: 0 -24px 70px rgba(0, 0, 0, 0.18);
+  }
+
+  .marketplace-filter-sheet-header {
+    display: flex;
+    min-height: 68px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e5e5e7;
+  }
+
+  .marketplace-filter-sheet-header span,
+  .marketplace-filter-sheet-header strong {
+    display: block;
+  }
+
+  .marketplace-filter-sheet-header span {
+    color: #8a6500;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .marketplace-filter-sheet-header strong {
+    margin-top: 2px;
+    font-size: 1.25rem;
+  }
+
+  .marketplace-filter-sheet-header button {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #f5f5f7;
+  }
+
+  .marketplace-filter-sheet-fields {
+    display: grid;
+    gap: 16px;
+    overflow-y: auto;
+    padding: 20px 16px;
+  }
+
+  .marketplace-filter-sheet-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e5e5e7;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .marketplace-filter-sheet-actions button {
+    min-height: 48px;
+  }
+
+  /* Services and forms */
+  .preorder-hero,
+  .service-hero,
+  .contact-experience-hero {
+    min-height: auto;
+    padding: 52px var(--mobile-gutter) 38px;
+  }
+
+  .preorder-hero,
+  .service-request-layout,
+  .contact-experience-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .preorder-hero h1,
+  .service-hero h1,
+  .contact-experience-hero h1 {
+    max-width: 12ch;
+    margin-inline: auto;
+    font-size: clamp(2.65rem, 12vw, 3.4rem);
+    line-height: 0.96;
+  }
+
+  .preorder-hero > img,
+  .service-hero > img {
+    width: 100%;
+    max-height: 330px;
+    object-fit: contain;
+  }
+
+  .service-request-layout,
+  .contact-experience-layout {
+    gap: 38px;
+    padding: 48px var(--mobile-gutter) var(--mobile-section-space);
+  }
+
+  .service-request-layout > form,
+  .contact-experience-layout form {
+    padding: 20px !important;
+  }
+
+  .service-guidance {
+    position: static;
+    padding: 30px 0 0;
+    border-top: 1px solid rgba(29, 29, 31, 0.12);
+    border-left: 0;
+  }
+
+  .service-guidance .whatsapp-button,
+  .contact-experience-details .whatsapp-button {
+    min-height: 48px;
+    width: 100%;
+  }
+
+  .service-upload input {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .floating-whatsapp {
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px 13px !important;
+    font-size: 0.75rem;
+  }
+
+  /* Compact accordion footer */
+  .store-footer {
+    padding: 44px var(--mobile-gutter) calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .store-footer-brand {
+    padding-bottom: 24px;
+  }
+
+  .store-footer-columns {
+    display: none;
+  }
+
+  .store-footer-accordions {
+    display: block;
+    border-top: 1px solid rgba(29, 29, 31, 0.12);
+  }
+
+  .store-footer-accordions details {
+    border-bottom: 1px solid rgba(29, 29, 31, 0.12);
+  }
+
+  .store-footer-accordions summary {
+    display: flex;
+    min-height: 48px;
+    cursor: pointer;
+    list-style: none;
+    align-items: center;
+    justify-content: space-between;
+    color: #1d1d1f;
+    font-size: 0.83rem;
+    font-weight: 800;
+  }
+
+  .store-footer-accordions summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .store-footer-accordions summary span {
+    font-size: 1.1rem;
+    transition: transform 160ms ease;
+  }
+
+  .store-footer-accordions details[open] summary span {
+    transform: rotate(45deg);
+  }
+
+  .store-footer-accordions details > div {
+    display: grid;
+    padding: 0 0 16px;
+  }
+
+  .store-footer-accordions a {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    color: #6e6e73;
+    font-size: 0.84rem;
+  }
+
+  .store-footer-contact {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    padding-block: 24px;
+  }
+
+  .store-footer-contact :is(a, span) {
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .store-footer-legal {
+    gap: 10px;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 359px) {
+  :root {
+    --mobile-gutter: 14px;
+  }
+
+  .site-header .mobile-header-actions .icon-button {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .iphone18-launch-copy h1 {
+    font-size: 2.35rem;
+  }
+
+  .iphone18-launch-actions a {
+    min-width: 108px;
+    padding-inline: 14px;
+  }
+
+  .store-category-links {
+    grid-template-columns: 1fr;
+  }
+
+  .family-hero-copy h1,
+  .story-hero-copy h1,
+  .buy-page-header h1,
+  .marketplace-page-hero h1 {
+    font-size: 2.55rem;
+  }
+
+  .store-footer-contact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .iphone18-launch-hero {
+    height: calc(100svh - var(--mobile-header-height));
+    min-height: 430px;
+    max-height: 520px;
+  }
+
+  .iphone18-launch-copy {
+    top: 50%;
+    right: auto;
+    left: 4%;
+    width: 42%;
+    justify-items: start;
+    text-align: left;
+    transform: translateY(-50%);
+  }
+
+  .iphone18-launch-copy h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    white-space: normal;
+  }
+
+  .iphone18-launch-copy > span {
+    max-width: 24ch;
+    font-size: 0.85rem;
+  }
+
+  .iphone18-launch-actions {
+    justify-content: flex-start;
+  }
+
+  .iphone18-launch-actions a {
+    min-width: 104px;
+    min-height: 44px;
+  }
+
+  .iphone18-launch-media {
+    inset: 0 0 0 44%;
+  }
+
+  .iphone18-launch-hero::before {
+    background: linear-gradient(90deg, #000 0 43%, rgba(0, 0, 0, 0.5) 54%, transparent 72%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
+  .iphone18-launch-media,
+  .product-story-iphone .story-hero-video {
+    background-image:
+      linear-gradient(180deg, #000 0%, transparent 12% 86%, #000 100%),
+      url("/products/campaigns/iphone-18-pro-coffee.webp");
+  }
+
+  .iphone18-launch-video,
+  .story-hero-video video,
+  .ultra-airpods-panel > img {
+    animation: none !important;
+    transition: none !important;
+  }
+}

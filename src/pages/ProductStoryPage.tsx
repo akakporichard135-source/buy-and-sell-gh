@@ -93,7 +93,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
             <button className="experience-button experience-button-light" type="button" onClick={() => setFilmOpen(true)}><Play size={17} fill="currentColor" /> Watch the film</button>
           </div>
           <button className="story-film-poster" type="button" aria-label={`Play ${story.name} product film`} onClick={() => setFilmOpen(true)}>
-            <video muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={seekToCleanProductFrame}><source src={story.media.src} type="video/mp4" /></video>
+            <video muted playsInline preload="metadata" aria-hidden="true" onLoadedMetadata={seekToCleanProductFrame}><CinematicSources src={story.media.src} /></video>
             <span className="experience-source-mask" aria-hidden="true" />
             <span className="story-film-play"><Play size={24} fill="currentColor" /></span>
           </button>
@@ -213,8 +213,8 @@ function StoryHeroVideo({ media }: { media: ProductStoryDefinition["media"] }) {
 
   return (
     <div className="story-hero-media story-hero-video">
-      <video ref={videoRef} autoPlay muted playsInline preload="auto" aria-label={media.alt}>
-        <source src={media.src} type="video/mp4" />
+      <video ref={videoRef} autoPlay muted playsInline preload="metadata" aria-label={media.alt}>
+        <CinematicSources src={media.src} />
       </video>
       <span className="story-video-mask" aria-hidden="true" />
       <button className="story-video-control" type="button" aria-label={playing ? "Pause product film" : "Play product film"} onClick={toggle}>
@@ -225,7 +225,7 @@ function StoryHeroVideo({ media }: { media: ProductStoryDefinition["media"] }) {
 }
 
 function StoryDesignFrame({ src, label }: { src: string; label: string }) {
-  return <video muted playsInline preload="metadata" aria-label={label} onLoadedMetadata={seekToCleanProductFrame}><source src={src} type="video/mp4" /></video>;
+  return <video muted playsInline preload="metadata" aria-label={label} onLoadedMetadata={seekToCleanProductFrame}><CinematicSources src={src} /></video>;
 }
 
 function FilmModal({ name, src, onClose }: { name: string; src: string; onClose: () => void }) {
@@ -250,7 +250,7 @@ function FilmModal({ name, src, onClose }: { name: string; src: string; onClose:
     <div className="film-modal" role="dialog" aria-modal="true" aria-label={`${name} product film`}>
       <button className="film-modal-backdrop" type="button" aria-label="Close product film" onClick={onClose} />
       <div className="film-modal-player">
-        <video ref={videoRef} autoPlay muted playsInline preload="auto"><source src={src} type="video/mp4" /></video>
+        <video ref={videoRef} autoPlay muted playsInline preload="metadata"><CinematicSources src={src} /></video>
         <span className="experience-source-mask film-source-mask" aria-hidden="true" />
         <div className="film-modal-controls">
           <button type="button" onClick={toggle}>{playing ? <Pause size={19} fill="currentColor" /> : <Play size={19} fill="currentColor" />}<span>{playing ? "Pause" : "Play"}</span></button>
@@ -273,10 +273,11 @@ function useCinematicPlayback(
     const video = videoRef.current;
     if (!video) return;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const loopStart = 0.08;
-    const holdAt = 1.15;
-    const loopEnd = 2.88;
-    const playbackRate = 0.72;
+    let loopStart = 0.08;
+    let holdAt = 1.15;
+    let loopEnd = 2.88;
+    let playbackRate = 0.72;
+    let reducedMotionFrame = holdAt;
     let holdTimer = 0;
     let resetTimer = 0;
     let revealTimer = 0;
@@ -286,6 +287,16 @@ function useCinematicPlayback(
     let hasHeld = false;
     let isVisible = true;
 
+    const syncSourceTiming = () => {
+      const portraitFilm = video.currentSrc.includes("iphone-18-pro-mobile.webm");
+      const sourceDuration = Number.isFinite(video.duration) ? video.duration : 3;
+      loopStart = portraitFilm ? 0.02 : 0.08;
+      holdAt = portraitFilm ? Math.min(1.15, Math.max(0.65, sourceDuration - 1.1)) : 1.15;
+      loopEnd = portraitFilm ? Math.max(loopStart + 0.6, sourceDuration - 0.12) : 2.88;
+      playbackRate = portraitFilm ? 1 : 0.72;
+      reducedMotionFrame = portraitFilm ? holdAt : 1.15;
+    };
+
     const canPlay = () => !motionQuery.matches && !manuallyPaused.current && !document.hidden && isVisible && !isHolding && !isResetting;
     const playWhenReady = () => {
       if (!canPlay()) return;
@@ -293,6 +304,7 @@ function useCinematicPlayback(
       void video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     };
     const initialize = () => {
+      syncSourceTiming();
       window.clearTimeout(holdTimer);
       window.clearTimeout(resetTimer);
       window.clearTimeout(revealTimer);
@@ -302,7 +314,7 @@ function useCinematicPlayback(
       hasHeld = false;
       video.classList.remove("is-loop-resetting");
       video.playbackRate = playbackRate;
-      video.currentTime = motionQuery.matches ? holdAt : loopStart;
+      video.currentTime = motionQuery.matches ? reducedMotionFrame : loopStart;
       if (motionQuery.matches) {
         video.pause();
         setPlaying(false);
@@ -440,5 +452,15 @@ function highlightAnchor(label: string) {
 function seekToCleanProductFrame(event: React.SyntheticEvent<HTMLVideoElement>) {
   const video = event.currentTarget;
   video.pause();
-  video.currentTime = 1.15;
+  video.currentTime = video.currentSrc.includes("iphone-18-pro-mobile.webm") ? 2.35 : 1.15;
+}
+
+function CinematicSources({ src }: { src: string }) {
+  const isIphone18Film = src.includes("iphone-18-pro.mp4");
+  return (
+    <>
+      {isIphone18Film && <source media="(max-width: 640px)" src="/videos/homepage/iphone-18-pro-mobile.webm" type="video/webm" />}
+      <source src={src} type="video/mp4" />
+    </>
+  );
 }

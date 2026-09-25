@@ -1,5 +1,5 @@
-import { Eye, MapPin, MessageCircle, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { Eye, MapPin, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { filterMarketplaceProducts, marketplaceOptions } from "../catalog/marketplaceCatalogue";
@@ -21,6 +21,7 @@ type MarketplaceCatalogueProps = {
 
 export function MarketplaceCatalogue({ products, categoryLabels, getCategory, loading, error, emptyTitle, onRetry }: MarketplaceCatalogueProps) {
   const [params, setParams] = useSearchParams();
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Preserve rapid filter edits while React Router commits the preceding URL update.
   const pendingParams = useRef(params);
   useEffect(() => { pendingParams.current = params; }, [params]);
@@ -53,6 +54,36 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
     setParams(pendingParams.current, { replace: true });
   };
 
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFiltersOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [filtersOpen]);
+
+  const filterFields = (
+    <MarketplaceFilterFields
+      category={category}
+      brand={brand}
+      condition={condition}
+      storage={storage}
+      availability={availability}
+      maxPrice={maxPrice}
+      categories={availableCategories}
+      brands={brands}
+      conditions={conditions}
+      storageOptions={storageOptions}
+      updateParam={updateParam}
+    />
+  );
+
   return (
     <section className="marketplace-catalogue" aria-labelledby="marketplace-results-title">
       <div className="marketplace-filter-shell">
@@ -61,23 +92,28 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
           <span className="sr-only">Search products</span>
           <input type="search" value={params.get("q") ?? ""} onChange={(event) => updateParam("q", event.target.value)} placeholder="Search brand, model or storage" />
         </label>
-        <div className="marketplace-filter-grid" aria-label="Product filters">
-          <FilterSelect label="Category" value={category} onChange={(value) => updateParam("category", value)} options={availableCategories} />
-          <FilterSelect label="Brand" value={brand} onChange={(value) => updateParam("brand", value)} options={brands.map((item) => [item, item])} />
-          <FilterSelect label="Condition" value={condition} onChange={(value) => updateParam("condition", value)} options={conditions.map((item) => [item, item])} />
-          <FilterSelect label="Storage" value={storage} onChange={(value) => updateParam("storage", value)} options={storageOptions.map((item) => [item, item])} />
-          <FilterSelect label="Availability" value={availability} onChange={(value) => updateParam("availability", value)} options={[["in-stock", "Available to buy"], ["enquiry", "Enquiry only"]]} />
-          <label className="marketplace-filter-field"><span>Maximum price</span><input type="number" min="0" inputMode="numeric" value={maxPrice} onChange={(event) => updateParam("maxPrice", event.target.value)} placeholder="Any price" /></label>
-        </div>
+        <div className="marketplace-filter-grid marketplace-filter-grid-desktop" aria-label="Product filters">{filterFields}</div>
       </div>
 
       <div className="marketplace-results-toolbar">
         <div><SlidersHorizontal size={18} aria-hidden="true" /><strong id="marketplace-results-title" role="status" aria-live="polite">{loading ? "Loading listings..." : `${filteredProducts.length} ${filteredProducts.length === 1 ? "listing" : "listings"}`}</strong></div>
         <div>
+          <button className="marketplace-filter-trigger" type="button" aria-haspopup="dialog" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(true)}><SlidersHorizontal size={17} /> Filters</button>
           <label><span>Sort</span><select value={sort} onChange={(event) => updateParam("sort", event.target.value)}><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></label>
           <button type="button" onClick={clearFilters}>Clear filters</button>
         </div>
       </div>
+
+      {filtersOpen && (
+        <div className="marketplace-filter-drawer" role="dialog" aria-modal="true" aria-label="Marketplace filters">
+          <button className="marketplace-filter-backdrop" type="button" aria-label="Close filters" onClick={() => setFiltersOpen(false)} />
+          <div className="marketplace-filter-sheet">
+            <div className="marketplace-filter-sheet-header"><div><span>Marketplace</span><strong>Filters</strong></div><button autoFocus type="button" aria-label="Close filters" onClick={() => setFiltersOpen(false)}><X size={21} /></button></div>
+            <div className="marketplace-filter-sheet-fields">{filterFields}</div>
+            <div className="marketplace-filter-sheet-actions"><button className="btn-primary" type="button" onClick={() => setFiltersOpen(false)}>Show {filteredProducts.length} listings</button><button className="btn-secondary" type="button" onClick={clearFilters}>Clear</button></div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="marketplace-empty">Loading current inventory...</div>
@@ -100,6 +136,43 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
         </div>
       )}
     </section>
+  );
+}
+
+function MarketplaceFilterFields({
+  category,
+  brand,
+  condition,
+  storage,
+  availability,
+  maxPrice,
+  categories,
+  brands,
+  conditions,
+  storageOptions,
+  updateParam,
+}: {
+  category: string;
+  brand: string;
+  condition: string;
+  storage: string;
+  availability: string;
+  maxPrice: string;
+  categories: string[][];
+  brands: string[];
+  conditions: string[];
+  storageOptions: string[];
+  updateParam: (key: string, value: string) => void;
+}) {
+  return (
+    <>
+      <FilterSelect label="Category" value={category} onChange={(value) => updateParam("category", value)} options={categories} />
+      <FilterSelect label="Brand" value={brand} onChange={(value) => updateParam("brand", value)} options={brands.map((item) => [item, item])} />
+      <FilterSelect label="Condition" value={condition} onChange={(value) => updateParam("condition", value)} options={conditions.map((item) => [item, item])} />
+      <FilterSelect label="Storage" value={storage} onChange={(value) => updateParam("storage", value)} options={storageOptions.map((item) => [item, item])} />
+      <FilterSelect label="Availability" value={availability} onChange={(value) => updateParam("availability", value)} options={[["in-stock", "Available to buy"], ["enquiry", "Enquiry only"]]} />
+      <label className="marketplace-filter-field"><span>Maximum price</span><input type="number" min="0" inputMode="numeric" value={maxPrice} onChange={(event) => updateParam("maxPrice", event.target.value)} placeholder="Any price" /></label>
+    </>
   );
 }
 

@@ -164,12 +164,12 @@ function Iphone18Hero() {
     if (!video) return;
     const hero = video.closest<HTMLElement>(".iphone18-launch-hero");
 
-    const loopStart = 0.08;
-    const blueStageHoldAt = 1.15;
+    let loopStart = 0.08;
+    let blueStageHoldAt = 1.15;
     const blueStageHoldDuration = 3000;
-    const loopEnd = 2.88;
-    const reducedMotionFrame = blueStageHoldAt;
-    const playbackRate = 0.72;
+    let loopEnd = 2.88;
+    let reducedMotionFrame = blueStageHoldAt;
+    let playbackRate = 0.72;
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     let resetTimer: number | undefined;
     let revealTimer: number | undefined;
@@ -179,6 +179,16 @@ function Iphone18Hero() {
     let isHolding = false;
     let hasHeldBlueStage = false;
     let isVisible = true;
+
+    const syncSourceTiming = () => {
+      const portraitFilm = video.currentSrc.includes("iphone-18-pro-mobile.webm");
+      const sourceDuration = Number.isFinite(video.duration) ? video.duration : 3;
+      loopStart = portraitFilm ? 0.02 : 0.08;
+      blueStageHoldAt = portraitFilm ? Math.min(1.15, Math.max(0.65, sourceDuration - 1.1)) : 1.15;
+      loopEnd = portraitFilm ? Math.max(loopStart + 0.6, sourceDuration - 0.12) : 2.88;
+      reducedMotionFrame = portraitFilm ? blueStageHoldAt : 1.15;
+      playbackRate = portraitFilm ? 1 : 0.72;
+    };
 
     const canPlay = () => !motionQuery.matches && isVisible && !document.hidden && !isResetting && !isHolding;
 
@@ -194,6 +204,7 @@ function Iphone18Hero() {
     };
 
     const syncPlayback = () => {
+      syncSourceTiming();
       window.clearTimeout(resetTimer);
       window.clearTimeout(revealTimer);
       window.clearTimeout(holdTimer);
@@ -312,9 +323,10 @@ function Iphone18Hero() {
           autoPlay
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
           aria-label="iPhone 18 Pro cinematic product film"
         >
+          <source media="(max-width: 640px)" src="/videos/homepage/iphone-18-pro-mobile.webm" type="video/webm" />
           <source src="/videos/homepage/iphone-18-pro.mp4" type="video/mp4" />
         </video>
       </div>

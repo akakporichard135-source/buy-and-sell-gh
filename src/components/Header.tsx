@@ -135,14 +135,10 @@ export function Header() {
         </div>
         <div className="mobile-header-actions xl:hidden">
           <button className="icon-button" type="button" aria-label="Search products" onClick={() => setSearchOpen(true)}><Search size={19} /></button>
-          <a className="icon-button" href="https://wa.me/233244182149" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
-            <MessageCircle size={19} />
-          </a>
           <NavLink to="/cart" className="icon-button relative" aria-label="Open cart">
             <ShoppingBag size={19} />
             {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
           </NavLink>
-          <NavLink to="/account" className="icon-button" aria-label="Account and order support"><UserRound size={19} /></NavLink>
           <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger shrink-0" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
             <Menu size={22} />
           </button>

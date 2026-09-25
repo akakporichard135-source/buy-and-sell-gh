@@ -40,6 +40,14 @@ export function Footer() {
           </section>
         ))}
       </div>
+      <div className="store-footer-accordions">
+        {footerColumns.map((column) => (
+          <details key={column.title}>
+            <summary>{column.title}<span aria-hidden="true">+</span></summary>
+            <div>{column.links.map(([label, to]) => <Link to={to} key={label}>{label}</Link>)}</div>
+          </details>
+        ))}
+      </div>
       <div className="store-footer-contact">
         <a href={`tel:${business.whatsapp.primary}`}><Phone size={15} /> {business.phones[0]}</a>
         <a href={`https://wa.me/${business.whatsapp.primary}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>

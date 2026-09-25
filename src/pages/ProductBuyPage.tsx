@@ -179,6 +179,13 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
         <div><p>Need the product story?</p><h2>Explore before you configure.</h2></div>
         <Link className="experience-button experience-button-light" to={productStoryPath(family, slug)}>Learn more about {name}</Link>
       </section>
+
+      <div className="mobile-buy-bar" aria-label={`${name} purchase actions`}>
+        <span><strong>{name}</strong><small>{priceLabel}</small></span>
+        {purchasable
+          ? <button type="button" onClick={() => addSelectedToCart(true)}>Buy</button>
+          : <Link to={preorderPath}>Check availability</Link>}
+      </div>
     </div>
   );
 }
