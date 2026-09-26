@@ -161,7 +161,7 @@ export function HomePage() {
 
 function Iphone18Hero() {
   return (
-    <section className="iphone18-launch-hero iphone18-still-hero" aria-labelledby="iphone18-launch-title">
+    <section className="iphone18-still-hero" aria-labelledby="iphone18-launch-title">
       <div className="iphone18-launch-copy">
         <p className="store-eyebrow">A new era of Pro</p>
         <h1 id="iphone18-launch-title">iPhone 18 Pro</h1>

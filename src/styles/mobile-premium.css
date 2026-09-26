@@ -140,16 +140,19 @@
   /* Homepage Apple-inspired still hero */
   .storefront-home .iphone18-still-hero {
     width: 100%;
-    min-height: auto;
+    min-height: clamp(400px, 58svh, 480px);
     height: auto;
     max-height: none;
     background: #000000;
     color: #f5f5f7;
-    padding: 34px 16px 16px;
+    padding: 26px 16px 0;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     align-items: center;
     text-align: center;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .iphone18-still-hero::before,
@@ -158,13 +161,16 @@
   }
 
   .storefront-home .iphone18-still-hero .iphone18-launch-copy {
-    position: relative;
-    top: auto;
-    inset: auto;
+    position: relative !important;
+    top: auto !important;
+    inset: auto !important;
     width: 100%;
     max-width: 360px;
     margin: 0 auto;
     gap: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .iphone18-still-hero .iphone18-launch-copy::before {
@@ -172,18 +178,18 @@
   }
 
   .iphone18-still-hero .store-eyebrow {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #86868b;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
   .iphone18-still-hero h1 {
     max-width: 100%;
-    font-size: clamp(2.6rem, 11.5vw, 3.4rem);
-    font-weight: 750;
-    line-height: 1.02;
+    font-size: clamp(2.4rem, 10.5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.05;
     letter-spacing: -0.025em;
     color: #f5f5f7;
     white-space: normal;
@@ -194,7 +200,7 @@
     font-size: 1.15rem;
     font-weight: 400;
     color: rgba(255, 255, 255, 0.8);
-    line-height: 1.38;
+    line-height: 1.35;
   }
 
   .iphone18-still-hero .iphone18-launch-actions {
@@ -207,12 +213,17 @@
   }
 
   .iphone18-still-hero .iphone18-launch-actions a {
-    min-width: 125px;
-    min-height: 44px;
-    padding: 0 20px;
+    min-width: 120px;
+    min-height: 42px;
+    padding: 0 18px;
     font-size: 0.92rem;
     font-weight: 500;
     border-radius: 999px;
+  }
+
+  .iphone18-still-hero .iphone18-launch-actions a:focus-visible {
+    outline: 2px solid #0071e3;
+    outline-offset: 3px;
   }
 
   .iphone18-still-hero .iphone18-launch-actions .store-button-primary {
@@ -222,19 +233,29 @@
   }
 
   .iphone18-still-hero .iphone18-launch-actions .store-button-secondary {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.06);
     color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
   }
 
   .storefront-home .iphone18-still-hero .iphone18-launch-media {
-    position: relative;
-    inset: auto;
+    position: relative !important;
+    inset: auto !important;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 16px;
     display: flex;
     justify-content: center;
+    align-items: flex-end;
+    flex: 1;
     background: none;
+  }
+
+  .storefront-home .iphone18-still-hero .iphone18-launch-media picture {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
   }
 
   .iphone18-still-hero .iphone18-source-mask,
@@ -243,13 +264,14 @@
   }
 
   .iphone18-still-hero .iphone18-hero-still-img {
-    width: 104%;
-    max-width: none;
+    width: 100%;
+    max-width: 440px;
     height: auto;
-    max-height: 290px;
+    max-height: 280px;
     object-fit: contain;
-    object-position: center top;
+    object-position: center bottom;
     filter: none;
+    margin: 0 auto;
   }
 
   /* Homepage campaigns become independent mobile stages. */
