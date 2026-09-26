@@ -161,28 +161,28 @@ export function HomePage() {
 
 function Iphone18Hero() {
   return (
-    <section className="iphone18-still-hero" aria-labelledby="iphone18-launch-title">
-      <div className="iphone18-launch-copy">
+    <section className="iphone18-hero" aria-labelledby="iphone18-hero-headline">
+      <div className="iphone18-hero-copy">
         <p className="store-eyebrow">A new era of Pro</p>
-        <h1 id="iphone18-launch-title">iPhone 18 Pro</h1>
-        <span>Pro further.</span>
-        <div className="iphone18-launch-actions">
+        <h1 id="iphone18-hero-headline">iPhone 18 Pro</h1>
+        <p className="iphone18-hero-subtitle">Pro further.</p>
+        <div className="iphone18-hero-actions">
           <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
           <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">View pricing</Link>
         </div>
       </div>
-      <div className="iphone18-launch-media">
+      <div className="iphone18-hero-media">
         <picture>
-          {campaignAssets.iphone18.hero.mobileSrc && (
-            <source media="(max-width: 767px)" srcSet={campaignAssets.iphone18.hero.mobileSrc} />
-          )}
+          <source type="image/webp" srcSet="/products/homepage/iphone-18-pro-hero.webp 1x, /products/homepage/iphone-18-pro-hero-2x.webp 2x" />
           <img
-            src={campaignAssets.iphone18.hero.src}
-            alt={campaignAssets.iphone18.hero.alt}
-            className="iphone18-hero-still-img"
+            src="/products/homepage/iphone-18-pro-hero-original.jpg"
+            alt="iPhone 18 Pro with chrome PRO visual"
+            className="iphone18-hero-img"
             loading="eager"
             fetchPriority="high"
             decoding="async"
+            width={736}
+            height={414}
             onError={(event) => {
               if (campaignAssets.iphone18.hero.fallback && !event.currentTarget.dataset.fallbackApplied) {
                 event.currentTarget.dataset.fallbackApplied = "true";

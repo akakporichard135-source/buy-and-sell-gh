@@ -136,16 +136,13 @@
     backdrop-filter: blur(18px);
   }
 
-  /* Homepage portrait flagship */
-  /* Homepage Apple-inspired still hero */
-  .storefront-home .iphone18-still-hero {
+  /* Homepage flagship hero */
+  .storefront-home .iphone18-hero {
     width: 100%;
     min-height: auto;
-    height: auto;
-    max-height: none;
     background: #000000;
     color: #f5f5f7;
-    padding: 28px 16px 28px;
+    padding: 24px 16px 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -155,33 +152,17 @@
     overflow: hidden;
   }
 
-  .iphone18-still-hero::before,
-  .iphone18-still-hero::after {
-    display: none !important;
-  }
-
-  .storefront-home .iphone18-still-hero .iphone18-launch-copy {
-    position: relative !important;
-    top: auto !important;
-    inset: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
+  .storefront-home .iphone18-hero .iphone18-hero-copy {
     width: 100%;
     max-width: 360px;
     margin: 0 auto;
-    gap: 6px;
-    display: flex !important;
+    gap: 4px;
+    display: flex;
     flex-direction: column;
     align-items: center;
   }
 
-  .iphone18-still-hero .iphone18-launch-copy::before {
-    display: none !important;
-  }
-
-  .iphone18-still-hero .store-eyebrow {
+  .storefront-home .iphone18-hero .store-eyebrow {
     font-size: 0.75rem;
     font-weight: 600;
     color: #86868b;
@@ -189,9 +170,9 @@
     text-transform: uppercase;
   }
 
-  .iphone18-still-hero h1 {
+  .storefront-home .iphone18-hero h1 {
     max-width: 100%;
-    font-size: clamp(2.3rem, 10vw, 3.1rem);
+    font-size: clamp(2.3rem, 9.5vw, 3rem);
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.025em;
@@ -199,86 +180,54 @@
     white-space: normal;
   }
 
-  .iphone18-still-hero .iphone18-launch-copy > span {
+  .storefront-home .iphone18-hero .iphone18-hero-subtitle {
     max-width: 28ch;
-    font-size: 1.12rem;
+    font-size: 1.15rem;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.8);
+    color: #f5f5f7;
     line-height: 1.35;
+    margin-top: 2px;
   }
 
-  .iphone18-still-hero .iphone18-launch-actions {
+  .storefront-home .iphone18-hero .iphone18-hero-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
     margin-top: 14px;
     width: 100%;
   }
 
-  .iphone18-still-hero .iphone18-launch-actions a {
-    min-width: 120px;
-    min-height: 42px;
+  .storefront-home .iphone18-hero .iphone18-hero-actions .store-button {
+    min-width: 110px;
+    min-height: 40px;
     padding: 0 18px;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 500;
     border-radius: 999px;
   }
 
-  .iphone18-still-hero .iphone18-launch-actions a:focus-visible {
-    outline: 2px solid #0071e3;
-    outline-offset: 3px;
-  }
-
-  .iphone18-still-hero .iphone18-launch-actions .store-button-primary {
-    background: #0071e3;
-    color: #ffffff;
-    border: 1px solid #0071e3;
-  }
-
-  .iphone18-still-hero .iphone18-launch-actions .store-button-secondary {
-    background: rgba(255, 255, 255, 0.06);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-  }
-
-  .storefront-home .iphone18-still-hero .iphone18-launch-media {
-    position: relative !important;
-    inset: auto !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
+  .storefront-home .iphone18-hero .iphone18-hero-media {
     width: 100%;
-    margin-top: 24px;
-    display: flex !important;
+    margin-top: 4px;
+    display: flex;
     justify-content: center;
     align-items: center;
-    flex: 0 1 auto !important;
-    background: none !important;
+    background: none;
   }
 
-  .storefront-home .iphone18-still-hero .iphone18-launch-media picture {
+  .storefront-home .iphone18-hero .iphone18-hero-media picture {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
   }
 
-  .iphone18-still-hero .iphone18-source-mask,
-  .iphone18-still-hero .iphone18-launch-pro {
-    display: none !important;
-  }
-
-  .iphone18-still-hero .iphone18-hero-still-img {
+  .storefront-home .iphone18-hero .iphone18-hero-img {
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     height: auto;
-    max-height: 200px;
     object-fit: contain;
-    object-position: center bottom;
     filter: none;
     margin: 0 auto;
   }
