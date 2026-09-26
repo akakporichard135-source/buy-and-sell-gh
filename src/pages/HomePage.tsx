@@ -222,7 +222,7 @@ function UltraAirpodsStory() {
           }}
         />
       </article>
-      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title">
+      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title" id="airpods-5">
         <div className="ultra-airpods-copy">
           <p className="store-eyebrow">Move with your music</p>
           <h2 id="airpods-story-title">AirPods 5</h2>
@@ -232,18 +232,21 @@ function UltraAirpodsStory() {
             <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">View pricing</Link>
           </div>
         </div>
-        <img
-          src="/products/homepage/airpods-5-lifestyle.webp"
-          alt={campaignAssets.airpods.lifestyle.alt}
-          loading="lazy"
-          decoding="async"
-          onError={(event) => {
-            if (campaignAssets.airpods.lifestyle.fallback && !event.currentTarget.dataset.fallbackApplied) {
-              event.currentTarget.dataset.fallbackApplied = "true";
-              event.currentTarget.src = campaignAssets.airpods.lifestyle.fallback;
-            }
-          }}
-        />
+        <div className="ultra-airpods-lifestyle-media">
+          <img
+            src="/products/homepage/airpods-5-lifestyle.webp"
+            alt={campaignAssets.airpods.lifestyle.alt}
+            className="ultra-airpods-lifestyle-img"
+            loading="lazy"
+            decoding="async"
+            onError={(event) => {
+              if (campaignAssets.airpods.lifestyle.fallback && !event.currentTarget.dataset.fallbackApplied) {
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = campaignAssets.airpods.lifestyle.fallback;
+              }
+            }}
+          />
+        </div>
       </article>
     </section>
   );
