@@ -97,10 +97,30 @@ const productTiles: Campaign[] = [
 ];
 
 const serviceStories = [
-  { label: "Upgrade & Save", title: "Move into something newer.", description: "Trade or swap your current device toward your next upgrade.", image: moreStoreUpgradeArtwork, to: "/sell-or-trade?mode=upgrade", tone: "light" },
-  { label: "Sell for Cash", title: "Sell your old device.", description: "Request an assessment and confirm the next step with our team.", image: moreStoreSellCashArtwork, to: "/sell-or-trade?mode=sell", tone: "light" },
-  { label: "Installment", title: "Own an iPhone today.", description: "Review current requirements before sending your request.", image: moreStoreInstallmentArtwork, to: "/installment", tone: "black" },
-  { label: "Repairs", title: "Let the experts fix it.", description: "Support for phones, laptops and game consoles.", image: moreStoreRepairsArtwork, to: "/repairs", tone: "black" },
+  {
+    label: "Installment",
+    title: "Own an iPhone today.",
+    description: "Review current requirements before sending your request.",
+    image: moreStoreInstallmentArtwork,
+    to: "/installment",
+    tone: "black",
+  },
+  {
+    label: "Repairs",
+    title: "Let the experts fix it.",
+    description: "Support for phones, laptops and game consoles.",
+    image: moreStoreRepairsArtwork,
+    to: "/repairs",
+    tone: "black",
+  },
+  {
+    label: "Upgrade & Save",
+    title: "Move into something newer.",
+    description: "Trade or swap your current device toward your next upgrade.",
+    image: moreStoreUpgradeArtwork,
+    to: "/sell-or-trade?mode=upgrade",
+    tone: "light",
+  },
 ];
 
 export function HomePage() {
@@ -243,8 +263,8 @@ function UltraAirpodsStory() {
             src="/products/homepage/airpods-5.jpg"
             alt="AirPods 5 with open charging case"
             className="ultra-airpods-lifestyle-img"
-            width={736}
-            height={610}
+            width={500}
+            height={500}
             loading="lazy"
             decoding="async"
           />
@@ -337,7 +357,6 @@ function CampaignPair({ campaigns, label, className }: { campaigns: Campaign[]; 
 function StoreRail({ eyebrow, title, description, className, children, id }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode; id?: string }) {
   const railRef = useRef<HTMLDivElement>(null);
   const railItems = Children.toArray(children);
-  const wraparoundItem = railItems[0];
 
   useEffect(() => {
     const rail = railRef.current;
@@ -415,12 +434,6 @@ function StoreRail({ eyebrow, title, description, className, children, id }: { e
       </div>
       <div ref={railRef} className="store-horizontal-rail">
         {railItems}
-        {isValidElement(wraparoundItem) && cloneElement(wraparoundItem as ReactElement<{ tabIndex?: number; "aria-hidden"?: boolean; "data-rail-wraparound"?: string }>, {
-          "aria-hidden": true,
-          "data-rail-wraparound": "true",
-          key: "rail-wraparound",
-          tabIndex: -1,
-        })}
       </div>
     </section>
   );

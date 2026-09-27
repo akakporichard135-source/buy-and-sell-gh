@@ -285,12 +285,13 @@
 
   .storefront-home > .home-product-campaign-apple-watch-series-12 .home-product-campaign-art > img {
     width: 100%;
-    max-width: 480px;
+    max-width: 290px;
     height: auto;
     min-height: 0;
     object-fit: contain;
     object-position: center;
     margin-inline: auto;
+    mix-blend-mode: multiply;
   }
 
   .home-product-pair {
@@ -413,14 +414,15 @@
     position: relative !important;
     inset: auto !important;
     width: 100% !important;
-    max-width: min(340px, 88vw) !important;
+    max-width: min(300px, 85vw) !important;
     height: auto !important;
     max-height: none !important;
-    aspect-ratio: 736 / 610 !important;
+    aspect-ratio: 1 / 1 !important;
     object-fit: contain !important;
     object-position: center !important;
-    border-radius: 20px !important;
-    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    mix-blend-mode: multiply !important;
     filter: none !important;
   }
 

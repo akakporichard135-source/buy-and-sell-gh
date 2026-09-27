@@ -9664,7 +9664,7 @@ body {
 .store-footer {
   background: var(--bg-secondary);
   color: var(--text-primary);
-  padding: clamp(2.2rem, 3.8vw, 3.2rem) max(1.25rem, calc((100vw - 1280px) / 2)) 0;
+  padding: clamp(2.2rem, 3.8vw, 3.2rem) max(1.25rem, calc((100vw - 1280px) / 2)) clamp(4.2rem, 6.5vw, 5.5rem);
 }
 
 .store-footer-brand {
@@ -9742,9 +9742,11 @@ body {
 .store-footer-legal {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 1.5rem;
   border-top: 1px solid var(--border-primary);
-  padding-block: 1rem 1.5rem;
+  padding-block: 1.25rem 1.5rem;
+  padding-right: clamp(6rem, 8vw, 8.5rem);
   color: var(--text-secondary);
   font-size: 0.73rem;
   line-height: 1.45;
@@ -9752,6 +9754,15 @@ body {
 
 .store-footer-legal p {
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .store-footer-legal {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-right: 0;
+    padding-bottom: 3.5rem;
+  }
 }
 
 @media (max-width: 1080px) {
@@ -14587,33 +14598,39 @@ body {
 }
 
 .storefront-home .service-story-rail .store-horizontal-rail {
-  display: flex;
-  gap: var(--home-grid-gap);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding: 0 0 0.85rem;
-  scroll-behavior: smooth;
-  scroll-padding-inline: 0;
-  scroll-snap-type: x mandatory;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 1.8vw, 24px);
+  width: min(100%, 1380px);
+  margin-inline: auto;
+  overflow: visible;
+  padding: 0;
 }
 
 .storefront-home .service-story-card {
-  width: auto;
-  flex: 0 0 clamp(360px, 31vw, 430px);
-  min-height: clamp(700px, 54vw, 780px);
-  grid-template-rows: 12rem minmax(0, 1fr) auto;
-  gap: clamp(1rem, 1.7vw, 1.5rem);
-  padding: clamp(1.25rem, 2vw, 1.75rem);
-  border-radius: 6px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 640px;
+  border-radius: 12px;
+  padding: clamp(24px, 2.2vw, 32px) clamp(20px, 2vw, 28px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: transform 250ms ease, box-shadow 250ms ease;
+}
+
+.storefront-home .service-story-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.09);
 }
 
 .storefront-home .service-story-card > div {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto minmax(4.75rem, auto) minmax(3.25rem, auto);
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 140px;
+  margin-bottom: 16px;
 }
 
 .storefront-home .service-story-card strong,
@@ -14623,16 +14640,51 @@ body {
 
 .storefront-home .service-story-card img {
   width: 100%;
-  height: 100%;
-  min-height: 0;
-  aspect-ratio: auto;
+  height: 360px;
+  max-height: 360px;
   object-fit: contain;
   object-position: center;
+  border-radius: 8px;
+  margin: auto 0;
 }
 
-@media (max-width: 1024px) {
+.storefront-home .service-story-card small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .storefront-home .service-story-rail .store-horizontal-rail {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 14px;
+    padding: 0 clamp(16px, 4vw, 24px) 20px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .storefront-home .service-story-card {
-    flex-basis: min(430px, calc((100% - var(--home-grid-gap)) / 2));
+    flex: 0 0 min(84vw, 340px);
+    min-height: 520px;
+    scroll-snap-align: center;
+    border-radius: 12px;
+    padding: 22px 18px;
+  }
+
+  .storefront-home .service-story-card > div {
+    min-height: 120px;
+    margin-bottom: 12px;
+  }
+
+  .storefront-home .service-story-card img {
+    height: 270px;
+    max-height: 270px;
   }
 }
 
@@ -14673,36 +14725,6 @@ body {
     justify-self: center;
     justify-content: center;
     text-align: center;
-  }
-
-  .storefront-home .service-story-rail .store-horizontal-rail {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 0.75rem;
-  }
-
-  .storefront-home .service-story-card {
-    flex-basis: min(430px, calc((100% - 1rem) / 2));
-  }
-}
-
-@media (max-width: 640px) {
-  .storefront-home .service-story-card {
-    flex: 0 0 min(430px, calc(100% - clamp(1.75rem, 10vw, 2.75rem)));
-    min-height: 0;
-    grid-template-rows: 10.5rem auto auto;
-    padding: 1rem;
-  }
-
-  .storefront-home .service-story-card > div {
-    min-height: 0;
-    grid-template-rows: auto minmax(4.75rem, auto) minmax(3.25rem, auto);
-  }
-
-  .storefront-home .service-story-card img {
-    height: auto;
-    aspect-ratio: 3 / 4;
   }
 }
 

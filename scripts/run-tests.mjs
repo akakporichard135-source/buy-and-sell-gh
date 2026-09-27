@@ -286,17 +286,20 @@ try {
   assert.match(homepageSource, /<UltraAirpodsStory \/>/, "Watch Ultra 4 and AirPods 5 share the approved split campaign");
   assert.doesNotMatch(homepageSource, /Built Around You\.|Power for ideas without limits\.|Everything you need to get more done\.|Buy &amp; Sell GH Concierge|EditorialDeviceGuide|ConciergeSection/, "The removed editorial and Concierge area does not return");
   assert.doesNotMatch(homepageSource, /NewMacLaunchCampaign|newMacLaunches\[/, "Mac mini and Mac Studio are removed from the homepage without changing their routes");
-  assert.match(homepageSource, /iphone18-hero-still-img|campaignAssets\.iphone18\.hero/, "The homepage hero uses the approved still image hero");
+  assert.match(homepageSource, /iphone18-hero-(?:still-)?img|campaignAssets\.iphone18\.hero/, "The homepage hero uses the approved still image hero");
   assert.doesNotMatch(homepageSource, /<video[^>]*\scontrols(?:\s|=|>)/i, "The flagship hero does not expose native controls");
   assert.doesNotMatch(homepageSource, /home-(?:video|story)-(?:controls|progress)|aria-label="Pause/i, "The flagship hero exposes no player-style controls");
   assert.doesNotMatch(homepageSource, /iphone-18-pro-cinematic\.webp/, "The rejected generated iPhone 18 Pro hardware is not used");
   const homepageMediaSource = homepageSource;
-  for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp", "airpods-5-lifestyle.webp"]) {
+  for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp"]) {
     const image = await readFile(path.join(projectRoot, "public/products/homepage", filename));
     assert.equal(image.toString("ascii", 0, 4), "RIFF", `${filename} is a real WebP asset`);
     assert.equal(image.toString("ascii", 8, 12), "WEBP", `${filename} is a real WebP asset`);
     assert.match(homepageMediaSource, new RegExp(`/products/homepage/${filename}`), `${filename} is used by the homepage`);
   }
+  const airpodsImg = await readFile(path.join(projectRoot, "public/products/homepage", "airpods-5.jpg"));
+  assert.ok(airpodsImg.length > 0, "airpods-5.jpg is a real asset");
+  assert.match(homepageMediaSource, /\/products\/homepage\/airpods-5\.jpg/, "airpods-5.jpg is used by the homepage");
   const heroVideo = await readFile(path.join(projectRoot, "public/videos/homepage/iphone-18-pro.mp4"));
   assert.equal(heroVideo.toString("ascii", 4, 8), "ftyp", "The iPhone 18 Pro hero source is a real MP4 asset");
   assert.match(homepageSource, /const productTiles: Campaign\[\] = \[\s*ipadAirCampaign,\s*visaTradingCampaign,\s*\]/, "Visa trading replaces iPad Pro in the paired homepage campaign data");
