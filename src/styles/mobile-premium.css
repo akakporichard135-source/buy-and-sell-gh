@@ -404,10 +404,10 @@
 
   .ultra-airpods-lifestyle .ultra-airpods-lifestyle-media {
     width: 100%;
-    margin-top: 20px;
+    margin-top: 10px;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
   }
 
   .ultra-airpods-lifestyle-img {
@@ -419,7 +419,7 @@
     max-height: 400px !important;
     aspect-ratio: 3 / 4 !important;
     object-fit: contain !important;
-    object-position: center bottom !important;
+    object-position: center top !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     mix-blend-mode: normal !important;
