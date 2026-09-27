@@ -206,74 +206,6 @@
   }
 }
 
-
-/* Product Family Quick Strip */
-.home-family-strip {
-  width: 100%;
-  background: #ffffff;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 24px 16px;
-}
-
-.home-family-strip-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(16px, 4vw, 44px);
-  max-width: 1100px;
-  margin: 0 auto;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.home-family-strip-inner::-webkit-scrollbar {
-  display: none;
-}
-
-.home-family-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  text-decoration: none;
-  color: #1d1d1f;
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.home-family-chip:hover {
-  opacity: 0.75;
-  transform: translateY(-2px);
-}
-
-.home-family-thumb {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: #f5f5f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-}
-
-.home-family-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.home-family-chip span {
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: #1d1d1f;
-}
-
 /* Homepage-only product stories. Catalogue cards and their layout remain unchanged. */
 .storefront-home > .home-product-campaign {
   position: relative;
@@ -738,12 +670,32 @@
 }
 
 .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy {
-  height: 300px;
-  min-height: 300px;
+  height: 240px;
+  min-height: 240px;
+}
+
+.home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art > img {
+  width: min(100%, 520px);
+  height: clamp(280px, 28vw, 420px);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+}
+
+.home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art > img {
+  width: min(100%, 420px);
+  height: clamp(280px, 28vw, 420px);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
 }
 
 .home-product-pair > .home-product-campaign-ipad-air .home-product-campaign-art > img {
-  width: min(106%, 720px);
+  width: min(100%, 480px);
+  height: clamp(280px, 28vw, 420px);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
 }
 
 .home-product-pair-ipad-visa > .home-product-campaign .home-product-campaign-copy {

@@ -302,8 +302,20 @@
   .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy,
   .home-product-pair-ipad-visa > .home-product-campaign .home-product-campaign-copy,
   .home-product-pair-ipad-visa > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-copy {
-    height: auto;
-    min-height: 0;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art > img,
+  .home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art > img,
+  .home-product-pair > .home-product-campaign-ipad-air .home-product-campaign-art > img {
+    width: 100% !important;
+    max-width: 340px !important;
+    height: auto !important;
+    max-height: 320px !important;
+    object-fit: contain !important;
+    object-position: center bottom !important;
+    margin: 0 auto !important;
   }
 
   .ultra-airpods-story {

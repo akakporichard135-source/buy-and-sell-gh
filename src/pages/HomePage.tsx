@@ -9,11 +9,6 @@ import { SEO } from "../components/SEO";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
 import "../styles/homepage-video-showcase.css";
-import ipadAirCampaignArt from "../assets/homepage/homepage-ipad-air-white.webp";
-import macbookAirCampaignArt from "../assets/homepage/homepage-macbook-air-premium-v2.jpg";
-import macbookAirM5Cutout from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
-import macbookProCampaignArt from "../assets/homepage/homepage-macbook-pro-cinematic.webp";
-import macbookProM5Cutout from "../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
 import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installment-owner.png";
 import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
 import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
@@ -22,7 +17,6 @@ import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
 import { campaignAssets } from "../catalog/campaignAssets";
 
 import { getLatestMacLaunch } from "../utils/latestMac";
-import type { LatestMacLaunch } from "../utils/latestMac";
 
 type CampaignTheme = "black" | "light" | "warm";
 
@@ -47,7 +41,7 @@ const ipadAirCampaign: Campaign = {
   eyebrow: "Fresh. Powerful. Colourful.",
   title: "iPad Air",
   description: "Made for work, study, creativity and everything in between.",
-  image: ipadAirCampaignArt,
+  image: "/products/homepage/ipad-air.jpg",
   imageAlt: "iPad Air in a layered premium product presentation",
   theme: "light",
   primaryLabel: "Learn more",
@@ -112,22 +106,37 @@ const serviceStories = [
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
-  const latestMacbookPro = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Pro"), [activeProducts]);
 
-  const featuredMacbookAirCampaign = latestMacbookAir
-    ? createMacCampaign(latestMacbookAir, "A light, capable Mac for work, study and everyday creativity.", "light", macbookAirCampaignArt, "macbook-air", {
-      image: macbookAirM5Cutout,
-      slug: "macbook-air-15-m5",
-    })
-    : null;
-  const featuredMacbookProCampaign = latestMacbookPro
-    ? createMacCampaign(latestMacbookPro, "Built for demanding creative, technical and professional workflows.", "black", macbookProCampaignArt, "macbook-pro", {
-      image: macbookProM5Cutout,
-      slug: "macbook-pro-16-m5-pro-max",
-    })
-    : null;
-  const featuredMacbookCampaigns = [featuredMacbookAirCampaign, featuredMacbookProCampaign]
-    .filter((campaign): campaign is Campaign => campaign !== null);
+  const featuredMacbookAirCampaign: Campaign = {
+    eyebrow: latestMacbookAir ? `${latestMacbookAir.generation} · MacBook Air` : "MacBook Air",
+    title: "MacBook Air",
+    description: "A light, capable Mac for work, study and everyday creativity.",
+    availabilityText: latestMacbookAir ? getLaunchAvailability(latestMacbookAir.variants, latestMacbookAir.featuredProduct.name) : undefined,
+    image: "/products/homepage/macbook-air.jpg",
+    imageAlt: "MacBook Air in an ultra-thin opening profile",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/mac/macbook-air",
+    secondaryLabel: "Shop now",
+    secondaryTo: "/shop/buy-mac/macbook-air",
+    variant: "macbook-air",
+  };
+
+  const macMiniCampaign: Campaign = {
+    eyebrow: "All-new",
+    title: "Mac mini",
+    description: "Now with M6 and M5 Pro.",
+    image: "/products/homepage/mac-mini-device.jpg",
+    fallbackImage: "/products/homepage/mac-mini.jpg",
+    imageAlt: "Mac mini with M6 and M5 Pro held in hand",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/mac-mini",
+    secondaryLabel: "Buy",
+    secondaryTo: "/shop?category=Macs",
+  };
+
+  const featuredMacCampaigns = [featuredMacbookAirCampaign, macMiniCampaign];
 
   return (
     <>
@@ -136,11 +145,8 @@ export function HomePage() {
         <Iphone18Hero />
         {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
         <UltraAirpodsStory />
-        <ProductFamilyStrip />
 
-        {featuredMacbookCampaigns.length > 0 && (
-          <CampaignPair campaigns={featuredMacbookCampaigns} label="MacBook Air and MacBook Pro" className="home-product-pair-macbooks" />
-        )}
+        <CampaignPair campaigns={featuredMacCampaigns} label="MacBook Air and Mac mini" className="home-product-pair-macbooks" />
         <CampaignPair campaigns={productTiles} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" />
 
         <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
@@ -248,32 +254,6 @@ function UltraAirpodsStory() {
           />
         </div>
       </article>
-    </section>
-  );
-}
-
-function ProductFamilyStrip() {
-  const families = [
-    { label: "iPhone", to: "/iphone", iconSrc: "/products/campaigns/iphone-18-pro-front.webp" },
-    { label: "Mac", to: "/mac", iconSrc: "/products/campaigns/macbook-air-floating.webp" },
-    { label: "iPad", to: "/ipad", iconSrc: "/products/campaigns/ipad-air-colors.webp" },
-    { label: "Watch", to: "/watch", iconSrc: "/products/homepage/watch-series-12.webp" },
-    { label: "AirPods", to: "/airpods", iconSrc: "/products/campaigns/airpods-5-product.webp" },
-    { label: "Accessories", to: "/accessories", iconSrc: "/products/campaigns/accessory-belkin-3-in-1.webp" },
-  ];
-
-  return (
-    <section className="home-family-strip" aria-label="Explore Apple product families">
-      <div className="home-family-strip-inner">
-        {families.map((item) => (
-          <Link to={item.to} key={item.label} className="home-family-chip">
-            <div className="home-family-thumb">
-              <img src={item.iconSrc} alt="" loading="lazy" decoding="async" />
-            </div>
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </div>
     </section>
   );
 }
@@ -454,31 +434,6 @@ function getLaunchAvailability(products: Product[], fallbackName: string) {
   const purchasableProduct = products.find(isProductPurchasable);
   if (purchasableProduct) return `${purchasableProduct.name} is available now while stock lasts.`;
   return `${fallbackName} is available for enquiry. Final availability is confirmed by Buy & Sell GH.`;
-}
-
-function createMacCampaign(
-  launch: LatestMacLaunch,
-  description: string,
-  theme: CampaignTheme,
-  fallbackImage: string,
-  variant: "macbook-air" | "macbook-pro",
-  integratedAsset?: { image: string; slug: string },
-): Campaign {
-  return {
-    eyebrow: `${launch.generation} · ${launch.family}`,
-    title: launch.family,
-    description,
-    availabilityText: getLaunchAvailability(launch.variants, launch.featuredProduct.name),
-    image: launch.featuredProduct.slug === integratedAsset?.slug ? integratedAsset.image : launch.image,
-    imageAlt: launch.imageAlt,
-    theme,
-    primaryLabel: "Learn more",
-    primaryTo: variant === "macbook-air" ? "/mac/macbook-air" : "/mac/macbook-pro",
-    secondaryLabel: "Shop now",
-    secondaryTo: variant === "macbook-air" ? "/shop/buy-mac/macbook-air" : "/shop/buy-mac/macbook-pro",
-    fallbackImage,
-    variant,
-  };
 }
 
 function slugify(value: string) {
