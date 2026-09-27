@@ -240,17 +240,13 @@ function UltraAirpodsStory() {
         </div>
         <div className="ultra-airpods-lifestyle-media">
           <img
-            src="/products/homepage/airpods-5-lifestyle.webp"
-            alt={campaignAssets.airpods.lifestyle.alt}
+            src="/products/homepage/airpods-5.jpg"
+            alt="AirPods 5 with open charging case"
             className="ultra-airpods-lifestyle-img"
+            width={736}
+            height={610}
             loading="lazy"
             decoding="async"
-            onError={(event) => {
-              if (campaignAssets.airpods.lifestyle.fallback && !event.currentTarget.dataset.fallbackApplied) {
-                event.currentTarget.dataset.fallbackApplied = "true";
-                event.currentTarget.src = campaignAssets.airpods.lifestyle.fallback;
-              }
-            }}
           />
         </div>
       </article>

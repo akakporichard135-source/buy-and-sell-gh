@@ -413,13 +413,12 @@
   inset: auto !important;
   display: block;
   width: 100%;
-  max-width: 320px;
+  max-width: 360px;
   height: auto;
-  max-height: 460px;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  object-position: center 18%;
-  border-radius: 20px;
+  aspect-ratio: 736 / 610;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 22px;
   box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.12);
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
   mask-image: none !important;
@@ -546,10 +545,11 @@
   }
 
   .ultra-airpods-lifestyle-img {
-    max-width: 340px !important;
-    max-height: 420px !important;
-    aspect-ratio: 4 / 5 !important;
-    object-position: center 18% !important;
+    max-width: min(340px, 90vw) !important;
+    max-height: none !important;
+    aspect-ratio: 736 / 610 !important;
+    object-fit: contain !important;
+    object-position: center !important;
     border-radius: 20px !important;
     box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.1) !important;
   }

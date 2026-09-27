@@ -50,7 +50,7 @@ export const campaignAssets = {
     comparison: { src: `${root}/watch-generic-product.webp`, alt: "White-band Apple Watch product presentation" },
   },
   airpods: {
-    lifestyle: { src: "/products/homepage/airpods-5-lifestyle.webp", fallback: `${root}/airpods-5-lifestyle.webp`, alt: "AirPods 5 wireless earbuds presentation" },
+    lifestyle: { src: "/products/homepage/airpods-5.jpg", fallback: "/products/homepage/airpods-5.jpg", alt: "AirPods 5 wireless earbuds in open case" },
     product: { src: `${root}/airpods-5-product.webp`, alt: "White wireless earbuds in an open charging case" },
     dark: { src: `${root}/airpods-5-dark.webp`, alt: "AirPods 5 campaign case on a dark background" },
     cases: { src: `${root}/airpods-cases.webp`, alt: "Wireless earbud cases in several protective colours" },

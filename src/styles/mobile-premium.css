@@ -413,12 +413,12 @@
     position: relative !important;
     inset: auto !important;
     width: 100% !important;
-    max-width: 310px !important;
+    max-width: min(340px, 88vw) !important;
     height: auto !important;
-    max-height: 380px !important;
-    aspect-ratio: 4 / 5 !important;
-    object-fit: cover !important;
-    object-position: center 18% !important;
+    max-height: none !important;
+    aspect-ratio: 736 / 610 !important;
+    object-fit: contain !important;
+    object-position: center !important;
     border-radius: 20px !important;
     box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.1) !important;
     filter: none !important;

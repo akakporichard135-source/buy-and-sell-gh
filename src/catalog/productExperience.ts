@@ -284,8 +284,8 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Move with your music",
     tagline: "Freedom to listen wherever the rhythm takes you.",
     introduction: "Next-generation acoustic architecture delivering studio-quality sound, personalized spatial audio, and transformative active noise cancellation.",
-    media: { type: "image", src: "/products/homepage/airpods-5-lifestyle.webp", alt: "AirPods 5 wireless earbuds presentation" },
-    designMedia: { type: "image", src: "/products/homepage/airpods-5-lifestyle.webp", alt: "AirPods 5 in-ear lifestyle and MagSafe charging case" },
+    media: { type: "image", src: "/products/homepage/airpods-5.jpg", alt: "AirPods 5 wireless earbuds presentation" },
+    designMedia: { type: "image", src: "/products/homepage/airpods-5.jpg", alt: "AirPods 5 in-ear presentation and MagSafe charging case" },
     galleryMedia: [
       campaignAssets.airpods.lifestyle,
       campaignAssets.airpods.product,
@@ -296,7 +296,7 @@ export const productStories: ProductStoryDefinition[] = [
     theme: "ink",
     buyPath: "/shop/buy-airpods/airpods-5",
     highlights: [
-      { label: "Lifestyle", title: "Sculpted for effortless movement.", description: "Ergonomically contoured to stay comfortable and secure all day, with the iconic white stem and pocket-sized USB-C case.", tone: "blue", media: { src: "/products/homepage/airpods-5-lifestyle.webp", alt: "AirPods 5 lifestyle presentation" } },
+      { label: "Lifestyle", title: "Sculpted for effortless movement.", description: "Ergonomically contoured to stay comfortable and secure all day, with the iconic white stem and pocket-sized USB-C case.", tone: "blue", media: { src: "/products/homepage/airpods-5.jpg", alt: "AirPods 5 presentation" } },
       { label: "Acoustics", title: "Pro-level Active Noise Cancellation.", description: "Up to 2x more noise cancellation than previous generations, with Adaptive Audio and Conversation Awareness.", tone: "light", media: campaignAssets.airpods.product },
       { label: "Battery", title: "Up to 30 hours of continuous sound.", description: "Get up to 6 hours of listening time on a single charge and up to 30 hours total with the compact MagSafe USB-C case.", tone: "gold", media: campaignAssets.airpods.dark },
       { label: "Protection", title: "Crafted for active everyday movement.", description: "IP54 dust, sweat, and water resistance for both earbuds and charging case.", tone: "blue", media: campaignAssets.airpods.cases },
