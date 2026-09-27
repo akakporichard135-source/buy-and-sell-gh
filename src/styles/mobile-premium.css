@@ -232,12 +232,19 @@
     margin: 0 auto;
   }
 
-  /* Homepage campaigns become independent mobile stages. */
+  /* Homepage top campaigns become independent mobile stages. */
   .storefront-home > .home-product-campaign,
-  .home-product-pair > .home-product-campaign,
   .ultra-airpods-panel {
     min-height: 650px;
     padding: 48px var(--mobile-gutter) 0;
+  }
+
+  .home-product-pair > .home-product-campaign {
+    min-height: auto !important;
+    padding: 40px var(--mobile-gutter) 36px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
   }
 
   .storefront-home > .home-product-campaign .home-product-campaign-copy,
@@ -256,15 +263,13 @@
     line-height: 0.96;
   }
 
-  .storefront-home > .home-product-campaign .home-product-campaign-art,
-  .home-product-pair > .home-product-campaign .home-product-campaign-art {
+  .storefront-home > .home-product-campaign .home-product-campaign-art {
     width: calc(100% + (var(--mobile-gutter) * 2));
     min-height: 360px;
     margin: 20px calc(var(--mobile-gutter) * -1) 0;
   }
 
-  .storefront-home > .home-product-campaign .home-product-campaign-art > img,
-  .home-product-pair > .home-product-campaign .home-product-campaign-art > img {
+  .storefront-home > .home-product-campaign .home-product-campaign-art > img {
     width: 108%;
     max-width: none;
     height: 100%;
@@ -300,22 +305,90 @@
     padding: 6px 0;
   }
 
-  .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy,
-  .home-product-pair-ipad-visa > .home-product-campaign .home-product-campaign-copy,
-  .home-product-pair-ipad-visa > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-copy {
+  .home-product-pair > .home-product-campaign .home-product-campaign-copy {
+    width: min(100%, 360px) !important;
     height: auto !important;
     min-height: 0 !important;
+    margin-inline: auto !important;
   }
 
-  .home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art > img,
-  .home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art > img,
+  .home-product-pair > .home-product-campaign .store-actions {
+    margin-top: 16px !important;
+    padding-top: 0 !important;
+  }
+
+  .home-product-pair > .home-product-campaign .home-product-campaign-art {
+    width: 100% !important;
+    min-height: 0 !important;
+    flex: none !important;
+    margin: 14px auto 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    transform: none !important;
+  }
+
+  .home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art {
+    margin-top: 8px !important;
+  }
+
+  .home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art > img {
+    width: 100% !important;
+    max-width: 340px !important;
+    height: auto !important;
+    max-height: 240px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    mix-blend-mode: multiply;
+  }
+
+  .home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art {
+    margin-top: 6px !important;
+  }
+
+  .home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art > img {
+    width: 100% !important;
+    max-width: 320px !important;
+    height: auto !important;
+    max-height: 280px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    mix-blend-mode: multiply;
+  }
+
+  .home-product-pair > .home-product-campaign-ipad-air .home-product-campaign-art {
+    margin-top: 10px !important;
+  }
+
   .home-product-pair > .home-product-campaign-ipad-air .home-product-campaign-art > img {
     width: 100% !important;
     max-width: 340px !important;
     height: auto !important;
-    max-height: 320px !important;
+    max-height: 270px !important;
     object-fit: contain !important;
-    object-position: center bottom !important;
+    object-position: center !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    mix-blend-mode: multiply;
+  }
+
+  .home-product-pair > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-art {
+    margin-top: 2px !important;
+    overflow: hidden;
+  }
+
+  .home-product-pair > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-art > img {
+    width: 100% !important;
+    max-width: 360px !important;
+    height: auto !important;
+    max-height: 250px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    transform: scale(1.14) !important;
     margin: 0 auto !important;
   }
 
@@ -428,17 +501,55 @@
 
   .storefront-home .service-story-rail {
     padding-block: var(--mobile-section-space);
+    padding-inline: 0;
   }
 
   .storefront-home .service-story-rail .store-horizontal-rail {
-    grid-auto-columns: min(86vw, 360px);
-    scroll-padding-inline: var(--mobile-gutter);
-    scroll-snap-type: x mandatory;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding-inline: var(--mobile-gutter) !important;
+    overflow-x: visible !important;
+    scroll-snap-type: none !important;
+    grid-auto-columns: unset !important;
+    grid-auto-flow: unset !important;
   }
 
   .storefront-home .service-story-card {
-    min-height: 540px;
-    scroll-snap-align: center;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 36px 24px 28px !important;
+    border-radius: 24px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    scroll-snap-align: none !important;
+  }
+
+  .storefront-home .service-story-card > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .storefront-home .service-story-card img {
+    width: 100% !important;
+    max-width: 280px !important;
+    height: auto !important;
+    max-height: 280px !important;
+    object-fit: contain !important;
+    margin: 20px auto 16px !important;
+    border-radius: 16px !important;
+    align-self: center !important;
+  }
+
+  .storefront-home .service-story-card small {
+    margin-top: auto !important;
+    padding-top: 8px !important;
   }
 
   /* Store discovery and catalogue */
@@ -1212,7 +1323,7 @@
 
   /* Compact accordion footer */
   .store-footer {
-    padding: 44px var(--mobile-gutter) calc(28px + env(safe-area-inset-bottom));
+    padding: 44px var(--mobile-gutter) calc(76px + env(safe-area-inset-bottom));
   }
 
   .store-footer-brand {

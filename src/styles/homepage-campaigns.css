@@ -750,10 +750,31 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .home-product-pair > .home-product-campaign {
+    min-height: auto;
+    padding: 44px 20px 36px;
+  }
+
   .home-product-pair-ipad-visa > .home-product-campaign .home-product-campaign-copy,
   .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy {
     height: auto;
-    min-height: 180px;
+    min-height: 0;
+  }
+
+  .home-product-pair > .home-product-campaign .store-actions {
+    margin-top: 16px;
+    padding-top: 0;
+  }
+
+  .home-product-pair > .home-product-campaign .home-product-campaign-art {
+    flex: none;
+    min-height: 0;
+    margin-top: 20px;
+    transform: none;
+  }
+
+  .home-product-pair > .home-product-campaign .home-product-campaign-art > img {
+    transform: none;
   }
 }
 
@@ -792,18 +813,19 @@
   }
 
   .home-product-pair > .home-product-campaign {
-    min-height: clamp(560px, 142vw, 690px);
-    padding: 44px 16px 0;
+    min-height: auto;
+    padding: 44px 16px 36px;
   }
 
   .home-product-pair > .home-product-campaign .home-product-campaign-copy {
     width: min(100%, 560px);
-    min-height: 220px;
+    height: auto;
+    min-height: 0;
   }
 
   .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy {
-    height: 276px;
-    min-height: 276px;
+    height: auto;
+    min-height: 0;
   }
 
   .home-product-pair > .home-product-campaign h2 {
@@ -919,12 +941,14 @@
 
 @media (max-width: 430px) {
   .home-product-pair > .home-product-campaign {
-    min-height: 575px;
+    min-height: auto;
     padding-top: 40px;
+    padding-bottom: 32px;
   }
 
   .home-product-pair > .home-product-campaign .home-product-campaign-copy {
-    min-height: 216px;
+    height: auto;
+    min-height: 0;
   }
 
   .home-product-pair > .home-product-campaign h2 {
@@ -937,7 +961,8 @@
   }
 
   .home-product-pair > .home-product-campaign .home-product-campaign-art > img {
-    height: clamp(280px, 84vw, 350px);
+    height: auto;
+    max-height: 300px;
   }
 
   .home-product-pair-ipad-visa > .home-product-campaign-turn-supported-visa-cards-into-value h2 {
@@ -946,7 +971,7 @@
   }
 
   .home-product-pair-ipad-visa > .home-product-campaign-turn-supported-visa-cards-into-value .home-product-campaign-art > img {
-    transform: translateY(2%) scale(1.5);
+    transform: none;
   }
 
   .storefront-home > .home-product-campaign {
@@ -971,20 +996,6 @@
 
   .storefront-home > .home-product-campaign .home-product-campaign-art > img {
     aspect-ratio: 1.1;
-  }
-}
-
-@media (max-width: 390px) {
-  .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy {
-    height: 273px;
-    min-height: 273px;
-  }
-}
-
-@media (max-width: 350px) {
-  .home-product-pair-macbooks > .home-product-campaign .home-product-campaign-copy {
-    height: 292px;
-    min-height: 292px;
   }
 }
 
