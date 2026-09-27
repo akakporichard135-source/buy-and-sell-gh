@@ -265,8 +265,8 @@ function UltraAirpodsStory() {
               src="/products/homepage/airpods-5.jpg"
               alt="AirPods 5 with open charging case"
               className="ultra-airpods-lifestyle-img"
-              width={500}
-              height={500}
+              width={720}
+              height={960}
               loading="lazy"
               decoding="async"
             />
