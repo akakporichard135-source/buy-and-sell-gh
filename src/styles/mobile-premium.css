@@ -347,7 +347,7 @@
     padding: 44px 20px 36px !important;
     min-height: auto !important;
     scroll-margin-top: 64px;
-    background: #f7f7f8;
+    background: #fafafa;
   }
 
   .ultra-airpods-lifestyle .ultra-airpods-copy {
@@ -422,7 +422,7 @@
     object-position: center !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    mix-blend-mode: multiply !important;
+    mix-blend-mode: normal !important;
     filter: none !important;
   }
 

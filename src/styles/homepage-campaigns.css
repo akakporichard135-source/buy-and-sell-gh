@@ -112,7 +112,7 @@
   align-items: center;
   width: 100%;
   max-width: 1000px;
-  margin-top: clamp(8px, 1.5vh, 18px);
+  margin-top: clamp(4px, 1.2vh, 12px);
   position: relative;
   z-index: 1;
 }

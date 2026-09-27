@@ -208,7 +208,7 @@ function Iphone18Hero() {
             fetchPriority="high"
             decoding="async"
             width={736}
-            height={414}
+            height={225}
             onError={(event) => {
               if (campaignAssets.iphone18.hero.fallback && !event.currentTarget.dataset.fallbackApplied) {
                 event.currentTarget.dataset.fallbackApplied = "true";
@@ -259,15 +259,18 @@ function UltraAirpodsStory() {
           </div>
         </div>
         <div className="ultra-airpods-lifestyle-media">
-          <img
-            src="/products/homepage/airpods-5.jpg"
-            alt="AirPods 5 with open charging case"
-            className="ultra-airpods-lifestyle-img"
-            width={500}
-            height={500}
-            loading="lazy"
-            decoding="async"
-          />
+          <picture>
+            <source type="image/webp" srcSet="/products/homepage/airpods-5.webp" />
+            <img
+              src="/products/homepage/airpods-5.jpg"
+              alt="AirPods 5 with open charging case"
+              className="ultra-airpods-lifestyle-img"
+              width={500}
+              height={500}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
         </div>
       </article>
     </section>
