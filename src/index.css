@@ -15555,9 +15555,14 @@ body {
 }
 
 .storefront-home .service-story-card {
-  min-height: clamp(680px, 52vw, 760px);
   border: 1px solid rgba(29, 29, 31, 0.08);
   box-shadow: 0 14px 36px rgba(29, 29, 31, 0.055);
+}
+
+@media (min-width: 901px) {
+  .storefront-home .service-story-card {
+    min-height: clamp(640px, 48vw, 720px);
+  }
 }
 
 .storefront-home .service-story-card[data-rail-wraparound="true"] {

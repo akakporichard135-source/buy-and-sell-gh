@@ -513,9 +513,13 @@
 .home-product-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(6px, 0.7vw, 10px);
-  padding: clamp(6px, 0.7vw, 10px);
+  gap: clamp(8px, 0.8vw, 12px);
+  padding: clamp(4px, 0.4vw, 6px) clamp(8px, 0.8vw, 12px);
   background: #f5f5f7;
+}
+
+.home-product-pair-ipad-visa {
+  padding-bottom: clamp(8px, 0.8vw, 12px);
 }
 
 .home-product-pair-single {
@@ -685,20 +689,20 @@
 }
 
 .home-product-pair > .home-product-campaign-macbook-air .home-product-campaign-art > img {
-  width: min(100%, 540px);
-  height: clamp(260px, 25vw, 360px);
+  width: min(100%, 600px);
+  height: clamp(280px, 28vw, 390px);
   object-fit: contain;
   object-position: center;
-  transform: translateY(-16px);
+  transform: translateY(-24px);
   mix-blend-mode: multiply;
 }
 
 .home-product-pair > .home-product-campaign-mac-mini .home-product-campaign-art > img {
-  width: min(100%, 460px);
-  height: clamp(260px, 25vw, 360px);
+  width: min(100%, 490px);
+  height: clamp(280px, 27vw, 380px);
   object-fit: contain;
   object-position: center 25%;
-  transform: translateY(-28px);
+  transform: translateY(-36px);
   mix-blend-mode: multiply;
 }
 
@@ -713,11 +717,12 @@
 }
 
 .home-product-pair > .home-product-campaign-ipad-air .home-product-campaign-art > img {
-  width: min(100%, 520px);
-  height: clamp(260px, 25vw, 360px);
+  width: min(100%, 500px);
+  height: clamp(260px, 25vw, 350px);
   object-fit: contain;
   object-position: center;
-  transform: translateY(-16px);
+  transform: translateY(-10px);
+  margin-bottom: 12px;
   mix-blend-mode: multiply;
 }
 
@@ -737,6 +742,7 @@
   object-fit: contain;
   object-position: center;
   transform: none;
+  margin-bottom: 12px;
 }
 
 @media (max-width: 900px) {
@@ -779,6 +785,10 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 6px;
     padding: 6px 0;
+  }
+
+  .home-product-pair-ipad-visa {
+    padding-bottom: 6px;
   }
 
   .home-product-pair > .home-product-campaign {

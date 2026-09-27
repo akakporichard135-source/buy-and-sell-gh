@@ -1462,8 +1462,8 @@
   }
 
   .storefront-home .service-story-card {
-    flex-basis: min(84vw, 360px);
-    min-height: clamp(620px, 170vw, 690px);
+    flex-basis: min(84vw, 340px);
+    min-height: 520px;
   }
 }
 

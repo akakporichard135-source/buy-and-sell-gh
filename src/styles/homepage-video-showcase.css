@@ -213,7 +213,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(8px, 0.8vw, 12px);
-  padding: clamp(8px, 0.8vw, 12px);
+  padding: clamp(8px, 0.8vw, 12px) clamp(8px, 0.8vw, 12px) clamp(4px, 0.4vw, 6px);
   background: #f5f5f7;
 }
 
@@ -243,12 +243,13 @@
 
 .ultra-airpods-lifestyle {
   color: #1d1d1f;
-  background: #f7f7f8;
+  background: #f7f5fa;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  padding: clamp(40px, 4vw, 56px) clamp(28px, 3vw, 44px) !important;
+  justify-content: center !important;
+  gap: clamp(16px, 2.5vw, 36px) !important;
+  padding: clamp(40px, 4vw, 56px) clamp(28px, 3.2vw, 48px) !important;
   min-height: clamp(580px, 46vw, 690px) !important;
   position: relative;
   overflow: hidden;
@@ -269,8 +270,8 @@
 }
 
 .ultra-airpods-lifestyle .ultra-airpods-copy {
-  width: 48%;
-  max-width: 320px;
+  flex: 0 0 clamp(260px, 40%, 310px);
+  max-width: 310px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -399,13 +400,15 @@
 }
 
 .ultra-airpods-lifestyle-media {
-  width: 48%;
+  flex: 1 1 auto;
+  width: auto;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   z-index: 2;
   height: 100%;
+  min-width: 0;
 }
 
 .ultra-airpods-lifestyle-img {
@@ -413,14 +416,15 @@
   inset: auto !important;
   display: block;
   width: 100%;
-  max-width: 380px;
+  max-width: clamp(340px, 34vw, 460px);
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: contain;
   object-position: center;
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
   border-radius: 0;
   box-shadow: none;
+  transform: translateX(-16px);
   transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
   mask-image: none !important;
   -webkit-mask-image: none !important;
@@ -428,7 +432,7 @@
 }
 
 .ultra-airpods-lifestyle:hover .ultra-airpods-lifestyle-img {
-  transform: scale(1.04);
+  transform: translateX(-16px) scale(1.03);
 }
 
 .ultra-airpods-panel > img {
@@ -507,8 +511,8 @@
     align-items: center !important;
     justify-content: flex-start !important;
     text-align: center !important;
-    padding: 44px 24px 36px !important;
-    min-height: auto !important;
+    padding: 44px 20px 40px !important;
+    min-height: 0 !important;
     scroll-margin-top: 64px;
   }
 
@@ -539,6 +543,7 @@
 
   .ultra-airpods-lifestyle .ultra-airpods-lifestyle-media {
     width: 100% !important;
+    height: auto !important;
     margin-top: 24px !important;
     display: flex !important;
     justify-content: center !important;
@@ -553,7 +558,8 @@
     object-position: center !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    mix-blend-mode: multiply !important;
+    mix-blend-mode: normal !important;
+    transform: none !important;
   }
 }
 
