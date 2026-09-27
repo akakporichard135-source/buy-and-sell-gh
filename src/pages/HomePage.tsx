@@ -73,7 +73,7 @@ const topCampaigns: Campaign[] = [
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/iphone/iphone-duo",
-    secondaryLabel: "View pricing",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-iphone/iphone-duo",
   },
   {
@@ -86,7 +86,7 @@ const topCampaigns: Campaign[] = [
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/watch/apple-watch-series-12",
-    secondaryLabel: "View pricing",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-watch/apple-watch-series-12",
   },
 ];
@@ -194,7 +194,7 @@ function Iphone18Hero() {
         <p className="iphone18-hero-subtitle">Pro further.</p>
         <div className="iphone18-hero-actions">
           <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
-          <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">View pricing</Link>
+          <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">Buy</Link>
         </div>
       </div>
       <div className="iphone18-hero-media">
@@ -232,7 +232,7 @@ function UltraAirpodsStory() {
           <span>Rugged capability. Precision without compromise.</span>
           <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
-            <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">View pricing</Link>
+            <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">Buy</Link>
           </div>
         </div>
         <img
@@ -255,7 +255,7 @@ function UltraAirpodsStory() {
           <span>Freedom to listen wherever the rhythm takes you.</span>
           <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
-            <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">View pricing</Link>
+            <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">Buy</Link>
           </div>
         </div>
         <div className="ultra-airpods-lifestyle-media">
