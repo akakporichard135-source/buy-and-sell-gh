@@ -464,8 +464,8 @@
 
 @media (max-width: 768px) {
   .storefront-home :where(.store-button, .new-mac-launch .store-button) {
-    height: 46px;
-    min-height: 46px;
+    height: auto;
+    min-height: 42px;
     padding: 0 20px;
     font-size: 0.9rem;
   }

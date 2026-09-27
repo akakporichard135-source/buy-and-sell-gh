@@ -12,7 +12,7 @@
   }
 
   html {
-    scroll-padding-top: 8.5rem;
+    scroll-padding-top: calc(var(--mobile-header-height) + env(safe-area-inset-top, 0px) + 2rem);
   }
 
   body,
@@ -39,6 +39,10 @@
   }
 
   /* Mobile global header and menu */
+  .site-header {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+  }
+
   .site-header-inner {
     width: 100%;
     min-height: var(--mobile-header-height);
@@ -189,22 +193,33 @@
     margin-top: 2px;
   }
 
-  .storefront-home .iphone18-hero .iphone18-hero-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 14px;
-    width: 100%;
+  /* Compact Apple-style CTA pill buttons across all homepage cards */
+  .storefront-home :is(.iphone18-hero-actions, .store-actions, .ultra-airpods-actions) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    margin-top: 14px !important;
+    margin-inline: auto !important;
   }
 
-  .storefront-home .iphone18-hero .iphone18-hero-actions .store-button {
-    min-width: 110px;
-    min-height: 40px;
-    padding: 0 18px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    border-radius: 999px;
+  .storefront-home :is(.iphone18-hero-actions, .store-actions, .ultra-airpods-actions) :is(.store-button, a, button) {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    height: auto !important;
+    padding: 0 20px !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
   }
 
   .storefront-home .iphone18-hero .iphone18-hero-media {
@@ -232,11 +247,10 @@
     margin: 0 auto;
   }
 
-  /* Homepage top campaigns become independent mobile stages. */
-  .storefront-home > .home-product-campaign,
-  .ultra-airpods-panel {
-    min-height: 650px;
-    padding: 48px var(--mobile-gutter) 0;
+  /* Homepage top campaigns become independent mobile stages with content-driven heights. */
+  .storefront-home > .home-product-campaign {
+    min-height: auto !important;
+    padding: 44px var(--mobile-gutter) 24px !important;
   }
 
   .home-product-pair > .home-product-campaign {
@@ -402,13 +416,72 @@
     min-height: 0;
   }
 
+  /* Apple Watch Ultra 4 Mobile Layout - clean vertical column, no dead height */
+  .ultra-airpods-panel.ultra-airpods-ultra {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
+    padding: 44px 20px 24px !important;
+    min-height: auto !important;
+    background: #030304 !important;
+    overflow: hidden !important;
+  }
+
+  .ultra-airpods-ultra .ultra-airpods-copy {
+    width: 100% !important;
+    max-width: 360px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 3 !important;
+  }
+
+  .ultra-airpods-ultra .store-eyebrow {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #86868b !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    margin-bottom: 6px !important;
+  }
+
+  .ultra-airpods-ultra h2 {
+    font-size: clamp(2.2rem, 9.5vw, 2.9rem) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.05 !important;
+    color: #f5f5f7 !important;
+    margin-bottom: 6px !important;
+  }
+
+  .ultra-airpods-ultra .ultra-airpods-copy > span {
+    font-size: 1.05rem !important;
+    color: #86868b !important;
+    max-width: 28ch !important;
+    margin: 0 auto 14px !important;
+    display: block !important;
+    line-height: 1.35 !important;
+  }
+
   .ultra-airpods-ultra > img {
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 56%;
-    object-fit: contain;
-    object-position: center bottom;
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 380px !important;
+    height: auto !important;
+    max-height: 310px !important;
+    object-fit: contain !important;
+    margin: 14px auto 0 !important;
+    display: block !important;
+  }
+
+  .ultra-airpods-ultra::after {
+    display: none !important;
   }
 
   .ultra-airpods-panel.ultra-airpods-lifestyle {
@@ -456,23 +529,6 @@
     margin: 0 auto 18px;
     display: block;
     line-height: 1.35;
-  }
-
-  .ultra-airpods-lifestyle .ultra-airpods-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .ultra-airpods-lifestyle .ultra-airpods-actions a {
-    min-width: 110px;
-    min-height: 40px;
-    padding: 0 18px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    border-radius: 999px;
   }
 
   .ultra-airpods-lifestyle .ultra-airpods-lifestyle-media {

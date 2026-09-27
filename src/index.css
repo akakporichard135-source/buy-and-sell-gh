@@ -10217,11 +10217,13 @@ body {
   }
 
   .store-actions {
-    width: min(100%, calc(100vw - 2rem));
+    width: auto;
+    max-width: 100%;
   }
 
   .store-button {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    width: auto;
     min-width: 0;
   }
 }
