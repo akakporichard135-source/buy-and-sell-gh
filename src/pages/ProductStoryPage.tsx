@@ -2,6 +2,7 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, X } from "l
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { editorialStories } from "../catalog/editorialStories";
 import {
   familyMatchesProduct,
   getProductStory,
@@ -11,6 +12,7 @@ import {
   type ProductStoryDefinition,
 } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
+import { EditorialProductStory } from "../components/EditorialProductStory";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
 import "../styles/product-experience.css";
@@ -47,6 +49,9 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
       </section>
     );
   }
+
+  const editorialStory = editorialStories[slug];
+  if (editorialStory) return <EditorialProductStory story={editorialStory} />;
 
   return (
     <div className={`product-story-page product-story-${story.theme} product-story-${family}`}>

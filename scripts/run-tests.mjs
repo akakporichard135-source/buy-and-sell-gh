@@ -44,6 +44,7 @@ try {
   const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
+  const editorialStories = await bundle(path.join(projectRoot, "src/catalog/editorialStories.ts"), path.join(outdir, "editorialStories.mjs"));
   const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
   const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
   const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
@@ -319,6 +320,18 @@ try {
   assert.equal(productExperience.productFamilies.iphone.path, "/iphone", "Product experience exposes the canonical iPhone family path");
   assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").buyPath, "/shop/buy-iphone/iphone-18-pro", "iPhone 18 Pro story links to the dedicated buying flow");
   assert.equal(productExperience.getProductStory("accessories", "charging-and-power").buyPath, "/shop/buy-accessory/charging-and-power", "Accessories featured Learn More route has a matching enquiry journey");
+  const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "macbook-air", "mac-mini", "ipad-air"];
+  assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All eight requested Learn More stories are configured");
+  for (const slug of editorialSlugs) {
+    const story = editorialStories.editorialStories[slug];
+    assert.ok(story.hero.src && story.hero.alt, `${slug} has accessible hero imagery`);
+    assert.ok(story.highlights.length >= 3 && story.highlights.length <= 5, `${slug} has a focused highlights rail`);
+    assert.ok(story.chapters.length >= 2, `${slug} has editorial chapters`);
+    assert.ok(story.buyPath.startsWith(slug === "mac-mini" ? "/pre-order?" : "/shop/buy-"), `${slug} uses its existing commerce flow`);
+    for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.map((item) => item.image)]) {
+      assert.ok(!/\.(mp4|webm)$/i.test(media.src), `${slug} uses still media`);
+    }
+  }
   const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
   assert.match(productFamilySource, /showCompare=\{comparisonProducts\.length > 1\}/, "Family navigation shows Compare only when reliable comparison data exists");
   const instantSearchSource = await readFile(path.join(projectRoot, "src/components/InstantSearch.tsx"), "utf8");
