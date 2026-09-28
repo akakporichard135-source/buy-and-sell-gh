@@ -14,6 +14,7 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
       loading={eager ? "eager" : "lazy"}
       fetchPriority={eager ? "high" : undefined}
       decoding="async"
+      draggable={false}
       style={image.position ? { objectPosition: image.position } : undefined}
     />
   );
@@ -31,16 +32,6 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
   return (
     <main className={`editorial-story editorial-story-${story.slug}`}>
       <SEO title={`${story.name} | Learn More`} description={`${story.name}. ${story.tagline} Explore the product and shop with Buy & Sell GH.`} />
-      <nav className="editorial-subnav" aria-label={`${story.name} sections`}>
-        <a className="editorial-subnav-name" href="#overview">{story.name}</a>
-        <div className="editorial-subnav-actions">
-          <a href="#highlights">Highlights</a>
-          {story.chapters.length > 0 && <a href={`#${story.chapters[0].id}`}>Explore</a>}
-          {story.information && <a href="#information">Details</a>}
-          <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
-        </div>
-      </nav>
-
       <section className={`editorial-hero editorial-tone-${story.heroTone}`} id="overview" aria-labelledby="editorial-title">
         <div className="editorial-hero-copy">
           <p className="editorial-eyebrow">{story.eyebrow}</p>
@@ -106,14 +97,6 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         </section>
       )}
 
-      <section className={`editorial-close editorial-tone-${story.closingTone ?? "ink"} ${!story.closingImage ? "editorial-close-minimal" : ""}`} aria-labelledby="editorial-close-title">
-        {story.closingImage && <div className="editorial-close-art"><ProductImage image={story.closingImage} /></div>}
-        <div className="editorial-close-copy">
-          <p className="editorial-eyebrow">{story.name}</p>
-          <h2 id="editorial-close-title">{story.closingLine}</h2>
-          <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
-        </div>
-      </section>
     </main>
   );
 }

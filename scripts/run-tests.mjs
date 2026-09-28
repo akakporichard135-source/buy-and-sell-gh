@@ -327,12 +327,17 @@ try {
     assert.ok(story.hero.src && story.hero.alt, `${slug} has accessible hero imagery`);
     assert.ok(story.highlights.length >= 3 && story.highlights.length <= 5, `${slug} has a focused highlights rail`);
     assert.ok(story.chapters.length >= 1, `${slug} has editorial chapters`);
-    assert.ok(story.information && story.information.items.length >= 3, `${slug} has customer-first product information`);
+    assert.ok(story.chapters.every((chapter) => chapter.copy && chapter.copy.length >= 80), `${slug} explains every major chapter`);
+    assert.equal(story.information.items.length, 4, `${slug} has a complete two-column information section`);
+    assert.ok(story.information.items.every((item) => item.description.length >= 80), `${slug} explains every information item`);
     assert.ok(story.buyPath.startsWith(slug === "mac-mini" ? "/pre-order?" : "/shop/buy-"), `${slug} uses its existing commerce flow`);
     for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.map((item) => item.image)]) {
       assert.ok(!/\.(mp4|webm)$/i.test(media.src), `${slug} uses still media`);
     }
   }
+  const editorialComponentSource = await readFile(path.join(projectRoot, "src/components/EditorialProductStory.tsx"), "utf8");
+  assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 1, "Editorial stories have one hero purchase CTA");
+  assert.doesNotMatch(editorialComponentSource, /editorial-subnav|editorial-close/, "Editorial stories omit duplicate product navigation and closing purchase banner");
   const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
   assert.match(productFamilySource, /showCompare=\{comparisonProducts\.length > 1\}/, "Family navigation shows Compare only when reliable comparison data exists");
   const instantSearchSource = await readFile(path.join(projectRoot, "src/components/InstantSearch.tsx"), "utf8");

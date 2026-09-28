@@ -1,6 +1,5 @@
 import macMiniHero from "../assets/homepage/homepage-mac-mini-white.webp";
 import macMiniDetail from "../assets/homepage/homepage-mac-mini-m6-launch.webp";
-import macbookAirHero from "../assets/homepage/homepage-macbook-air-m5-cutout.webp";
 
 export type EditorialTone = "light" | "ink" | "blue" | "plum" | "sage";
 
@@ -44,9 +43,6 @@ export type EditorialStory = {
     layout: "stage" | "split";
   }>;
   information: EditorialInformation;
-  closingLine: string;
-  closingImage?: EditorialImage;
-  closingTone?: EditorialTone;
 };
 
 const campaign = "/products/campaigns";
@@ -63,42 +59,40 @@ export const editorialStories: Record<string, EditorialStory> = {
     heroTone: "ink",
     highlights: [
       { label: "Design", title: "A presence from every angle.", image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro concept, rear view" }, tone: "light" },
-      { label: "Profile", title: "Sculpted titanium silhouette.", image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Close profile view of an iPhone 18 Pro concept" }, tone: "ink" },
-      { label: "Finishes", title: "A finish that feels like you.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "iPhone 18 Pro concept finishes" }, tone: "light" },
+      { label: "Profile", title: "A striking silhouette.", image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Close profile view of an iPhone 18 Pro concept" }, tone: "ink" },
+      { label: "Finishes", title: "A finish that feels like you.", image: { src: `${campaign}/iphone-18-pro-burgundy-finish.jpg`, alt: "Burgundy iPhone 18 Pro concept shown from the front and back" }, tone: "light" },
       { label: "Experience", title: "Every detail in focus.", image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro concept" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "Considered from every side.", copy: "A distinctive silhouette makes the product the whole story.", image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro concept viewed from behind" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "Considered from every side.", copy: "The camera arrangement gives this concept an unmistakable profile. Look closer at the silver finish, the rounded corners, and the way each detail contributes to the overall shape.", image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro concept viewed from behind" }, tone: "light", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Engineered for ambitious days.",
-      intro: "A flagship smartphone designed to combine a durable titanium form, an expansive high-resolution display, and an advanced camera system that brings studio-level versatility into your everyday routine.",
+      title: "A closer look at the concept.",
+      intro: "This iPhone 18 Pro presentation explores a possible direction for the Pro design. The imagery is conceptual, so final materials, features, and specifications should be checked against a confirmed product listing.",
       items: [
         {
           category: "DESIGN",
-          heading: "Sculpted with purposeful refinement.",
-          description: "A contoured titanium enclosure brings strength, balance, and lightweight comfort to hand, engineered with clean seamless transitions from the tactile buttons to the precision glass back.",
+          heading: "A distinctive shape.",
+          description: "The render puts the rear camera area at the center of the design. Its softened edges and restrained finish give the phone a clean, deliberate look from the back and the side.",
         },
         {
           category: "DISPLAY",
-          heading: "Vibrant, expansive, and always ready.",
-          description: "The Super Retina XDR display delivers fluid responsiveness, edge-to-edge clarity, and an Always-On glanceable experience whether you are viewing documents under bright daylight or unwinding with media at night.",
+          heading: "Space for what matters.",
+          description: "A full-screen phone is a natural fit for reading, sharing photos, and keeping your day in view. Display technology and dimensions are not established by these concept images.",
         },
         {
           category: "CAMERA",
-          heading: "A complete optical studio in your pocket.",
-          description: "The multi-lens camera system lets you seamlessly frame wide landscapes, natural portraits, and distant subjects with remarkable detail, rich color accuracy, and effortless low-light capture.",
+          heading: "A camera-first visual identity.",
+          description: "Three prominent lenses define the rear view in this concept. Their appearance shows a design idea, not verified photographic performance or camera specifications.",
         },
         {
           category: "PERFORMANCE",
-          heading: "Fast, responsive, and effortlessly capable.",
-          description: "Built to handle demanding multitasking, high-fidelity gaming, and real-time photo processing with smooth efficiency and all-day power reliability.",
+          heading: "Built around everyday possibilities.",
+          description: "From messages to creative work, a Pro phone should feel comfortable across many daily tasks. Processor, battery, and performance claims will need confirmation for any final model.",
         },
       ],
     },
-    closingLine: "Pro further.",
-    closingTone: "ink",
   },
   "iphone-duo": {
     slug: "iphone-duo",
@@ -115,39 +109,37 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Together", title: "Two sides of one idea.", image: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Two iPhone Duo foldable concepts" }, tone: "ink" },
     ],
     chapters: [
-      { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "A compact shape opens into a broad visual canvas.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo concept unfolded" }, tone: "light", layout: "stage" },
-      { id: "design", label: "Design", title: "A new angle on everyday.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "iPhone Duo concept held at its edge" }, tone: "light", layout: "split" },
-      { id: "everyday", label: "Everyday", title: "Made for the way you move.", image: { src: `${homepage}/iphone-duo.webp`, alt: "Open foldable phone held in two hands", fit: "cover" }, tone: "light", layout: "stage" },
+      { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "Closed, the idea is familiar: a phone ready to travel with you. Open it and the wider canvas invites a different way to read, look, and create.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo concept unfolded" }, tone: "light", layout: "stage" },
+      { id: "design", label: "Design", title: "A new angle on everyday.", copy: "The side view makes the fold the story. It is a simple visual shift that changes how the same device can sit in your hand or on a table.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "iPhone Duo concept held at its edge" }, tone: "blue", layout: "split" },
+      { id: "everyday", label: "Everyday", title: "Made for the way you move.", copy: "A larger view can make room for shared photos, a longer read, or an idea in progress. This is a look at the concept in use, not a promise of specific software features.", image: { src: `${homepage}/iphone-duo.webp`, alt: "Open foldable phone held in two hands", fit: "cover" }, tone: "light", layout: "stage" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "A new perspective on mobile productivity.",
-      intro: "An innovative dual-experience device designed to offer the familiarity of a pocketable phone with the freedom of an expansive unfoldable workspace whenever you need more room.",
+      title: "Two ways to see the day.",
+      intro: "iPhone Duo is presented here as a foldable concept. Its open and closed forms suggest different ways to use one device; final hardware and software behavior are not confirmed by the imagery.",
       items: [
         {
           category: "THE CANVAS",
           heading: "Compact when closed. Expansive when open.",
-          description: "Move seamlessly from quick messages and one-handed pocket use to an immersive wide display designed for reading, side-by-side apps, and creative projects.",
+          description: "The closed silhouette keeps the shape familiar. The open view offers a broader surface for reading and looking at content, without making claims about exact screen size or app support.",
         },
         {
           category: "DESIGN",
-          heading: "Precision hinge architecture.",
-          description: "Engineered to fold flat with a tactile, confident motion, balanced weight distribution in both folded and unfolded orientations, and durable materials crafted for daily use.",
+          heading: "A fold at the center of the idea.",
+          description: "The profile images show how the two halves meet. They communicate the design direction, while hinge construction and long-term durability remain unverified.",
         },
         {
           category: "MULTITASKING",
-          heading: "Two sides of the same workflow.",
-          description: "Run two applications simultaneously, review documents while taking notes, or view media with an integrated stand posture without requiring extra accessories.",
+          heading: "Room to imagine more.",
+          description: "A wider canvas could change how you move between a message, a document, and a photo. Specific multitasking modes will depend on the finished device and its software.",
         },
         {
           category: "EXPERIENCE",
-          heading: "Everyday interactions, expanded.",
-          description: "Enjoy intuitive touch gestures, vibrant visual clarity across both inner and outer displays, and a fluid software environment tuned for flexible screen layouts.",
+          heading: "Familiar, then different.",
+          description: "The appeal is in moving from a compact phone shape to an open visual surface. The renders are a design exploration rather than a technical feature list.",
         },
       ],
     },
-    closingLine: "See what opens up.",
-    closingTone: "ink",
   },
   "apple-watch-series-12": {
     slug: "apple-watch-series-12",
@@ -163,38 +155,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-generic-product.webp`, alt: "Watch with a light band" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A personal way to show up.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile on clean background" }, tone: "light", layout: "stage" },
-      { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "An easy-to-wear form that belongs wherever the day takes you.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept presentation" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "A personal way to show up.", copy: "A watch is one of the few things you carry into nearly every part of the day. This concept pairs a simple face with a band that brings its own character to the look.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile on clean background" }, tone: "sage", layout: "stage" },
+      { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "The appeal is in having a useful glance nearby without interrupting what you are doing. The renders focus on the feel of wearing it, not an unconfirmed list of functions.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept presentation" }, tone: "light", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Essential connection for every part of your day.",
-      intro: "A versatile smartwatch designed to keep your schedule, health metrics, and daily communications effortlessly accessible right from your wrist.",
+      title: "A watch for the everyday.",
+      intro: "The Series 12 imagery explores a wearable that feels at home throughout the day. It shows a design direction; any final health, display, and connectivity features need confirmation from a product listing.",
       items: [
         {
           category: "DESIGN",
           heading: "Lightweight, refined, and comfortable all day.",
-          description: "Designed with a sleek curved case and smooth crystal front that sits naturally against the wrist, paired with quick-change band options for workouts, office, and evening wear.",
+          description: "A rounded case and soft-looking band create an easygoing profile. The images offer a sense of style and scale, while materials and band compatibility remain to be confirmed.",
         },
         {
           category: "GLANCEABLE INFO",
-          heading: "Important updates at a glance.",
-          description: "The bright always-on display delivers incoming messages, reminders, calendar alerts, and navigation prompts without needing to reach for your phone.",
+          heading: "A small screen, close at hand.",
+          description: "The watch face is designed to be read in a moment. Whether a final model supports specific alerts or an always-on display depends on its confirmed specifications.",
         },
         {
           category: "ACTIVITY & MOVEMENT",
           heading: "Stay motivated and in rhythm.",
-          description: "Track daily movement, workouts, and exercise milestones with custom workout views and comprehensive activity metrics that encourage continuous progress.",
+          description: "A watch can be a companion for walks, workouts, and quieter routines alike. The concept imagery does not establish which activity or health measurements a finished device includes.",
         },
         {
           category: "CONVENIENCE",
-          heading: "Seamless everyday communication.",
-          description: "Take quick calls, respond to texts, trigger smart timers, and stay connected with family and colleagues wherever the day takes you.",
+          heading: "Part of your routine.",
+          description: "Its compact form makes the wrist a natural place for a quick glance. Calling, messaging, and other connected features should be verified before purchase.",
         },
       ],
     },
-    closingLine: "Make it your day.",
-    closingTone: "ink",
   },
   "apple-watch-ultra-4": {
     slug: "apple-watch-ultra-4",
@@ -210,38 +200,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Adventure", title: "Take the long way round.", image: { src: `${campaign}/watch-ultra-4-orange.webp`, alt: "Apple Watch Ultra concept with orange band", fit: "cover" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "Built to stand out there.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept shown close up" }, tone: "ink", layout: "stage" },
-      { id: "details", label: "Details", title: "Every angle has purpose.", copy: "A distinctive case and controls give the design its unmistakable character.", image: { src: `${campaign}/watch-ultra-4-interface.webp`, alt: "Close view of Apple Watch Ultra concept controls", fit: "cover" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "Built to stand out there.", copy: "The bolder case and expressive band give this concept a different presence from an everyday watch. Large, legible details keep the visual focus on the wrist, even against a wide outdoor scene.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept shown close up" }, tone: "ink", layout: "stage" },
+      { id: "details", label: "Details", title: "Every angle has purpose.", copy: "A distinctive case and visible side controls give the design its character. The imagery invites a closer look at their placement without promising a particular control behavior.", image: { src: `${campaign}/watch-ultra-4-interface.webp`, alt: "Close view of Apple Watch Ultra concept controls", fit: "cover" }, tone: "light", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Rugged capability for the path ahead.",
-      intro: "Built for outdoor enthusiasts, endurance athletes, and adventurers who require durable materials, tactile physical controls, and reliable navigation in challenging environments.",
+      title: "An adventurous design direction.",
+      intro: "This Ultra 4 presentation emphasizes a strong case, prominent controls, and an outdoor-ready look. It is a concept showcase, not a verified account of materials, navigation, endurance, or safety features.",
       items: [
         {
           category: "RUGGED DESIGN",
-          heading: "Aerospace-grade titanium enclosure.",
-          description: "A raised bezel shields the flat sapphire crystal display against edge impacts, corrosion, and rough terrain while maintaining lightweight wrist comfort.",
+          heading: "A case with presence.",
+          description: "The broad case and raised edge make a visual statement. The render cannot establish the metal, crystal, or protection rating used by a final product.",
         },
         {
           category: "TACTILE CONTROLS",
-          heading: "Instant physical responsiveness.",
-          description: "The knurled Digital Crown and customizable Action button provide immediate tactile control, easy to operate even while wearing gloves or moving through wet weather.",
+          heading: "Details you can see and feel.",
+          description: "A prominent crown and side controls are central to the concept's look. Their exact functions and usability in demanding conditions would need real product documentation.",
         },
         {
           category: "ADVENTURE & NAVIGATION",
-          heading: "Engineered for demanding expeditions.",
-          description: "High-precision dual-frequency location tracking, dedicated outdoor compass waypoints, and specialized metrics support trail runs, hikes, and ocean activities.",
+          heading: "A look made for open spaces.",
+          description: "The visual story leans into exploration and movement. GPS capability, water resistance, and supported activities are not confirmed by the concept images.",
         },
         {
           category: "ENDURANCE",
-          heading: "Power management built for distance.",
-          description: "Intelligent power efficiency ensures the watch keeps recording metrics, tracking routes, and providing emergency safety features across long adventures.",
+          heading: "Ready in spirit for longer days.",
+          description: "A watch for the outdoors has to earn trust over time. Battery life and emergency features should be taken from the final specifications, not inferred from a render.",
         },
       ],
     },
-    closingLine: "The next adventure starts here.",
-    closingTone: "ink",
   },
   "airpods-5": {
     slug: "airpods-5",
@@ -257,38 +245,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "On the move", title: "Easy to take along.", image: { src: `${campaign}/airpods-5-dark.webp`, alt: "Wireless earbud case on a dark background" }, tone: "ink" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "Simple from the first touch.", image: { src: `${homepage}/airpods-5.webp`, alt: "Open earbud charging case" }, tone: "light", layout: "stage" },
-      { id: "listening", label: "Listening", title: "Make room for the music.", copy: "A listening companion for the places and moments that are yours.", image: { src: `${campaign}/airpods-5-lifestyle.webp`, alt: "Earbuds in an everyday setting", fit: "cover" }, tone: "blue", layout: "split" },
+      { id: "design", label: "Design", title: "Simple from the first touch.", copy: "The open case puts the earbuds front and center, with a shape meant to be easy to take along. The clean presentation keeps attention on the object rather than an unverified feature list.", image: { src: `${homepage}/airpods-5.webp`, alt: "Open earbud charging case" }, tone: "light", layout: "stage" },
+      { id: "listening", label: "Listening", title: "Make room for the music.", copy: "Music and conversation follow us through work, travel, and quiet time. This scene captures that everyday rhythm without claiming a specific listening mode or sound profile.", image: { src: `${campaign}/airpods-5-lifestyle.webp`, alt: "Earbuds in an everyday setting", fit: "cover" }, tone: "blue", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Effortless sound that moves with you.",
-      intro: "Wireless earbuds designed to deliver rich, immersive audio, seamless device switching, and all-day listening comfort in a compact pocket-sized case.",
+      title: "A simple idea for everyday listening.",
+      intro: "The AirPods 5 concept centers on a familiar pair of wireless earbuds and a compact case. Audio performance, battery life, charging, and device compatibility should be checked against confirmed product details.",
       items: [
         {
           category: "ACOUSTICS",
-          heading: "Rich, detailed sound architecture.",
-          description: "Custom-tuned acoustic drivers deliver crisp highs, balanced mid-tones, and deep resonant bass for music, podcasts, and clear phone conversations.",
+          heading: "Made with listening in mind.",
+          description: "The earbuds are presented as a companion for music, podcasts, and calls. Driver design and sound quality cannot be judged from the visual concept alone.",
         },
         {
           category: "COMFORT & FIT",
-          heading: "Contoured for all-day wear.",
-          description: "An ergonomic shape sits securely and lightly in the ear, providing natural acoustic seal and breathability through workouts, commutes, and long work sessions.",
+          heading: "An understated shape.",
+          description: "The open-ear silhouette looks compact and familiar. Comfort and fit are personal, so the final design and wearing experience deserve a hands-on check.",
         },
         {
           category: "PORTABILITY & POWER",
-          heading: "Compact charging case with USB-C.",
-          description: "Slip the sleek case into any pocket, enjoy extended battery life across multiple recharges, and top up quickly when you need sound on the go.",
+          heading: "A case made to travel.",
+          description: "The rounded case keeps the pair together between listening sessions. Its charging connector and battery capacity are not established by these images.",
         },
         {
           category: "INTUITIVE CONTROLS",
-          heading: "Touch and voice at your command.",
-          description: "Effortlessly manage playback, answer incoming calls, and interact with your connected devices through intuitive stem touch gestures.",
+          heading: "Keep it easy.",
+          description: "Quick, familiar interactions are part of the appeal of wireless earbuds. Supported gestures and voice controls will depend on the finished product.",
         },
       ],
     },
-    closingLine: "Hear your day differently.",
-    closingTone: "ink",
   },
   "macbook-air": {
     slug: "macbook-air",
@@ -296,7 +282,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Ready to go",
     tagline: "Light work. Big ideas.",
     buyPath: "/shop/buy-mac/macbook-air",
-    hero: { src: macbookAirHero, alt: "MacBook Air in an open, angled presentation" },
+    hero: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air in an open, angled presentation" },
     heroTone: "light",
     highlights: [
       { label: "Portable", title: "Take your workspace anywhere.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air in a floating view" }, tone: "light" },
@@ -304,38 +290,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Choice", title: "Find the Air for you.", image: { src: `${campaign}/macbook-air-lineup.webp`, alt: "MacBook Air in several views" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A lighter way to work.", copy: "An open screen, a comfortable keyboard, and a shape that goes where you go.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air seen from the side" }, tone: "light", layout: "stage" },
-      { id: "workspace", label: "Workspace", title: "Make room for what matters.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air floating product presentation" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "A lighter way to work.", copy: "A slim laptop makes it easier to take a familiar workspace from one place to the next. The angled view puts the screen, keyboard, and profile together in a single glance.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air seen from the side" }, tone: "light", layout: "stage" },
+      { id: "workspace", label: "Workspace", title: "Make room for what matters.", copy: "At a desk or on the move, the appeal is having your work and ideas ready when you are. The exact performance and connections depend on the MacBook Air configuration you choose.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air floating product presentation" }, tone: "blue", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Thin, light, and ready for serious work.",
-      intro: "The quintessential portable laptop, combining a slender aluminum unibody design, an expansive high-resolution display, and silent all-day efficiency for students, creators, and professionals.",
+      title: "A closer look at MacBook Air.",
+      intro: "This page focuses on the portable form and the everyday workspace it creates. For a specific purchase, compare the listed chip, memory, storage, display, and port configuration before choosing.",
       items: [
         {
           category: "PORTABILITY",
-          heading: "Ultra-thin unibody craftsmanship.",
-          description: "Incredibly slim and lightweight, MacBook Air slips into any backpack or sleeve, giving you full desktop-class capability wherever you choose to work.",
+          heading: "Easy to make room for.",
+          description: "A slim profile is the defining visual feature here. Check the dimensions and weight of the exact model to see how it fits your bag and your routine.",
         },
         {
           category: "DISPLAY & KEYBOARD",
-          heading: "Comfortable viewing and effortless typing.",
-          description: "The vibrant Liquid Retina display renders text with pin-sharp clarity and rich color accuracy, complemented by the backlit Magic Keyboard and spacious Force Touch trackpad.",
+          heading: "A familiar place to focus.",
+          description: "The open design keeps the display and keyboard close to the task at hand. Screen size, panel details, and keyboard layout vary by model and region.",
         },
         {
           category: "WORK & CREATIVITY",
-          heading: "Quiet, responsive everyday performance.",
-          description: "Tackle intensive spreadsheets, photo editing, software development, and everyday video meetings with fluid responsiveness and silent, fanless operation.",
+          heading: "Choose for the work you do.",
+          description: "Writing, studying, meetings, and creative projects place different demands on a laptop. Review the actual processor and memory options when deciding which configuration suits you.",
         },
         {
           category: "CONNECTIVITY",
-          heading: "Essential modern ports.",
-          description: "High-speed USB-C / Thunderbolt ports, MagSafe charging with quick-release safety, and a reliable headphone jack make connecting displays, external drives, and accessories simple.",
+          heading: "Plan your setup.",
+          description: "Think about the monitor, storage, and accessories you use every day. Confirm the available ports and charging method on the selected model before you order.",
         },
       ],
     },
-    closingLine: "Your next idea can go anywhere.",
-    closingTone: "light",
   },
   "mac-mini": {
     slug: "mac-mini",
@@ -352,38 +336,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Workspace", title: "A setup that feels like yours.", image: { src: macMiniDetail, alt: "Mac mini desktop concept" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A small form with a clear purpose.", copy: "Give the work more room, without giving the computer more desk.", image: { src: macMiniHero, alt: "Silver Mac mini product view" }, tone: "light", layout: "stage" },
-      { id: "details", label: "Details", title: "A closer look at the setup.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front detail" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "A small form with a clear purpose.", copy: "A compact desktop gives more of the desk back to you. The quiet shape is easy to place beside a display, leaving the rest of the setup open to your preferences.", image: { src: macMiniHero, alt: "Silver Mac mini product view" }, tone: "light", layout: "stage" },
+      { id: "details", label: "Details", title: "A closer look at the setup.", copy: "The front view brings the compact proportions and visible connections into focus. Before planning a full workstation, check the exact port layout of the model offered for pre-order.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front detail" }, tone: "blue", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "Compact desktop power that transforms your workspace.",
-      intro: "A versatile small-form-factor desktop that fits into any desk arrangement, delivering robust computing power, quiet thermal efficiency, and wide display connectivity.",
+      title: "Small desktop, flexible setup.",
+      intro: "Mac mini leaves the choice of display and accessories to you. This overview is about its compact form; the processor, ports, and display support should be verified for the specific model offered.",
       items: [
         {
           category: "COMPACT FORM",
-          heading: "Minimal footprint, maximum desk room.",
-          description: "An iconic compact square aluminum enclosure that sits unobtrusively under a display or beside your workspace, leaving more room for your creative setup.",
+          heading: "More room on the desk.",
+          description: "Its compact enclosure can sit beside a display without taking over the workspace. Measure the space you have and compare the listed dimensions when planning the setup.",
         },
         {
           category: "VERSATILITY",
           heading: "Build your dream desk arrangement.",
-          description: "Pair with your preferred monitor, keyboard, mouse, and audio setup to create a tailored workstation for home, studio, or corporate environments.",
+          description: "Choose the display, keyboard, pointing device, and audio gear that suit your work. Compatibility depends on the connections and software supported by the selected model.",
         },
         {
           category: "PRODUCTIVITY & CREATIVITY",
-          heading: "Handles demanding everyday workloads.",
-          description: "Optimized for multi-app multitasking, code compilation, creative photo and video editing, and high-throughput data processing.",
+          heading: "Match the machine to the task.",
+          description: "A small desktop can support many kinds of work, from documents to creative projects. Compare the listed chip, memory, and storage before deciding what it can handle for you.",
         },
         {
           category: "PORTS & CONNECTIVITY",
-          heading: "Versatile high-speed connections.",
-          description: "Convenient front and rear ports accommodate fast external storage, multiple high-resolution displays, and high-speed networking with ease.",
+          heading: "Connect what you need.",
+          description: "The images show visible connection points, but not the full specification. Check the exact port types and external display support on the product listing.",
         },
       ],
     },
-    closingLine: "Make space for the next thing.",
-    closingTone: "light",
   },
   "ipad-air": {
     slug: "ipad-air",
@@ -400,38 +382,36 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Your way", title: "Make the moment yours.", image: { src: `${campaign}/ipad-air-space-gray.webp`, alt: "Space gray iPad Air concept" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A canvas with character.", copy: "A portable form that leaves the focus on whatever you are making.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept finish range" }, tone: "light", layout: "stage" },
-      { id: "creativity", label: "Creativity", title: "Start with a blank screen.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "Blue iPad Air concept screen and rear view" }, tone: "light", layout: "split" },
-      { id: "details", label: "Details", title: "The little things make it yours.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "iPad Air concept camera and finish detail" }, tone: "light", layout: "split" },
+      { id: "design", label: "Design", title: "A canvas with character.", copy: "The broad screen gives content room to breathe, while the finish adds a little personality. These views invite you to look at the form from the front and back.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept finish range" }, tone: "light", layout: "stage" },
+      { id: "creativity", label: "Creativity", title: "Start with a blank screen.", copy: "A tablet can be a place to collect notes, read closely, or work through a visual idea. The blue presentation shows that open canvas without promising a particular accessory or app.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "Blue iPad Air concept screen and rear view" }, tone: "blue", layout: "split" },
+      { id: "details", label: "Details", title: "The little things make it yours.", copy: "The camera, edges, and color are easier to appreciate up close. Small choices in the form can make the whole device feel more personal.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "iPad Air concept camera and finish detail" }, tone: "plum", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
-      title: "The versatile canvas for ideas, study, and creativity.",
-      intro: "A lightweight, powerful tablet engineered to bridge the gap between portable reading, handwritten notes, high-precision drawing, and laptop-style productivity.",
+      title: "A canvas for different kinds of days.",
+      intro: "The iPad Air story is about a portable screen that can move between reading, viewing, and making. Check the exact model and accessory compatibility before relying on any particular creative or work feature.",
       items: [
         {
           category: "VERSATILITY",
           heading: "From sketchpad to digital notebook.",
-          description: "Seamlessly transition between reading documents, taking handwritten notes, sketching creative illustrations, and typing out reports in one portable slab.",
+          description: "A tablet offers a flexible space for documents, images, and ideas. Handwriting and typing workflows depend on the apps and accessories you choose.",
         },
         {
-          category: "LIQUID RETINA DISPLAY",
-          heading: "Stunning visual immersion.",
-          description: "An expansive edge-to-edge display with rich color reproduction, anti-reflective coating, and crisp detail brings books, movies, and designs vividly to life.",
+          category: "DISPLAY",
+          heading: "A broad view for your content.",
+          description: "The front view highlights the screen as the center of the experience. Display size, coating, and color performance should be checked on the selected model.",
         },
         {
           category: "ACCESSORY INTEGRATION",
-          heading: "Pair with Pencil and Keyboard.",
-          description: "Transform iPad Air into a precision creative drawing surface or a capable typing workstation with magnetic snap-on accessories and keyboard support.",
+          heading: "Make it work your way.",
+          description: "A stylus or keyboard can change how you use a tablet. Confirm which accessories are supported and sold separately for the version you are considering.",
         },
         {
           category: "PORTABILITY",
-          heading: "Lightweight freedom on the move.",
-          description: "Slim profile and featherlight feel make it the ideal companion for campus lectures, business travel, coffee shop work sessions, and home leisure.",
+          heading: "Take your space with you.",
+          description: "The slim form is easy to picture in a bag or on a desk. Compare the actual weight and dimensions to your everyday carry needs.",
         },
       ],
     },
-    closingLine: "Make more of every day.",
-    closingTone: "light",
   },
 };
