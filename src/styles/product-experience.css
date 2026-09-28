@@ -1359,6 +1359,58 @@
   color: var(--experience-ink);
 }
 
+.story-overview,
+.story-highlights,
+.story-design-section,
+.story-camera-section,
+.story-performance-section,
+.story-color-section,
+.story-details,
+.story-shopping-section,
+.story-final-cta,
+#available-products,
+#buy {
+  scroll-margin-top: 8.5rem;
+}
+
+.story-shopping-section {
+  background: #f5f5f7;
+  color: var(--experience-ink);
+}
+
+.scroll-anchor {
+  position: relative;
+  top: -8.5rem;
+  display: block;
+  visibility: hidden;
+}
+
+.story-shopping-helpers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: min(100%, 78rem);
+  margin-inline: auto;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--experience-line);
+  text-align: center;
+}
+
+.story-shopping-helpers > span {
+  color: var(--experience-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.story-shopping-helpers .experience-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.85rem;
+}
+
 .story-final-cta {
   display: grid;
   justify-items: center;
@@ -2583,6 +2635,24 @@
   .story-details,
   .story-related {
     padding: 4.5rem 1rem;
+  }
+
+  .story-overview,
+  .story-highlights,
+  .story-design-section,
+  .story-camera-section,
+  .story-performance-section,
+  .story-color-section,
+  .story-details,
+  .story-shopping-section,
+  .story-final-cta,
+  #available-products,
+  #buy {
+    scroll-margin-top: 8.25rem;
+  }
+
+  .scroll-anchor {
+    top: -8.25rem;
   }
 
   .experience-heading {

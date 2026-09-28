@@ -22,9 +22,21 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const configuredStory = getProductStory(family, slug);
   const product = activeProducts.find((item) => item.slug === slug && familyMatchesProduct(item, family));
   const story = useMemo(() => configuredStory ?? (product ? storyFromProduct(product, family) : undefined), [configuredStory, family, product]);
-  const related = useMemo(() => activeProducts.filter((item) => item.id !== product?.id && familyMatchesProduct(item, family)).slice(0, 3), [activeProducts, family, product?.id]);
+  const availableProducts = useMemo(
+    () => activeProducts.filter((item) => item.id !== product?.id && familyMatchesProduct(item, family)),
+    [activeProducts, family, product?.id]
+  );
   const [filmOpen, setFilmOpen] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
+
+  const scrollToAvailableProducts = (e: React.MouseEvent) => {
+    const el = document.getElementById("available-products") || document.getElementById("buy");
+    if (el) {
+      e.preventDefault();
+      el.scrollIntoView({ behavior: "smooth" });
+      window.history.pushState(null, "", "#available-products");
+    }
+  };
 
   const scrollRail = (direction: "left" | "right") => {
     if (!railRef.current) return;
@@ -53,7 +65,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   return (
     <div className={`product-story-page product-story-${story.theme} product-story-${family}`}>
       <SEO title={`${story.name} | Overview`} description={`${story.tagline} Explore the ${story.name} product story and current Buy & Sell GH availability.`} />
-      <StoryLocalNav story={story} />
+      <StoryLocalNav story={story} hasAvailableProducts={availableProducts.length > 0} onBuyClick={scrollToAvailableProducts} />
 
       <section className="story-hero" id="overview">
         <div className="story-hero-copy">
@@ -62,8 +74,20 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
           <span>{story.tagline}</span>
           {story.campaignStatus && <small className="story-campaign-status">{story.campaignStatus}</small>}
           <div className="experience-actions">
-            <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy {story.name}</Link>
-            {story.media.type === "video" && <button className="experience-button experience-button-secondary" type="button" onClick={() => setFilmOpen(true)}>Watch the film</button>}
+            {availableProducts.length > 0 ? (
+              <a className="experience-button experience-button-primary" href="#available-products" onClick={scrollToAvailableProducts}>
+                Buy
+              </a>
+            ) : (
+              <Link className="experience-button experience-button-primary" to={story.buyPath}>
+                Buy {story.name}
+              </Link>
+            )}
+            {story.media.type === "video" && (
+              <button className="experience-button experience-button-secondary" type="button" onClick={() => setFilmOpen(true)}>
+                Watch the film
+              </button>
+            )}
           </div>
         </div>
         <StoryMedia media={story.media} priority />
@@ -178,32 +202,58 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         </div>
       </section>
 
-      {related.length > 0 && (
-        <section className="story-related">
+      {availableProducts.length > 0 ? (
+        <section className="story-related story-shopping-section" id="available-products">
+          <span id="buy" className="scroll-anchor" aria-hidden="true" />
           <div className="experience-heading">
-            <p>Explore the lineup</p>
-            <h2>More from {productFamilies[family].label}.</h2>
+            <p>Available to buy</p>
+            <h2>Shop {productFamilies[family].label}.</h2>
+            <span>Choose from available devices in the Buy &amp; Sell GH store.</span>
           </div>
-          <ProductGrid products={related} imageVariant="catalogue" />
+          <ProductGrid products={availableProducts} imageVariant="catalogue" />
+          <div className="story-shopping-helpers">
+            <span>Looking for a different model or custom specification?</span>
+            <div className="experience-actions">
+              <Link className="experience-button experience-button-secondary" to="/pre-order">
+                Request a custom device
+              </Link>
+              <Link className="experience-button experience-button-secondary" to={productFamilies[family].path}>
+                Compare all {productFamilies[family].label} models
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="story-final-cta" id="available-products">
+          <span id="buy" className="scroll-anchor" aria-hidden="true" />
+          <p>{story.name}</p>
+          <h2>Ready for the practical details?</h2>
+          <span>See real catalogue options, or send an enquiry when the exact configuration is not currently listed.</span>
+          <div className="experience-actions">
+            <Link className="experience-button experience-button-primary" to={story.buyPath}>
+              Buy {story.name} <ArrowRight size={17} />
+            </Link>
+            <Link className="experience-button experience-button-secondary" to={productFamilies[family].path}>
+              Compare the lineup
+            </Link>
+          </div>
         </section>
       )}
-
-      <section className="story-final-cta">
-        <p>{story.name}</p>
-        <h2>Ready for the practical details?</h2>
-        <span>See real catalogue options, or send an enquiry when the exact configuration is not currently listed.</span>
-        <div className="experience-actions">
-          <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy {story.name} <ArrowRight size={17} /></Link>
-          <Link className="experience-button experience-button-secondary" to={productFamilies[family].path}>Compare the lineup</Link>
-        </div>
-      </section>
 
       {filmOpen && story.media.type === "video" && <FilmModal name={story.name} src={story.media.src} onClose={() => setFilmOpen(false)} />}
     </div>
   );
 }
 
-function StoryLocalNav({ story }: { story: ProductStoryDefinition }) {
+function StoryLocalNav({
+  story,
+  hasAvailableProducts = false,
+  onBuyClick,
+}: {
+  story: ProductStoryDefinition;
+  hasAvailableProducts?: boolean;
+  onBuyClick?: (e: React.MouseEvent) => void;
+}) {
   const sectionLinks = [
     ["#overview", "Overview"],
     ["#highlights", "Highlights"],
@@ -211,19 +261,39 @@ function StoryLocalNav({ story }: { story: ProductStoryDefinition }) {
     ...(story.family === "iphone" && story.slug === "iphone-18-pro" ? [["#cameras", "Cameras"], ["#performance", "Performance"]] : []),
     ...(story.colorStory ? [["#colors", "Colors"]] : []),
     ["#tech-specs", "Tech Specs"],
+    ...(hasAvailableProducts ? [["#available-products", "Available to Buy"]] : []),
   ];
   return (
     <nav className="product-local-nav" aria-label={`${story.name} product navigation`}>
       <Link className="product-local-title" to={`/${story.family}/${story.slug}`}>{story.name}</Link>
       <div className="product-local-links">
         {sectionLinks.map(([href, label]) => <a href={href} key={href}>{label}</a>)}
-        <Link className="product-local-buy" to={story.buyPath}>Buy</Link>
+        {hasAvailableProducts ? (
+          <a className="product-local-buy" href="#available-products" onClick={onBuyClick}>
+            Buy
+          </a>
+        ) : (
+          <Link className="product-local-buy" to={story.buyPath}>
+            Buy
+          </Link>
+        )}
       </div>
       <details className="product-local-mobile-menu">
         <summary>Sections <ChevronDown size={15} aria-hidden="true" /></summary>
         <div>
           {sectionLinks.map(([href, label]) => (
-            <a href={href} key={href} onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>{label}</a>
+            <a
+              href={href}
+              key={href}
+              onClick={(event) => {
+                event.currentTarget.closest("details")?.removeAttribute("open");
+                if (href === "#available-products" && onBuyClick) {
+                  onBuyClick(event);
+                }
+              }}
+            >
+              {label}
+            </a>
           ))}
         </div>
       </details>
