@@ -155,7 +155,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-generic-product.webp`, alt: "Watch with a light band" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A personal way to show up.", copy: "A watch is one of the few things you carry into nearly every part of the day. This concept pairs a simple face with a band that brings its own character to the look.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile on clean background" }, tone: "sage", layout: "stage" },
+      { id: "design", label: "Design", title: "A personal way to show up.", copy: "A watch is one of the few things you carry into nearly every part of the day. This concept pairs a simple face with a band that brings its own character to the look.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile on clean background" }, tone: "light", layout: "stage" },
       { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "The appeal is in having a useful glance nearby without interrupting what you are doing. The renders focus on the feel of wearing it, not an unconfirmed list of functions.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept presentation" }, tone: "light", layout: "split" },
     ],
     information: {
@@ -197,7 +197,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     highlights: [
       { label: "Design", title: "Bold by nature.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept close view" }, tone: "ink" },
       { label: "Control", title: "Details you can feel.", image: { src: `${campaign}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra concept side and display", fit: "cover" }, tone: "light" },
-      { label: "Adventure", title: "Take the long way round.", image: { src: `${campaign}/watch-ultra-4-orange.webp`, alt: "Apple Watch Ultra concept with orange band", fit: "cover" }, tone: "light" },
+      { label: "Adventure", title: "Take the long way round.", image: { src: `${campaign}/watch-ultra-4-orange.webp`, alt: "Apple Watch Ultra concept with orange band", fit: "contain" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "Built to stand out there.", copy: "The bolder case and expressive band give this concept a different presence from an everyday watch. Large, legible details keep the visual focus on the wrist, even against a wide outdoor scene.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept shown close up" }, tone: "ink", layout: "stage" },
@@ -245,7 +245,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "On the move", title: "Easy to take along.", image: { src: `${campaign}/airpods-5-dark.webp`, alt: "Wireless earbud case on a dark background" }, tone: "ink" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "Simple from the first touch.", copy: "The open case puts the earbuds front and center, with a shape meant to be easy to take along. The clean presentation keeps attention on the object rather than an unverified feature list.", image: { src: `${homepage}/airpods-5.webp`, alt: "Open earbud charging case" }, tone: "light", layout: "stage" },
+      { id: "design", label: "Design", title: "Simple from the first touch.", copy: "The open case puts the earbuds front and center, with a shape meant to be easy to take along. The clean presentation keeps attention on the object rather than an unverified feature list.", image: { src: `${campaign}/airpods-5-product.webp`, alt: "Open earbud charging case" }, tone: "light", layout: "stage" },
       { id: "listening", label: "Listening", title: "Make room for the music.", copy: "Music and conversation follow us through work, travel, and quiet time. This scene captures that everyday rhythm without claiming a specific listening mode or sound profile.", image: { src: `${campaign}/airpods-5-lifestyle.webp`, alt: "Earbuds in an everyday setting", fit: "cover" }, tone: "blue", layout: "split" },
     ],
     information: {
