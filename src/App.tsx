@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminAuthProvider } from "./admin/AdminAuth";
 import { ProtectedAdminRoute } from "./admin/ProtectedAdminRoute";
@@ -70,6 +70,35 @@ export default function App() {
 }
 
 function PublicShell() {
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      // Strictly allow normal context menu in inputs, textareas, selects, links, editable elements, and buttons
+      if (target.closest("input, textarea, select, [contenteditable='true'], a, button, .selectable")) {
+        return;
+      }
+      // Deter casual right-click saving on presentation images, videos, and editorial surfaces
+      if (target.closest("img, video, .editorial-story, .presentation-content, .public-shell")) {
+        e.preventDefault();
+      }
+    };
+
+    const handleDragStart = (e: DragEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.tagName === "IMG") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("dragstart", handleDragStart);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("dragstart", handleDragStart);
+    };
+  }, []);
+
   return (
     <div className="public-shell min-h-screen bg-page text-ink">
       <Header />

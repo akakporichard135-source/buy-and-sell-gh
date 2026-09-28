@@ -326,7 +326,8 @@ try {
     const story = editorialStories.editorialStories[slug];
     assert.ok(story.hero.src && story.hero.alt, `${slug} has accessible hero imagery`);
     assert.ok(story.highlights.length >= 3 && story.highlights.length <= 5, `${slug} has a focused highlights rail`);
-    assert.ok(story.chapters.length >= 2, `${slug} has editorial chapters`);
+    assert.ok(story.chapters.length >= 1, `${slug} has editorial chapters`);
+    assert.ok(story.information && story.information.items.length >= 3, `${slug} has customer-first product information`);
     assert.ok(story.buyPath.startsWith(slug === "mac-mini" ? "/pre-order?" : "/shop/buy-"), `${slug} uses its existing commerce flow`);
     for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.map((item) => item.image)]) {
       assert.ok(!/\.(mp4|webm)$/i.test(media.src), `${slug} uses still media`);

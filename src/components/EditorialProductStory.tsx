@@ -35,7 +35,8 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         <a className="editorial-subnav-name" href="#overview">{story.name}</a>
         <div className="editorial-subnav-actions">
           <a href="#highlights">Highlights</a>
-          <a href={`#${story.chapters[0].id}`}>Explore</a>
+          {story.chapters.length > 0 && <a href={`#${story.chapters[0].id}`}>Explore</a>}
+          {story.information && <a href="#information">Details</a>}
           <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
         </div>
       </nav>
@@ -84,7 +85,28 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         </section>
       ))}
 
-      <section className={`editorial-close editorial-tone-${story.closingTone ?? "ink"}`} aria-labelledby="editorial-close-title">
+      {story.information && (
+        <section className="editorial-information" id="information" aria-labelledby="editorial-info-title">
+          <div className="editorial-info-container">
+            <div className="editorial-info-header">
+              <p className="editorial-eyebrow">{story.information.eyebrow ?? "EVERYTHING TO KNOW"}</p>
+              <h2 id="editorial-info-title">{story.information.title}</h2>
+              <p className="editorial-info-intro">{story.information.intro}</p>
+            </div>
+            <div className="editorial-info-grid">
+              {story.information.items.map((item) => (
+                <article className="editorial-info-card" key={item.category}>
+                  <p className="editorial-info-category">{item.category}</p>
+                  <h3 className="editorial-info-heading">{item.heading}</h3>
+                  <p className="editorial-info-body">{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className={`editorial-close editorial-tone-${story.closingTone ?? "ink"} ${!story.closingImage ? "editorial-close-minimal" : ""}`} aria-labelledby="editorial-close-title">
         {story.closingImage && <div className="editorial-close-art"><ProductImage image={story.closingImage} /></div>}
         <div className="editorial-close-copy">
           <p className="editorial-eyebrow">{story.name}</p>
