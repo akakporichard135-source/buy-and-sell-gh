@@ -14011,10 +14011,10 @@ body {
 
 .mac-story-hero h1 {
   margin: 0.3rem 0 0;
-  font-size: clamp(4rem, 10vw, 9rem);
-  font-weight: 950;
-  letter-spacing: 0;
-  line-height: 0.88;
+  font-size: clamp(3.2rem, 7.5vw, 6.2rem);
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  line-height: 0.95;
 }
 
 .mac-story-hero-copy > p:not(.store-eyebrow) {
@@ -14084,12 +14084,12 @@ body {
 }
 
 .mac-story-panel h2 {
-  max-width: 12ch;
+  max-width: 22ch;
   margin: 0.45rem 0 0;
-  font-size: clamp(2.4rem, 4.8vw, 5rem);
-  font-weight: 950;
-  letter-spacing: 0;
-  line-height: 0.95;
+  font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
 }
 
 .mac-story-panel > p:not(.store-eyebrow) {
@@ -14150,12 +14150,12 @@ body {
 }
 
 .mac-story-preorder h2 {
-  max-width: 13ch;
+  max-width: 26ch;
   margin: 0.45rem auto 0;
-  font-size: clamp(3rem, 7vw, 6.5rem);
-  font-weight: 950;
-  letter-spacing: 0;
-  line-height: 0.93;
+  font-size: clamp(2rem, 4.2vw, 3.2rem);
+  font-weight: 850;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 
 .mac-story-preorder > p:not(.store-eyebrow) {

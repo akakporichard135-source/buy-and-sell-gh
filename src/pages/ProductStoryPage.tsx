@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ChevronDown, Pause, Play, X } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
@@ -24,6 +24,16 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const story = useMemo(() => configuredStory ?? (product ? storyFromProduct(product, family) : undefined), [configuredStory, family, product]);
   const related = useMemo(() => activeProducts.filter((item) => item.id !== product?.id && familyMatchesProduct(item, family)).slice(0, 3), [activeProducts, family, product?.id]);
   const [filmOpen, setFilmOpen] = useState(false);
+  const railRef = useRef<HTMLDivElement>(null);
+
+  const scrollRail = (direction: "left" | "right") => {
+    if (!railRef.current) return;
+    const scrollAmount = Math.min(railRef.current.clientWidth * 0.8, 480);
+    railRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
   if (loading && !story) {
     return <section className="experience-loading" role="status">Loading the product experience...</section>;
@@ -52,7 +62,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
           <span>{story.tagline}</span>
           {story.campaignStatus && <small className="story-campaign-status">{story.campaignStatus}</small>}
           <div className="experience-actions">
-            <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy or view pricing</Link>
+            <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy {story.name}</Link>
             {story.media.type === "video" && <button className="experience-button experience-button-secondary" type="button" onClick={() => setFilmOpen(true)}>Watch the film</button>}
           </div>
         </div>
@@ -65,20 +75,46 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
       </section>
 
       <section className="story-highlights" id="highlights">
-        <div className="experience-heading">
-          <p>Get the highlights</p>
-          <h2>A closer look at what matters.</h2>
+        <div className="story-highlights-header">
+          <div className="experience-heading">
+            <p>Get the highlights</p>
+            <h2>A closer look at what matters.</h2>
+          </div>
+          <div className="story-rail-controls" aria-label="Highlight rail controls">
+            <button
+              type="button"
+              className="story-rail-arrow story-rail-prev"
+              onClick={() => scrollRail("left")}
+              aria-label="Previous highlights"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              className="story-rail-arrow story-rail-next"
+              onClick={() => scrollRail("right")}
+              aria-label="Next highlights"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-        <div className="story-highlight-rail" tabIndex={0} aria-label={`${story.name} highlights`}>
+        <div className="story-highlight-rail" ref={railRef} tabIndex={0} aria-label={`${story.name} highlights`}>
           {story.highlights.map((highlight, index) => (
-            <article className={`story-highlight story-highlight-${highlight.tone}${highlight.media ? " story-highlight-media" : ""}`} id={highlightAnchor(highlight.label)} key={highlight.title}>
-              {highlight.media && <img src={highlight.media.src} alt={highlight.media.alt} loading="lazy" decoding="async" style={highlight.media.position ? { objectPosition: highlight.media.position } : undefined} />}
+            <article className={`story-highlight story-highlight-${highlight.tone}${highlight.media ? " story-highlight-has-media" : ""}`} id={highlightAnchor(highlight.label)} key={highlight.title}>
               <div className="story-highlight-copy">
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <p>{highlight.label}</p>
+                <div className="story-highlight-meta">
+                  <p className="story-highlight-label">{highlight.label}</p>
+                  <span className="story-highlight-index">{String(index + 1).padStart(2, "0")}</span>
+                </div>
                 <h3>{highlight.title}</h3>
                 <strong>{highlight.description}</strong>
               </div>
+              {highlight.media && (
+                <div className="story-highlight-visual">
+                  <img src={highlight.media.src} alt={highlight.media.alt} loading="lazy" decoding="async" style={highlight.media.position ? { objectPosition: highlight.media.position } : undefined} />
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -88,8 +124,8 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         <section className="story-film-section" id="film">
           <div>
             <p>Product film</p>
-            <h2>See the campaign in motion.</h2>
-            <span>The approved cinematic sequence is presented with custom, accessible playback controls.</span>
+            <h2>See it in action.</h2>
+            <span>Watch the cinematic product overview with custom playback controls.</span>
             <button className="experience-button experience-button-light" type="button" onClick={() => setFilmOpen(true)}><Play size={17} fill="currentColor" /> Watch the film</button>
           </div>
           <button className="story-film-poster" type="button" aria-label={`Play ${story.name} product film`} onClick={() => setFilmOpen(true)}>
@@ -130,7 +166,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         <div className="experience-heading">
           <p>Tech specs</p>
           <h2>Details, without the guesswork.</h2>
-          <span>Only verified campaign information or fields stored with a real catalogue product appear here.</span>
+          <span>Key specifications and features confirmed for Store availability.</span>
         </div>
         <div className="story-detail-groups">
           {story.detailGroups.map((group) => (
@@ -157,7 +193,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         <h2>Ready for the practical details?</h2>
         <span>See real catalogue options, or send an enquiry when the exact configuration is not currently listed.</span>
         <div className="experience-actions">
-          <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy or view pricing <ArrowRight size={17} /></Link>
+          <Link className="experience-button experience-button-primary" to={story.buyPath}>Buy {story.name} <ArrowRight size={17} /></Link>
           <Link className="experience-button experience-button-secondary" to={productFamilies[family].path}>Compare the lineup</Link>
         </div>
       </section>

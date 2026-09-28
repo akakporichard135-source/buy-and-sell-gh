@@ -61,15 +61,16 @@
 }
 
 .experience-button-primary {
-  background: var(--experience-blue);
-  border-color: var(--experience-blue);
-  color: #fff;
-  font-weight: 500;
+  background: #e5b438;
+  border-color: #e5b438;
+  color: #111;
+  font-weight: 700;
 }
 
 .experience-button-primary:hover {
-  background: #0077ed;
-  border-color: #0077ed;
+  background: #cca030;
+  border-color: #cca030;
+  color: #111;
 }
 
 .experience-button-secondary {
@@ -135,13 +136,14 @@
 .product-local-nav .product-local-buy {
   padding: 0.48rem 0.9rem;
   border-radius: 999px;
-  background: var(--experience-blue);
-  color: #fff;
+  background: #e5b438;
+  color: #111;
+  font-weight: 700;
 }
 
 .product-local-nav .product-local-buy:hover {
-  color: #fff;
-  background: #0077ed;
+  color: #111;
+  background: #cca030;
 }
 
 .experience-heading {
@@ -809,21 +811,27 @@
 .story-hero-media {
   position: relative;
   z-index: 1;
-  min-height: 28rem;
+  min-height: 24rem;
   overflow: hidden;
+}
+
+.story-hero-image {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .story-hero-media img,
 .story-hero-media video {
   display: block;
-  width: 100%;
-  height: 100%;
   object-fit: contain;
   object-position: center bottom;
 }
 
 .story-hero-image img {
-  max-width: 92rem;
+  width: auto;
+  max-width: 100%;
+  max-height: clamp(380px, 45vw, 540px);
   margin-inline: auto;
   padding: 1rem 2rem 0;
   filter: drop-shadow(0 28px 32px rgba(0, 0, 0, 0.18));
@@ -876,122 +884,228 @@
 }
 
 .story-introduction {
-  padding: clamp(6rem, 11vw, 11rem) max(1.25rem, calc((100vw - 70rem) / 2));
+  padding: clamp(4.5rem, 8vw, 7.5rem) 1.5rem;
   background: #fff;
   color: var(--experience-ink);
+  text-align: center;
+}
+
+.product-story-ink .story-introduction {
+  background: #000;
+  color: #fff;
+}
+
+.story-introduction > p {
+  margin: 0 auto 0.85rem;
+  color: #9a7000;
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.product-story-ink .story-introduction > p {
+  color: #f0be36;
 }
 
 .story-introduction h2 {
-  max-width: 66rem;
-  margin: 0;
-  font-size: clamp(2.6rem, 6.2vw, 6.4rem);
-  font-weight: 800;
-  line-height: 0.98;
+  max-width: 54rem;
+  margin: 0 auto;
+  font-size: clamp(1.85rem, 3.4vw, 3.1rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 .story-highlights {
   background: #f5f5f7;
   color: var(--experience-ink);
+  padding: clamp(4rem, 7vw, 6.5rem) 0;
+}
+
+.product-story-ink .story-highlights {
+  background: #0a0a0c;
+  color: #fff;
+}
+
+.story-highlights-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: min(100%, 78rem);
+  margin: 0 auto 2rem;
+  padding-inline: 1.5rem;
+  box-sizing: border-box;
+}
+
+.story-highlights-header .experience-heading {
+  margin: 0;
+  width: auto;
+}
+
+.story-rail-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.story-rail-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1d1d1f;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.story-rail-arrow:hover {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.28);
+  transform: scale(1.05);
+}
+
+.story-rail-arrow:active {
+  transform: scale(0.95);
+}
+
+.product-story-ink .story-rail-arrow {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.product-story-ink .story-rail-arrow:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .story-highlight-rail {
-  display: grid;
-  width: min(100%, 86rem);
-  grid-auto-columns: minmax(21rem, 37rem);
-  grid-auto-flow: column;
-  gap: 1rem;
-  margin-inline: auto;
-  padding-bottom: 1rem;
+  display: flex;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 0.5rem max(1.5rem, calc((100vw - 78rem) / 2)) 1.5rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+.story-highlight-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .story-highlight {
-  position: relative;
+  flex: 0 0 clamp(320px, 28vw, 400px);
+  height: 520px;
+  min-height: 520px;
   display: flex;
-  min-height: 33rem;
   flex-direction: column;
-  justify-content: flex-end;
-  scroll-snap-align: start;
+  justify-content: space-between;
+  border-radius: 20px;
+  padding: 2.2rem 2rem 0;
   overflow: hidden;
-  padding: clamp(1.7rem, 3vw, 3rem);
-  border-radius: 8px;
+  position: relative;
+  scroll-snap-align: start;
+  box-sizing: border-box;
+  transition: transform 220ms ease;
+}
+
+.story-highlight:hover {
+  transform: translateY(-2px);
 }
 
 .story-highlight-copy {
-  position: relative;
-  z-index: 2;
   display: flex;
-  min-height: 100%;
   flex-direction: column;
-  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
-.story-highlight-copy > span {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  color: currentColor;
-  font-size: clamp(4rem, 8vw, 8rem);
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0.08;
+.story-highlight-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
 }
 
-.story-highlight-copy > p {
-  margin: 0 0 0.75rem;
+.story-highlight-label {
+  margin: 0;
   color: #9a7000;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 850;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.story-highlight-index {
+  font-size: 0.8rem;
+  font-weight: 750;
+  opacity: 0.4;
+  font-variant-numeric: tabular-nums;
 }
 
 .story-highlight-copy h3 {
-  max-width: 11ch;
-  margin: 0;
-  font-size: clamp(2.2rem, 4.2vw, 4.6rem);
-  font-weight: 820;
-  line-height: 0.98;
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.45rem, 1.8vw, 1.85rem);
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  word-break: normal;
+  hyphens: none;
+  max-width: none;
 }
 
 .story-highlight-copy > strong {
   display: block;
-  max-width: 29rem;
-  margin-top: 1.2rem;
-  font-size: 1rem;
-  font-weight: 550;
-  line-height: 1.55;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+  opacity: 0.82;
+  max-width: none;
 }
 
-.story-highlight-media > img {
-  position: absolute;
-  z-index: 0;
-  inset: 0 0 auto;
+.story-highlight-visual {
+  margin-top: auto;
   width: 100%;
-  height: 58%;
-  object-fit: contain;
-  padding: 1.2rem;
+  height: 230px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.story-highlight-media .story-highlight-copy::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: -5rem -3rem -3rem;
-  background: linear-gradient(180deg, transparent, currentColor 5.2rem);
-  opacity: 0.04;
-  pointer-events: none;
+.story-highlight-visual img {
+  max-height: 100%;
+  max-width: 90%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.12));
 }
 
 .story-highlight-ink {
-  background: #09090a;
+  background: #111113;
   color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.story-highlight-ink .story-highlight-copy > p,
-.story-highlight-gold .story-highlight-copy > p {
+.story-highlight-ink .story-highlight-label {
   color: #f0be36;
+}
+
+.story-highlight-ink .story-highlight-index {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .story-highlight-light {
@@ -1001,13 +1115,23 @@
 }
 
 .story-highlight-blue {
-  background: #dff2ff;
+  background: #eef6fc;
   color: #062842;
+  border: 1px solid rgba(0, 113, 227, 0.12);
 }
 
 .story-highlight-gold {
-  background: #18140a;
+  background: #18150c;
   color: #fff;
+  border: 1px solid rgba(229, 180, 56, 0.18);
+}
+
+.story-highlight-gold .story-highlight-label {
+  color: #f0be36;
+}
+
+.story-highlight-gold .story-highlight-index {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .story-film-section {
@@ -2563,19 +2687,33 @@
   }
 
   .story-introduction {
-    padding: 5rem 1rem;
+    padding: 4rem 1.25rem;
   }
 
   .story-introduction h2 {
-    font-size: clamp(2.35rem, 11vw, 3.8rem);
+    font-size: clamp(1.5rem, 6vw, 2.1rem);
+    line-height: 1.28;
+    max-width: 100%;
+  }
+
+  .story-rail-controls {
+    display: none;
   }
 
   .story-highlight-rail {
-    grid-auto-columns: minmax(17rem, 84vw);
+    padding-inline: 1.25rem;
+    gap: 1rem;
   }
 
   .story-highlight {
-    min-height: 27rem;
+    flex: 0 0 min(84vw, 340px);
+    height: 480px;
+    min-height: 480px;
+    padding: 1.8rem 1.4rem 0;
+  }
+
+  .story-highlight-visual {
+    height: 200px;
   }
 
   .story-film-section {
