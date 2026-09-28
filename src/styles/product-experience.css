@@ -1366,73 +1366,80 @@
 .story-performance-section,
 .story-color-section,
 .story-details,
-.story-shopping-section,
-.story-final-cta,
-#available-products,
-#buy {
+.story-final-cta {
   scroll-margin-top: 8.5rem;
-}
-
-.story-shopping-section {
-  background: #f5f5f7;
-  color: var(--experience-ink);
-}
-
-.scroll-anchor {
-  position: relative;
-  top: -8.5rem;
-  display: block;
-  visibility: hidden;
-}
-
-.story-shopping-helpers {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  width: min(100%, 78rem);
-  margin-inline: auto;
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-  padding-top: clamp(2rem, 4vw, 3rem);
-  border-top: 1px solid var(--experience-line);
-  text-align: center;
-}
-
-.story-shopping-helpers > span {
-  color: var(--experience-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.story-shopping-helpers .experience-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.85rem;
 }
 
 .story-final-cta {
   display: grid;
   justify-items: center;
-  padding: clamp(6rem, 10vw, 10rem) 1.25rem;
-  background: #fff;
+  padding: clamp(6.5rem, 11vw, 11.5rem) 1.25rem;
+  background: #fbfbfd;
   color: var(--experience-ink);
   text-align: center;
 }
 
-.story-final-cta h2 {
-  max-width: 14ch;
-  margin: 0;
-  font-size: clamp(2.8rem, 6vw, 6rem);
-  line-height: 0.95;
+.product-story-ink .story-final-cta {
+  background: #000;
+  color: #fff;
 }
 
-.story-final-cta > span {
-  max-width: 43rem;
-  margin: 1.2rem 0 1.7rem;
-  color: var(--experience-muted);
-  font-size: 1.05rem;
-  line-height: 1.55;
+.product-story-light .story-final-cta {
+  background: #fbfbfd;
+  color: var(--experience-ink);
+}
+
+.product-story-blue .story-final-cta {
+  background: #f5f9ff;
+  color: var(--experience-ink);
+}
+
+.story-final-eyebrow {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  color: #9a7000;
+}
+
+.product-story-ink .story-final-eyebrow {
+  color: #f0be36;
+}
+
+.product-story-blue .story-final-eyebrow {
+  color: #0071e3;
+}
+
+.story-final-cta h2 {
+  max-width: 18ch;
+  margin: 0 0 clamp(2rem, 3.5vw, 3rem);
+  font-size: clamp(2.6rem, 5.5vw, 4.8rem);
+  font-weight: 750;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.product-story-ink .story-final-cta h2 {
+  color: #fff;
+}
+
+.story-final-cta .experience-button-primary {
+  min-height: 3rem;
+  padding: 0.75rem 2.6rem;
+  border-radius: 999px;
+  background: #e5b438;
+  color: #111;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  transition: background-color 200ms ease, transform 180ms ease;
+}
+
+.story-final-cta .experience-button-primary:hover {
+  background: #cca030;
+  transform: translateY(-1px);
 }
 
 .film-modal {
@@ -2644,15 +2651,8 @@
   .story-performance-section,
   .story-color-section,
   .story-details,
-  .story-shopping-section,
-  .story-final-cta,
-  #available-products,
-  #buy {
+  .story-final-cta {
     scroll-margin-top: 8.25rem;
-  }
-
-  .scroll-anchor {
-    top: -8.25rem;
   }
 
   .experience-heading {

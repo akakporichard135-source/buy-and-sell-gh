@@ -48,6 +48,7 @@ export interface ProductStoryDefinition {
   campaignStatus?: string;
   theme: "ink" | "light" | "blue";
   buyPath: string;
+  finalCtaHeadline?: string;
   highlights: StoryHighlight[];
   designTitle: string;
   designCopy: string;
@@ -168,6 +169,7 @@ export const productStories: ProductStoryDefinition[] = [
     campaignStatus: "Configuration and availability confirmed during enquiry.",
     theme: "ink",
     buyPath: "/shop/buy-iphone/iphone-18-pro",
+    finalCtaHeadline: "Pro further.",
     highlights: [
       { label: "Design", title: "Pro further from every angle.", description: "Iridescent PRO typographic glass staging frames the titanium body and camera island.", tone: "blue", media: { src: "/products/campaigns/iphone-18-pro-hero.webp", alt: "iPhone 18 Pro PRO stage" } },
       { label: "Camera", title: "More room to shape the shot.", description: "A three-camera 48MP Pro Fusion system is designed for wide, ultrawide and telephoto perspectives.", tone: "ink", media: campaignAssets.iphone18.silver },
