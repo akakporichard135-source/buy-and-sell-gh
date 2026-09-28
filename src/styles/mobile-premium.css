@@ -1003,6 +1003,25 @@
     text-wrap: balance;
   }
 
+  .product-story-page .story-introduction-iphone-18-pro {
+    padding: clamp(64px, 12vw, 88px) clamp(20px, 5.5vw, 24px);
+    overflow-x: clip;
+    box-sizing: border-box;
+  }
+
+  .product-story-page .story-introduction-iphone-18-pro .story-intro-statement {
+    max-width: 100%;
+    font-size: clamp(32px, 9vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    word-break: normal;
+    overflow-wrap: break-word;
+  }
+
+  .product-story-page .story-introduction-iphone-18-pro .story-intro-lead {
+    margin-bottom: 0.16em;
+  }
+
   .story-rail-controls {
     display: none;
   }

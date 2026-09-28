@@ -73,9 +73,16 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
         <StoryMedia media={story.media} priority />
       </section>
 
-      <section className="story-introduction">
+      <section className={`story-introduction ${story.slug === "iphone-18-pro" ? "story-introduction-iphone-18-pro" : ""}`}>
         <p>Overview</p>
-        <h2>{story.introduction}</h2>
+        {story.introductionLead ? (
+          <h2 className="story-intro-statement">
+            <span className="story-intro-lead">{story.introductionLead}</span>
+            <span className="story-intro-sub">{story.introductionSub}</span>
+          </h2>
+        ) : (
+          <h2>{story.introduction}</h2>
+        )}
       </section>
 
       <section className="story-highlights" id="highlights">

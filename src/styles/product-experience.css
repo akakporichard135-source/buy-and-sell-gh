@@ -918,6 +918,50 @@
   text-wrap: balance;
 }
 
+/* iPhone 18 Pro dedicated Overview editorial presentation */
+.story-introduction-iphone-18-pro {
+  padding: clamp(90px, 7.8vw, 130px) 24px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.story-introduction-iphone-18-pro > p {
+  margin: 0 auto clamp(1.2rem, 2vw, 1.65rem);
+  color: #f0be36;
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.story-introduction-iphone-18-pro .story-intro-statement {
+  max-width: min(100%, 1000px);
+  margin: 0 auto;
+  font-size: clamp(42px, 4.6vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: #fff;
+  text-wrap: balance;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.story-introduction-iphone-18-pro .story-intro-lead {
+  display: block;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.12em;
+}
+
+.story-introduction-iphone-18-pro .story-intro-sub {
+  display: block;
+  font-weight: 550;
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .story-highlights {
   background: #f5f5f7;
   color: var(--experience-ink);

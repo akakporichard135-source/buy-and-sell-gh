@@ -37,6 +37,8 @@ export interface ProductStoryDefinition {
   eyebrow: string;
   tagline: string;
   introduction: string;
+  introductionLead?: string;
+  introductionSub?: string;
   media: { type: "image" | "video"; src: string; alt: string };
   designMedia?: { type: "image"; src: string; alt: string };
   galleryMedia?: Array<{ src: string; alt: string }>;
@@ -149,7 +151,9 @@ export const productStories: ProductStoryDefinition[] = [
     name: "iPhone 18 Pro",
     eyebrow: "A new era of Pro",
     tagline: "Pro further. Built for ambitious ideas and demanding days.",
-    introduction: "A flagship iPhone experience featuring glowing PRO titanium design, an expansive ProMotion display, Apple silicon with A20 Pro, and the versatile Pro Fusion camera system.",
+    introduction: "Pro from every angle. Designed to make every interaction feel extraordinary.",
+    introductionLead: "Pro from every angle.",
+    introductionSub: "Designed to make every interaction feel extraordinary.",
     media: { type: "video", src: "/videos/homepage/iphone-18-pro.mp4", alt: "iPhone 18 Pro cinematic product film" },
     designMedia: { type: "image", src: "/products/campaigns/iphone-18-pro-banner.webp", alt: "iPhone 18 Pro cinematic banner with PRO glass letters" },
     galleryMedia: [
