@@ -19,6 +19,8 @@ import "../styles/product-experience.css";
 
 export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
+  const editorialStory = editorialStories[slug];
+  if (editorialStory) return <EditorialProductStory story={editorialStory} />;
   const { activeProducts, loading } = useProductCatalog();
   const configuredStory = getProductStory(family, slug);
   const product = activeProducts.find((item) => item.slug === slug && familyMatchesProduct(item, family));
@@ -49,9 +51,6 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
       </section>
     );
   }
-
-  const editorialStory = editorialStories[slug];
-  if (editorialStory) return <EditorialProductStory story={editorialStory} />;
 
   return (
     <div className={`product-story-page product-story-${story.theme} product-story-${family}`}>

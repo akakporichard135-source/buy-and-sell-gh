@@ -32,6 +32,7 @@ export type EditorialStory = {
   }>;
   closingLine: string;
   closingImage?: EditorialImage;
+  closingTone?: EditorialTone;
 };
 
 const campaign = "/products/campaigns";
@@ -49,16 +50,17 @@ export const editorialStories: Record<string, EditorialStory> = {
     highlights: [
       { label: "Design", title: "A presence from every angle.", image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro concept, rear view" }, tone: "light" },
       { label: "Camera", title: "Make the moment yours.", image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Close view of an iPhone 18 Pro concept camera area" }, tone: "plum" },
-      { label: "Finishes", title: "A finish that feels like you.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "iPhone 18 Pro concept finishes" }, tone: "blue" },
-      { label: "Experience", title: "Every detail in focus.", image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro concept" }, tone: "ink" },
+      { label: "Finishes", title: "A finish that feels like you.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "iPhone 18 Pro concept finishes" }, tone: "light" },
+      { label: "Experience", title: "Every detail in focus.", image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro concept" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "Considered from every side.", copy: "A distinctive silhouette makes the product the whole story.", image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro concept viewed from behind" }, tone: "light", layout: "split" },
       { id: "camera", label: "Camera", title: "A closer look changes everything.", image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Close view of the iPhone 18 Pro concept camera design", fit: "cover" }, tone: "ink", layout: "stage" },
-      { id: "finishes", label: "Finishes", title: "Find your point of view.", copy: "Explore the look, then confirm the exact model and finish with our team.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "iPhone 18 Pro concept in several finishes" }, tone: "blue", layout: "split" },
+      { id: "finishes", label: "Finishes", title: "Find your point of view.", copy: "Explore the look, then confirm the exact model and finish with our team.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "iPhone 18 Pro concept in several finishes" }, tone: "light", layout: "split" },
     ],
     closingLine: "Pro further.",
-    closingImage: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "iPhone 18 Pro concept front view" },
+    closingImage: { src: `${campaign}/iphone-18-pro-hero.webp`, alt: "iPhone 18 Pro concept front view" },
+    closingTone: "ink",
   },
   "iphone-duo": {
     slug: "iphone-duo",
@@ -70,17 +72,18 @@ export const editorialStories: Record<string, EditorialStory> = {
     heroTone: "light",
     highlights: [
       { label: "The fold", title: "Small moment. Bigger canvas.", image: { src: `${campaign}/iphone-duo-folded.webp`, alt: "Folded iPhone Duo concept" }, tone: "light" },
-      { label: "Open", title: "Make space for more.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "Open iPhone Duo concept" }, tone: "blue" },
-      { label: "Profile", title: "The form tells the story.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "Side profile of an iPhone Duo concept" }, tone: "ink" },
-      { label: "Together", title: "Two sides of one idea.", image: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Two iPhone Duo foldable concepts" }, tone: "sage" },
+      { label: "Open", title: "Make space for more.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "Open iPhone Duo concept" }, tone: "light" },
+      { label: "Profile", title: "The form tells the story.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "Side profile of an iPhone Duo concept" }, tone: "light" },
+      { label: "Together", title: "Two sides of one idea.", image: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Two iPhone Duo foldable concepts" }, tone: "ink" },
     ],
     chapters: [
-      { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "A compact shape opens into a broad visual canvas.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo concept unfolded" }, tone: "blue", layout: "stage" },
-      { id: "design", label: "Design", title: "A new angle on everyday.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "iPhone Duo concept held at its edge" }, tone: "ink", layout: "split" },
+      { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "A compact shape opens into a broad visual canvas.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo concept unfolded" }, tone: "light", layout: "stage" },
+      { id: "design", label: "Design", title: "A new angle on everyday.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "iPhone Duo concept held at its edge" }, tone: "light", layout: "split" },
       { id: "everyday", label: "Everyday", title: "Made for the way you move.", image: { src: `${homepage}/iphone-duo.webp`, alt: "Open foldable phone held in two hands", fit: "cover" }, tone: "light", layout: "stage" },
     ],
     closingLine: "See what opens up.",
     closingImage: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Pair of iPhone Duo concepts" },
+    closingTone: "ink",
   },
   "apple-watch-series-12": {
     slug: "apple-watch-series-12",
@@ -91,16 +94,17 @@ export const editorialStories: Record<string, EditorialStory> = {
     hero: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept presentation" },
     heroTone: "light",
     highlights: [
-      { label: "Design", title: "A look that moves with you.", image: { src: `${campaign}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 concept and band" }, tone: "light" },
+      { label: "Design", title: "A look that moves with you.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept and band" }, tone: "light" },
       { label: "At a glance", title: "Your day, within reach.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept face" }, tone: "blue" },
-      { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-generic-product.webp`, alt: "Watch with a light band" }, tone: "sage" },
+      { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-generic-product.webp`, alt: "Watch with a light band" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A personal way to show up.", image: { src: `${campaign}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 concept on a clean background" }, tone: "light", layout: "stage" },
+      { id: "design", label: "Design", title: "A personal way to show up.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept on a clean background" }, tone: "light", layout: "stage" },
       { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "An easy-to-wear form that belongs wherever the day takes you.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept presentation" }, tone: "blue", layout: "split" },
     ],
     closingLine: "Make it your day.",
-    closingImage: { src: `${campaign}/watch-generic-product.webp`, alt: "Watch with a light band" },
+    closingImage: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 concept" },
+    closingTone: "ink",
   },
   "apple-watch-ultra-4": {
     slug: "apple-watch-ultra-4",
@@ -113,7 +117,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     highlights: [
       { label: "Design", title: "Bold by nature.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept close view" }, tone: "ink" },
       { label: "Control", title: "Details you can feel.", image: { src: `${campaign}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra concept side and display" }, tone: "light" },
-      { label: "Adventure", title: "Take the long way round.", image: { src: `${homepage}/watch-ultra-4.webp`, alt: "Apple Watch Ultra concept with orange band" }, tone: "plum" },
+      { label: "Adventure", title: "Take the long way round.", image: { src: `${homepage}/watch-ultra-4.webp`, alt: "Apple Watch Ultra concept with orange band" }, tone: "ink" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "Built to stand out there.", image: { src: `${campaign}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra concept shown close up" }, tone: "ink", layout: "stage" },
@@ -121,6 +125,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     ],
     closingLine: "The next adventure starts here.",
     closingImage: { src: `${homepage}/watch-ultra-4.webp`, alt: "Apple Watch Ultra 4 concept" },
+    closingTone: "ink",
   },
   "airpods-5": {
     slug: "airpods-5",
@@ -141,6 +146,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     ],
     closingLine: "Hear your day differently.",
     closingImage: { src: `${campaign}/airpods-5-dark.webp`, alt: "Earbud charging case on a dark stage" },
+    closingTone: "ink",
   },
   "macbook-air": {
     slug: "macbook-air",
@@ -151,16 +157,17 @@ export const editorialStories: Record<string, EditorialStory> = {
     hero: { src: macbookAirHero, alt: "MacBook Air in an open, angled presentation" },
     heroTone: "light",
     highlights: [
-      { label: "Portable", title: "Take your workspace anywhere.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air in a floating view" }, tone: "blue" },
-      { label: "Design", title: "Thin looks good from here.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air slim profile" }, tone: "ink" },
+      { label: "Portable", title: "Take your workspace anywhere.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air in a floating view" }, tone: "light" },
+      { label: "Design", title: "Thin looks good from here.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air slim profile" }, tone: "light" },
       { label: "Choice", title: "Find the Air for you.", image: { src: `${campaign}/macbook-air-lineup.webp`, alt: "MacBook Air in several views" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "A lighter way to work.", copy: "An open screen, a comfortable keyboard, and a shape that goes where you go.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air seen from the side" }, tone: "light", layout: "stage" },
-      { id: "workspace", label: "Workspace", title: "Make room for what matters.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air floating product presentation" }, tone: "blue", layout: "split" },
+      { id: "workspace", label: "Workspace", title: "Make room for what matters.", image: { src: `${campaign}/macbook-air-floating.webp`, alt: "MacBook Air floating product presentation" }, tone: "light", layout: "split" },
     ],
     closingLine: "Your next idea can go anywhere.",
     closingImage: { src: `${campaign}/macbook-air-lineup.webp`, alt: "MacBook Air in several views" },
+    closingTone: "light",
   },
   "mac-mini": {
     slug: "mac-mini",
@@ -173,15 +180,16 @@ export const editorialStories: Record<string, EditorialStory> = {
     heroTone: "light",
     highlights: [
       { label: "Design", title: "Make more of your space.", image: { src: macMiniDetail, alt: "Compact silver Mac mini" }, tone: "light" },
-      { label: "At hand", title: "The details are right there.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front and port detail" }, tone: "blue" },
-      { label: "Workspace", title: "A setup that feels like yours.", image: { src: macMiniDetail, alt: "Mac mini desktop concept" }, tone: "ink" },
+      { label: "At hand", title: "The details are right there.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front and port detail" }, tone: "light" },
+      { label: "Workspace", title: "A setup that feels like yours.", image: { src: macMiniDetail, alt: "Mac mini desktop concept" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "A small form with a clear purpose.", copy: "Give the work more room, without giving the computer more desk.", image: { src: macMiniDetail, alt: "Silver Mac mini product view" }, tone: "light", layout: "stage" },
-      { id: "details", label: "Details", title: "A closer look at the setup.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front detail" }, tone: "blue", layout: "split" },
+      { id: "details", label: "Details", title: "A closer look at the setup.", image: { src: `${homepage}/mac-mini-device.jpg`, alt: "Mac mini front detail" }, tone: "light", layout: "split" },
     ],
     closingLine: "Make space for the next thing.",
     closingImage: { src: macMiniHero, alt: "Compact silver Mac mini" },
+    closingTone: "light",
   },
   "ipad-air": {
     slug: "ipad-air",
@@ -190,19 +198,20 @@ export const editorialStories: Record<string, EditorialStory> = {
     tagline: "A canvas for wherever the day goes.",
     buyPath: "/shop/buy-ipad/ipad-air",
     hero: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept in several finishes" },
-    heroTone: "blue",
+    heroTone: "light",
     highlights: [
-      { label: "Colour", title: "Pick a fresh perspective.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept colour range" }, tone: "blue" },
+      { label: "Colour", title: "Pick a fresh perspective.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept colour range" }, tone: "light" },
       { label: "Canvas", title: "Give every idea more room.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "Blue iPad Air concept from front and back" }, tone: "light" },
-      { label: "Design", title: "Beautifully simple to carry.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "Close iPad Air concept enclosure detail" }, tone: "plum" },
-      { label: "Your way", title: "Make the moment yours.", image: { src: `${campaign}/ipad-air-space-gray.webp`, alt: "Space gray iPad Air concept" }, tone: "sage" },
+      { label: "Design", title: "Beautifully simple to carry.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "Close iPad Air concept enclosure detail" }, tone: "light" },
+      { label: "Your way", title: "Make the moment yours.", image: { src: `${campaign}/ipad-air-space-gray.webp`, alt: "Space gray iPad Air concept" }, tone: "light" },
     ],
     chapters: [
-      { id: "design", label: "Design", title: "A canvas with character.", copy: "A portable form that leaves the focus on whatever you are making.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept finish range" }, tone: "blue", layout: "stage" },
+      { id: "design", label: "Design", title: "A canvas with character.", copy: "A portable form that leaves the focus on whatever you are making.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air concept finish range" }, tone: "light", layout: "stage" },
       { id: "creativity", label: "Creativity", title: "Start with a blank screen.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "Blue iPad Air concept screen and rear view" }, tone: "light", layout: "split" },
-      { id: "details", label: "Details", title: "The little things make it yours.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "iPad Air concept camera and finish detail" }, tone: "plum", layout: "split" },
+      { id: "details", label: "Details", title: "The little things make it yours.", image: { src: `${campaign}/ipad-air-detail.webp`, alt: "iPad Air concept camera and finish detail" }, tone: "light", layout: "split" },
     ],
     closingLine: "Make more of every day.",
     closingImage: { src: `${campaign}/ipad-air-space-gray.webp`, alt: "Space gray iPad Air concept" },
+    closingTone: "light",
   },
 };

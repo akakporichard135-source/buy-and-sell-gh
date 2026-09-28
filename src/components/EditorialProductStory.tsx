@@ -84,7 +84,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         </section>
       ))}
 
-      <section className="editorial-close" aria-labelledby="editorial-close-title">
+      <section className={`editorial-close editorial-tone-${story.closingTone ?? "ink"}`} aria-labelledby="editorial-close-title">
         {story.closingImage && <div className="editorial-close-art"><ProductImage image={story.closingImage} /></div>}
         <div className="editorial-close-copy">
           <p className="editorial-eyebrow">{story.name}</p>
