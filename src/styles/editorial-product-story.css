@@ -1,5 +1,7 @@
 .editorial-story {
-  --editorial-gutter: clamp(20px, 4.5vw, 76px);
+  --editorial-gutter: clamp(20px, 4.5vw, 64px);
+  --editorial-content-max: 1200px;
+  --editorial-content-gutter: max(var(--editorial-gutter), calc((100% - var(--editorial-content-max)) / 2 + var(--editorial-gutter)));
   --editorial-ink: #17191c;
   --editorial-max-width: 1180px;
   color: #17191c;
@@ -93,7 +95,7 @@
   object-position: center bottom;
 }
 
-/* Product-specific Hero Image Constraints (No artificial scale transforms, full device visibility) */
+/* Product-specific Hero Image Constraints */
 .editorial-story-apple-watch-series-12 .editorial-hero-art {
   max-width: 360px;
   max-height: clamp(320px, 44vh, 420px);
@@ -105,35 +107,39 @@
 }
 
 .editorial-story-airpods-5 .editorial-hero-art {
-  max-width: 420px;
-  max-height: clamp(320px, 44vh, 400px);
+  max-width: 520px;
+  max-height: clamp(350px, 48vh, 450px);
   align-items: center;
   padding-bottom: 20px;
 }
 .editorial-story-airpods-5 .editorial-hero-art img {
+  max-width: 480px;
+  max-height: 100%;
   object-position: center center;
 }
 
 .editorial-story-mac-mini .editorial-hero-art {
-  max-width: min(100%, 640px);
-  max-height: clamp(240px, 32vh, 320px);
+  max-width: min(100%, 860px);
+  max-height: clamp(320px, 44vh, 440px);
   align-items: flex-end;
-  padding-bottom: 20px;
+  padding-bottom: 24px;
 }
 .editorial-story-mac-mini .editorial-hero-art img {
+  max-width: min(100%, 820px);
+  max-height: clamp(300px, 42vh, 420px);
   object-position: center bottom;
 }
 
 .editorial-story-macbook-air .editorial-hero-art {
-  max-width: min(100%, 780px);
-  max-height: clamp(320px, 44vh, 420px);
+  max-width: min(100%, 800px);
+  max-height: clamp(330px, 46vh, 430px);
   align-items: flex-end;
   padding-bottom: 16px;
 }
 
 .editorial-story-ipad-air .editorial-hero-art {
-  max-width: min(100%, 720px);
-  max-height: clamp(340px, 46vh, 430px);
+  max-width: min(100%, 780px);
+  max-height: clamp(350px, 48vh, 440px);
   align-items: flex-end;
   padding-bottom: 16px;
 }
@@ -146,8 +152,8 @@
 }
 
 .editorial-story-iphone-duo .editorial-hero-art {
-  max-width: min(100%, 720px);
-  max-height: clamp(320px, 44vh, 420px);
+  max-width: min(100%, 820px);
+  max-height: clamp(360px, 48vh, 460px);
   align-items: flex-end;
   padding-bottom: 16px;
 }
@@ -167,10 +173,10 @@
 }
 .editorial-highlights-heading {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
-  padding: 0 var(--editorial-gutter) 24px;
+  padding: 0 var(--editorial-content-gutter) 24px;
 }
 .editorial-highlights h2 {
   font-size: clamp(2.2rem, 3.4vw, 2.85rem);
@@ -202,12 +208,15 @@
 }
 .editorial-highlight-rail {
   display: flex;
-  gap: 20px;
-  padding: 0 var(--editorial-gutter) 16px;
+  gap: 24px;
+  padding-left: var(--editorial-content-gutter);
+  padding-right: var(--editorial-content-gutter);
+  padding-bottom: 20px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-inline: var(--editorial-gutter);
+  scroll-padding-left: var(--editorial-content-gutter);
   scrollbar-width: none;
+  -ms-overflow-style: none;
   overscroll-behavior-inline: contain;
 }
 .editorial-highlight-rail::-webkit-scrollbar {
@@ -216,8 +225,8 @@
 .editorial-highlight {
   display: grid;
   grid-template-rows: auto 1fr;
-  flex: 0 0 clamp(320px, 28vw, 390px);
-  height: clamp(430px, 34vw, 480px);
+  flex: 0 0 clamp(380px, 32vw, 460px);
+  height: clamp(440px, 36vw, 490px);
   border-radius: 18px;
   overflow: hidden;
   scroll-snap-align: start;
@@ -269,8 +278,8 @@
   overflow: hidden;
 }
 .editorial-highlight-art img {
-  max-width: min(100%, 280px);
-  max-height: clamp(210px, 20vw, 260px);
+  max-width: min(100%, 300px);
+  max-height: clamp(220px, 22vw, 270px);
   width: auto;
   height: auto;
   object-fit: contain;
@@ -355,32 +364,35 @@
 
 /* Product-specific Chapter Stage Constraints */
 .editorial-story-mac-mini .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 520px);
-  height: clamp(190px, 22vw, 280px);
+  max-width: min(100%, 700px);
+  height: clamp(230px, 26vw, 340px);
 }
 .editorial-story-airpods-5 .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 340px);
-  height: clamp(220px, 24vw, 300px);
+  max-width: min(100%, 440px);
+  height: clamp(260px, 30vw, 380px);
 }
 .editorial-story-apple-watch-series-12 .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 380px);
-  height: clamp(240px, 26vw, 320px);
+  max-width: min(100%, 480px);
+  height: clamp(300px, 34vw, 440px);
 }
 .editorial-story-iphone-duo .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 700px);
-  height: clamp(260px, 28vw, 360px);
+  max-width: min(100%, 940px);
+  height: clamp(320px, 36vw, 460px);
+}
+.editorial-story-iphone-duo #fold {
+  padding-block: clamp(36px, 4vw, 56px);
 }
 .editorial-story-macbook-air .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 740px);
-  height: clamp(260px, 28vw, 360px);
+  max-width: min(100%, 820px);
+  height: clamp(280px, 32vw, 420px);
 }
 .editorial-story-apple-watch-ultra-4 .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 700px);
-  height: clamp(260px, 28vw, 360px);
+  max-width: min(100%, 780px);
+  height: clamp(280px, 32vw, 420px);
 }
 .editorial-story-ipad-air .editorial-chapter-stage .editorial-chapter-art {
-  max-width: min(100%, 700px);
-  height: clamp(260px, 30vw, 380px);
+  max-width: min(100%, 780px);
+  height: clamp(280px, 32vw, 420px);
 }
 
 .editorial-chapter-split {
@@ -409,7 +421,7 @@
   object-fit: contain;
 }
 .editorial-story-iphone-18-pro .editorial-chapter-split .editorial-chapter-art img {
-  max-width: min(100%, 360px);
+  max-width: min(100%, 400px);
 }
 .editorial-story-iphone-duo #everyday .editorial-chapter-art {
   max-width: 960px;
@@ -488,12 +500,10 @@
   max-width: 64ch;
 }
 
-.editorial-story-iphone-18-pro .editorial-information { background: #edf0ef; }
-.editorial-story-iphone-duo .editorial-information,
-.editorial-story-macbook-air .editorial-information { background: #eaf1f4; }
-.editorial-story-apple-watch-series-12 .editorial-information,
-.editorial-story-ipad-air .editorial-information { background: #edf2ed; }
-.editorial-story-apple-watch-ultra-4 .editorial-information { background: #e9eceb; }
+/* Page-specific background accents for Information section */
+.editorial-story-iphone-18-pro .editorial-information { background: #f2f3f5; }
+.editorial-story-apple-watch-ultra-4 .editorial-information { background: #f3f3f5; }
+.editorial-story-apple-watch-series-12 .editorial-information { background: #f2f5f4; }
 .editorial-story-airpods-5 .editorial-information { background: #f1f5f7; }
 .editorial-story-mac-mini .editorial-information { background: #f0f2f3; }
 
@@ -501,20 +511,23 @@
 @media (min-width: 761px) and (max-width: 1050px) {
   .editorial-hero h1 { font-size: 3.6rem; }
   .editorial-chapter h2 { font-size: 2.85rem; }
-  .editorial-highlight { flex-basis: clamp(290px, 36vw, 340px); height: clamp(400px, 36vw, 440px); }
+  .editorial-highlight { flex-basis: clamp(330px, 42vw, 380px); height: clamp(420px, 40vw, 460px); }
   .editorial-highlight-art { padding: 4px 16px 18px; }
-  .editorial-highlight-art img { max-width: min(100%, 240px); max-height: 220px; }
+  .editorial-highlight-art img { max-width: min(100%, 260px); max-height: 240px; }
   .editorial-chapter-split { gap: clamp(24px, 4vw, 48px); }
 }
 
 @media (max-width: 760px) {
-  .editorial-story { --editorial-gutter: 20px; }
+  .editorial-story {
+    --editorial-gutter: 20px;
+    --editorial-content-gutter: 20px;
+  }
   .editorial-hero { height: auto; min-height: 0; grid-template-rows: auto auto; }
   .editorial-hero-copy { gap: 10px; padding-top: 28px; padding-bottom: 6px; }
   .editorial-hero h1 { font-size: clamp(2.2rem, 7.5vw, 2.75rem); }
   .editorial-hero-tagline { font-size: 16px; }
   .editorial-hero-art {
-    height: clamp(220px, 56vw, 300px);
+    height: clamp(230px, 58vw, 320px);
     padding: 8px 16px 18px;
     align-items: center;
   }
@@ -535,25 +548,33 @@
   .editorial-story-apple-watch-ultra-4 .editorial-hero-art,
   .editorial-story-iphone-18-pro .editorial-hero-art {
     max-width: 100%;
-    height: clamp(210px, 54vw, 290px);
+    height: clamp(220px, 56vw, 300px);
     padding-bottom: 14px;
   }
   .editorial-highlights { padding-block: 40px 50px; }
   .editorial-highlights-heading { padding-bottom: 16px; }
   .editorial-highlights h2 { max-width: 9ch; font-size: 1.85rem; }
   .editorial-rail-controls button { width: 36px; height: 36px; }
-  .editorial-highlight { flex-basis: min(80vw, 310px); height: 400px; border-radius: 16px; }
+  .editorial-highlight-rail {
+    gap: 16px;
+    padding-bottom: 14px;
+  }
+  .editorial-highlight {
+    flex: 0 0 min(80vw, 320px);
+    height: 410px;
+    border-radius: 16px;
+  }
   .editorial-highlight-copy { min-height: 100px; padding: 18px 18px 6px; }
   .editorial-highlight h3 { font-size: 1.4rem; }
   .editorial-highlight-art { height: 100%; padding: 4px 14px 18px; }
-  .editorial-highlight-art img { max-width: min(100%, 230px); max-height: 210px; }
+  .editorial-highlight-art img { max-width: min(100%, 240px); max-height: 220px; }
   .editorial-chapter { min-height: 0; padding-block: 44px; }
   .editorial-chapter h2 { font-size: 2.15rem; }
   .editorial-chapter-stage { grid-template-rows: auto auto; gap: 18px; }
-  .editorial-chapter-stage .editorial-chapter-art { height: clamp(210px, 54vw, 300px); width: 100%; max-width: 100%; }
+  .editorial-chapter-stage .editorial-chapter-art { height: clamp(220px, 56vw, 320px); width: 100%; max-width: 100%; }
   .editorial-chapter-split { display: flex; flex-direction: column; align-items: stretch; gap: 20px; }
   .editorial-chapter-split .editorial-chapter-copy { margin: 0; }
-  .editorial-chapter-split .editorial-chapter-art { height: clamp(210px, 54vw, 300px); width: 100%; }
+  .editorial-chapter-split .editorial-chapter-art { height: clamp(220px, 56vw, 320px); width: 100%; }
   .editorial-information { padding-block: 40px 52px; }
   .editorial-info-header { margin-bottom: 26px; }
   .editorial-info-header h2 { font-size: 1.95rem; }
@@ -565,9 +586,13 @@
 }
 
 @media (max-width: 390px) {
-  .editorial-story { --editorial-gutter: 16px; }
+  .editorial-story {
+    --editorial-gutter: 16px;
+    --editorial-content-gutter: 16px;
+  }
   .editorial-hero h1 { font-size: 2.1rem; }
-  .editorial-highlight { flex-basis: 82vw; height: 380px; }
+  .editorial-highlight-rail { gap: 14px; }
+  .editorial-highlight { flex-basis: 80vw; height: 385px; }
   .editorial-highlight-copy { min-height: 94px; padding: 16px 16px 6px; }
   .editorial-highlight h3 { font-size: 1.3rem; }
   .editorial-chapter h2 { font-size: 1.9rem; }
@@ -579,10 +604,14 @@
 }
 
 @media (max-width: 360px) {
-  .editorial-story { --editorial-gutter: 14px; }
+  .editorial-story {
+    --editorial-gutter: 14px;
+    --editorial-content-gutter: 14px;
+  }
   .editorial-hero h1 { font-size: 1.9rem; }
   .editorial-hero-tagline { font-size: 14px; }
-  .editorial-highlight { flex-basis: 84vw; height: 365px; }
+  .editorial-highlight-rail { gap: 12px; }
+  .editorial-highlight { flex-basis: 82vw; height: 370px; }
   .editorial-chapter h2 { font-size: 1.75rem; }
 }
 

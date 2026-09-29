@@ -67,7 +67,7 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
         <div className="experience-heading">
           <p>Get to know {definition.label}</p>
           <h2>Stories that start with the product.</h2>
-          <span>Campaign concepts are kept separate from confirmed Store inventory, with availability stated clearly.</span>
+          <span>Explore dedicated product stories, guided features, and confirmed Store inventory with availability stated clearly.</span>
         </div>
         <div className={`family-feature-grid family-feature-grid-${campaigns.length}`}>
           {campaigns.map((campaign) => (

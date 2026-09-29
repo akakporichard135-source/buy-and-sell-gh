@@ -29,23 +29,23 @@ export const campaignAssets = {
       mobileSrc: "/products/homepage/iphone-18-pro-hero-mobile.webp",
       alt: "iPhone 18 Pro in titanium finish with glowing PRO stage",
     },
-    lineup: { src: `${root}/iphone-18-pro-lineup.webp`, alt: "Three iPhone 18 Pro campaign concepts in dark, burgundy and blue" },
-    coffee: { src: `${root}/iphone-18-pro-coffee.webp`, alt: "Coffee finish iPhone 18 Pro campaign concept shown in profile" },
-    front: { src: `${root}/iphone-18-pro-front.webp`, alt: "Front view of an iPhone 18 Pro campaign concept" },
-    silver: { src: `${root}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro campaign concept shown from the back" },
-    colors: { src: `${root}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro campaign finish concepts" },
+    lineup: { src: `${root}/iphone-18-pro-lineup.webp`, alt: "Three iPhone 18 Pro finishes in dark, burgundy and blue" },
+    coffee: { src: `${root}/iphone-18-pro-coffee.webp`, alt: "Coffee finish iPhone 18 Pro shown in profile" },
+    front: { src: `${root}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro" },
+    silver: { src: `${root}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro shown from the back" },
+    colors: { src: `${root}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes" },
   },
   duo: {
     hero: { src: "/products/homepage/iphone-duo.webp", alt: "An open premium foldable phone held naturally in two hands" },
-    folded: { src: `${root}/iphone-duo-folded.webp`, alt: "Folded white iPhone Duo campaign concept" },
-    open: { src: `${root}/iphone-duo-open.webp`, alt: "Open iPhone Duo campaign concept with a two-panel display" },
-    side: { src: `${root}/iphone-duo-side.webp`, alt: "Slim folded iPhone Duo campaign concept held from the side" },
-    pair: { src: `${root}/iphone-duo-pair.webp`, alt: "Black and white foldable phone campaign concepts" },
+    folded: { src: `${root}/iphone-duo-folded.webp`, alt: "Folded white iPhone Duo" },
+    open: { src: `${root}/iphone-duo-open.webp`, alt: "Open iPhone Duo with a two-panel display" },
+    side: { src: `${root}/iphone-duo-side.webp`, alt: "Slim folded iPhone Duo held from the side" },
+    pair: { src: `${root}/iphone-duo-pair.webp`, alt: "Black and white foldable phone presentations" },
   },
   watch: {
     series12: { src: "/products/homepage/watch-series-12.webp", fallback: `${root}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 everyday smartwatch presentation" },
     ultraHero: { src: "/products/homepage/watch-ultra-4.webp", fallback: `${root}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra 4 rugged titanium smartwatch with orange band" },
-    ultraInterface: { src: `${root}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra campaign interface presentation" },
+    ultraInterface: { src: `${root}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra interface presentation" },
     sensor: { src: `${root}/watch-sensor-detail.webp`, alt: "Close product demonstration of watch sensor lights" },
     comparison: { src: `${root}/watch-generic-product.webp`, alt: "White-band Apple Watch product presentation" },
   },
@@ -78,9 +78,9 @@ export const campaignAssets = {
 export const familyCampaigns: Record<ProductFamilyKey, FamilyCampaign[]> = {
   iphone: [
     {
-      eyebrow: "Campaign concept",
+      eyebrow: "Product Story",
       title: "iPhone 18 Pro",
-      copy: "A cinematic Pro story, with final finish, configuration and availability confirmed before payment.",
+      copy: "A cinematic Pro story crafted in titanium, with pro camera optics and all-day battery life.",
       storyPath: "/iphone/iphone-18-pro",
       buyPath: "/shop/buy-iphone/iphone-18-pro",
       media: campaignAssets.iphone18.coffee,
@@ -88,9 +88,9 @@ export const familyCampaigns: Record<ProductFamilyKey, FamilyCampaign[]> = {
       availability: "Available on request",
     },
     {
-      eyebrow: "Campaign concept",
+      eyebrow: "Product Story",
       title: "iPhone Duo",
-      copy: "A foldable format that opens into more room. Exact specifications remain subject to sourcing confirmation.",
+      copy: "A foldable format that opens into more room for work, media, and multitasking.",
       storyPath: "/iphone/iphone-duo",
       buyPath: "/shop/buy-iphone/iphone-duo",
       media: campaignAssets.duo.open,
@@ -131,7 +131,7 @@ export const familyCampaigns: Record<ProductFamilyKey, FamilyCampaign[]> = {
   ],
   watch: [
     {
-      eyebrow: "Campaign concept",
+      eyebrow: "Product Story",
       title: "Apple Watch Series 12",
       copy: "An everyday watch story centered on movement, connection and information at a glance.",
       storyPath: "/watch/apple-watch-series-12",
@@ -141,7 +141,7 @@ export const familyCampaigns: Record<ProductFamilyKey, FamilyCampaign[]> = {
       availability: "Available on request",
     },
     {
-      eyebrow: "Campaign concept",
+      eyebrow: "Product Story",
       title: "Apple Watch Ultra 4",
       copy: "A larger, adventure-focused watch presentation with bold controls and a rugged silhouette.",
       storyPath: "/watch/apple-watch-ultra-4",
@@ -153,9 +153,9 @@ export const familyCampaigns: Record<ProductFamilyKey, FamilyCampaign[]> = {
   ],
   airpods: [
     {
-      eyebrow: "Campaign concept",
+      eyebrow: "Product Story",
       title: "AirPods 5",
-      copy: "A compact wireless listening story with exact model and charging case confirmed during enquiry.",
+      copy: "A compact wireless listening story with rich acoustics, seamless connectivity, and USB-C convenience.",
       storyPath: "/airpods/airpods-5",
       buyPath: "/shop/buy-airpods/airpods-5",
       media: campaignAssets.airpods.lifestyle,

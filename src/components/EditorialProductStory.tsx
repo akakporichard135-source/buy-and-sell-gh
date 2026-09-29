@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { EditorialImage, EditorialStory } from "../catalog/editorialStories";
 import { SEO } from "./SEO";
@@ -22,11 +22,21 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
 
 export function EditorialProductStory({ story }: { story: EditorialStory }) {
   const railRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (railRef.current) {
+      railRef.current.scrollLeft = 0;
+    }
+  }, [story.slug]);
+
   const scrollHighlights = (direction: -1 | 1) => {
     const rail = railRef.current;
     if (!rail) return;
     const card = rail.querySelector<HTMLElement>(".editorial-highlight");
-    rail.scrollBy({ left: direction * (card?.offsetWidth ?? rail.clientWidth) + direction * 18, behavior: "smooth" });
+    if (!card) return;
+    const cardWidth = card.offsetWidth;
+    const gap = 20;
+    rail.scrollBy({ left: direction * (cardWidth + gap), behavior: "smooth" });
   };
 
   return (
