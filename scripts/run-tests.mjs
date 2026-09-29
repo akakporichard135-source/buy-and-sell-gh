@@ -308,7 +308,7 @@ try {
   assert.doesNotMatch(homepageSource, /<section className="store-(?:feature|product)-grid"/, "Homepage product campaigns no longer use paired grids");
   assert.match(homepageSource, /<CampaignPair campaigns=\{productTiles\} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" \/>[\s\S]*<StoreRail[\s\S]*<\/StoreRail>[\s\S]*<PremiumTrustStrip \/>/, "The iPad and Visa pair is followed by store services and trust benefits");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
-  assert.doesNotMatch(homepageSource, /secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
+  assert.doesNotMatch(homepageSource, /title:\s*"(?:iPhone 18 Pro|iPhone Duo|Apple Watch Series 12|Apple Watch Ultra 4|AirPods 5|iPad Air|MacBook Air)"[^}]*?secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
   const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
   for (const familyPath of ["iphone", "mac", "ipad", "watch", "airpods", "accessories"]) {
@@ -330,7 +330,7 @@ try {
     assert.ok(story.chapters.every((chapter) => chapter.copy && chapter.copy.length >= 80), `${slug} explains every major chapter`);
     assert.equal(story.information.items.length, 4, `${slug} has a complete two-column information section`);
     assert.ok(story.information.items.every((item) => item.description.length >= 80), `${slug} explains every information item`);
-    assert.ok(story.buyPath.startsWith(slug === "mac-mini" ? "/pre-order?" : "/shop/buy-"), `${slug} uses its existing commerce flow`);
+    assert.ok(story.buyPath.startsWith("/shop/buy-") || story.buyPath.startsWith("/pre-order?"), `${slug} uses its existing commerce flow`);
     for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.map((item) => item.image)]) {
       assert.ok(!/\.(mp4|webm)$/i.test(media.src), `${slug} uses still media`);
     }

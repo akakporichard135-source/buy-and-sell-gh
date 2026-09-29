@@ -46,7 +46,7 @@ const ipadAirCampaign: Campaign = {
   theme: "light",
   primaryLabel: "Learn more",
   primaryTo: "/ipad/ipad-air",
-  secondaryLabel: "Shop now",
+  secondaryLabel: "Buy",
   secondaryTo: "/shop/buy-ipad/ipad-air",
 };
 
@@ -73,7 +73,7 @@ const topCampaigns: Campaign[] = [
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/iphone/iphone-duo",
-    secondaryLabel: "Buy",
+    secondaryLabel: "View Pricing",
     secondaryTo: "/shop/buy-iphone/iphone-duo",
   },
   {
@@ -137,7 +137,7 @@ export function HomePage() {
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/mac/macbook-air",
-    secondaryLabel: "Shop now",
+    secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-mac/macbook-air",
     variant: "macbook-air",
   };
@@ -152,8 +152,8 @@ export function HomePage() {
     theme: "light",
     primaryLabel: "Learn more",
     primaryTo: "/mac-mini",
-    secondaryLabel: "Buy",
-    secondaryTo: "/shop?category=Macs",
+    secondaryLabel: "Pre-order",
+    secondaryTo: "/shop/buy-mac/mac-mini",
   };
 
   const featuredMacCampaigns = [featuredMacbookAirCampaign, macMiniCampaign];
@@ -259,15 +259,18 @@ function UltraAirpodsStory() {
           </div>
         </div>
         <div className="ultra-airpods-lifestyle-media">
-          <img
-            src="/products/homepage/airpods-5.webp"
-            alt="AirPods 5 wireless earbuds with open charging case"
-            className="ultra-airpods-lifestyle-img"
-            width={590}
-            height={610}
-            loading="eager"
-            decoding="async"
-          />
+          <picture>
+            <source type="image/webp" srcSet="/products/homepage/airpods-5.webp" />
+            <img
+              src="/products/homepage/airpods-5.jpg"
+              alt="AirPods 5 wireless earbuds with open charging case"
+              className="ultra-airpods-lifestyle-img"
+              width={590}
+              height={610}
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
         </div>
       </article>
     </section>

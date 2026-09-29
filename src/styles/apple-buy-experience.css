@@ -1,0 +1,668 @@
+/* ==========================================================================
+   Apple-Style Category-Specific Buy Experience Styles
+   Buy & Sell GH Storefront
+   ========================================================================== */
+
+.apple-buy-root {
+  background-color: #ffffff;
+  color: #1d1d1f;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 96px;
+  overflow-x: clip;
+}
+
+/* --------------------------------------------------------------------------
+   Top Sticky Subnav / Header
+   -------------------------------------------------------------------------- */
+.apple-buy-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.apple-buy-header-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.apple-buy-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.apple-buy-header-title h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-buy-header-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f5f5f7;
+  color: #6e6e73;
+}
+
+.apple-buy-header-price {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-buy-breadcrumbs {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 16px 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #86868b;
+}
+
+.apple-buy-breadcrumbs a {
+  color: #6e6e73;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.apple-buy-breadcrumbs a:hover {
+  color: #1d1d1f;
+}
+
+.apple-buy-breadcrumbs span {
+  opacity: 0.5;
+}
+
+/* --------------------------------------------------------------------------
+   Main Two-Column Purchasing Layout
+   -------------------------------------------------------------------------- */
+.apple-buy-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 24px 60px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 56px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .apple-buy-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 16px 20px 48px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Left Column: Sticky Product Showcase & Gallery
+   -------------------------------------------------------------------------- */
+.apple-buy-gallery-col {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .apple-buy-gallery-col {
+    position: static;
+    top: auto;
+  }
+}
+
+.apple-buy-stage {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 540px;
+  background: #fbfbfd;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  padding: 36px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.apple-buy-stage.apple-buy-stage-dark {
+  background: #000000;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.apple-buy-stage-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  will-change: opacity, transform;
+}
+
+.apple-buy-stage-caption {
+  font-size: 0.82rem;
+  color: #86868b;
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.4;
+}
+
+.apple-buy-thumbnails {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.apple-buy-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  border: 1px solid #d2d2d7;
+  background: #ffffff;
+  padding: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-buy-thumb:hover {
+  border-color: #86868b;
+  transform: translateY(-1px);
+}
+
+.apple-buy-thumb.is-selected {
+  border: 2px solid #0071e3;
+  outline: 2px solid rgba(0, 113, 227, 0.2);
+}
+
+.apple-buy-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* --------------------------------------------------------------------------
+   Right Column: Progressive Configuration Flow
+   -------------------------------------------------------------------------- */
+.apple-buy-config-col {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.apple-buy-intro {
+  margin-bottom: 8px;
+}
+
+.apple-buy-intro-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b38600;
+  margin-bottom: 6px;
+}
+
+.apple-buy-intro-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #1d1d1f;
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+
+.apple-buy-intro-lede {
+  font-size: 1.05rem;
+  color: #6e6e73;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Step Sections & Cards
+   -------------------------------------------------------------------------- */
+.apple-buy-step {
+  border-top: 1px solid #e5e5ea;
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.apple-buy-step:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.apple-buy-step-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apple-buy-step-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-buy-step-title span {
+  color: #6e6e73;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.apple-buy-step-subtitle {
+  font-size: 0.88rem;
+  color: #86868b;
+  margin: 0;
+}
+
+/* Option Cards (1-col or 2-col grids) */
+.apple-buy-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.apple-buy-cards-grid-single {
+  grid-template-columns: 1fr;
+}
+
+.apple-buy-card {
+  position: relative;
+  border: 1px solid #d2d2d7;
+  border-radius: 16px;
+  padding: 18px 20px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 84px;
+  gap: 6px;
+}
+
+.apple-buy-card:hover {
+  border-color: #86868b;
+}
+
+.apple-buy-card.is-selected {
+  border: 2px solid #0071e3;
+  background: rgba(0, 113, 227, 0.02);
+  box-shadow: 0 0 0 1px #0071e3;
+}
+
+.apple-buy-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.apple-buy-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.apple-buy-card-check {
+  color: #0071e3;
+  flex-shrink: 0;
+}
+
+.apple-buy-card-desc {
+  font-size: 0.82rem;
+  color: #6e6e73;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.apple-buy-card-price {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Color Swatches Component
+   -------------------------------------------------------------------------- */
+.apple-buy-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.apple-buy-swatch-label {
+  font-size: 0.92rem;
+  color: #1d1d1f;
+}
+
+.apple-buy-swatch-label strong {
+  font-weight: 700;
+}
+
+.apple-buy-swatch-list {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.apple-buy-swatch-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.apple-buy-swatch-btn:hover {
+  transform: scale(1.08);
+}
+
+.apple-buy-swatch-btn.is-selected {
+  box-shadow: 0 0 0 2px #0071e3, 0 0 0 4px rgba(0, 113, 227, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   Order Summary & Add to Bag Card
+   -------------------------------------------------------------------------- */
+.apple-buy-summary-card {
+  border: 1px solid #d2d2d7;
+  border-radius: 20px;
+  padding: 28px;
+  background: #fafafc;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.apple-buy-summary-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apple-buy-summary-header h3 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: #1d1d1f;
+}
+
+.apple-buy-summary-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid #e5e5ea;
+  border-bottom: 1px solid #e5e5ea;
+  padding: 16px 0;
+}
+
+.apple-buy-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
+.apple-buy-summary-item-label {
+  color: #6e6e73;
+}
+
+.apple-buy-summary-item-val {
+  font-weight: 600;
+  color: #1d1d1f;
+  text-align: right;
+}
+
+.apple-buy-summary-pricing {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.apple-buy-summary-price-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+.apple-buy-summary-price-val {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+}
+
+.apple-buy-summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apple-buy-btn-primary {
+  width: 100%;
+  min-height: 52px;
+  background: #ffc800;
+  color: #000000;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.18s, transform 0.15s, box-shadow 0.18s;
+  box-shadow: 0 4px 14px rgba(255, 200, 0, 0.3);
+}
+
+.apple-buy-btn-primary:hover {
+  background: #f0bc00;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 200, 0, 0.4);
+}
+
+.apple-buy-btn-secondary {
+  width: 100%;
+  min-height: 48px;
+  background: transparent;
+  color: #1d1d1f;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 980px;
+  border: 1px solid #d2d2d7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+.apple-buy-btn-secondary:hover {
+  border-color: #86868b;
+  background: #f5f5f7;
+}
+
+.apple-buy-assurances {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #6e6e73;
+}
+
+.apple-buy-assurances li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apple-buy-assurances svg {
+  color: #34c759;
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Sticky Purchase Bar
+   -------------------------------------------------------------------------- */
+.apple-buy-mobile-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 820px) {
+  .apple-buy-mobile-bar {
+    display: flex;
+  }
+}
+
+.apple-buy-mobile-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.apple-buy-mobile-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apple-buy-mobile-price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+.apple-buy-mobile-btn {
+  padding: 10px 22px;
+  background: #ffc800;
+  color: #000000;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   iPhone Duo Special Pricing Showcase
+   -------------------------------------------------------------------------- */
+.duo-pricing-stage {
+  background: radial-gradient(circle at center, #ffffff 0%, #f5f5f7 100%);
+  border-radius: 28px;
+  padding: 40px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.duo-pricing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #fff8e1;
+  color: #b38600;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.duo-pricing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.duo-pricing-feature-pill {
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+}
+
+.duo-pricing-feature-pill strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #1d1d1f;
+  margin-bottom: 2px;
+}
+
+.duo-pricing-feature-pill span {
+  color: #6e6e73;
+}

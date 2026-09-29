@@ -100,6 +100,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Room to unfold",
     tagline: "A different way to see more.",
     buyPath: "/shop/buy-iphone/iphone-duo",
+    buyLabel: "View Pricing",
     hero: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo foldable phone opened wide" },
     heroTone: "light",
     highlights: [
@@ -326,7 +327,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     name: "Mac mini",
     eyebrow: "A desktop with room to think",
     tagline: "Small on your desk. Big in your day.",
-    buyPath: "/pre-order?category=Mac&model=Mac%20mini",
+    buyPath: "/shop/buy-mac/mac-mini",
     buyLabel: "Pre-order",
     hero: { src: macMiniHero, alt: "Silver Mac mini desktop computer shown from the front" },
     heroTone: "light",
