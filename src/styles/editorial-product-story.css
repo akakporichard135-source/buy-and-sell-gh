@@ -107,13 +107,13 @@
 }
 
 .editorial-story-airpods-5 .editorial-hero-art {
-  max-width: 520px;
-  max-height: clamp(350px, 48vh, 450px);
+  max-width: 440px;
+  max-height: clamp(320px, 44vh, 420px);
   align-items: center;
-  padding-bottom: 20px;
+  padding-bottom: 24px;
 }
 .editorial-story-airpods-5 .editorial-hero-art img {
-  max-width: 480px;
+  max-width: 400px;
   max-height: 100%;
   object-position: center center;
 }

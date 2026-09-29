@@ -147,16 +147,16 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Made for your day",
     tagline: "A little closer to everything.",
     buyPath: "/shop/buy-watch/apple-watch-series-12",
-    hero: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 on clean display" },
+    hero: { src: `${campaign}/watch-series-12-hero.webp`, alt: "Apple Watch Series 12 on clean display", fit: "contain" },
     heroTone: "light",
     highlights: [
-      { label: "Design", title: "A look that moves with you.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 with sport band" }, tone: "light" },
-      { label: "At a glance", title: "Your day, within reach.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 glowing edge-to-edge display" }, tone: "light" },
-      { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-generic-product.webp`, alt: "Apple Watch with neutral everyday band" }, tone: "light" },
+      { label: "Design", title: "A look that moves with you.", image: { src: `${campaign}/watch-series-12-hero.webp`, alt: "Apple Watch Series 12 with sport band" }, tone: "light" },
+      { label: "Display", title: "Wide-angle OLED brilliance.", image: { src: `${campaign}/watch-series-12-display.webp`, alt: "Apple Watch Series 12 wide-angle OLED display" }, tone: "light" },
+      { label: "Everyday", title: "Present for every moment.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 in space black finish" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "A personal way to show up.", copy: "A watch is one of the few devices you carry into every hour of your life. Series 12 pairs an ultra-thin case with thoughtfully crafted bands, bringing effortless sophistication to workouts and formal occasions alike.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile on clean background" }, tone: "light", layout: "stage" },
-      { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "Get glanceable metrics, respond to urgent notifications, and track your wellness rings with a subtle lift of the wrist. Intuitive interactions keep you connected while staying present in the moment.", image: { src: `${homepage}/watch-series-12.webp`, alt: "Apple Watch Series 12 presentation" }, tone: "light", layout: "split" },
+      { id: "everyday", label: "Everyday", title: "Keep your moments close.", copy: "Get glanceable metrics, respond to urgent notifications, and track your wellness rings with a subtle lift of the wrist. Intuitive interactions keep you connected while staying present in the moment.", image: { src: `${campaign}/watch-series-12-hero.webp`, alt: "Apple Watch Series 12 presentation" }, tone: "light", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",
@@ -241,12 +241,12 @@ export const editorialStories: Record<string, EditorialStory> = {
     heroTone: "light",
     highlights: [
       { label: "Design", title: "Open. Listen. Go.", image: { src: `${campaign}/airpods-5-product.webp`, alt: "AirPods 5 earbuds resting in open USB-C charging case" }, tone: "light" },
-      { label: "Listening", title: "Your moments, your soundtrack.", image: { src: `${campaign}/airpods-5-lifestyle.webp`, alt: "AirPods 5 in a relaxed listening setting", fit: "cover" }, tone: "blue" },
-      { label: "On the move", title: "Easy to take along.", image: { src: `${campaign}/airpods-5-dark.webp`, alt: "AirPods 5 charging case showing pocket-friendly profile" }, tone: "ink" },
+      { label: "Acoustics", title: "Sculpted for acoustic clarity.", image: { src: `${campaign}/airpods-5-earbuds.webp`, alt: "AirPods 5 precision-engineered earbuds and charging case" }, tone: "light" },
+      { label: "Fit & Finish", title: "All-day comfort. Instant connection.", image: { src: `${campaign}/airpods-5-front.webp`, alt: "AirPods 5 open charging case and front-facing earbuds" }, tone: "light" },
     ],
     chapters: [
       { id: "design", label: "Design", title: "Simple from the first touch.", copy: "The sculpted open-ear contour rests effortlessly in your ear, delivering balanced acoustic seal without feeling intrusive. The compact pocket-friendly case opens with a reassuring magnetic snap.", image: { src: `${campaign}/airpods-5-product.webp`, alt: "Open AirPods 5 charging case" }, tone: "light", layout: "stage" },
-      { id: "listening", label: "Listening", title: "Make room for the music.", copy: "Custom high-excursion acoustic drivers and advanced computational audio deliver crisp highs, clean midranges, and punchy bass whether you are listening to podcasts on a commute or focusing at your desk.", image: { src: `${campaign}/airpods-5-lifestyle.webp`, alt: "AirPods 5 in an everyday listening setting", fit: "cover" }, tone: "blue", layout: "split" },
+      { id: "listening", label: "Listening", title: "Make room for the music.", copy: "Custom high-excursion acoustic drivers and advanced computational audio deliver crisp highs, clean midranges, and punchy bass whether you are listening to podcasts on a commute or focusing at your desk.", image: { src: `${campaign}/airpods-5-earbuds.webp`, alt: "AirPods 5 acoustic architecture and open charging case" }, tone: "light", layout: "split" },
     ],
     information: {
       eyebrow: "EVERYTHING TO KNOW",

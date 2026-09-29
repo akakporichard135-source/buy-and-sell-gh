@@ -259,18 +259,15 @@ function UltraAirpodsStory() {
           </div>
         </div>
         <div className="ultra-airpods-lifestyle-media">
-          <picture>
-            <source type="image/webp" srcSet="/products/homepage/airpods-5.webp" />
-            <img
-              src="/products/homepage/airpods-5.jpg"
-              alt="AirPods 5 with open charging case"
-              className="ultra-airpods-lifestyle-img"
-              width={720}
-              height={960}
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
+          <img
+            src="/products/homepage/airpods-5.webp"
+            alt="AirPods 5 wireless earbuds with open charging case"
+            className="ultra-airpods-lifestyle-img"
+            width={590}
+            height={610}
+            loading="eager"
+            decoding="async"
+          />
         </div>
       </article>
     </section>

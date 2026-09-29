@@ -543,10 +543,10 @@
     position: relative !important;
     inset: auto !important;
     width: auto !important;
-    max-width: min(320px, 85vw) !important;
+    max-width: min(300px, 80vw) !important;
     height: auto !important;
-    max-height: 400px !important;
-    aspect-ratio: 3 / 4 !important;
+    max-height: 360px !important;
+    aspect-ratio: auto !important;
     object-fit: contain !important;
     object-position: center top !important;
     border-radius: 0 !important;
