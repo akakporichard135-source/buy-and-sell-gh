@@ -41,7 +41,7 @@ export function BuyLayout({
 }: BuyLayoutProps) {
   return (
     <div className="apple-buy-root">
-      <header className="apple-buy-header">
+      <div className="apple-buy-header">
         <div className="apple-buy-header-inner">
           <div className="apple-buy-header-title">
             <h1>Buy {name}</h1>
@@ -49,7 +49,7 @@ export function BuyLayout({
           </div>
           <div className="apple-buy-header-price">{priceLabel}</div>
         </div>
-      </header>
+      </div>
 
       <nav className="apple-buy-breadcrumbs" aria-label="Breadcrumb">
         <Link to="/">Home</Link>

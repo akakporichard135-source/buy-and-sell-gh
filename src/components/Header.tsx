@@ -1,300 +1,149 @@
-import { ChevronDown, Menu, MessageCircle, Search, ShoppingBag, UserRound, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
-import { WhatsAppButton } from "./WhatsAppButton";
+import "../styles/global-header.css";
 
-type HeaderNavItem =
-  | { label: string; to: string; children?: never }
-  | { label: string; children: Array<{ label: string; to: string }>; to?: never };
+export interface GlobalNavItem {
+  label: string;
+  to: string;
+  matchPrefixes: string[];
+}
 
-const navItems: HeaderNavItem[] = [
-  { label: "Home", to: "/" },
-  { label: "Store", to: "/store" },
-  { label: "Mac", to: "/mac" },
-  { label: "iPad", to: "/ipad" },
-  { label: "iPhone", to: "/iphone" },
-  { label: "Watch", to: "/watch" },
-  { label: "AirPods", to: "/airpods" },
-  { label: "Accessories", to: "/accessories" },
-  { label: "Others", children: [
-    { label: "Explore Others", to: "/others" },
-    { label: "Phones & Tablets", to: "/phones-tablets" },
-    { label: "Electronics", to: "/electronics" },
-  ] },
-  { label: "Services", children: [
-    { label: "UK Used", to: "/uk-used-devices" },
-    { label: "Pre-order", to: "/pre-order" },
-    { label: "Repairs", to: "/repairs" },
-    { label: "Support", to: "/support" },
-    { label: "Contact", to: "/contact" },
-  ] },
-];
-
-const mobileUtilityItems = [
-  { label: "Installment", to: "/installment" },
-  { label: "Visa Cards", to: "/gift-cards" },
-  { label: "Refer a Friend", to: "/refer-a-friend" },
+export const GLOBAL_NAV_ITEMS: GlobalNavItem[] = [
+  { label: "Store", to: "/store", matchPrefixes: ["/store", "/shop"] },
+  { label: "Mac", to: "/mac", matchPrefixes: ["/mac", "/shop/buy-mac", "/mac-mini", "/mac-studio"] },
+  { label: "iPad", to: "/ipad", matchPrefixes: ["/ipad", "/shop/buy-ipad"] },
+  { label: "iPhone", to: "/iphone", matchPrefixes: ["/iphone", "/shop/buy-iphone"] },
+  { label: "Watch", to: "/watch", matchPrefixes: ["/watch", "/shop/buy-watch"] },
+  { label: "AirPods", to: "/airpods", matchPrefixes: ["/airpods", "/shop/buy-airpods"] },
+  { label: "Accessories", to: "/accessories", matchPrefixes: ["/accessories", "/shop/buy-accessory"] },
+  { label: "Support", to: "/support", matchPrefixes: ["/support", "/contact"] },
 ];
 
 export function Header() {
-  const [open, setOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const menuTriggerRef = useRef<HTMLButtonElement>(null);
   const { totalItems } = useCart();
   const location = useLocation();
-  const isHomePage = location.pathname === "/";
-  const currentRoute = `${location.pathname}${location.search}`;
-  const isNavItemActive = (to: string) => {
-    if (to.includes("?")) return currentRoute === to;
-    if (to === "/store") return location.pathname === "/store" || location.pathname === "/shop" || location.pathname.startsWith("/shop/");
-    if (to === "/") return location.pathname === "/";
-    return location.pathname === to || location.pathname.startsWith(`${to}/`);
-  };
-  const linkClass = (isActive: boolean) => `site-nav-link ${isActive ? "is-active" : ""}`;
 
+  // Close mobile menu on route change
   useEffect(() => {
-    if (!open) return;
-    const originalOverflow = document.body.style.overflow;
-    const originalPosition = document.body.style.position;
-    const originalTop = document.body.style.top;
-    const originalWidth = document.body.style.width;
-    const scrollY = window.scrollY;
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-    document.body.classList.add("mobile-menu-open");
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.position = originalPosition;
-      document.body.style.top = originalTop;
-      document.body.style.width = originalWidth;
-      document.body.classList.remove("mobile-menu-open");
-      window.scrollTo(0, scrollY);
-      window.removeEventListener("keydown", onKeyDown);
-      menuTriggerRef.current?.focus({ preventScroll: true });
-    };
-  }, [open]);
-
-  useEffect(() => {
-    const closeAllDropdowns = () => {
-      document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((details) => {
-        details.removeAttribute("open");
-      });
-    };
-
-    const handleOutsideClick = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest(".site-nav-dropdown")) {
-        closeAllDropdowns();
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeAllDropdowns();
-      }
-    };
-
-    window.addEventListener("pointerdown", handleOutsideClick);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", handleOutsideClick);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  useEffect(() => {
-    document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((details) => {
-      details.removeAttribute("open");
-    });
+    setMobileMenuOpen(false);
   }, [location.pathname, location.search]);
 
+  // Lock body scroll when mobile menu is active
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  // Subtle active route matching
+  const isItemActive = (item: GlobalNavItem) => {
+    const pathname = location.pathname;
+    return item.matchPrefixes.some((prefix) => {
+      if (prefix === "/store" || prefix === "/shop") {
+        if (pathname.startsWith("/shop/buy-")) return false;
+        return pathname === prefix || pathname.startsWith(`${prefix}/`);
+      }
+      return pathname === prefix || pathname.startsWith(`${prefix}/`);
+    });
+  };
+
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-black/8 bg-white/96 shadow-sm backdrop-blur-xl">
-      {!isHomePage && (
-        <div className="site-promo-bar" role="note">
-          <span>Trade in your current device and upgrade for less.</span>
-          <Link to="/sell-or-trade">Get estimate</Link>
-        </div>
-      )}
-      <div className="site-header-inner mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
-        <Logo />
-        <nav className="hidden items-center gap-1 2xl:gap-2 xl:flex" aria-label="Main navigation">
-          {navItems.map((item) => {
-            if (item.children) {
-              const active = item.children.some((child) => isNavItemActive(child.to));
-              return (
-                <details
-                  className={`site-nav-dropdown ${active ? "is-active" : ""}`}
-                  key={item.label}
-                  onToggle={(e) => {
-                    if (e.currentTarget.open) {
-                      document.querySelectorAll<HTMLDetailsElement>("details.site-nav-dropdown[open]").forEach((d) => {
-                        if (d !== e.currentTarget) d.removeAttribute("open");
-                      });
-                    }
-                  }}
-                >
-                  <summary className={linkClass(active)}>{item.label}<ChevronDown size={14} aria-hidden="true" /></summary>
-                  <div className="site-nav-dropdown-menu">
-                    {item.children.map((child) => {
-                      const childActive = isNavItemActive(child.to);
-                      return (
-                        <Link
-                          key={child.to}
-                          to={child.to}
-                          className={childActive ? "is-active" : ""}
-                          aria-current={childActive ? "page" : undefined}
-                          onClick={(e) => {
-                            const details = e.currentTarget.closest("details");
-                            if (details) details.removeAttribute("open");
-                          }}
-                        >
-                          {child.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </details>
-              );
-            }
-            const active = isNavItemActive(item.to);
+    <header className="site-header global-header sticky top-0 z-50">
+      <div className="global-header-inner">
+        {/* Brand logo at Apple mark position */}
+        <Logo compact className="global-header-brand" />
+
+        {/* Desktop horizontal navigation */}
+        <nav className="global-header-nav" aria-label="Global Navigation">
+          {GLOBAL_NAV_ITEMS.map((item) => {
+            const active = isItemActive(item);
             return (
-              <Link key={item.to} to={item.to} className={linkClass(active)} aria-current={active ? "page" : undefined}>
+              <Link
+                key={item.label}
+                to={item.to}
+                className={`global-header-link ${active ? "is-active" : ""}`}
+                aria-current={active ? "page" : undefined}
+              >
                 {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="hidden items-center gap-2 xl:flex">
-          <button className="icon-button" type="button" aria-label="Search products" onClick={() => setSearchOpen(true)}>
-            <Search size={19} />
+
+        {/* Header Actions: Search, Bag, and Mobile Menu Toggle */}
+        <div className="global-header-actions">
+          <button
+            type="button"
+            className="global-header-icon-btn"
+            aria-label="Search products"
+            onClick={() => setSearchOpen(true)}
+          >
+            <Search size={16} strokeWidth={2} />
           </button>
-          <NavLink to="/cart" className="icon-button relative" aria-label="Open cart">
-            <ShoppingBag size={19} />
-            {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
+
+          <NavLink
+            to="/cart"
+            className="global-header-icon-btn relative"
+            aria-label={totalItems > 0 ? `Shopping Bag with ${totalItems} items` : "Shopping Bag"}
+          >
+            <ShoppingBag size={16} strokeWidth={2} />
+            {totalItems > 0 && (
+              <span className="global-header-badge" aria-hidden="true">
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            )}
           </NavLink>
-          <NavLink to="/account" className="icon-button" aria-label="Account and order support">
-            <UserRound size={19} />
-          </NavLink>
-          <a className="icon-button" href="https://wa.me/233244182149" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
-            <MessageCircle size={19} />
-          </a>
-        </div>
-        <div className="mobile-header-actions xl:hidden">
-          <button className="icon-button" type="button" aria-label="Search products" onClick={() => setSearchOpen(true)}><Search size={19} /></button>
-          <NavLink to="/cart" className="icon-button relative" aria-label="Open cart">
-            <ShoppingBag size={19} />
-            {totalItems > 0 && <span className="cart-dot">{totalItems}</span>}
-          </NavLink>
-          <button ref={menuTriggerRef} className="icon-button mobile-menu-trigger shrink-0" type="button" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
-            <Menu size={22} />
+
+          <button
+            type="button"
+            className="global-header-menu-btn"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            {mobileMenuOpen ? <X size={18} strokeWidth={2} /> : <Menu size={18} strokeWidth={2} />}
           </button>
         </div>
       </div>
 
-      {open && createPortal(
-        <MobileMenuOverlay
-          totalItems={totalItems}
-          currentRoute={currentRoute}
-          pathname={location.pathname}
-          onClose={() => setOpen(false)}
-          onSearch={() => {
-            setOpen(false);
-            setSearchOpen(true);
-          }}
-        />,
-        document.body,
+      {/* Responsive mobile menu drawer */}
+      {mobileMenuOpen && (
+        <div className="global-mobile-drawer" role="dialog" aria-modal="true" aria-label="Navigation menu">
+          <nav className="global-mobile-links" aria-label="Mobile Categories">
+            {GLOBAL_NAV_ITEMS.map((item) => {
+              const active = isItemActive(item);
+              return (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  className={`global-mobile-link ${active ? "is-active" : ""}`}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       )}
+
+      {/* Global Instant Search modal */}
       <InstantSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
-
-function MobileMenuOverlay({
-  totalItems,
-  currentRoute,
-  pathname,
-  onClose,
-  onSearch,
-}: {
-  totalItems: number;
-  currentRoute: string;
-  pathname: string;
-  onClose: () => void;
-  onSearch: () => void;
-}) {
-  const isNavItemActive = (to: string) => {
-    if (to.includes("?")) return currentRoute === to;
-    if (to === "/store") return pathname === "/store" || pathname === "/shop" || pathname.startsWith("/shop/");
-    if (to === "/") return pathname === "/";
-    return pathname === to || pathname.startsWith(`${to}/`);
-  };
-
-  return (
-    <div className="mobile-menu-overlay xl:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
-      <div className="mobile-menu-panel">
-        <div className="mobile-menu-header">
-          <Logo />
-          <button autoFocus className="icon-button h-12 w-12" type="button" aria-label="Close menu" onClick={onClose}>
-            <X size={22} />
-          </button>
-        </div>
-        <nav className="mobile-menu-nav" aria-label="Mobile navigation">
-          {navItems.map((item) => {
-            if (item.children) {
-              const active = item.children.some((child) => isNavItemActive(child.to));
-              return (
-                <details className="mobile-menu-group" key={item.label} open={active || undefined}>
-                  <summary className={`mobile-menu-link ${active ? "is-active" : ""}`}>{item.label}<ChevronDown size={18} aria-hidden="true" /></summary>
-                  <div className="mobile-menu-subnav">
-                    {item.children.map((child) => {
-                      const childActive = isNavItemActive(child.to);
-                      return <Link key={child.to} to={child.to} className={`mobile-menu-sublink ${childActive ? "is-active" : ""}`} aria-current={childActive ? "page" : undefined} onClick={onClose}>{child.label}</Link>;
-                    })}
-                  </div>
-                </details>
-              );
-            }
-            const active = isNavItemActive(item.to);
-            return (
-              <Link key={item.to} to={item.to} className={`mobile-menu-link ${active ? "is-active" : ""}`} aria-current={active ? "page" : undefined} onClick={onClose}>
-                {item.label}
-              </Link>
-            );
-          })}
-          {mobileUtilityItems.map((item) => {
-            const active = isNavItemActive(item.to);
-            return (
-              <Link key={item.to} to={item.to} className={`mobile-menu-link ${active ? "is-active" : ""}`} aria-current={active ? "page" : undefined} onClick={onClose}>
-                {item.label}
-              </Link>
-            );
-          })}
-          <button className="mobile-menu-link" type="button" onClick={onSearch}>
-            Search Products
-          </button>
-          <NavLink to="/cart" className={({ isActive }) => `mobile-menu-link ${isActive ? "is-active" : ""}`} onClick={onClose}>
-            Cart ({totalItems})
-          </NavLink>
-          <NavLink to="/account" className={({ isActive }) => `mobile-menu-link ${isActive ? "is-active" : ""}`} onClick={onClose}>
-            Account &amp; order support
-          </NavLink>
-        </nav>
-        <div className="mobile-menu-footer">
-          <WhatsAppButton className="w-full">Chat on WhatsApp</WhatsAppButton>
-        </div>
-      </div>
-    </div>
-  );
-}
-

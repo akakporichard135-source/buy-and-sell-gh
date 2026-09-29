@@ -7,6 +7,7 @@ import { CartProvider } from "./context/CartContext";
 import "./index.css";
 import "./styles/product-experience.css";
 import "./styles/mobile-premium.css";
+import "./styles/global-header.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

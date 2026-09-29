@@ -6037,35 +6037,7 @@ footer a:hover {
 }
 
 /* Physical shop-board alignment: charcoal foundations with restrained gold details. */
-.site-header {
-  border-bottom-color: rgba(216, 167, 45, 0.28);
-  background: rgba(10, 10, 12, 0.97);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
-}
-
-.site-header .site-logo-text span:first-child {
-  color: var(--brand-surface-raised);
-}
-
-.site-header .site-logo-text span:last-child {
-  color: var(--brand-gold-soft);
-}
-
-.site-header nav a:not([aria-current="page"]) {
-  color: rgba(255, 253, 248, 0.76);
-}
-
-.site-header nav a:hover,
-.site-header nav a[aria-current="page"] {
-  background: rgba(216, 167, 45, 0.16);
-  color: var(--brand-gold-soft);
-}
-
-.site-header .icon-button {
-  border-color: rgba(216, 167, 45, 0.26);
-  background: var(--brand-charcoal-soft);
-  color: var(--brand-surface-raised);
-}
+/* Old dark header block removed */
 
 .mobile-menu-header .site-logo-text span:first-child {
   color: var(--brand-black);
@@ -6323,53 +6295,7 @@ body {
     transparent;
 }
 
-.site-header {
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-  background: rgba(8, 8, 9, 0.9) !important;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18) !important;
-  backdrop-filter: blur(24px);
-}
-
-.site-header .site-logo-text span:first-child {
-  color: #fffdf8;
-}
-
-.site-header .site-logo-text span:last-child {
-  color: var(--brand-gold-soft);
-}
-
-.site-header nav a,
-.site-header .mobile-menu-trigger {
-  color: rgba(255, 253, 248, 0.78) !important;
-}
-
-.site-header nav a:hover,
-.site-header nav a[aria-current="page"] {
-  background: rgba(216, 167, 45, 0.14) !important;
-  color: var(--brand-gold-soft) !important;
-}
-
-.site-header .icon-button {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fffdf8;
-}
-
-.site-header .whatsapp-button {
-  box-shadow: 0 16px 34px rgba(0, 166, 96, 0.22);
-}
-
-@media (min-width: 1024px) {
-  .site-header nav {
-    gap: clamp(0.18rem, 0.55vw, 0.62rem);
-  }
-
-  .site-header nav a {
-    padding-inline: clamp(0.42rem, 0.72vw, 0.7rem);
-    font-size: clamp(0.72rem, 0.74vw, 0.84rem);
-    white-space: nowrap;
-  }
-}
+/* Removed legacy dark header 6298 */
 
 .hero-shell {
   min-height: min(760px, calc(100dvh - 2rem));
@@ -6948,26 +6874,7 @@ body {
   }
 }
 
-/* Apple-inspired public homepage pass */
-.site-header {
-  background: rgba(8, 8, 9, 0.94) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18) !important;
-}
-
-.site-header .site-logo-mark {
-  background: #050505;
-  border-color: rgba(246, 190, 0, 0.74);
-  color: #f6be00;
-}
-
-.site-header .site-logo-text span:first-child {
-  color: #fff;
-}
-
-.site-header .site-logo-text span:last-child {
-  color: #f6be00;
-}
+/* Removed legacy dark header 6924 */
 
 .site-nav-link {
   position: relative;

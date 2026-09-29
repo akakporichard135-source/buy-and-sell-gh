@@ -41,7 +41,6 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
         title={`${definition.label} | Explore the Buy & Sell GH Store`}
         description={`${definition.description} Browse real Store listings and keep marketplace listings separate.`}
       />
-      <FamilyLocalNav family={family} showCompare={comparisonProducts.length > 1} />
 
       <section className={`family-hero family-hero-${definition.heroTone}`} id="overview">
         <div className="family-hero-copy">

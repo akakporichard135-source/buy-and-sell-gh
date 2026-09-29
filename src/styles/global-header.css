@@ -1,0 +1,268 @@
+/* ==========================================================================
+   Apple-Style Global Header Design System — Buy & Sell GH
+   One Navigation System Only
+   ========================================================================== */
+
+:root {
+  --global-header-height: 44px;
+}
+
+/* Slim sticky global navigation */
+.site-header.global-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  height: var(--global-header-height) !important;
+  min-height: var(--global-header-height) !important;
+  max-height: var(--global-header-height) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  transform: translateZ(0);
+}
+
+.global-header-inner {
+  max-width: 1024px;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+/* Brand Logo at Apple Mark position */
+.global-header-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+  opacity: 0.92;
+  transition: opacity 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.global-header-brand:hover {
+  opacity: 1;
+}
+
+.global-header-brand .site-logo-mark {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  box-shadow: none !important;
+}
+
+.global-header-brand .site-logo-text {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  line-height: 1;
+}
+
+.global-header-brand .site-logo-text span:last-child {
+  display: inline-block !important;
+}
+
+/* Desktop Horizontal Categories Navigation */
+.global-header-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  max-width: 720px;
+  margin: 0 clamp(16px, 3vw, 36px);
+  padding: 0;
+  list-style: none;
+}
+
+.site-header.global-header nav a,
+.site-header.global-header .global-header-link {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Myriad Set Pro", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.72) !important;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 8px 4px;
+  transition: color 0.18s ease, opacity 0.18s ease;
+  font-weight: 400;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.site-header.global-header nav a:hover,
+.site-header.global-header .global-header-link:hover {
+  color: #000000 !important;
+}
+
+/* Subtle Active Navigation State */
+.site-header.global-header nav a.is-active,
+.site-header.global-header .global-header-link.is-active {
+  color: #000000 !important;
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* Header Actions: Search, Bag, and Mobile Menu Toggle */
+.global-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.global-header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 4px;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: rgba(0, 0, 0, 0.75) !important;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.global-header-icon-btn:hover {
+  color: #000000 !important;
+}
+
+/* Subtle Cart Badge */
+.global-header-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 999px;
+  background: #1d1d1f;
+  color: #ffffff;
+}
+
+/* Mobile Menu Toggle Button (hidden on desktop) */
+.global-header-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: rgba(0, 0, 0, 0.8) !important;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints (Desktop vs Mobile/Tablet)
+   ========================================================================== */
+
+/* Breakpoint: <= 834px collapses into Mobile Header */
+@media (max-width: 834px) {
+  .global-header-nav {
+    display: none !important;
+  }
+
+  .global-header-menu-btn {
+    display: inline-flex !important;
+  }
+
+  .global-header-actions {
+    gap: 8px;
+  }
+}
+
+/* Mobile Drawer Overlay */
+.global-mobile-drawer {
+  position: fixed;
+  top: var(--global-header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: calc(100dvh - var(--global-header-height));
+  background: #ffffff !important;
+  z-index: 999;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 48px;
+  box-sizing: border-box;
+  animation: globalMobileDrawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes globalMobileDrawerSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.global-mobile-links {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.global-mobile-link {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  text-decoration: none;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 0.15s ease;
+}
+
+.global-mobile-link:hover,
+.global-mobile-link:active {
+  color: #0071e3;
+}
+
+.global-mobile-link.is-active {
+  color: #0071e3;
+}

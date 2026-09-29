@@ -259,12 +259,17 @@ try {
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
-  assert.ok(headerSource.indexOf('{ label: "Home", to: "/" }') < headerSource.indexOf('{ label: "Store", to: "/store" }'), "Home is the first global navigation destination");
-  assert.match(headerSource, /label: "Others", children:/, "Global navigation has one Others category");
-  assert.match(headerSource, /label: "Phones & Tablets", to: "\/phones-tablets"/, "Others links to Phones & Tablets");
-  assert.match(headerSource, /label: "Electronics", to: "\/electronics"/, "Others links to Electronics");
-  assert.equal((headerSource.match(/label: "Phones & Tablets"/g) ?? []).length, 1, "Phones & Tablets is not duplicated as a standalone navigation item");
-  assert.equal((headerSource.match(/label: "Electronics"/g) ?? []).length, 1, "Electronics is not duplicated as a standalone navigation item");
+  const navLabels = ["Store", "Mac", "iPad", "iPhone", "Watch", "AirPods", "Accessories", "Support"];
+  for (let i = 0; i < navLabels.length - 1; i++) {
+    const current = `label: "${navLabels[i]}"`;
+    const next = `label: "${navLabels[i + 1]}"`;
+    assert.ok(
+      headerSource.indexOf(current) !== -1 && headerSource.indexOf(current) < headerSource.indexOf(next),
+      `${navLabels[i]} appears before ${navLabels[i + 1]} in the global navigation order`
+    );
+  }
+  assert.doesNotMatch(headerSource, /label: "(?:Others|Services)"/, "Global navigation omits obsolete multi-tier dropdowns");
+  assert.doesNotMatch(headerSource, /site-promo-bar/, "Global navigation omits stacked promotional banners");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
   const showcaseSlugs = ["iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-16-plus"];
@@ -339,7 +344,7 @@ try {
   assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 1, "Editorial stories have one hero purchase CTA");
   assert.doesNotMatch(editorialComponentSource, /editorial-subnav|editorial-close/, "Editorial stories omit duplicate product navigation and closing purchase banner");
   const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
-  assert.match(productFamilySource, /showCompare=\{comparisonProducts\.length > 1\}/, "Family navigation shows Compare only when reliable comparison data exists");
+  assert.doesNotMatch(productFamilySource, /<FamilyLocalNav/, "Product family pages omit duplicate page-specific navigation");
   const instantSearchSource = await readFile(path.join(projectRoot, "src/components/InstantSearch.tsx"), "utf8");
   assert.match(instantSearchSource, /isAppleCatalogueProduct\(product\) \? "Store" : "Marketplace"/, "Search labels Store and Marketplace results distinctly");
   const storeDiscoverySource = await readFile(path.join(projectRoot, "src/components/StoreDiscovery.tsx"), "utf8");

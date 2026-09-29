@@ -28,7 +28,7 @@ export function IphoneDuoPricingExperience() {
         description="Review iPhone Duo pricing guidance, foldable canvas specifications, and advance allocation availability with Buy & Sell GH in Accra, Ghana."
       />
 
-      <header className="apple-buy-header">
+      <div className="apple-buy-header">
         <div className="apple-buy-header-inner">
           <div className="apple-buy-header-title">
             <h1>iPhone Duo</h1>
@@ -36,7 +36,7 @@ export function IphoneDuoPricingExperience() {
           </div>
           <div className="apple-buy-header-price">Pricing on Enquiry</div>
         </div>
-      </header>
+      </div>
 
       <nav className="apple-buy-breadcrumbs" aria-label="Breadcrumb">
         <Link to="/">Home</Link>

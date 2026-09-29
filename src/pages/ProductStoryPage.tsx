@@ -55,7 +55,6 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   return (
     <div className={`product-story-page product-story-${story.theme} product-story-${family}`}>
       <SEO title={`${story.name} | Overview`} description={`${story.tagline} Explore the ${story.name} product story and current Buy & Sell GH availability.`} />
-      <StoryLocalNav story={story} />
 
       <section className="story-hero" id="overview">
         <div className="story-hero-copy">
