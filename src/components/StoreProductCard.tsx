@@ -11,29 +11,58 @@ import { ProductVisual } from "./ProductVisual";
 export function StoreProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const enquiry = product.priceOnRequest === true || product.price <= 0;
-  const purchasable = isProductPurchasable(product);
+  const isPurchasable = isProductPurchasable(product);
+  // iPhone Duo is strictly View Pricing only, never direct Buy
+  const canDirectBuy = isPurchasable && product.slug !== "iphone-duo";
   const family = productFamilyForCard(product);
-  const status = product.condition === "UK Used" ? "UK USED" : purchasable ? "IN STOCK" : "AVAILABLE ON REQUEST";
+  const status = product.condition === "UK Used" ? "UK USED" : isPurchasable ? "IN STOCK" : "AVAILABLE ON REQUEST";
   const facts = storeCardFacts(product);
 
   return (
     <article className="store-product-card" aria-label={product.name}>
-      <Link className="store-product-art" to={productStoryPath(family, product.slug)} aria-label={`Learn more about ${product.name}`} tabIndex={-1}>
+      <Link
+        className="store-product-art"
+        to={productStoryPath(family, product.slug)}
+        aria-label={`Learn more about ${product.name}`}
+        tabIndex={-1}
+      >
         <ProductVisual product={product} imageVariant="catalogue" />
       </Link>
       <div className="store-product-body">
-        <h2 title={product.name}><Link to={productStoryPath(family, product.slug)}>{product.name}</Link></h2>
-        <div className={`store-product-price${enquiry ? " is-enquiry" : ""}`}>
-          <span>{enquiry ? "Request Pricing" : formatGhs(product.price)}</span>
-          {!enquiry && Boolean(product.oldPrice) && <del>{formatGhs(product.oldPrice!)}</del>}
+        <div className="store-product-meta-row">
+          <span className={`store-product-badge ${status === "IN STOCK" ? "badge-in-stock" : "badge-request"}`}>
+            {status}
+          </span>
         </div>
-        <p className="store-product-facts" title={facts.join(" \u00b7 ")}>{facts.join(" \u00b7 ")}</p>
-        <div className="store-product-status"><span>{status}</span></div>
+        <h2 className="store-product-title" title={product.name}>
+          <Link to={productStoryPath(family, product.slug)}>{product.name}</Link>
+        </h2>
+        <div className={`store-product-price${enquiry ? " is-enquiry" : ""}`}>
+          <span className="price-current">{enquiry ? "Request Pricing" : formatGhs(product.price)}</span>
+          {!enquiry && Boolean(product.oldPrice) && <del className="price-old">{formatGhs(product.oldPrice!)}</del>}
+        </div>
+        <p className="store-product-facts" title={facts.join(" \u00b7 ")}>
+          {facts.join(" \u00b7 ")}
+        </p>
         <div className="store-product-actions">
-          <Link className="btn-primary" to={productStoryPath(family, product.slug)}><Eye size={16} /> Learn More</Link>
+          <Link className="btn-store-card-learn" to={productStoryPath(family, product.slug)}>
+            <Eye size={15} aria-hidden="true" /> Learn More
+          </Link>
           <div className="store-product-secondary">
-            <Link to={productBuyPath(family, product.slug)}><ArrowRight size={17} /> {purchasable ? "Buy" : "View Pricing"}</Link>
-            {purchasable && <button type="button" title="Add to cart" aria-label={`Add ${product.name} to cart`} onClick={() => addItem(product, product.storage[0], product.colors[0])}><ShoppingBag size={18} /></button>}
+            <Link className="btn-store-card-action" to={productBuyPath(family, product.slug)}>
+              <ArrowRight size={15} aria-hidden="true" /> {canDirectBuy ? "Buy" : "View Pricing"}
+            </Link>
+            {canDirectBuy && (
+              <button
+                type="button"
+                className="btn-store-card-cart"
+                title="Add to cart"
+                aria-label={`Add ${product.name} to cart`}
+                onClick={() => addItem(product, product.storage[0] || "", product.colors[0] || "")}
+              >
+                <ShoppingBag size={16} aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -2,7 +2,6 @@ import { Filter, MessageCircle, Search, SlidersHorizontal, X } from "lucide-reac
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { StoreProductCard } from "../components/StoreProductCard";
-import { StoreDiscovery } from "../components/StoreDiscovery";
 import { SEO } from "../components/SEO";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
@@ -30,6 +29,13 @@ import type { Product } from "../types/product";
 import { compareProductsNewest, mixProductsDeterministically } from "../utils/shopOrdering";
 import { intentWhatsAppUrl } from "../utils/whatsapp";
 import { STORE_BATCH_SIZE, storeFilterChoices } from "../utils/storePresentation";
+import { StoreHeroIntro } from "../components/store/StoreHeroIntro";
+import { StoreProductFamilyStrip } from "../components/store/StoreProductFamilyStrip";
+import { StoreLatestCarousel } from "../components/store/StoreLatestCarousel";
+import { StoreCategoryCards } from "../components/store/StoreCategoryCards";
+import { StoreHelpCards } from "../components/store/StoreHelpCards";
+import { StoreAccessoriesCarousel } from "../components/store/StoreAccessoriesCarousel";
+import { StoreDifferenceCards } from "../components/store/StoreDifferenceCards";
 import "../styles/store.css";
 
 type SortOption = "Recommended" | "Newest" | "Price: Low to High" | "Price: High to Low" | "Popular";
@@ -70,10 +76,11 @@ const defaultFilters: FiltersState = {
 export function ShopPage() {
   const { activeProducts, loading, error, refreshProducts } = useProductCatalog();
   const products = useMemo(() => activeProducts.filter(isAppleCatalogueProduct), [activeProducts]);
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const initialCategory = params.get("category") ?? "All";
   const initialGeneration = params.get("generation") ?? "All";
   const initialCondition = getConditionFromParams(params, initialCategory);
+
   const [filters, setFilters] = useState<FiltersState>({
     ...defaultFilters,
     category: normalizeStorefrontCategory(initialCategory),
@@ -83,8 +90,10 @@ export function ShopPage() {
     newArrival: params.get("newArrival") === "true",
     popular: params.get("popular") === "true",
   });
+
   const [sort, setSort] = useState<SortOption>("Recommended");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showDesktopFilters, setShowDesktopFilters] = useState(true);
   const drawerRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const [batch, setBatch] = useState({ key: "", count: STORE_BATCH_SIZE });
@@ -112,11 +121,18 @@ export function ShopPage() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setDrawerOpen(false);
       if (event.key === "Tab") {
-        const controls = Array.from(drawerRef.current?.querySelectorAll<HTMLElement>("button, input, select, a[href]") ?? []).filter((element) => element.getClientRects().length);
+        const controls = Array.from(
+          drawerRef.current?.querySelectorAll<HTMLElement>("button, input, select, a[href]") ?? [],
+        ).filter((element) => element.getClientRects().length);
         const first = controls[0];
         const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -130,6 +146,7 @@ export function ShopPage() {
   const activeFilters = useMemo(() => getActiveFilters(filters), [filters]);
   const activeFilterCount = activeFilters.length;
   const brandOptions = useMemo(() => getBrandOptions(products, filters.brand), [filters.brand, products]);
+
   const dynamicIphoneGenerationOptions = useMemo(() => {
     const options = Array.from(
       new Set(
@@ -141,13 +158,23 @@ export function ShopPage() {
     ).sort(compareGenerationLabelsNewest);
     return options.length ? options : iphoneGenerationOptions;
   }, [products]);
+
   const dynamicMacbookGenerationOptions = useMemo(() => getMacbookGenerationOptions(products), [products]);
-  const inventoryChoices = useMemo(() => ({
-    categories: storeFilterChoices(products.map(getStorefrontCategory), filters.category),
-    storage: storeFilterChoices(products.filter((product) => matchesShopCategory(product, filters.category)).flatMap((product) => product.storage), filters.storage),
-    conditions: storeFilterChoices(products.map((product) => product.condition), filters.condition),
-    availability: storeFilterChoices(products.map((product) => product.stockStatus), filters.availability),
-  }), [products, filters.category, filters.storage, filters.condition, filters.availability]);
+
+  const inventoryChoices = useMemo(
+    () => ({
+      categories: storeFilterChoices(products.map(getStorefrontCategory), filters.category),
+      storage: storeFilterChoices(
+        products
+          .filter((product) => matchesShopCategory(product, filters.category))
+          .flatMap((product) => product.storage),
+        filters.storage,
+      ),
+      conditions: storeFilterChoices(products.map((product) => product.condition), filters.condition),
+      availability: storeFilterChoices(products.map((product) => product.stockStatus), filters.availability),
+    }),
+    [products, filters.category, filters.storage, filters.condition, filters.availability],
+  );
 
   const filtered = useMemo(() => {
     const terms = filters.search.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -167,7 +194,9 @@ export function ShopPage() {
           ...product.colors,
           ...(product.tags ?? []),
           ...(product.badges ?? []),
-        ].join(" ").toLowerCase();
+        ]
+          .join(" ")
+          .toLowerCase();
         return terms.every((term) => searchable.includes(term));
       })
       .filter((product) => filters.brand === "All" || product.brand === filters.brand)
@@ -179,7 +208,12 @@ export function ShopPage() {
         if (filters.category === "Phones") return getIphoneGeneration(product) === filters.generation;
         return true;
       })
-      .filter((product) => filters.category !== "Accessories" || filters.accessoryFamily === "All" || getAccessoryFamily(product) === filters.accessoryFamily)
+      .filter(
+        (product) =>
+          filters.category !== "Accessories" ||
+          filters.accessoryFamily === "All" ||
+          getAccessoryFamily(product) === filters.accessoryFamily,
+      )
       .filter((product) => product.colors.join(" ").toLowerCase().includes(filters.color.toLowerCase()))
       .filter((product) => matchesShopCategory(product, filters.category))
       .filter((product) => filters.condition === "All" || product.condition === filters.condition)
@@ -194,7 +228,9 @@ export function ShopPage() {
     return [...list].sort((a, b) => {
       const aPriceOnRequest = a.priceOnRequest || a.price <= 0;
       const bPriceOnRequest = b.priceOnRequest || b.price <= 0;
-      if ((sort === "Price: Low to High" || sort === "Price: High to Low") && aPriceOnRequest !== bPriceOnRequest) return aPriceOnRequest ? 1 : -1;
+      if ((sort === "Price: Low to High" || sort === "Price: High to Low") && aPriceOnRequest !== bPriceOnRequest) {
+        return aPriceOnRequest ? 1 : -1;
+      }
       if (sort === "Price: Low to High") return a.price - b.price;
       if (sort === "Price: High to Low") return b.price - a.price;
       if (sort === "Popular") {
@@ -218,6 +254,7 @@ export function ShopPage() {
     setBatch({ key: "", count: STORE_BATCH_SIZE });
     setFilters(defaultFilters);
   };
+
   const removeFilter = (key: keyof FiltersState) => {
     setBatch({ key: "", count: STORE_BATCH_SIZE });
     setFilters((current) => ({ ...current, [key]: defaultFilters[key] }));
@@ -225,86 +262,256 @@ export function ShopPage() {
 
   return (
     <div className="store-page">
-      <SEO title="Shop Phones, Tablets, Laptops and Accessories in Ghana" description="Browse confirmed phones, tablets, laptops, watches, audio and accessories from Buy & Sell GH in Accra." />
-      <section className="page-hero shop-hero">
-        <div className="store-hero-inner">
-          <p className="eyebrow-dark">Store</p>
-          <h1>The best place to explore Buy &amp; Sell GH products.</h1>
-          <p>Discover curated product families first, then browse real Store inventory with clear pricing and availability.</p>
-        </div>
-      </section>
-      <StoreDiscovery products={products} />
-      <section className="section shop-section">
-        <div className="shop-layout">
-          <aside className="filter-panel hidden lg:block">
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} inventoryChoices={inventoryChoices} />
-          </aside>
-          <div className="shop-results">
-            <div className="catalogue-toolbar">
-              <p className="catalogue-count" role="status">{loading ? "Loading products..." : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}</p>
-              <label className="search-inline catalogue-search">
-                <Search size={18} />
-                <input type="search" aria-label="Search Store" value={filters.search} maxLength={100} onChange={(e) => updateFilter("search", e.target.value)} placeholder="Search the Store" />
-                {filters.search && <button type="button" aria-label="Clear search" onClick={() => updateFilter("search", "")}><X size={18} /></button>}
-              </label>
-              <button ref={filterButtonRef} className="btn-secondary catalogue-filter-button lg:hidden" type="button" aria-haspopup="dialog" aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}>
-                <Filter size={17} /> Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-              </button>
-              <label className="catalogue-sort">Sort
-                <select value={sort} onChange={(e) => {
-                  setBatch({ key: "", count: STORE_BATCH_SIZE });
-                  setSort(e.target.value as SortOption);
-                }}>
-                  <option>Recommended</option>
-                  <option>Newest</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Popular</option>
-                </select>
-              </label>
+      <SEO
+        title="Store - Buy & Sell GH | The Best Way to Buy the Products You Love"
+        description="Shop confirmed iPhones, MacBooks, iPads, Apple Watches, AirPods and original accessories from Buy & Sell GH in Accra. Fast delivery and pickup available."
+      />
+
+      {/* 1. Bright Apple-Style Store Introduction */}
+      <StoreHeroIntro />
+
+      {/* 2. Horizontal Product-Family Strip */}
+      <StoreProductFamilyStrip
+        activeCategory={filters.category}
+        onSelectCategory={(category) => {
+          updateFilter("category", category);
+          updateFilter("generation", "All");
+          updateFilter("accessoryFamily", "All");
+          updateFilter("storage", "All");
+        }}
+      />
+
+      {/* 3. The Latest Cinematic Carousel */}
+      <StoreLatestCarousel />
+
+      {/* 4. Shop by Category Horizontal Cards */}
+      <StoreCategoryCards
+        onSelectCategory={(categoryKey) => {
+          updateFilter("category", categoryKey);
+          updateFilter("generation", "All");
+          updateFilter("accessoryFamily", "All");
+          updateFilter("storage", "All");
+        }}
+      />
+
+      {/* 5. Real Store Inventory — All Products */}
+      <section id="all-products" className="store-section store-inventory-section" aria-labelledby="store-inventory-title">
+        <div className="store-container">
+          <div className="store-inventory-header">
+            <div>
+              <p className="store-section-eyebrow">ALL PRODUCTS</p>
+              <h2 id="store-inventory-title" className="store-section-title">
+                Shop Buy &amp; Sell GH.
+              </h2>
+              <p className="store-section-subtitle">
+                Explore confirmed devices with authentic pricing, condition reports, and immediate Accra availability.
+              </p>
             </div>
-            <ActiveFilterChips filters={activeFilters} removeFilter={removeFilter} clearFilters={clearFilters} />
-            {loading ? (
-              <div className="rounded-lg border border-black/7 bg-white p-8 text-center font-black text-ink/70">Loading products...</div>
-            ) : error ? (
-              <div className="rounded-lg border border-black/7 bg-white p-8 text-center">
-                <p className="font-black text-ink">Catalogue is temporarily unavailable.</p>
-                <button className="btn-secondary mt-4" type="button" onClick={() => void refreshProducts()}>Retry</button>
-              </div>
-            ) : filtered.length > 0 ? (
-              <>
-                <div className="store-catalogue-grid" id="store-products">
-                  {visibleProducts.map((product) => <StoreProductCard key={product.id} product={product} />)}
-                </div>
-                {filtered.length > STORE_BATCH_SIZE && <div className="store-load-more">
-                  <p role="status">Showing {visibleProducts.length} of {filtered.length} products</p>
-                  <button className="btn-secondary" type="button" aria-controls="store-products" disabled={visibleProducts.length === filtered.length} onClick={() => setBatch({ key: resultKey, count: visibleCount + STORE_BATCH_SIZE })}>
-                    {visibleProducts.length === filtered.length ? "All products shown" : "Load more"}
-                  </button>
-                </div>}
-                {filtered.length <= 3 && <ShortResultsCta />}
-              </>
-            ) : (
-              <NoResultsState clearFilters={clearFilters} />
+          </div>
+
+          <div className="store-inventory-layout">
+            {/* Desktop Filters Sidebar */}
+            {showDesktopFilters && (
+              <aside className="store-filter-sidebar hidden lg:block" aria-label="Desktop product filters">
+                <FilterControls
+                  filters={filters}
+                  updateFilter={updateFilter}
+                  clearFilters={clearFilters}
+                  activeFilterCount={activeFilterCount}
+                  brandOptions={brandOptions}
+                  iphoneGenerationChoices={dynamicIphoneGenerationOptions}
+                  macbookGenerationChoices={dynamicMacbookGenerationOptions}
+                  inventoryChoices={inventoryChoices}
+                />
+              </aside>
             )}
+
+            <div className="store-inventory-content">
+              {/* Premium Search and Toolbar */}
+              <div className="store-toolbar">
+                <div className="store-search-wrap">
+                  <Search size={18} className="store-search-icon" aria-hidden="true" />
+                  <input
+                    type="search"
+                    aria-label="Search Buy & Sell GH Store"
+                    value={filters.search}
+                    maxLength={100}
+                    onChange={(e) => updateFilter("search", e.target.value)}
+                    placeholder="Search Buy & Sell GH Store"
+                    className="store-search-input"
+                  />
+                  {filters.search && (
+                    <button
+                      type="button"
+                      aria-label="Clear search text"
+                      onClick={() => updateFilter("search", "")}
+                      className="store-search-clear"
+                    >
+                      <X size={17} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="store-toolbar-actions">
+                  <button
+                    ref={filterButtonRef}
+                    className="btn-store-toolbar-filter store-filter-mobile-btn"
+                    type="button"
+                    aria-haspopup="dialog"
+                    aria-expanded={drawerOpen}
+                    onClick={() => setDrawerOpen(true)}
+                  >
+                    <Filter size={16} /> Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+                  </button>
+
+                  <button
+                    className="btn-store-toolbar-filter store-filter-desktop-btn"
+                    type="button"
+                    onClick={() => setShowDesktopFilters((prev) => !prev)}
+                    title={showDesktopFilters ? "Hide filter panel" : "Show filter panel"}
+                  >
+                    <SlidersHorizontal size={16} /> {showDesktopFilters ? "Hide Filters" : "Filters"}
+                  </button>
+
+                  <label className="store-sort-label">
+                    <span className="sr-only">Sort products</span>
+                    <select
+                      value={sort}
+                      onChange={(e) => {
+                        setBatch({ key: "", count: STORE_BATCH_SIZE });
+                        setSort(e.target.value as SortOption);
+                      }}
+                      className="store-sort-select"
+                      aria-label="Sort products by"
+                    >
+                      <option>Recommended</option>
+                      <option>Newest</option>
+                      <option>Price: Low to High</option>
+                      <option>Price: High to Low</option>
+                      <option>Popular</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              {/* Status and Active Filter Chips */}
+              <div className="store-status-row">
+                <p className="store-inventory-count" role="status">
+                  {loading
+                    ? "Loading products..."
+                    : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
+                </p>
+                <ActiveFilterChips
+                  filters={activeFilters}
+                  removeFilter={removeFilter}
+                  clearFilters={clearFilters}
+                />
+              </div>
+
+              {/* Product Grid Render */}
+              {loading ? (
+                <div className="store-state-box">
+                  <p className="font-semibold text-ink/70">Loading confirmed store products...</p>
+                </div>
+              ) : error ? (
+                <div className="store-state-box">
+                  <p className="font-semibold text-ink">Catalogue is temporarily unavailable.</p>
+                  <button className="btn-store-primary mt-4" type="button" onClick={() => void refreshProducts()}>
+                    Retry
+                  </button>
+                </div>
+              ) : filtered.length > 0 ? (
+                <>
+                  <div className="store-catalogue-grid" id="store-products">
+                    {visibleProducts.map((product) => (
+                      <StoreProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+
+                  {filtered.length > STORE_BATCH_SIZE && (
+                    <div className="store-load-more">
+                      <p role="status">
+                        Showing {visibleProducts.length} of {filtered.length} products
+                      </p>
+                      <button
+                        className="btn-store-secondary"
+                        type="button"
+                        aria-controls="store-products"
+                        disabled={visibleProducts.length === filtered.length}
+                        onClick={() =>
+                          setBatch({ key: resultKey, count: visibleCount + STORE_BATCH_SIZE })
+                        }
+                      >
+                        {visibleProducts.length === filtered.length ? "All products shown" : "Load more products"}
+                      </button>
+                    </div>
+                  )}
+
+                  {filtered.length <= 3 && <ShortResultsCta />}
+                </>
+              ) : (
+                <NoResultsState clearFilters={clearFilters} />
+              )}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* 6. Help Is Here Personal Shopping Section */}
+      <StoreHelpCards />
+
+      {/* 7. Accessories Horizontal Carousel */}
+      <StoreAccessoriesCarousel products={products} />
+
+      {/* 8. The Buy & Sell GH Difference */}
+      <StoreDifferenceCards />
+
+      {/* Mobile Filter Drawer */}
       {drawerOpen && (
-        <div className="filter-drawer" role="dialog" aria-modal="true" aria-label="Product filters">
-          <button className="filter-drawer-backdrop" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)} />
-          <div className="filter-drawer-panel" ref={drawerRef}>
-            <div className="filter-drawer-header">
+        <div className="store-filter-drawer" role="dialog" aria-modal="true" aria-label="Product filters">
+          <button
+            className="store-filter-drawer-backdrop"
+            type="button"
+            aria-label="Close filters"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="store-filter-drawer-panel" ref={drawerRef}>
+            <div className="store-filter-drawer-header">
               <div>
-                <p className="text-lg font-black text-ink">Filters</p>
-                <p className="text-sm font-bold text-ink/60">{activeFilterCount} active</p>
+                <p className="text-lg font-bold text-ink">Filters</p>
+                <p className="text-xs text-ink/60">{activeFilterCount} active</p>
               </div>
-              <button autoFocus className="icon-button shrink-0" type="button" aria-label="Close filters" onClick={() => setDrawerOpen(false)}><X size={20} /></button>
+              <button
+                autoFocus
+                className="store-drawer-close-btn"
+                type="button"
+                aria-label="Close filters"
+                onClick={() => setDrawerOpen(false)}
+              >
+                <X size={20} />
+              </button>
             </div>
-            <FilterControls filters={filters} updateFilter={updateFilter} clearFilters={clearFilters} activeFilterCount={activeFilterCount} brandOptions={brandOptions} iphoneGenerationChoices={dynamicIphoneGenerationOptions} macbookGenerationChoices={dynamicMacbookGenerationOptions} inventoryChoices={inventoryChoices} />
-            <div className="filter-drawer-actions">
-              <button className="btn-primary" type="button" onClick={() => setDrawerOpen(false)}>Show {filtered.length} Products</button>
-              <button className="btn-secondary" type="button" onClick={clearFilters}>Clear All</button>
+            <div className="store-filter-drawer-body">
+              <FilterControls
+                filters={filters}
+                updateFilter={updateFilter}
+                clearFilters={clearFilters}
+                activeFilterCount={activeFilterCount}
+                brandOptions={brandOptions}
+                iphoneGenerationChoices={dynamicIphoneGenerationOptions}
+                macbookGenerationChoices={dynamicMacbookGenerationOptions}
+                inventoryChoices={inventoryChoices}
+              />
+            </div>
+            <div className="store-filter-drawer-footer">
+              <button className="btn-store-primary w-full" type="button" onClick={() => setDrawerOpen(false)}>
+                Show {filtered.length} Products
+              </button>
+              {activeFilterCount > 0 && (
+                <button className="btn-store-secondary w-full" type="button" onClick={clearFilters}>
+                  Clear All
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -333,50 +540,239 @@ function FilterControls({
   inventoryChoices: { categories: string[]; storage: string[]; conditions: string[]; availability: string[] };
 }) {
   return (
-    <div className="filter-controls">
-      <div className="filter-panel-header">
-        <span className="flex items-center gap-2"><SlidersHorizontal size={19} /> Filters</span>
-        {activeFilterCount > 0 && <button type="button" onClick={clearFilters}>Clear All</button>}
+    <div className="store-filter-controls">
+      <div className="store-filter-title-row">
+        <span className="store-filter-title">
+          <SlidersHorizontal size={17} /> Filter By
+        </span>
+        {activeFilterCount > 0 && (
+          <button type="button" className="store-filter-clear-link" onClick={clearFilters}>
+            Clear all
+          </button>
+        )}
       </div>
-      <div className="filter-group">
-        <label className="filter-label">Product type<select value={filters.category} onChange={(e) => {
-          updateFilter("category", e.target.value);
-          updateFilter("generation", "All");
-          updateFilter("accessoryFamily", "All");
-          updateFilter("storage", "All");
-        }}><option>All</option>{inventoryChoices.categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Brand<select value={filters.brand} onChange={(e) => {
-          updateFilter("brand", e.target.value);
-          updateFilter("generation", "All");
-        }}><option>All</option>{brandOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        {filters.category !== "Accessories" && <label className="filter-label">Model<input value={filters.model} maxLength={100} placeholder="Type model" onChange={(e) => updateFilter("model", e.target.value)} /></label>}
-        {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Phone generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{iphoneGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Chip / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{macbookGenerationChoices.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "Audio" && (filters.brand === "All" || filters.brand === "Apple") && <label className="filter-label">Model / Generation<select value={filters.generation} onChange={(e) => updateFilter("generation", e.target.value)}><option>All</option>{airpodsGenerationOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        {filters.category === "Accessories" && <label className="filter-label">Accessory Family<select value={filters.accessoryFamily} onChange={(e) => updateFilter("accessoryFamily", e.target.value)}><option value="All">All Accessories</option>{accessoryFamilyOptions.map((item) => <option key={item}>{item}</option>)}</select></label>}
+
+      <div className="store-filter-section">
+        <label className="store-filter-label">
+          Category
+          <select
+            value={filters.category}
+            onChange={(e) => {
+              updateFilter("category", e.target.value);
+              updateFilter("generation", "All");
+              updateFilter("accessoryFamily", "All");
+              updateFilter("storage", "All");
+            }}
+            className="store-filter-select"
+          >
+            <option>All</option>
+            {inventoryChoices.categories.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="store-filter-label">
+          Brand
+          <select
+            value={filters.brand}
+            onChange={(e) => {
+              updateFilter("brand", e.target.value);
+              updateFilter("generation", "All");
+            }}
+            className="store-filter-select"
+          >
+            <option>All</option>
+            {brandOptions.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
+        </label>
+
+        {filters.category !== "Accessories" && (
+          <label className="store-filter-label">
+            Model
+            <input
+              value={filters.model}
+              maxLength={100}
+              placeholder="e.g. Pro Max, Air..."
+              onChange={(e) => updateFilter("model", e.target.value)}
+              className="store-filter-input"
+            />
+          </label>
+        )}
+
+        {filters.category === "Phones" && (filters.brand === "All" || filters.brand === "Apple") && (
+          <label className="store-filter-label">
+            iPhone Generation
+            <select
+              value={filters.generation}
+              onChange={(e) => updateFilter("generation", e.target.value)}
+              className="store-filter-select"
+            >
+              <option>All</option>
+              {iphoneGenerationChoices.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {filters.category === "Laptops" && (filters.brand === "All" || filters.brand === "Apple") && (
+          <label className="store-filter-label">
+            Apple Chip
+            <select
+              value={filters.generation}
+              onChange={(e) => updateFilter("generation", e.target.value)}
+              className="store-filter-select"
+            >
+              <option>All</option>
+              {macbookGenerationChoices.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {filters.category === "Audio" && (filters.brand === "All" || filters.brand === "Apple") && (
+          <label className="store-filter-label">
+            Model / Generation
+            <select
+              value={filters.generation}
+              onChange={(e) => updateFilter("generation", e.target.value)}
+              className="store-filter-select"
+            >
+              <option>All</option>
+              {airpodsGenerationOptions.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {filters.category === "Accessories" && (
+          <label className="store-filter-label">
+            Accessory Family
+            <select
+              value={filters.accessoryFamily}
+              onChange={(e) => updateFilter("accessoryFamily", e.target.value)}
+              className="store-filter-select"
+            >
+              <option value="All">All Accessories</option>
+              {accessoryFamilyOptions.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
-      <div className="filter-group">
-        <label className="filter-label">Price: up to GHS {filters.maxPrice.toLocaleString()}<input type="range" min="2000" max={maxCataloguePrice} step="500" value={filters.maxPrice} onChange={(e) => updateFilter("maxPrice", Number(e.target.value))} /></label>
-        <label className="filter-label">Condition<select value={filters.condition} onChange={(e) => updateFilter("condition", e.target.value)}><option>All</option>{inventoryChoices.conditions.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Availability<select value={filters.availability} onChange={(e) => updateFilter("availability", e.target.value)}><option>All</option>{inventoryChoices.availability.map((item) => <option key={item}>{item}</option>)}</select></label>
+
+      <div className="store-filter-section">
+        <label className="store-filter-label">
+          Price: up to GHS {filters.maxPrice.toLocaleString()}
+          <input
+            type="range"
+            min="2000"
+            max={maxCataloguePrice}
+            step="500"
+            value={filters.maxPrice}
+            onChange={(e) => updateFilter("maxPrice", Number(e.target.value))}
+            className="store-range-slider"
+          />
+        </label>
+
+        <label className="store-filter-label">
+          Condition
+          <select
+            value={filters.condition}
+            onChange={(e) => updateFilter("condition", e.target.value)}
+            className="store-filter-select"
+          >
+            <option>All</option>
+            {inventoryChoices.conditions.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="store-filter-label">
+          Availability
+          <select
+            value={filters.availability}
+            onChange={(e) => updateFilter("availability", e.target.value)}
+            className="store-filter-select"
+          >
+            <option>All</option>
+            {inventoryChoices.availability.map((item) => (
+              <option key={item}>{item}</option>
+            ))}
+          </select>
+        </label>
       </div>
-      {categorySupportsStorage(filters.category) && <div className="filter-group">
-        <label className="filter-label">Storage<select value={filters.storage} onChange={(e) => updateFilter("storage", e.target.value)}><option>All</option>{inventoryChoices.storage.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="filter-label">Colour<input value={filters.color} maxLength={80} placeholder="Gold, Black, Blue..." onChange={(e) => updateFilter("color", e.target.value)} /></label>
-      </div>}
-      <div className="filter-group filter-check-grid">
-        <FilterCheck label="New Arrivals" checked={filters.newArrival} onChange={(checked) => updateFilter("newArrival", checked)} />
-        <FilterCheck label="Popular Choices" checked={filters.popular} onChange={(checked) => updateFilter("popular", checked)} />
+
+      {categorySupportsStorage(filters.category) && (
+        <div className="store-filter-section">
+          <label className="store-filter-label">
+            Storage
+            <select
+              value={filters.storage}
+              onChange={(e) => updateFilter("storage", e.target.value)}
+              className="store-filter-select"
+            >
+              <option>All</option>
+              {inventoryChoices.storage.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="store-filter-label">
+            Colour
+            <input
+              value={filters.color}
+              maxLength={80}
+              placeholder="e.g. Natural Titanium, Midnight..."
+              onChange={(e) => updateFilter("color", e.target.value)}
+              className="store-filter-input"
+            />
+          </label>
+        </div>
+      )}
+
+      <div className="store-filter-checks">
+        <FilterCheck
+          label="New Arrivals"
+          checked={filters.newArrival}
+          onChange={(checked) => updateFilter("newArrival", checked)}
+        />
+        <FilterCheck
+          label="Popular Choices"
+          checked={filters.popular}
+          onChange={(checked) => updateFilter("popular", checked)}
+        />
       </div>
     </div>
   );
 }
 
-function FilterCheck({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function FilterCheck({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
   return (
-    <label className="filter-check">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      {label}
+    <label className="store-filter-checkbox-label">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="store-checkbox"
+      />
+      <span>{label}</span>
     </label>
   );
 }
@@ -392,45 +788,75 @@ function ActiveFilterChips({
 }) {
   if (!filters.length) return null;
   return (
-    <div className="active-filter-row" aria-label="Active filters">
+    <div className="store-active-chips" aria-label="Active filters">
       {filters.map((filter) => (
-        <button key={filter.key} type="button" onClick={() => removeFilter(filter.key)}>
-          {filter.label} <X size={14} />
+        <button
+          key={filter.key}
+          type="button"
+          onClick={() => removeFilter(filter.key)}
+          className="store-chip"
+        >
+          <span>{filter.label}</span>
+          <X size={13} aria-hidden="true" />
         </button>
       ))}
-      <button className="clear-filter-chip" type="button" onClick={clearFilters}>Clear all</button>
+      <button className="store-chip-clear" type="button" onClick={clearFilters}>
+        Clear all
+      </button>
     </div>
   );
 }
 
 function ShortResultsCta() {
   return (
-    <section className="catalogue-continuation">
-      <div>
-        <p className="eyebrow-dark">Need something specific?</p>
-        <h2>Can't find the device you want?</h2>
-        <p>Send the model, storage, colour and budget you want. Availability can change quickly.</p>
+    <div className="store-custom-request-card">
+      <div className="store-custom-request-copy">
+        <p className="store-section-eyebrow">CUSTOM REQUESTS</p>
+        <h3 className="store-custom-request-title">Looking for a specific device?</h3>
+        <p className="store-custom-request-desc">
+          Tell us the exact model, storage capacity, and preferred colour you want. Our sourcing team in Accra
+          confirms incoming stock daily.
+        </p>
       </div>
-      <div className="catalogue-continuation-actions">
-        <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
-        <WhatsAppButton className="catalogue-whatsapp">Chat on WhatsApp</WhatsAppButton>
+      <div className="store-custom-request-actions">
+        <Link className="btn-store-primary" to="/pre-order">
+          Pre-Order a Device
+        </Link>
+        <WhatsAppButton className="btn-store-secondary">
+          <MessageCircle size={16} /> Chat on WhatsApp
+        </WhatsAppButton>
       </div>
-    </section>
+    </div>
   );
 }
 
 function NoResultsState({ clearFilters }: { clearFilters: () => void }) {
   return (
-    <section className="catalogue-empty-state">
-      <Search size={28} />
-      <h2>No products match your filters.</h2>
-      <p>Try removing a filter or pre-order the exact device that is not currently available.</p>
-      <div>
-        <button className="btn-secondary" type="button" onClick={clearFilters}>Clear Filters</button>
-        <Link className="btn-primary" to="/pre-order">Pre-Order a Device</Link>
-        <a className="btn-ghost" href={intentWhatsAppUrl("request")} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> WhatsApp</a>
+    <div className="store-empty-card">
+      <div className="store-empty-icon-wrap" aria-hidden="true">
+        <Search size={32} />
       </div>
-    </section>
+      <h3 className="store-empty-title">No products match your current filters.</h3>
+      <p className="store-empty-desc">
+        Try adjusting your search terms or clearing specific filters to view more confirmed inventory.
+      </p>
+      <div className="store-empty-actions">
+        <button className="btn-store-primary" type="button" onClick={clearFilters}>
+          Clear All Filters
+        </button>
+        <Link className="btn-store-secondary" to="/pre-order">
+          Pre-Order Device
+        </Link>
+        <a
+          className="btn-store-ghost"
+          href={intentWhatsAppUrl("request")}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <MessageCircle size={16} /> WhatsApp Us
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -447,7 +873,9 @@ function getActiveFilters(filters: FiltersState): ActiveFilter[] {
   if (filters.model) active.push({ key: "model", label: `Model: ${filters.model}` });
   if (filters.generation !== "All") active.push({ key: "generation", label: filters.generation });
   if (filters.accessoryFamily !== "All") active.push({ key: "accessoryFamily", label: filters.accessoryFamily });
-  if (filters.maxPrice !== defaultFilters.maxPrice) active.push({ key: "maxPrice", label: `Up to GHS ${filters.maxPrice.toLocaleString()}` });
+  if (filters.maxPrice !== defaultFilters.maxPrice) {
+    active.push({ key: "maxPrice", label: `Up to GHS ${filters.maxPrice.toLocaleString()}` });
+  }
   if (filters.condition !== "All") active.push({ key: "condition", label: filters.condition });
   if (filters.storage !== "All") active.push({ key: "storage", label: filters.storage });
   if (filters.color) active.push({ key: "color", label: `Colour: ${filters.color}` });
@@ -464,6 +892,7 @@ function getConditionFromParams(params: URLSearchParams, category: string) {
   if (category === "Brand New Devices") return "Brand New";
   return "All";
 }
+
 function matchesShopCategory(product: Product, category: string) {
   return productMatchesStorefrontCategory(product, category);
 }
@@ -475,4 +904,3 @@ function compareGenerationLabelsNewest(a: string, b: string) {
 function generationNumberFromLabel(label: string) {
   return Number(label.match(/\d+/)?.[0] ?? 0);
 }
-
