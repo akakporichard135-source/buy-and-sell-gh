@@ -414,32 +414,34 @@ function StoreServicesSection() {
   return (
     <section id="more-from-store" className="store-services-section" aria-labelledby="store-services-title">
       <div className="store-services-container">
-        <div className="store-services-header">
-          <p className="store-services-eyebrow">SERVICES</p>
-          <h2 id="store-services-title" className="store-services-title">More from our store.</h2>
-          <p className="store-services-subtitle">Explore more ways to buy, upgrade, sell and get support.</p>
-        </div>
+        <div className="store-services-header-row">
+          <div className="store-services-header">
+            <p className="store-services-eyebrow">SERVICES</p>
+            <h2 id="store-services-title" className="store-services-title">More from our store.</h2>
+            <p className="store-services-subtitle">Explore more ways to buy, upgrade, sell and get support.</p>
+          </div>
 
-        {/* Carousel Navigation Arrows Row */}
-        <div className="store-services-controls" aria-label="Services carousel controls">
-          <button
-            type="button"
-            className="store-services-arrow-btn store-services-prev"
-            onClick={() => scrollCarousel("left")}
-            disabled={!canScrollLeft}
-            aria-label="Previous service poster"
-          >
-            <ChevronLeft size={22} strokeWidth={2.4} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="store-services-arrow-btn store-services-next"
-            onClick={() => scrollCarousel("right")}
-            disabled={!canScrollRight}
-            aria-label="Next service poster"
-          >
-            <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
-          </button>
+          {/* Apple-style Upper-Right Carousel Controls */}
+          <div className="store-services-controls" aria-label="Services carousel navigation">
+            <button
+              type="button"
+              className="store-services-arrow-btn store-services-prev"
+              onClick={() => scrollCarousel("left")}
+              disabled={!canScrollLeft}
+              aria-label="Previous service poster"
+            >
+              <ChevronLeft size={20} strokeWidth={2.4} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="store-services-arrow-btn store-services-next"
+              onClick={() => scrollCarousel("right")}
+              disabled={!canScrollRight}
+              aria-label="Next service poster"
+            >
+              <ChevronRight size={20} strokeWidth={2.4} aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         {/* Horizontal Carousel */}
