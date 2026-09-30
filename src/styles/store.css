@@ -921,21 +921,28 @@
    CATALOG LAYOUT: SIDEBAR + PRODUCT RESULTS GRID
    Filters and Product Grid begin on the EXACT SAME HORIZONTAL LINE.
    ========================================================================== */
-.store-catalog-layout {
+.store-catalog-layout,
+.catalog-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 36px;
+  gap: clamp(24px, 3vw, 36px);
   align-items: start;
 }
 
 @media (min-width: 1024px) {
-  .store-catalog-layout.has-sidebar {
-    grid-template-columns: 240px minmax(0, 1fr);
+  .store-catalog-layout.has-sidebar,
+  .catalog-layout.has-sidebar {
+    grid-template-columns: 220px minmax(0, 1fr);
   }
 }
 
 /* Desktop Filter Sidebar — Quiet, refined, Apple-like */
 .store-filter-sidebar {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  margin-top: 0;
+  padding-top: 0;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -1059,8 +1066,21 @@
 
 /* Product Results Container */
 .store-product-results {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: start;
+  margin-top: 0;
+  padding-top: 0;
   min-width: 0;
   width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .store-catalog-layout.has-sidebar .store-product-results,
+  .catalog-layout.has-sidebar .store-product-results {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 /* Product Catalogue Grid */
@@ -1436,7 +1456,7 @@
 }
 
 /* ==========================================================================
-   6. HELP IS HERE CARDS
+   5. HELP IS HERE CARDS (WHENEVER YOU NEED IT)
    ========================================================================== */
 .store-help-section {
   background-color: #ffffff;
@@ -1445,7 +1465,7 @@
 }
 
 .store-help-track .store-help-card {
-  flex: 0 0 clamp(280px, 24vw, 340px);
+  flex: 0 0 clamp(300px, 26vw, 360px);
   scroll-snap-align: start;
   scroll-snap-stop: normal;
   display: flex;
@@ -1454,45 +1474,57 @@
   border-radius: 20px;
   background: var(--store-bg);
   border: 1px solid var(--store-border);
-  padding: 28px;
+  padding: 26px 26px 22px;
   box-sizing: border-box;
-  min-height: 270px;
-  transition: transform 240ms ease, box-shadow 240ms ease;
+  min-height: 310px;
+  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
 }
 
 .store-help-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--store-shadow-hover);
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
-.store-help-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+.store-help-card-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--store-gold);
-  margin-bottom: 18px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .store-help-card-eyebrow {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--store-gold);
-  margin: 0 0 6px;
+  margin: 0;
+}
+
+.store-help-card-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #1b7a2b;
+  background: #eef7ee;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.store-help-card-body {
+  flex: 1;
 }
 
 .store-help-card-title {
-  font-size: 19px;
+  font-size: clamp(19px, 1.8vw, 22px);
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--store-ink);
   margin: 0 0 8px;
+  line-height: 1.25;
 }
 
 .store-help-card-copy {
@@ -1502,74 +1534,111 @@
   margin: 0;
 }
 
+.store-help-visual-stage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 16px 0 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.store-help-visual-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--store-bg);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--store-gold);
+  flex-shrink: 0;
+}
+
+.store-help-visual-motif {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--store-ink);
+  letter-spacing: -0.01em;
+}
+
 .store-help-card-action {
-  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .store-help-action-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #0066cc;
   text-decoration: none;
+  transition: color 140ms ease;
 }
 
 .store-help-action-link:hover {
   text-decoration: underline;
+  color: #004499;
 }
 
 @media (max-width: 640px) {
   .store-help-track .store-help-card {
-    flex: 0 0 clamp(260px, 75vw, 300px);
-    min-height: 250px;
+    flex: 0 0 clamp(270px, 78vw, 320px);
+    min-height: 290px;
     padding: 22px;
   }
 }
 
 /* ==========================================================================
-   7. ACCESSORIES HORIZONTAL CAROUSEL
+   6. ACCESSORIES HORIZONTAL CAROUSEL (COMPLETE YOUR SETUP)
    ========================================================================== */
 .store-accessories-section {
   background-color: var(--store-bg);
 }
 
 .store-accessories-track .store-accessory-card {
-  flex: 0 0 clamp(220px, 18vw, 260px);
+  flex: 0 0 clamp(250px, 22vw, 290px);
   scroll-snap-align: start;
   scroll-snap-stop: normal;
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 20px;
   border: 1px solid var(--store-border);
-  padding: 18px;
+  padding: 20px;
   box-sizing: border-box;
-  transition: transform 240ms ease, box-shadow 240ms ease;
+  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
 }
 
 .store-accessory-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--store-shadow-hover);
+  border-color: rgba(0, 0, 0, 0.16);
 }
 
 .store-accessory-media {
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1 / 1;
-  background: var(--store-bg);
-  border-radius: 12px;
+  height: clamp(180px, 16vw, 210px);
+  background: #fbfbfd;
+  border-radius: 14px;
   padding: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  text-decoration: none;
 }
 
 .store-accessory-img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 90%;
+  max-height: 90%;
   object-fit: contain;
-  transition: transform 240ms ease;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .store-accessory-card:hover .store-accessory-img {
@@ -1583,16 +1652,21 @@
 }
 
 .store-accessory-detail {
-  font-size: 11.5px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--store-gold);
-  margin: 0 0 4px;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .store-accessory-name {
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 700;
-  line-height: 1.3;
+  line-height: 1.28;
   margin: 0 0 6px;
   min-height: 2.6em;
   display: -webkit-box;
@@ -1604,6 +1678,7 @@
 .store-accessory-name a {
   color: var(--store-ink);
   text-decoration: none;
+  transition: color 140ms ease;
 }
 
 .store-accessory-name a:hover {
@@ -1611,69 +1686,31 @@
 }
 
 .store-accessory-price {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--store-ink);
-  margin: 0 0 14px;
+  margin: 0 0 16px;
 }
 
 .store-accessory-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: auto;
-}
-
-.btn-store-card-secondary {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-height: 36px;
-  border-radius: 8px;
-  background: #f5f5f7;
-  color: var(--store-ink);
-  font-size: 12.5px;
-  font-weight: 600;
-  text-decoration: none;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.btn-store-card-secondary:hover {
-  background: #e8e8ed;
-}
-
-.btn-store-card-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: var(--store-gold);
-  color: #111111;
-  font-size: 12.5px;
-  font-weight: 600;
-  border: 0;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.btn-store-card-primary:hover {
-  background: var(--store-gold-hover);
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 640px) {
   .store-accessories-track .store-accessory-card {
-    flex: 0 0 clamp(200px, 60vw, 240px);
+    flex: 0 0 clamp(220px, 68vw, 260px);
     padding: 16px;
   }
 }
 
 /* ==========================================================================
-   8. THE BUY & SELL GH DIFFERENCE
+   7. THE BUY & SELL GH DIFFERENCE (WHY SHOP WITH US)
    ========================================================================== */
 .store-diff-section {
   background-color: #ffffff;
@@ -1681,7 +1718,7 @@
 }
 
 .store-diff-track .store-diff-card {
-  flex: 0 0 clamp(240px, 20vw, 280px);
+  flex: 0 0 clamp(250px, 21vw, 290px);
   scroll-snap-align: start;
   scroll-snap-stop: normal;
   display: flex;
@@ -1689,41 +1726,49 @@
   background: var(--store-bg);
   border-radius: 20px;
   border: 1px solid var(--store-border);
-  padding: 24px;
+  padding: 26px 24px;
   box-sizing: border-box;
-  min-height: 200px;
+  min-height: 210px;
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.store-diff-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--store-shadow-hover);
 }
 
 .store-diff-icon-wrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--store-gold);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .store-diff-title {
-  font-size: 17px;
+  font-size: 17.5px;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--store-ink);
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 
 .store-diff-copy {
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 13.5px;
+  line-height: 1.48;
   color: var(--store-subtle);
   margin: 0;
 }
 
 @media (max-width: 640px) {
   .store-diff-track .store-diff-card {
-    flex: 0 0 clamp(220px, 65vw, 260px);
+    flex: 0 0 clamp(230px, 68vw, 270px);
     padding: 20px;
   }
 }

@@ -294,7 +294,16 @@ export function ShopPage() {
         }}
       />
 
-      {/* 5. Real Store Inventory — All Products */}
+      {/* 5. Help Is Here Personal Shopping Section */}
+      <StoreHelpCards />
+
+      {/* 6. Accessories Horizontal Carousel */}
+      <StoreAccessoriesCarousel products={products} />
+
+      {/* 7. The Buy & Sell GH Difference */}
+      <StoreDifferenceCards />
+
+      {/* 8. Real Store Inventory — All Products */}
       <section id="all-products" className="store-section store-inventory-section" aria-labelledby="store-inventory-title">
         <div className="store-container">
           <div className="store-inventory-header">
@@ -391,7 +400,7 @@ export function ShopPage() {
           </div>
 
           {/* Catalog Layout: Filter Sidebar (Left) + Product Results Grid (Right) */}
-          <div className={`store-catalog-layout${showDesktopFilters ? " has-sidebar" : " no-sidebar"}`}>
+          <div className={`store-catalog-layout catalog-layout${showDesktopFilters ? " has-sidebar" : " no-sidebar"}`}>
             {/* Desktop Filters Sidebar */}
             {showDesktopFilters && (
               <aside className="store-filter-sidebar hidden lg:block" aria-label="Desktop product filters">
@@ -457,15 +466,6 @@ export function ShopPage() {
           </div>
         </div>
       </section>
-
-      {/* 6. Help Is Here Personal Shopping Section */}
-      <StoreHelpCards />
-
-      {/* 7. Accessories Horizontal Carousel */}
-      <StoreAccessoriesCarousel products={products} />
-
-      {/* 8. The Buy & Sell GH Difference */}
-      <StoreDifferenceCards />
 
       {/* Mobile Filter Drawer */}
       {drawerOpen && (

@@ -1,65 +1,77 @@
-import { ArrowRight, CreditCard, MapPin, MessageCircle, RefreshCw, Wrench } from "lucide-react";
+import { ArrowRight, CreditCard, MapPin, MessageCircle, RefreshCw, ShieldCheck, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 import { intentWhatsAppUrl } from "../../utils/whatsapp";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface HelpCardItem {
   id: string;
-  eyebrow: string;
+  category: string;
+  badge: string;
   title: string;
   description: string;
   actionLabel: string;
   actionPath: string;
   isExternal?: boolean;
   icon: typeof MessageCircle;
+  motif: string;
 }
 
 const helpCards: HelpCardItem[] = [
   {
     id: "chat",
-    eyebrow: "PERSONAL SHOPPING",
+    category: "PERSONAL SHOPPING",
+    badge: "Accra Specialist Online",
     title: "Chat with a specialist.",
-    description: "Ask questions, compare device models, and confirm immediate Accra availability directly on WhatsApp.",
+    description: "Compare device models, confirm battery health on UK Used stock, and reserve immediately on WhatsApp.",
     actionLabel: "Chat on WhatsApp",
     actionPath: intentWhatsAppUrl("general"),
     isExternal: true,
     icon: MessageCircle,
+    motif: "Direct Chat",
   },
   {
     id: "repairs",
-    eyebrow: "CERTIFIED SERVICE",
+    category: "CERTIFIED SERVICE",
+    badge: "Official Diagnostics",
     title: "Professional device repair.",
-    description: "Expert screen replacements, battery upgrades, and board repairs for phones, laptops, and consoles.",
+    description: "Expert screen replacements, genuine battery upgrades, and board-level repairs with fast turnaround.",
     actionLabel: "Explore repairs",
     actionPath: "/repairs",
     icon: Wrench,
+    motif: "Precision Bench",
   },
   {
     id: "installment",
-    eyebrow: "FLEXIBLE PAYMENT",
+    category: "FLEXIBLE PAYMENT",
+    badge: "Manageable Plans",
     title: "Own your device today.",
-    description: "Spread the cost comfortably across manageable installment plans with transparent requirements.",
+    description: "Spread the cost comfortably across manageable installment plans with straightforward, transparent requirements.",
     actionLabel: "View installment plans",
     actionPath: "/installment",
     icon: CreditCard,
+    motif: "Easy Financing",
   },
   {
     id: "trade-in",
-    eyebrow: "TRADE IN OR SELL",
+    category: "TRADE IN OR SELL",
+    badge: "Instant Valuation",
     title: "Upgrade and save.",
-    description: "Get fair valuation toward your next device upgrade or receive instant cash for your used electronics.",
+    description: "Receive fair appraisal toward your next iPhone or MacBook upgrade, or get paid cash for your used device.",
     actionLabel: "Get an estimate",
     actionPath: "/sell-or-trade",
     icon: RefreshCw,
+    motif: "Fair Exchange",
   },
   {
     id: "support",
-    eyebrow: "AFTERCARE & PICKUP",
+    category: "AFTERCARE & PICKUP",
+    badge: "Dome Pillar 2 Hub",
     title: "Order assistance.",
-    description: "Have questions about an existing order request, express delivery, or pickup at Dome Pillar 2?",
+    description: "Have questions about an existing order request, express dispatch across Accra, or walk-in collection?",
     actionLabel: "Contact support",
     actionPath: "/contact",
     icon: MapPin,
+    motif: "Local Pickup",
   },
 ];
 
@@ -78,14 +90,23 @@ export function StoreHelpCards() {
             const Icon = card.icon;
             return (
               <article key={card.id} className="store-help-card">
-                <div className="store-help-card-icon" aria-hidden="true">
-                  <Icon size={26} strokeWidth={2} />
+                <div className="store-help-card-header">
+                  <span className="store-help-card-eyebrow">{card.category}</span>
+                  <span className="store-help-card-badge">{card.badge}</span>
                 </div>
+
                 <div className="store-help-card-body">
-                  <p className="store-help-card-eyebrow">{card.eyebrow}</p>
                   <h3 className="store-help-card-title">{card.title}</h3>
                   <p className="store-help-card-copy">{card.description}</p>
                 </div>
+
+                <div className="store-help-visual-stage" aria-hidden="true">
+                  <div className="store-help-visual-icon-wrap">
+                    <Icon size={28} strokeWidth={1.8} />
+                  </div>
+                  <span className="store-help-visual-motif">{card.motif}</span>
+                </div>
+
                 <div className="store-help-card-action">
                   {card.isExternal ? (
                     <a

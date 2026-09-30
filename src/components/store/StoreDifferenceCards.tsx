@@ -1,4 +1,4 @@
-import { BadgeCheck, MapPin, MessageCircle, PackageCheck, RefreshCw } from "lucide-react";
+import { BadgeCheck, MapPin, MessageCircle, PackageCheck, RefreshCw, ShieldCheck } from "lucide-react";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface DifferenceItem {
@@ -32,6 +32,12 @@ const differences: DifferenceItem[] = [
     icon: RefreshCw,
     title: "Trade-in available",
     copy: "Get fair market value for your existing device applied directly toward your new purchase.",
+  },
+  {
+    id: "guidance",
+    icon: ShieldCheck,
+    title: "Genuine product guidance",
+    copy: "Honest battery health reports, serial number verification, and expert advice before you purchase.",
   },
   {
     id: "support",
