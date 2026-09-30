@@ -1,4 +1,4 @@
-import { BadgeCheck, MapPin, MessageCircle, PackageCheck, RefreshCw, ShieldCheck } from "lucide-react";
+import { BadgeCheck, MapPin, MessageCircle, PackageCheck, RefreshCw, Wrench } from "lucide-react";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface DifferenceItem {
@@ -12,38 +12,38 @@ const differences: DifferenceItem[] = [
   {
     id: "availability",
     icon: BadgeCheck,
-    title: "Clear availability",
+    title: "Clear Availability",
     copy: "Confirmed in-stock and enquiry devices are labeled separately so you always know what is ready.",
   },
   {
     id: "review",
     icon: PackageCheck,
-    title: "Order review",
+    title: "Order Review",
     copy: "Every order request is manually reviewed and verified before payment instructions are issued.",
   },
   {
     id: "pickup",
     icon: MapPin,
-    title: "Accra pickup & delivery",
+    title: "Accra Pickup & Delivery",
     copy: "Fast express delivery across Greater Accra or safe in-person collection at Dome Pillar 2.",
   },
   {
     id: "trade-in",
     icon: RefreshCw,
-    title: "Trade-in available",
+    title: "Trade-In Available",
     copy: "Get fair market value for your existing device applied directly toward your new purchase.",
-  },
-  {
-    id: "guidance",
-    icon: ShieldCheck,
-    title: "Genuine product guidance",
-    copy: "Honest battery health reports, serial number verification, and expert advice before you purchase.",
   },
   {
     id: "support",
     icon: MessageCircle,
-    title: "Local dedicated support",
-    copy: "Personal assistance from our Accra team whenever you need comparison advice or follow-up.",
+    title: "Local Support",
+    copy: "Personal assistance from our Accra team whenever you need comparison advice or order follow-up.",
+  },
+  {
+    id: "repairs",
+    icon: Wrench,
+    title: "Device Repairs",
+    copy: "In-house technical diagnostics and certified repairs to keep your Apple devices performing at their best.",
   },
 ];
 
@@ -63,7 +63,7 @@ export function StoreDifferenceCards() {
             return (
               <article key={item.id} className="store-diff-card">
                 <div className="store-diff-icon-wrap" aria-hidden="true">
-                  <Icon size={26} className="store-diff-icon" />
+                  <Icon size={24} className="store-diff-icon" />
                 </div>
                 <h3 className="store-diff-title">{item.title}</h3>
                 <p className="store-diff-copy">{item.copy}</p>

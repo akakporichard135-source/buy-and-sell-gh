@@ -45,8 +45,8 @@ const productFamilies: ProductFamilyItem[] = [
   {
     id: "accessories",
     name: "Accessories",
-    image: "/products/campaigns/accessory-belkin-3-in-1.webp",
-    alt: "Store accessories and chargers",
+    image: "/products/campaigns/accessory-magsafe-puck.webp",
+    alt: "Apple MagSafe charger and accessories",
     category: "Accessories",
   },
 ];

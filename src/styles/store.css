@@ -1645,6 +1645,29 @@
   transform: scale(1.06);
 }
 
+.store-accessory-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  background: #fbfbfd;
+  border-radius: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  color: var(--store-subtle);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.store-accessory-placeholder-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--store-subtle);
+  text-align: center;
+}
+
 .store-accessory-info {
   flex: 1;
   display: flex;

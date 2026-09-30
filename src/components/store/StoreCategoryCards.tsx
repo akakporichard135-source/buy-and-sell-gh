@@ -56,8 +56,8 @@ const categoryCards: CategoryCardItem[] = [
     categoryKey: "Accessories",
     title: "Accessories",
     subtitle: "Genuine power adapters, MagSafe chargers and keyboards.",
-    image: "/products/campaigns/accessory-belkin-3-in-1.webp",
-    alt: "Store accessories",
+    image: "/products/campaigns/accessory-magsafe-puck.webp",
+    alt: "Apple MagSafe and store accessories",
   },
 ];
 

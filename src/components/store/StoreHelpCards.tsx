@@ -1,4 +1,4 @@
-import { ArrowRight, CreditCard, MapPin, MessageCircle, RefreshCw, ShieldCheck, Wrench } from "lucide-react";
+import { ArrowRight, Banknote, CreditCard, Gift, MessageCircle, RefreshCw, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 import { intentWhatsAppUrl } from "../../utils/whatsapp";
 import { StoreCarousel } from "./StoreCarousel";
@@ -52,26 +52,37 @@ const helpCards: HelpCardItem[] = [
     motif: "Easy Financing",
   },
   {
-    id: "trade-in",
-    category: "TRADE IN OR SELL",
+    id: "upgrade-trade-in",
+    category: "TRADE IN OR UPGRADE",
     badge: "Instant Valuation",
-    title: "Upgrade and save.",
-    description: "Receive fair appraisal toward your next iPhone or MacBook upgrade, or get paid cash for your used device.",
-    actionLabel: "Get an estimate",
+    title: "Upgrade & Save.",
+    description: "Receive fair trade-in value toward your next iPhone or MacBook upgrade with fast in-person inspection.",
+    actionLabel: "Get a trade-in estimate",
     actionPath: "/sell-or-trade",
     icon: RefreshCw,
     motif: "Fair Exchange",
   },
   {
-    id: "support",
-    category: "AFTERCARE & PICKUP",
-    badge: "Dome Pillar 2 Hub",
-    title: "Order assistance.",
-    description: "Have questions about an existing order request, express dispatch across Accra, or walk-in collection?",
-    actionLabel: "Contact support",
-    actionPath: "/contact",
-    icon: MapPin,
-    motif: "Local Pickup",
+    id: "sell-device",
+    category: "INSTANT BUYOUT",
+    badge: "Immediate Payout",
+    title: "Sell your device.",
+    description: "Turn your used Apple device into instant cash in Accra with quick diagnostic verification.",
+    actionLabel: "Sell your device",
+    actionPath: "/sell-or-trade",
+    icon: Banknote,
+    motif: "Instant Cash",
+  },
+  {
+    id: "refer-friend",
+    category: "CUSTOMER REWARDS",
+    badge: "Store Credit",
+    title: "Refer a Friend.",
+    description: "Earn store credit and exclusive discounts when your friends and family purchase their Apple devices with us.",
+    actionLabel: "Explore referral rewards",
+    actionPath: "/refer-a-friend",
+    icon: Gift,
+    motif: "Earn Together",
   },
 ];
 
@@ -82,7 +93,7 @@ export function StoreHelpCards() {
         <StoreCarousel
           eyebrow="HELP IS HERE"
           title="Whenever you need it."
-          subtitle="Support, flexible financing, repairs, and trade-in services tailored for Ghana."
+          subtitle="Support, flexible financing, repairs, trade-in, and customer rewards tailored for Ghana."
           controlsAriaLabel="Store help services carousel navigation"
           trackClassName="store-help-track"
         >
@@ -102,7 +113,7 @@ export function StoreHelpCards() {
 
                 <div className="store-help-visual-stage" aria-hidden="true">
                   <div className="store-help-visual-icon-wrap">
-                    <Icon size={28} strokeWidth={1.8} />
+                    <Icon size={24} strokeWidth={1.8} />
                   </div>
                   <span className="store-help-visual-motif">{card.motif}</span>
                 </div>
