@@ -311,7 +311,16 @@ try {
   assert.match(homepageSource, /const productTiles: Campaign\[\] = \[\s*ipadAirCampaign,\s*visaTradingCampaign,\s*\]/, "Visa trading replaces iPad Pro in the paired homepage campaign data");
   assert.doesNotMatch(homepageSource, /ipadProCampaignArt|title:\s*"iPad Pro"/, "The iPad Pro campaign is removed from the homepage");
   assert.doesNotMatch(homepageSource, /<section className="store-(?:feature|product)-grid"/, "Homepage product campaigns no longer use paired grids");
-  assert.match(homepageSource, /<CampaignPair campaigns=\{productTiles\} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" \/>[\s\S]*<StoreRail[\s\S]*<\/StoreRail>[\s\S]*<PremiumTrustStrip \/>/, "The iPad and Visa pair is followed by store services and trust benefits");
+  assert.match(homepageSource, /<CampaignPair campaigns=\{productTiles\} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" \/>[\s\S]*<StoreServicesSection \/>[\s\S]*<PremiumTrustStrip \/>/, "The iPad and Visa pair is followed by store services and trust benefits");
+  for (const serviceImg of ["installment-payment.png", "repairs.png", "upgrade-and-save.png", "sell-your-device.png", "refer-a-friend.png"]) {
+    const imgData = await readFile(path.join(projectRoot, "public/services", serviceImg));
+    assert.equal(imgData.toString("ascii", 1, 4), "PNG", `${serviceImg} is a real PNG asset`);
+    assert.match(homepageSource, new RegExp(`/services/${serviceImg}`), `${serviceImg} is used by the homepage services section`);
+  }
+  for (const serviceRoute of ["/installment", "/repairs", "/sell-or-trade\\?mode=upgrade", "/sell-or-trade", "/refer-a-friend"]) {
+    assert.match(homepageSource, new RegExp(`to:\\s*"${serviceRoute}"`), `${serviceRoute} is linked in the homepage services section`);
+  }
+  assert.doesNotMatch(homepageSource, /moreStoreInstallmentArtwork|moreStoreRepairsArtwork|moreStoreSellCashArtwork|moreStoreUpgradeArtwork/, "Obsolete service flyer imports are removed");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /title:\s*"(?:iPhone 18 Pro|iPhone Duo|Apple Watch Series 12|Apple Watch Ultra 4|AirPods 5|iPad Air|MacBook Air)"[^}]*?secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");

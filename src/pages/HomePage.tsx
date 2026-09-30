@@ -1,6 +1,6 @@
-import { ArrowRight, BadgeCheck, ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
-import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef } from "react";
-import type { ReactElement, ReactNode } from "react";
+import { BadgeCheck, ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
@@ -9,10 +9,7 @@ import { SEO } from "../components/SEO";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
 import "../styles/homepage-video-showcase.css";
-import moreStoreInstallmentArtwork from "../assets/homepage/more-store-installment-owner.png";
-import moreStoreRepairsArtwork from "../assets/homepage/more-store-repairs-owner.png";
-import moreStoreSellCashArtwork from "../assets/homepage/more-store-sell-cash-owner.png";
-import moreStoreUpgradeArtwork from "../assets/homepage/more-store-upgrade-owner.png";
+import "../styles/homepage-services.css";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
 import { campaignAssets } from "../catalog/campaignAssets";
 
@@ -96,30 +93,55 @@ const productTiles: Campaign[] = [
   visaTradingCampaign,
 ];
 
-const serviceStories = [
+interface ServiceCardItem {
+  id: string;
+  title: string;
+  concept: string;
+  to: string;
+  image: string;
+  alt: string;
+}
+
+const homepageServices: ServiceCardItem[] = [
   {
-    label: "Installment",
-    title: "Own an iPhone today.",
-    description: "Review current requirements before sending your request.",
-    image: moreStoreInstallmentArtwork,
+    id: "installment-payment",
+    title: "Installment Payment",
+    concept: "Own an iPhone today.",
     to: "/installment",
-    tone: "black",
+    image: "/services/installment-payment.png",
+    alt: "Installment Payment — Own an iPhone today with Buy & Sell GH verified flexible payment plans",
   },
   {
-    label: "Repairs",
-    title: "Let the experts fix it.",
-    description: "Support for phones, laptops and game consoles.",
-    image: moreStoreRepairsArtwork,
+    id: "repairs",
+    title: "Repairs",
+    concept: "Let the experts fix it.",
     to: "/repairs",
-    tone: "black",
+    image: "/services/repairs.png",
+    alt: "Repairs — Let the experts fix it. Fast professional repairs for phones, laptops, and game consoles",
   },
   {
-    label: "Upgrade & Save",
-    title: "Move into something newer.",
-    description: "Trade or swap your current device toward your next upgrade.",
-    image: moreStoreUpgradeArtwork,
+    id: "upgrade-and-save",
+    title: "Upgrade & Save",
+    concept: "Move into something newer.",
     to: "/sell-or-trade?mode=upgrade",
-    tone: "light",
+    image: "/services/upgrade-and-save.png",
+    alt: "Upgrade & Save — Move into something newer. Trade or swap your current device toward your next upgrade",
+  },
+  {
+    id: "sell-your-device",
+    title: "Sell Your Device",
+    concept: "Sell your old device for cash.",
+    to: "/sell-or-trade",
+    image: "/services/sell-your-device.png",
+    alt: "Sell Your Device — Sell your old device for cash with instant valuation and quick payout",
+  },
+  {
+    id: "refer-a-friend",
+    title: "Refer a Friend",
+    concept: "Refer a friend.",
+    to: "/refer-a-friend",
+    image: "/services/refer-a-friend.png",
+    alt: "Refer a Friend — Refer a friend and earn exclusive rewards from Buy & Sell GH",
   },
 ];
 
@@ -169,15 +191,7 @@ export function HomePage() {
         <CampaignPair campaigns={featuredMacCampaigns} label="MacBook Air and Mac mini" className="home-product-pair-macbooks" />
         <CampaignPair campaigns={productTiles} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" />
 
-        <StoreRail eyebrow="Services" title="More from our store." description="Explore more ways to upgrade, sell and get support." className="service-story-rail" id="more-from-store">
-          {serviceStories.map((story) => (
-            <Link className={`service-story-card service-story-${story.tone}`} to={story.to} key={story.label}>
-              <div><span>{story.label}</span><strong>{story.title}</strong><p>{story.description}</p></div>
-              <img src={story.image} alt={`${story.label} from Buy & Sell GH`} loading="lazy" decoding="async" />
-              <small>Learn more <ChevronRight size={14} /></small>
-            </Link>
-          ))}
-        </StoreRail>
+        <StoreServicesSection />
         <PremiumTrustStrip />
 
       </main>
@@ -357,86 +371,42 @@ function CampaignPair({ campaigns, label, className }: { campaigns: Campaign[]; 
   );
 }
 
-function StoreRail({ eyebrow, title, description, className, children, id }: { eyebrow: string; title: string; description: string; className: string; children: ReactNode; id?: string }) {
-  const railRef = useRef<HTMLDivElement>(null);
-  const railItems = Children.toArray(children);
-
-  useEffect(() => {
-    const rail = railRef.current;
-    if (!rail || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    let intervalId = 0;
-    let resumeId = 0;
-    let paused = false;
-
-    const start = () => {
-      window.clearInterval(intervalId);
-      intervalId = window.setInterval(() => {
-        if (paused || document.hidden) return;
-        const cards = Array.from(rail.children) as HTMLElement[];
-        if (cards.length < 2 || rail.scrollWidth <= rail.clientWidth) return;
-        const step = cards[1].offsetLeft - cards[0].offsetLeft;
-        const wraparoundCard = cards.find((card) => card.dataset.railWraparound === "true");
-        if (wraparoundCard && rail.scrollLeft >= wraparoundCard.offsetLeft - 4) {
-          rail.scrollTo({ left: 0, behavior: "auto" });
-        }
-        const maxScroll = rail.scrollWidth - rail.clientWidth;
-        const nextLeft = Math.min(rail.scrollLeft + step, maxScroll);
-        rail.scrollTo({ left: nextLeft, behavior: "smooth" });
-      }, 5200);
-    };
-
-    const pause = () => {
-      paused = true;
-      window.clearInterval(intervalId);
-      window.clearTimeout(resumeId);
-    };
-    const resume = () => {
-      window.clearTimeout(resumeId);
-      resumeId = window.setTimeout(() => {
-        paused = false;
-        start();
-      }, 1800);
-    };
-    const handleVisibility = () => {
-      if (document.hidden) pause();
-      else resume();
-    };
-
-    rail.addEventListener("pointerenter", pause);
-    rail.addEventListener("pointerleave", resume);
-    rail.addEventListener("pointerdown", pause);
-    rail.addEventListener("pointerup", resume);
-    rail.addEventListener("touchstart", pause, { passive: true });
-    rail.addEventListener("touchend", resume, { passive: true });
-    rail.addEventListener("focusin", pause);
-    rail.addEventListener("focusout", resume);
-    document.addEventListener("visibilitychange", handleVisibility);
-    start();
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.clearTimeout(resumeId);
-      rail.removeEventListener("pointerenter", pause);
-      rail.removeEventListener("pointerleave", resume);
-      rail.removeEventListener("pointerdown", pause);
-      rail.removeEventListener("pointerup", resume);
-      rail.removeEventListener("touchstart", pause);
-      rail.removeEventListener("touchend", resume);
-      rail.removeEventListener("focusin", pause);
-      rail.removeEventListener("focusout", resume);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, []);
-
+function StoreServicesSection() {
   return (
-    <section id={id} className={`store-rail-section ${className}`} aria-labelledby={`rail-${slugify(title)}`}>
-      <div className="store-rail-heading">
-        <div><p className="store-eyebrow">{eyebrow}</p><h2 id={`rail-${slugify(title)}`}>{title}</h2></div>
-        <span>{description} <ArrowRight size={16} /></span>
-      </div>
-      <div ref={railRef} className="store-horizontal-rail">
-        {railItems}
+    <section id="more-from-store" className="store-services-section" aria-labelledby="store-services-title">
+      <div className="store-services-container">
+        <div className="store-services-header">
+          <p className="store-services-eyebrow">SERVICES</p>
+          <h2 id="store-services-title" className="store-services-title">More from our store.</h2>
+          <p className="store-services-subtitle">Explore more ways to buy, upgrade, sell and get support.</p>
+        </div>
+        <div className="store-services-grid" role="list" aria-label="Services offered by Buy & Sell GH">
+          {homepageServices.map((service) => (
+            <Link
+              key={service.id}
+              to={service.to}
+              className="store-service-card"
+              role="listitem"
+              aria-label={`${service.title} — ${service.concept}`}
+            >
+              <div className="store-service-poster">
+                <img
+                  src={service.image}
+                  alt={service.alt}
+                  width={1024}
+                  height={1536}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div className="store-service-cta">
+                <span className="store-service-link">
+                  Learn more <ChevronRight size={14} aria-hidden="true" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
