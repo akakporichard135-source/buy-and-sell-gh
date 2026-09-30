@@ -46,6 +46,8 @@ export function StoreCarousel({
     const el = trackRef.current;
     if (!el) return;
 
+    // Guarantee the first card always starts fully visible at initial render
+    el.scrollLeft = 0;
     checkScroll();
 
     let timeoutId: number | undefined;

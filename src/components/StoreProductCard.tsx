@@ -30,28 +30,32 @@ export function StoreProductCard({ product }: { product: Product }) {
       </Link>
       <div className="store-product-body">
         <div className="store-product-meta-row">
-          <span className={`store-product-badge ${status === "IN STOCK" ? "badge-in-stock" : "badge-request"}`}>
+          <span className={`store-product-badge ${status === "IN STOCK" ? "badge-in-stock" : status === "UK USED" ? "badge-uk-used" : "badge-request"}`}>
             {status}
           </span>
         </div>
-        <h2 className="store-product-title" title={product.name}>
+
+        <h3 className="store-product-title" title={product.name}>
           <Link to={productStoryPath(family, product.slug)}>{product.name}</Link>
-        </h2>
+        </h3>
+
+        {facts.length > 0 && (
+          <p className="store-product-facts" title={facts.join(" \u00b7 ")}>
+            {facts.slice(0, 3).join(" \u00b7 ")}
+          </p>
+        )}
+
         <div className={`store-product-price${enquiry ? " is-enquiry" : ""}`}>
           <span className="price-current">{enquiry ? "Request Pricing" : formatGhs(product.price)}</span>
           {!enquiry && Boolean(product.oldPrice) && <del className="price-old">{formatGhs(product.oldPrice!)}</del>}
         </div>
-        <p className="store-product-facts" title={facts.join(" \u00b7 ")}>
-          {facts.join(" \u00b7 ")}
-        </p>
+
         <div className="store-product-actions">
-          <Link className="btn-store-card-learn" to={productStoryPath(family, product.slug)}>
-            <Eye size={15} aria-hidden="true" /> Learn More
-          </Link>
-          <div className="store-product-secondary">
-            <Link className="btn-store-card-action" to={productBuyPath(family, product.slug)}>
-              <ArrowRight size={15} aria-hidden="true" /> {canDirectBuy ? "Buy" : "View Pricing"}
+          <div className="store-product-actions-primary-group">
+            <Link className="btn-store-card-primary" to={productBuyPath(family, product.slug)}>
+              {canDirectBuy ? "Buy" : "View Pricing"}
             </Link>
+
             {canDirectBuy && (
               <button
                 type="button"
@@ -60,10 +64,14 @@ export function StoreProductCard({ product }: { product: Product }) {
                 aria-label={`Add ${product.name} to cart`}
                 onClick={() => addItem(product, product.storage[0] || "", product.colors[0] || "")}
               >
-                <ShoppingBag size={16} aria-hidden="true" />
+                <ShoppingBag size={15} aria-hidden="true" />
               </button>
             )}
           </div>
+
+          <Link className="btn-store-card-secondary" to={productStoryPath(family, product.slug)}>
+            Learn more <ArrowRight size={13} aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </article>

@@ -309,7 +309,89 @@ export function ShopPage() {
             </div>
           </div>
 
-          <div className="store-inventory-layout">
+          {/* Premium Search and Toolbar (Full Width across catalog) */}
+          <div className="store-toolbar">
+            <div className="store-search-wrap">
+              <Search size={18} className="store-search-icon" aria-hidden="true" />
+              <input
+                type="search"
+                aria-label="Search Buy & Sell GH Store"
+                value={filters.search}
+                maxLength={100}
+                onChange={(e) => updateFilter("search", e.target.value)}
+                placeholder="Search Buy & Sell GH Store"
+                className="store-search-input"
+              />
+              {filters.search && (
+                <button
+                  type="button"
+                  aria-label="Clear search text"
+                  onClick={() => updateFilter("search", "")}
+                  className="store-search-clear"
+                >
+                  <X size={17} />
+                </button>
+              )}
+            </div>
+
+            <div className="store-toolbar-actions">
+              <button
+                ref={filterButtonRef}
+                className="btn-store-toolbar-filter store-filter-mobile-btn"
+                type="button"
+                aria-haspopup="dialog"
+                aria-expanded={drawerOpen}
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Filter size={16} /> Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+              </button>
+
+              <button
+                className="btn-store-toolbar-filter store-filter-desktop-btn"
+                type="button"
+                onClick={() => setShowDesktopFilters((prev) => !prev)}
+                title={showDesktopFilters ? "Hide filter panel" : "Show filter panel"}
+              >
+                <SlidersHorizontal size={16} /> {showDesktopFilters ? "Hide Filters" : "Filters"}
+              </button>
+
+              <label className="store-sort-label">
+                <span className="sr-only">Sort products</span>
+                <select
+                  value={sort}
+                  onChange={(e) => {
+                    setBatch({ key: "", count: STORE_BATCH_SIZE });
+                    setSort(e.target.value as SortOption);
+                  }}
+                  className="store-sort-select"
+                  aria-label="Sort products by"
+                >
+                  <option>Recommended</option>
+                  <option>Newest</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                  <option>Popular</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* Status and Active Filter Chips */}
+          <div className="store-status-row">
+            <p className="store-inventory-count" role="status">
+              {loading
+                ? "Loading products..."
+                : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
+            </p>
+            <ActiveFilterChips
+              filters={activeFilters}
+              removeFilter={removeFilter}
+              clearFilters={clearFilters}
+            />
+          </div>
+
+          {/* Catalog Layout: Filter Sidebar (Left) + Product Results Grid (Right) */}
+          <div className={`store-catalog-layout${showDesktopFilters ? " has-sidebar" : " no-sidebar"}`}>
             {/* Desktop Filters Sidebar */}
             {showDesktopFilters && (
               <aside className="store-filter-sidebar hidden lg:block" aria-label="Desktop product filters">
@@ -326,88 +408,7 @@ export function ShopPage() {
               </aside>
             )}
 
-            <div className="store-inventory-content">
-              {/* Premium Search and Toolbar */}
-              <div className="store-toolbar">
-                <div className="store-search-wrap">
-                  <Search size={18} className="store-search-icon" aria-hidden="true" />
-                  <input
-                    type="search"
-                    aria-label="Search Buy & Sell GH Store"
-                    value={filters.search}
-                    maxLength={100}
-                    onChange={(e) => updateFilter("search", e.target.value)}
-                    placeholder="Search Buy & Sell GH Store"
-                    className="store-search-input"
-                  />
-                  {filters.search && (
-                    <button
-                      type="button"
-                      aria-label="Clear search text"
-                      onClick={() => updateFilter("search", "")}
-                      className="store-search-clear"
-                    >
-                      <X size={17} />
-                    </button>
-                  )}
-                </div>
-
-                <div className="store-toolbar-actions">
-                  <button
-                    ref={filterButtonRef}
-                    className="btn-store-toolbar-filter store-filter-mobile-btn"
-                    type="button"
-                    aria-haspopup="dialog"
-                    aria-expanded={drawerOpen}
-                    onClick={() => setDrawerOpen(true)}
-                  >
-                    <Filter size={16} /> Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-                  </button>
-
-                  <button
-                    className="btn-store-toolbar-filter store-filter-desktop-btn"
-                    type="button"
-                    onClick={() => setShowDesktopFilters((prev) => !prev)}
-                    title={showDesktopFilters ? "Hide filter panel" : "Show filter panel"}
-                  >
-                    <SlidersHorizontal size={16} /> {showDesktopFilters ? "Hide Filters" : "Filters"}
-                  </button>
-
-                  <label className="store-sort-label">
-                    <span className="sr-only">Sort products</span>
-                    <select
-                      value={sort}
-                      onChange={(e) => {
-                        setBatch({ key: "", count: STORE_BATCH_SIZE });
-                        setSort(e.target.value as SortOption);
-                      }}
-                      className="store-sort-select"
-                      aria-label="Sort products by"
-                    >
-                      <option>Recommended</option>
-                      <option>Newest</option>
-                      <option>Price: Low to High</option>
-                      <option>Price: High to Low</option>
-                      <option>Popular</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-
-              {/* Status and Active Filter Chips */}
-              <div className="store-status-row">
-                <p className="store-inventory-count" role="status">
-                  {loading
-                    ? "Loading products..."
-                    : `${filtered.length} ${filtered.length === 1 ? "product" : "products"}`}
-                </p>
-                <ActiveFilterChips
-                  filters={activeFilters}
-                  removeFilter={removeFilter}
-                  clearFilters={clearFilters}
-                />
-              </div>
-
+            <div className="store-product-results">
               {/* Product Grid Render */}
               {loading ? (
                 <div className="store-state-box">
@@ -542,9 +543,7 @@ function FilterControls({
   return (
     <div className="store-filter-controls">
       <div className="store-filter-title-row">
-        <span className="store-filter-title">
-          <SlidersHorizontal size={17} /> Filter By
-        </span>
+        <span className="store-filter-title">Filters</span>
         {activeFilterCount > 0 && (
           <button type="button" className="store-filter-clear-link" onClick={clearFilters}>
             Clear all

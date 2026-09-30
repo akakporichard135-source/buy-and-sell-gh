@@ -10,7 +10,7 @@ const productFamilies: ProductFamilyItem[] = [
   {
     id: "iphone",
     name: "iPhone",
-    image: "/products/homepage/iphone-18-pro-hero.webp",
+    image: "/products/campaigns/iphone-18-pro-colors.webp",
     alt: "iPhone lineup",
     category: "Phones",
   },

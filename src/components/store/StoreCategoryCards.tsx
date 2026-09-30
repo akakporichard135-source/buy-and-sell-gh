@@ -16,7 +16,7 @@ const categoryCards: CategoryCardItem[] = [
     categoryKey: "Phones",
     title: "Phones",
     subtitle: "iPhone 18 Pro, iPhone Duo and verified UK Used devices.",
-    image: "/products/campaigns/iphone-18-pro-coffee.webp",
+    image: "/products/campaigns/iphone-18-pro-colors.webp",
     alt: "iPhone devices",
   },
   {
