@@ -321,6 +321,9 @@ try {
     assert.match(homepageSource, new RegExp(`to:\\s*"${serviceRoute}"`), `${serviceRoute} is linked in the homepage services section`);
   }
   assert.doesNotMatch(homepageSource, /moreStoreInstallmentArtwork|moreStoreRepairsArtwork|moreStoreSellCashArtwork|moreStoreUpgradeArtwork/, "Obsolete service flyer imports are removed");
+  assert.match(homepageSource, /store-services-carousel/, "The services section uses a horizontal carousel");
+  assert.match(homepageSource, /store-services-prev[\s\S]*store-services-next/, "The services section includes carousel navigation arrows");
+  assert.doesNotMatch(homepageSource, /store-service-cta|store-service-link|Learn more <ChevronRight/, "The extra blue Learn more text is removed from underneath posters");
   assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /title:\s*"(?:iPhone 18 Pro|iPhone Duo|Apple Watch Series 12|Apple Watch Ultra 4|AirPods 5|iPad Air|MacBook Air)"[^}]*?secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
   assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");

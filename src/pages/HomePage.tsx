@@ -1,5 +1,5 @@
-import { BadgeCheck, ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { BadgeCheck, ChevronLeft, ChevronRight, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
@@ -372,6 +372,45 @@ function CampaignPair({ campaigns, label, className }: { campaigns: Campaign[]; 
 }
 
 function StoreServicesSection() {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollButtons = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const scrollLeft = el.scrollLeft;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(scrollLeft > 8);
+    setCanScrollRight(scrollLeft < maxScroll - 8);
+  };
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    window.addEventListener("resize", updateScrollButtons);
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, []);
+
+  const scrollCarousel = (direction: "left" | "right") => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const cards = Array.from(el.querySelectorAll<HTMLElement>(".store-service-card"));
+    if (!cards.length) return;
+    const cardWidth = cards[0].offsetWidth;
+    const gap = 24;
+    const step = cardWidth + gap;
+    el.scrollBy({
+      left: direction === "left" ? -step : step,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <section id="more-from-store" className="store-services-section" aria-labelledby="store-services-title">
       <div className="store-services-container">
@@ -380,13 +419,42 @@ function StoreServicesSection() {
           <h2 id="store-services-title" className="store-services-title">More from our store.</h2>
           <p className="store-services-subtitle">Explore more ways to buy, upgrade, sell and get support.</p>
         </div>
-        <div className="store-services-grid" role="list" aria-label="Services offered by Buy & Sell GH">
+
+        {/* Carousel Navigation Arrows Row */}
+        <div className="store-services-controls" aria-label="Services carousel controls">
+          <button
+            type="button"
+            className="store-services-arrow-btn store-services-prev"
+            onClick={() => scrollCarousel("left")}
+            disabled={!canScrollLeft}
+            aria-label="Previous service poster"
+          >
+            <ChevronLeft size={22} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="store-services-arrow-btn store-services-next"
+            onClick={() => scrollCarousel("right")}
+            disabled={!canScrollRight}
+            aria-label="Next service poster"
+          >
+            <ChevronRight size={22} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Horizontal Carousel */}
+        <div
+          ref={carouselRef}
+          className="store-services-carousel"
+          role="region"
+          aria-label="Services carousel"
+          tabIndex={0}
+        >
           {homepageServices.map((service) => (
             <Link
               key={service.id}
               to={service.to}
               className="store-service-card"
-              role="listitem"
               aria-label={`${service.title} — ${service.concept}`}
             >
               <div className="store-service-poster">
@@ -398,11 +466,6 @@ function StoreServicesSection() {
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
-              <div className="store-service-cta">
-                <span className="store-service-link">
-                  Learn more <ChevronRight size={14} aria-hidden="true" />
-                </span>
               </div>
             </Link>
           ))}
