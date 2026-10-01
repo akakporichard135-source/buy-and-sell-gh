@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import type { ProductFamilyKey } from "../../../catalog/productExperience";
+import type { Product } from "../../../types/product";
 import { accessoryProducts } from "../../../data/accessoryProducts";
 import { StoreCarousel } from "../StoreCarousel";
 import { resolveCatalogueProductImage } from "../../../utils/productImages";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { formatGhs } from "../../../utils/format";
 
 interface StoreCategoryAccessoriesRailProps {
@@ -26,7 +28,7 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
               <StoreCarousel
                 eyebrow="POWER & CHARGING"
                 title="Keep your devices charged anywhere."
-                subtitle="Genuine Apple USB-C adapters and magnetic wireless chargers with confirmed local stock."
+                subtitle="Genuine Apple USB-C adapters and magnetic wireless chargers. Confirm availability before ordering."
                 controlsAriaLabel="Charging accessories carousel"
                 trackClassName="store-cat-acc-track"
               >
@@ -112,7 +114,7 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
     }
     if (family === "watch") {
       return (
-        slug.includes("watch-fast-charger") ||
+        slug.includes("watch-magnetic-fast-charger") ||
         slug.includes("magsafe-charger") ||
         slug.includes("20w")
       );
@@ -183,7 +185,7 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
   );
 }
 
-function AccessoryMiniCard({ product }: { product: any }) {
+function AccessoryMiniCard({ product }: { product: Product }) {
   const resolvedImg = resolveCatalogueProductImage(product);
   const priceDisplay = product.priceOnRequest || product.price <= 0
     ? "Contact for price"
@@ -201,9 +203,7 @@ function AccessoryMiniCard({ product }: { product: any }) {
             className="store-cat-acc-card-img"
           />
         ) : (
-          <div className="store-cat-card-placeholder">
-            <span>Asset pending</span>
-          </div>
+          <ProductImagePlaceholder />
         )}
       </div>
 

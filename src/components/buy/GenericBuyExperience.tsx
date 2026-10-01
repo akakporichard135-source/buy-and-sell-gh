@@ -41,7 +41,7 @@ export function GenericBuyExperience({
     ? formatGhs(product.price)
     : "Price confirmed on enquiry";
 
-  const activeImage = gallery[activeThumb]?.src || gallery[0]?.src || "/products/homepage/iphone-18-pro-hero.webp";
+  const activeImage = gallery[activeThumb]?.src || gallery[0]?.src;
 
   const whatsAppEnquiry = product
     ? productWhatsAppUrl(product, storage, color)

@@ -79,19 +79,19 @@
 }
 
 .iphone18-hero .iphone18-hero-actions .store-button:focus-visible {
-  outline: 2px solid #e5b438;
+  outline: 2px solid var(--brand-gold-strong);
   outline-offset: 3px;
 }
 
 .iphone18-hero .iphone18-hero-actions .store-button-primary {
-  background: #e5b438;
+  background: var(--brand-gold);
   color: #111111;
-  border: 1px solid #e5b438;
+  border: 1px solid var(--brand-gold);
 }
 
 .iphone18-hero .iphone18-hero-actions .store-button-primary:hover {
-  background: #cca030;
-  border-color: #cca030;
+  background: var(--brand-gold-hover);
+  border-color: var(--brand-gold-hover);
 }
 
 .iphone18-hero .iphone18-hero-actions .store-button-secondary {
@@ -418,15 +418,15 @@
 
 .storefront-home .store-button-primary,
 .storefront-home > .home-product-campaign .store-button-primary {
-  border-color: #e5b438;
-  background: #e5b438;
+  border-color: var(--brand-gold);
+  background: var(--brand-gold);
   color: #111111;
 }
 
 .storefront-home .store-button-primary:hover,
 .storefront-home > .home-product-campaign .store-button-primary:hover {
-  background: #cca030;
-  border-color: #cca030;
+  background: var(--brand-gold-hover);
+  border-color: var(--brand-gold-hover);
   transform: translateY(-1px);
 }
 
@@ -447,8 +447,8 @@
 
 .storefront-home .home-product-campaign-black .store-button-primary,
 .storefront-home > .home-product-campaign-black .store-button-primary {
-  border-color: #e5b438;
-  background: #e5b438;
+  border-color: var(--brand-gold);
+  background: var(--brand-gold);
   color: #111111;
 }
 
@@ -635,9 +635,9 @@
 }
 
 .home-product-pair > .home-product-campaign .store-button-primary {
-  border-color: #e5b438;
+  border-color: var(--brand-gold);
   color: #111;
-  background: #e5b438;
+  background: var(--brand-gold);
 }
 
 .home-product-pair > .home-product-campaign .store-button-secondary {

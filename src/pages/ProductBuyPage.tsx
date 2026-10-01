@@ -45,8 +45,8 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
     return <WatchSeries12BuyExperience catalogProduct={primaryProduct} />;
   }
 
-  // 5. AirPods 5 / Standard AirPods
-  if (family === "airpods" && (slug === "airpods-5" || !slug.includes("max"))) {
+  // 5. AirPods 5
+  if (family === "airpods" && slug === "airpods-5") {
     return <AirpodsBuyExperience catalogProduct={primaryProduct} />;
   }
 

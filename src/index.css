@@ -2,7 +2,7 @@
 
 @theme {
   --color-ink: #0a0a0c;
-  --color-page: #f3efe5;
+  --color-page: #ffffff;
   --color-warm: #fbf2d9;
   --color-gold: #d8a72d;
   --color-gold-light: #f0cf78;
@@ -25,9 +25,9 @@
   --border-primary: #d2d2d7;
   --border-soft: #e8e8ed;
   --brand-gold-hover: #c69520;
-  --link-blue: #0071e3;
-  --link-blue-hover: #0066cc;
-  --link-blue-dark: #2997ff;
+  --link-blue: var(--color-gold-dark);
+  --link-blue-hover: var(--color-gold-dark);
+  --link-blue-dark: var(--brand-gold-soft);
   --accent-new: #bf4800;
   --accent-positive: #248a3d;
   --brand-black: #0a0a0c;
@@ -4849,14 +4849,14 @@ body {
 
 .btn-primary {
   border: 1px solid rgba(216, 167, 45, 0.48);
-  background: var(--brand-black);
-  color: var(--brand-surface-raised);
+  background: var(--brand-gold);
+  color: var(--brand-black);
   box-shadow: var(--brand-shadow-sm);
 }
 
 .btn-primary:hover {
   border-color: var(--brand-gold);
-  background: var(--brand-charcoal);
+  background: var(--brand-gold-hover);
   box-shadow: 0 12px 28px rgba(10, 10, 12, 0.18);
 }
 
@@ -5911,8 +5911,8 @@ footer a:hover {
 .device-request-layout > form > .btn-primary,
 .home-desktop-device-form > form > .btn-primary {
   border-color: rgba(216, 167, 45, 0.62);
-  background: var(--brand-black);
-  color: var(--brand-surface-raised);
+  background: var(--brand-gold);
+  color: var(--brand-black);
 }
 
 /* FAQ cards gain a clear, keyboard-visible active state. */
@@ -6949,7 +6949,7 @@ body {
 
 .apple-home-page {
   overflow-x: clip;
-  background: #f5f5f7;
+  background: #ffffff;
   color: #111;
 }
 
@@ -8263,7 +8263,7 @@ body {
   justify-items: center;
   gap: clamp(1.1rem, 2.4vw, 2rem);
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: #ffffff;
   padding: clamp(3.6rem, 5.6vw, 5.4rem) max(1rem, calc((100vw - 1480px) / 2)) 0;
   color: var(--text-primary);
   text-align: center;
@@ -8799,23 +8799,23 @@ body {
 }
 
 .store-button-primary {
-  background: var(--link-blue);
-  color: #fff;
+  background: var(--brand-gold);
+  color: var(--brand-black);
 }
 
 .store-button-primary:hover {
-  background: #0066cc;
+  background: var(--brand-gold-hover);
 }
 
 .store-launch-black .store-button-primary,
 .store-product-black .store-button-primary {
-  background: #2997ff;
-  color: #fff;
+  background: var(--brand-gold);
+  color: var(--brand-black);
 }
 
 .store-launch-black .store-button-primary:hover,
 .store-product-black .store-button-primary:hover {
-  background: #147ce5;
+  background: var(--brand-gold-hover);
 }
 
 .store-button-secondary {
@@ -8928,7 +8928,7 @@ body {
   align-items: center;
   gap: clamp(2rem, 5vw, 5rem);
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: #ffffff;
   color: var(--text-primary);
   padding: clamp(3.5rem, 6vw, 6rem) max(1rem, calc((100vw - 1360px) / 2));
 }
@@ -9015,7 +9015,7 @@ body {
   justify-items: center;
   gap: clamp(1.5rem, 3vw, 2.5rem);
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: #ffffff;
   color: var(--text-primary);
   padding: clamp(4rem, 7vw, 6.5rem) 1rem;
   text-align: center;
@@ -9036,7 +9036,7 @@ body {
 .store-rail-section,
 .store-marketplace-section {
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: #ffffff;
   padding: clamp(4rem, 7vw, 6.5rem) max(1rem, calc((100vw - 1380px) / 2));
 }
 
@@ -9517,7 +9517,7 @@ body {
 }
 
 .service-story-rail {
-  background: var(--bg-secondary);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
@@ -9620,7 +9620,7 @@ body {
 }
 
 .store-footer {
-  background: var(--bg-secondary);
+  background: #ffffff;
   color: var(--text-primary);
   padding: clamp(2.2rem, 3.8vw, 3.2rem) max(1.25rem, calc((100vw - 1280px) / 2)) clamp(4.2rem, 6.5vw, 5.5rem);
 }
@@ -11218,7 +11218,7 @@ body {
 
 /* Final focused homepage/service cleanup */
 .store-human-campaign {
-  background: #f5f5f7;
+  background: #ffffff;
 }
 
 .store-human-campaign-art {
@@ -11583,7 +11583,7 @@ body {
 /* Exactly two calm Visa showcase beats: Watch, then iPhone 17 Pro. */
 .storefront-home .visa-product-showcase {
   border-radius: 0;
-  background: #f5f5f7;
+  background: #ffffff;
   box-shadow: none;
 }
 
@@ -11734,7 +11734,7 @@ body {
 
 /* Final correction pass: sticker surface, brand sheet, and aligned campaign tiles */
 .store-human-campaign {
-  background: #f5f5f7;
+  background: #ffffff;
 }
 
 .store-sticker-collage {
@@ -13826,7 +13826,7 @@ body {
 
 .new-mac-launch .store-button-primary,
 .mac-story-page .store-button-primary {
-  background: #e5b438;
+  background: var(--brand-gold);
   color: #111;
 }
 

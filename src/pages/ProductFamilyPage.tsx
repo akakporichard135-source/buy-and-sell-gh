@@ -13,6 +13,7 @@ import { StoreCategoryCard } from "../components/store/category/StoreCategoryCar
 import { StoreCategoryCatalogGrid } from "../components/store/category/StoreCategoryCatalogGrid";
 import { StoreCategoryAccessoriesRail } from "../components/store/category/StoreCategoryAccessoriesRail";
 import { StoreCategoryTrustBar } from "../components/store/category/StoreCategoryTrustBar";
+import "../styles/store.css";
 import "../styles/store-category.css";
 import {
   compareAirpodsNewest,
@@ -65,7 +66,9 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
           <StoreCarousel
             eyebrow="FEATURED MODELS"
             title={`Explore the ${config.label} lineup.`}
-            subtitle="Browse the latest releases, signature features, and flagship hardware."
+            subtitle={family === "accessories"
+              ? "Explore original chargers, cables, and everyday Apple companions."
+              : "Browse the latest releases, signature features, and flagship hardware."}
             controlsAriaLabel={`${config.label} featured carousel navigation`}
             trackClassName="store-cat-featured-track"
           >

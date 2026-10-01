@@ -11,7 +11,7 @@ interface FormFieldProps {
 }
 
 export function FormField({ label, name, type = "text", required, placeholder, defaultValue, options, textarea, maxLength }: FormFieldProps) {
-  const inputClass = "mt-1.5 w-full rounded-xl border border-[#d2d2d7] bg-[#fbfbfd] px-4 py-3 text-sm font-normal text-[#1d1d1f] placeholder:text-[#86868b] outline-none transition focus:border-[#0071e3] focus:bg-white focus:ring-3 focus:ring-[#0071e3]/15";
+  const inputClass = "mt-1.5 w-full rounded-xl border border-[#d2d2d7] bg-white px-4 py-3 text-sm font-normal text-[#1d1d1f] placeholder:text-[#86868b] outline-none transition focus:border-[#b17d12] focus:ring-3 focus:ring-[#d8a72d]/20";
   const inputType = type === "text" && name.toLowerCase().includes("phone") ? "tel" : type;
   const autoComplete = name.toLowerCase().includes("phone") ? "tel" : name.toLowerCase().includes("email") ? "email" : name === "name" ? "name" : undefined;
 

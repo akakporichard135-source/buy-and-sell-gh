@@ -4,7 +4,7 @@
 
 .store-services-section {
   width: 100%;
-  background: #fbfbfd;
+  background: #ffffff;
   padding: clamp(84px, 8vw, 120px) clamp(20px, 4vw, 48px) clamp(96px, 10vw, 144px);
   box-sizing: border-box;
   border-top: 1px solid rgba(0, 0, 0, 0.04);
@@ -87,8 +87,8 @@
 }
 
 .store-services-arrow-btn:hover:not(:disabled) {
-  background: #f5f5f7;
-  border-color: rgba(0, 0, 0, 0.24);
+  background: #fffaf0;
+  border-color: var(--brand-gold);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transform: scale(1.05);
 }
@@ -98,7 +98,7 @@
 }
 
 .store-services-arrow-btn:focus-visible {
-  outline: 2px solid #0071e3;
+  outline: 2px solid var(--brand-gold-strong);
   outline-offset: 3px;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .store-service-card:focus-visible .store-service-poster {
-  outline: 2px solid #0071e3;
+  outline: 2px solid var(--brand-gold-strong);
   outline-offset: 4px;
 }
 

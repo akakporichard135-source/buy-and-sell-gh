@@ -4,14 +4,14 @@
    ========================================================================== */
 
 :root {
-  --store-bg: #fbfbfd;
+  --store-bg: #ffffff;
   --store-card-bg: #ffffff;
   --store-dark-card-bg: #101012;
   --store-ink: #1d1d1f;
   --store-subtle: #6e6e73;
   --store-border: rgba(0, 0, 0, 0.08);
-  --store-gold: #c8961e;
-  --store-gold-hover: #b58416;
+  --store-gold: var(--brand-gold);
+  --store-gold-hover: var(--brand-gold-hover);
   --store-gold-bg: rgba(200, 150, 30, 0.1);
   --store-radius: 20px;
   --store-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
@@ -79,7 +79,7 @@
 .store-section-header-link {
   font-size: 14px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -170,7 +170,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   text-decoration: none;
   font-weight: 500;
 }
@@ -262,7 +262,7 @@
 .store-latest-card a:focus-visible,
 .store-accessory-card a:focus-visible,
 .store-accessory-card button:focus-visible {
-  outline: 2px solid #0066cc;
+  outline: 2px solid var(--brand-gold-strong);
   outline-offset: 3px;
 }
 
@@ -283,6 +283,11 @@
   max-height: 100%;
   object-fit: contain;
   transition: transform 240ms ease;
+}
+
+.store-family-item:first-child .store-family-img {
+  max-width: 110%;
+  max-height: 110%;
 }
 
 .store-family-item:hover .store-family-img {
@@ -390,8 +395,8 @@
 }
 
 .store-carousel-btn:hover:not(:disabled) {
-  background: #f5f5f7;
-  border-color: rgba(0, 0, 0, 0.22);
+  background: #fffaf0;
+  border-color: var(--brand-gold);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transform: scale(1.05);
 }
@@ -559,6 +564,11 @@
   transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.store-latest-card:has(.store-latest-card-media[href="/mac-mini"]) .store-latest-card-img {
+  max-height: 265px;
+  transform: scale(1.13);
+}
+
 .store-latest-card:hover .store-latest-card-img {
   transform: scale(1.04);
 }
@@ -599,7 +609,7 @@
   justify-content: center;
   padding: 9px 18px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
+  background: #ffffff;
   color: var(--store-ink);
   font-size: 14px;
   font-weight: 600;
@@ -716,7 +726,7 @@
   gap: 6px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
 }
 
 @media (max-width: 640px) {
@@ -936,7 +946,7 @@
   border: 0;
   font-size: 12.5px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   cursor: pointer;
   padding: 4px 8px;
 }
@@ -1009,7 +1019,7 @@
   padding: 0;
   font-size: 12.5px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   cursor: pointer;
 }
 
@@ -1310,8 +1320,8 @@
   justify-content: center;
   padding: 8px 18px;
   border-radius: 999px;
-  background: var(--store-ink);
-  color: #ffffff;
+  background: var(--store-gold);
+  color: #111111;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -1322,7 +1332,7 @@
 }
 
 .btn-store-card-primary:hover {
-  background: var(--store-gold);
+  background: var(--store-gold-hover);
   color: #111111;
   transform: translateY(-1px);
 }
@@ -1333,7 +1343,7 @@
   gap: 4px;
   font-size: 13px;
   font-weight: 500;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   text-decoration: none;
   transition: color 140ms ease;
   white-space: nowrap;
@@ -1341,7 +1351,7 @@
 
 .btn-store-card-secondary:hover {
   text-decoration: underline;
-  color: #004499;
+  color: var(--brand-gold-strong);
 }
 
 .btn-store-card-cart {
@@ -1432,7 +1442,7 @@
   border-radius: 999px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   text-decoration: none;
 }
 
@@ -1601,14 +1611,14 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #0066cc;
+  color: var(--color-gold-dark);
   text-decoration: none;
   transition: color 140ms ease;
 }
 
 .store-help-action-link:hover {
   text-decoration: underline;
-  color: #004499;
+  color: var(--brand-gold-strong);
 }
 
 @media (max-width: 640px) {

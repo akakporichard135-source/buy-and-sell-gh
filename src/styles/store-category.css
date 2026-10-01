@@ -4,7 +4,7 @@
    ========================================================================== */
 
 .store-category-page {
-  background-color: #f5f5f7;
+  background-color: #ffffff;
   color: #1d1d1f;
   min-height: 100vh;
   padding-bottom: 96px;
@@ -16,7 +16,7 @@
    -------------------------------------------------------------------------- */
 .store-cat-intro-section {
   padding: 48px 0 28px;
-  background: #f5f5f7;
+  background: #ffffff;
 }
 
 .store-cat-intro-container {
@@ -180,15 +180,15 @@ a.store-cat-help-item:hover {
 
 .store-cat-subnav-pill:hover {
   background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.2);
+  border-color: var(--brand-gold);
   transform: translateY(-1px);
 }
 
 .store-cat-subnav-pill.is-active {
-  background: #1d1d1f;
-  color: #ffffff;
-  border-color: #1d1d1f;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  background: var(--brand-gold);
+  color: #111111;
+  border-color: var(--brand-gold);
+  box-shadow: 0 4px 12px rgba(177, 125, 18, 0.16);
 }
 
 /* --------------------------------------------------------------------------
@@ -201,6 +201,11 @@ a.store-cat-help-item:hover {
 .store-cat-carousel-container {
   max-width: 1360px;
   margin: 0 auto;
+}
+
+.store-cat-carousel-container .store-carousel-header-row,
+.store-cat-acc-rail-container .store-carousel-header-row {
+  padding-inline: 56px;
 }
 
 .store-cat-featured-track {
@@ -372,15 +377,17 @@ a.store-cat-help-item:hover {
 
 .store-cat-card-placeholder {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   width: 100%;
   height: 100%;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  color: #86868b;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #65656a;
+  font-size: 0.76rem;
   font-weight: 500;
 }
 
@@ -405,25 +412,26 @@ a.store-cat-help-item:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 40px;
   padding: 8px 20px;
   font-size: 0.875rem;
   font-weight: 600;
   border-radius: 9999px;
-  background: #0071e3;
-  color: #ffffff;
+  background: var(--brand-gold);
+  color: #111111;
   text-decoration: none;
   transition: background-color 0.15s ease, transform 0.15s ease;
   line-height: 1.25;
 }
 
 .store-cat-btn-primary:hover {
-  background: #0077ed;
+  background: var(--brand-gold-hover);
   transform: translateY(-1px);
 }
 
 .store-cat-card.is-dark .store-cat-btn-primary {
-  background: #0071e3;
-  color: #ffffff;
+  background: var(--brand-gold);
+  color: #111111;
 }
 
 .store-cat-btn-text {
@@ -432,7 +440,7 @@ a.store-cat-help-item:hover {
   gap: 3px;
   font-size: 0.875rem;
   font-weight: 550;
-  color: #0071e3;
+  color: var(--color-gold-dark);
   text-decoration: none;
   transition: opacity 0.15s ease;
 }
@@ -442,7 +450,7 @@ a.store-cat-help-item:hover {
 }
 
 .store-cat-card.is-dark .store-cat-btn-text {
-  color: #2997ff;
+  color: var(--brand-gold-soft);
 }
 
 /* --------------------------------------------------------------------------
@@ -512,7 +520,7 @@ a.store-cat-help-item:hover {
 }
 
 .store-cat-condition-btn.is-active {
-  background: #ffffff;
+  background: var(--brand-gold);
   color: #1d1d1f;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
@@ -528,7 +536,7 @@ a.store-cat-help-item:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: #fbfbfd;
+  background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 18px;
   padding: 20px;
@@ -655,25 +663,26 @@ a.store-cat-help-item:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 38px;
   padding: 6px 15px;
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: 9999px;
-  background: #0071e3;
-  color: #ffffff;
+  background: var(--brand-gold);
+  color: #111111;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .store-cat-grid-card-btn:hover {
-  background: #0077ed;
+  background: var(--brand-gold-hover);
   transform: translateY(-1px);
 }
 
 .store-cat-empty-state {
   text-align: center;
   padding: 60px 20px;
-  background: #fbfbfd;
+  background: #ffffff;
   border-radius: 16px;
   border: 1px dashed rgba(0, 0, 0, 0.12);
   color: #6e6e73;
@@ -785,21 +794,22 @@ a.store-cat-help-item:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 38px;
   padding: 6px 14px;
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: 999px;
-  background: #f5f5f7;
-  color: #1d1d1f;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--brand-gold);
+  color: #111111;
+  border: 1px solid var(--brand-gold);
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .store-cat-acc-card-btn:hover {
-  background: #1d1d1f;
-  color: #ffffff;
-  border-color: #1d1d1f;
+  background: var(--brand-gold-hover);
+  color: #111111;
+  border-color: var(--brand-gold-hover);
 }
 
 /* --------------------------------------------------------------------------
@@ -807,7 +817,7 @@ a.store-cat-help-item:hover {
    -------------------------------------------------------------------------- */
 .store-cat-trust-section {
   padding: 64px 0 24px;
-  background: #f5f5f7;
+  background: #ffffff;
 }
 
 .store-cat-trust-container {
@@ -891,13 +901,24 @@ a.store-cat-help-item:hover {
 .store-cat-trust-card-link {
   font-size: 0.84rem;
   font-weight: 600;
-  color: #0071e3;
+  color: var(--color-gold-dark);
   text-decoration: none;
   transition: text-decoration 0.15s ease;
 }
 
 .store-cat-trust-card-link:hover {
   text-decoration: underline;
+}
+
+.store-cat-subnav-pill:focus-visible,
+.store-cat-condition-btn:focus-visible,
+.store-cat-btn-primary:focus-visible,
+.store-cat-btn-text:focus-visible,
+.store-cat-grid-card-btn:focus-visible,
+.store-cat-acc-card-btn:focus-visible,
+.store-cat-trust-card-link:focus-visible {
+  outline: 2px solid var(--brand-gold-strong);
+  outline-offset: 3px;
 }
 
 /* --------------------------------------------------------------------------
@@ -961,6 +982,11 @@ a.store-cat-help-item:hover {
     padding-left: 20px;
     padding-right: 20px;
     gap: 16px;
+  }
+
+  .store-cat-carousel-container .store-carousel-header-row,
+  .store-cat-acc-rail-container .store-carousel-header-row {
+    padding-inline: 20px;
   }
 
   .store-cat-intro-title {

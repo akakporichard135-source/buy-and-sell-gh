@@ -25,17 +25,17 @@
   min-height: 34px;
   width: fit-content;
   padding: 7px 17px;
-  border: 1px solid #dcae27;
+  border: 1px solid var(--brand-gold);
   border-radius: 999px;
   color: #191919;
-  background: #f4c542;
+  background: var(--brand-gold);
   font-size: 12px;
   line-height: 1;
   font-weight: 750;
   white-space: nowrap;
   transition: background-color .2s ease, transform .2s ease;
 }
-.editorial-buy:hover { background: #ffd968; transform: translateY(-1px); }
+.editorial-buy:hover { background: var(--brand-gold-hover); transform: translateY(-1px); }
 .editorial-story a:focus-visible, .editorial-story button:focus-visible, .editorial-highlight-rail:focus-visible { outline: 3px solid #ba8510; outline-offset: 3px; }
 .editorial-eyebrow { font-size: 12px; line-height: 1.25; font-weight: 750; text-transform: uppercase; }
 

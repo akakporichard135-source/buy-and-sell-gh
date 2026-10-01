@@ -5,6 +5,7 @@ import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import type { Product } from "../../../types/product";
 import { formatGhs } from "../../../utils/format";
 import { resolveCatalogueProductImage, resolveProductImage } from "../../../utils/productImages";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 
 interface StoreCategoryCatalogGridProps {
   family: ProductFamilyKey;
@@ -174,9 +175,7 @@ function StoreCatalogProductCard({ product, family }: { product: Product; family
             className="store-cat-grid-card-img"
           />
         ) : (
-          <div className="store-cat-card-placeholder">
-            <span>Asset pending</span>
-          </div>
+          <ProductImagePlaceholder />
         )}
       </div>
 

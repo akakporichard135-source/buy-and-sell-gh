@@ -95,7 +95,17 @@
 }
 
 .contact-experience-hero {
-  padding: clamp(5rem, 10vw, 10rem) 1rem clamp(3rem, 6vw, 6rem);
+  padding: clamp(3rem, 6vw, 5rem) 1rem clamp(2rem, 4vw, 3rem);
+}
+
+.contact-experience-hero h1 {
+  max-width: 18ch;
+  font-size: clamp(2.7rem, 5vw, 4.8rem);
+  line-height: 1.05;
+}
+
+.contact-experience-layout {
+  padding-block: clamp(2.5rem, 5vw, 4.5rem);
 }
 
 .contact-experience-details {
@@ -173,6 +183,6 @@
 @media (max-width: 480px) {
   .preorder-hero h1,
   .contact-experience-hero h1 {
-    font-size: clamp(2.8rem, 15vw, 4.3rem);
+    font-size: clamp(2.55rem, 11vw, 3.5rem);
   }
 }

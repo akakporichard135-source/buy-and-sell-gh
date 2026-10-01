@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CategoryFeaturedCardData } from "./categoryData";
+import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 
 interface StoreCategoryCardProps {
   card: CategoryFeaturedCardData;
@@ -45,9 +46,7 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
             className="store-cat-card-img"
           />
         ) : (
-          <div className="store-cat-card-placeholder">
-            <span>Asset pending confirmation</span>
-          </div>
+          <ProductImagePlaceholder />
         )}
       </div>
 

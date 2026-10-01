@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag } from "lucide-react";
+import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag, ImageOff } from "lucide-react";
 import "../../styles/apple-buy-experience.css";
 
 // --------------------------------------------------------------------------
@@ -10,7 +10,7 @@ export interface BuyLayoutProps {
   name: string;
   categoryLabel: string;
   categoryPath: string;
-  activeImageSrc: string;
+  activeImageSrc?: string;
   activeImageAlt: string;
   priceLabel: string;
   badge?: string;
@@ -63,15 +63,22 @@ export function BuyLayout({
         {/* Left Column: Sticky Product Showcase */}
         <div className="apple-buy-gallery-col">
           <div className={`apple-buy-stage ${darkStage ? "apple-buy-stage-dark" : ""}`}>
-            <img
-              src={activeImageSrc}
-              alt={activeImageAlt}
-              className="apple-buy-stage-img"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              draggable={false}
-            />
+            {activeImageSrc ? (
+              <img
+                src={activeImageSrc}
+                alt={activeImageAlt}
+                className="apple-buy-stage-img"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                draggable={false}
+              />
+            ) : (
+              <div className="apple-buy-stage-placeholder" role="img" aria-label={`${name} image coming soon`}>
+                <ImageOff size={40} strokeWidth={1.5} aria-hidden="true" />
+                <span>Image coming soon</span>
+              </div>
+            )}
           </div>
           {thumbnails.length > 1 && (
             <div className="apple-buy-thumbnails" aria-label={`${name} viewing angles`}>

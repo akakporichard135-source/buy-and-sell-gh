@@ -107,10 +107,10 @@
   align-items: center;
   justify-content: center;
   padding: 0 22px;
-  border: 1px solid #e5b438;
+  border: 1px solid var(--brand-gold);
   border-radius: 999px;
   color: #111111;
-  background: #e5b438;
+  background: var(--brand-gold);
   font-size: 0.9rem;
   font-weight: 500;
   line-height: 1;
@@ -119,8 +119,8 @@
 }
 
 .ultra-airpods-actions a:hover {
-  background: #cca030;
-  border-color: #cca030;
+  background: var(--brand-gold-hover);
+  border-color: var(--brand-gold-hover);
   transform: translateY(-1px);
 }
 

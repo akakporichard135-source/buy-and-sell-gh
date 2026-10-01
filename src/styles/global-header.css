@@ -260,9 +260,9 @@
 
 .global-mobile-link:hover,
 .global-mobile-link:active {
-  color: #0071e3;
+  color: var(--color-gold-dark);
 }
 
 .global-mobile-link.is-active {
-  color: #0071e3;
+  color: var(--color-gold-dark);
 }
