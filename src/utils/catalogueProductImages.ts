@@ -1,26 +1,16 @@
-import catalogueAdapter20WPremium from "../assets/catalogue-products/apple-20w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter30WPremium from "../assets/catalogue-products/apple-30w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter35WDualPremium from "../assets/catalogue-products/apple-35w-dual-usb-c-power-adapter-premium.webp";
 import catalogueAdapter70WPremium from "../assets/catalogue-products/apple-70w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter96WPremium from "../assets/catalogue-products/apple-96w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter140WPremium from "../assets/catalogue-products/apple-140w-usb-c-power-adapter-premium.webp";
-import catalogueMagsafeChargerPremium from "../assets/catalogue-products/apple-magsafe-charger-premium.webp";
-import catalogueUsbCChargeCablePremium from "../assets/catalogue-products/apple-usb-c-charge-cable-premium.webp";
 import catalogueUsbCToLightningPremium from "../assets/catalogue-products/apple-usb-c-to-lightning-cable-premium.webp";
-import catalogueCable60WPremium from "../assets/catalogue-products/apple-60w-usb-c-charge-cable-premium.webp";
-import catalogueCable240WPremium from "../assets/catalogue-products/apple-240w-usb-c-charge-cable-premium.webp";
-import catalogueMagsafe3CablePremium from "../assets/catalogue-products/apple-usb-c-to-magsafe-3-cable-premium.webp";
 import catalogueMagsafeIphoneCasePremium from "../assets/catalogue-products/apple-magsafe-iphone-case-premium.webp";
 import catalogueClearIphoneCasePremium from "../assets/catalogue-products/apple-clear-iphone-case-magsafe-premium.webp";
 import cataloguePencilUsbCPremium from "../assets/catalogue-products/apple-pencil-usb-c-premium.webp";
 import cataloguePencilProPremium from "../assets/catalogue-products/apple-pencil-pro-premium.webp";
 import catalogueMagicKeyboardIpadPremium from "../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
-import catalogueMagicKeyboardFolioPremium from "../assets/catalogue-products/apple-magic-keyboard-folio-premium.webp";
 import catalogueMagicMousePremium from "../assets/catalogue-products/apple-magic-mouse-premium.webp";
-import catalogueMagicTrackpadPremium from "../assets/catalogue-products/apple-magic-trackpad-premium.webp";
-import catalogueMagicKeyboardPremium from "../assets/catalogue-products/apple-magic-keyboard-premium.webp";
 import catalogueMagicKeyboardTouchIdPremium from "../assets/catalogue-products/apple-magic-keyboard-touch-id-premium.webp";
-import catalogueWatchFastChargerPremium from "../assets/catalogue-products/apple-watch-fast-charger-usb-c-premium.webp";
 import catalogueIphone16ProMaxPremium from "../assets/catalogue-products/iphone-16-pro-max-premium.webp";
 import catalogueIphone16ProPremium from "../assets/catalogue-products/iphone-16-pro-premium.webp";
 import catalogueIphone16PlusPremium from "../assets/catalogue-products/iphone-16-plus-premium.webp";
@@ -112,30 +102,34 @@ import catalogueMacbookPro14M5Premium from "../assets/catalogue-products/macbook
 import catalogueMacbookPro14M5ProMaxPremium from "../assets/catalogue-products/macbook-pro-14-inch-m5-pro-max-premium.webp";
 import catalogueMacbookPro16M5Premium from "../assets/catalogue-products/macbook-pro-16-inch-m5-pro-max-premium.webp";
 
+// Existing catalogue files for these products still contain baked-in gold scenery.
+export const missingCleanAccessoryImageSlugs = new Set([
+  "apple-20w-usb-c-power-adapter",
+  "apple-60w-usb-c-charge-cable",
+  "apple-240w-usb-c-charge-cable",
+  "apple-magic-keyboard-folio",
+  "apple-usb-c-charge-cable",
+  "apple-watch-magnetic-fast-charger-usb-c",
+  "apple-usb-c-to-magsafe-3-cable",
+  "apple-magic-trackpad",
+  "apple-magic-keyboard",
+]);
+
 export const localCatalogueImageBySlug: Record<string, string> = {
-  "apple-20w-usb-c-power-adapter": catalogueAdapter20WPremium,
   "apple-30w-usb-c-power-adapter": catalogueAdapter30WPremium,
   "apple-35w-dual-usb-c-power-adapter": catalogueAdapter35WDualPremium,
   "apple-70w-usb-c-power-adapter": catalogueAdapter70WPremium,
   "apple-96w-usb-c-power-adapter": catalogueAdapter96WPremium,
   "apple-140w-usb-c-power-adapter": catalogueAdapter140WPremium,
-  "apple-magsafe-charger": catalogueMagsafeChargerPremium,
-  "apple-usb-c-charge-cable": catalogueUsbCChargeCablePremium,
+  "apple-magsafe-charger": "/products/campaigns/accessory-magsafe-puck.webp",
   "apple-usb-c-to-lightning-cable": catalogueUsbCToLightningPremium,
-  "apple-60w-usb-c-charge-cable": catalogueCable60WPremium,
-  "apple-240w-usb-c-charge-cable": catalogueCable240WPremium,
-  "apple-usb-c-to-magsafe-3-cable": catalogueMagsafe3CablePremium,
   "apple-magsafe-iphone-case": catalogueMagsafeIphoneCasePremium,
   "apple-clear-iphone-case-magsafe": catalogueClearIphoneCasePremium,
   "apple-pencil-usb-c": cataloguePencilUsbCPremium,
   "apple-pencil-pro": cataloguePencilProPremium,
   "apple-magic-keyboard-ipad": catalogueMagicKeyboardIpadPremium,
-  "apple-magic-keyboard-folio": catalogueMagicKeyboardFolioPremium,
   "apple-magic-mouse": catalogueMagicMousePremium,
-  "apple-magic-trackpad": catalogueMagicTrackpadPremium,
-  "apple-magic-keyboard": catalogueMagicKeyboardPremium,
   "apple-magic-keyboard-touch-id": catalogueMagicKeyboardTouchIdPremium,
-  "apple-watch-magnetic-fast-charger-usb-c": catalogueWatchFastChargerPremium,
   "iphone-16-pro-max": catalogueIphone16ProMaxPremium,
   "iphone-16-pro": catalogueIphone16ProPremium,
   "iphone-16-plus": catalogueIphone16PlusPremium,

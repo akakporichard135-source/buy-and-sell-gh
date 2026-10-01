@@ -1,6 +1,6 @@
 import { Eye, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
-import { productBuyPath, productStoryPath } from "../../catalog/productExperience";
+import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
 import { useCart } from "../../context/CartContext";
 import type { Product } from "../../types/product";
 import { formatGhs } from "../../utils/format";
@@ -26,17 +26,20 @@ function getAccessoryEyebrow(product: Product): string {
 
 export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselProps) {
   const { addItem } = useCart();
-
-  // Filter all legitimate catalog accessories
-  const allAccessories = products.filter(
-    (product) =>
-      product.category === "Accessories" ||
-      product.subcategory?.includes("Accessories") ||
-      product.category?.toLowerCase().includes("accessories"),
-  );
-
-  // Present a curated selection of genuine Apple accessories across key categories
-  const featuredAccessories = allAccessories.slice(0, 12);
+  const featuredSlugs: { slug: string; family: ProductFamilyKey }[] = [
+    { slug: "apple-magsafe-iphone-case", family: "accessories" },
+    { slug: "airpods-4-anc", family: "airpods" },
+    { slug: "apple-clear-iphone-case-magsafe", family: "accessories" },
+    { slug: "apple-pencil-pro", family: "accessories" },
+    { slug: "apple-magic-keyboard-ipad", family: "accessories" },
+    { slug: "airpods-pro-3", family: "airpods" },
+    { slug: "apple-20w-usb-c-power-adapter", family: "accessories" },
+    { slug: "apple-magsafe-charger", family: "accessories" },
+  ];
+  const featuredAccessories = featuredSlugs.flatMap(({ slug, family }) => {
+    const product = products.find((item) => item.slug === slug);
+    return product ? [{ product, family }] : [];
+  });
 
   if (featuredAccessories.length === 0) {
     return null;
@@ -48,16 +51,16 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
         <StoreCarousel
           eyebrow="ACCESSORIES"
           title="Complete your setup."
-          subtitle="Explore genuine power adapters, braided cables, MagSafe chargers, Magic keyboards, and protection."
+          subtitle="The essentials that go beautifully together."
           controlsAriaLabel="Accessories carousel navigation"
           trackClassName="store-accessories-track"
           headerRight={
-            <Link to="/store?category=Accessories" className="store-section-header-link">
+            <Link to="/accessories" className="store-section-header-link">
               All accessories
             </Link>
           }
         >
-          {featuredAccessories.map((product) => {
+          {featuredAccessories.map(({ product, family }) => {
             const image = resolveCatalogueProductImage(product);
             const enquiry = product.priceOnRequest === true || product.price <= 0;
             const purchasable = isProductPurchasable(product);
@@ -66,7 +69,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
             return (
               <article key={product.id} className="store-accessory-card">
                 <Link
-                  to={productStoryPath("accessories", product.slug)}
+                  to={productStoryPath(family, product.slug)}
                   className="store-accessory-media"
                   aria-label={`View ${product.name}`}
                 >
@@ -89,7 +92,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
                 <div className="store-accessory-info">
                   <p className="store-accessory-detail">{eyebrow}</p>
                   <h3 className="store-accessory-name">
-                    <Link to={productStoryPath("accessories", product.slug)}>
+                    <Link to={productStoryPath(family, product.slug)}>
                       {product.name}
                     </Link>
                   </h3>
@@ -100,7 +103,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
 
                 <div className="store-accessory-actions">
                   <Link
-                    to={productStoryPath("accessories", product.slug)}
+                    to={productStoryPath(family, product.slug)}
                     className="btn-store-card-secondary"
                   >
                     <Eye size={15} aria-hidden="true" /> Details
@@ -117,7 +120,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
                     </button>
                   ) : (
                     <Link
-                      to={productBuyPath("accessories", product.slug)}
+                      to={productBuyPath(family, product.slug)}
                       className="btn-store-card-primary"
                     >
                       Enquire

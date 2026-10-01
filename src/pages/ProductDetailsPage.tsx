@@ -177,7 +177,7 @@ export function ProductDetailsPage() {
       </script>
       <section className="section product-detail-layout">
         <div className="product-gallery">
-          <button className={`product-main-image ${zoomed ? "is-zoomed" : ""}`} type="button" onClick={() => setZoomed((current) => !current)} aria-label="Zoom product image">
+          <button className={`product-main-image ${product.category === "Accessories" || product.category === "AirPods" ? "product-main-image-clean" : ""} ${zoomed ? "is-zoomed" : ""}`} type="button" onClick={() => setZoomed((current) => !current)} aria-label="Zoom product image">
             {active ? <img src={active.src} alt={active.alt} loading="eager" /> : <span className="product-gallery-empty">{realPhotosPending ? "Photos of this exact device are coming soon" : "Image coming soon"}</span>}
           </button>
           <div className="product-thumbnails" aria-label="Product image thumbnails">

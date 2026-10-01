@@ -1,5 +1,6 @@
 import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import macbookProCutout from "../../../assets/homepage/homepage-macbook-pro-m5-cutout.webp";
+import { localCatalogueImageBySlug } from "../../../utils/catalogueProductImages";
 
 export interface CategorySubnavItem {
   id: string;
@@ -495,8 +496,8 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         subtitle: "Compact, fast, and energy-efficient charging for iPhone, iPad, and Apple Watch.",
         price: "In Stock",
         badge: "Bestseller",
-        image: "/products/campaigns/accessory-usbc-cables.webp",
-        alt: "Apple 20W USB-C power adapter and cable",
+        image: "",
+        alt: "Apple 20W USB-C Power Adapter",
         buyPath: "/shop/buy-accessory/apple-20w-usb-c-power-adapter",
         buyLabel: "Buy",
         storyPath: "/shop/buy-accessory/apple-20w-usb-c-power-adapter",
@@ -510,7 +511,7 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         subtitle: "Fast, easy authentication and secure password entry in a sleek, rechargeable wireless keyboard.",
         price: "Contact for price",
         badge: "Mac Companion",
-        image: "/products/campaigns/accessory-macbook-charger.webp",
+        image: localCatalogueImageBySlug["apple-magic-keyboard-touch-id"],
         alt: "Apple Magic Keyboard for Mac",
         buyPath: "/shop/buy-accessory/apple-magic-keyboard-touch-id",
         buyLabel: "View Pricing",
@@ -525,13 +526,13 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         subtitle: "Supports fast-charging up to 50 percent in around 30 minutes on supported 16-inch MacBook Pro models.",
         price: "Contact for price",
         badge: "Heavy Duty",
-        image: "/products/campaigns/accessory-color-cables.webp",
+        image: localCatalogueImageBySlug["apple-140w-usb-c-power-adapter"],
         alt: "Apple 140W USB-C Power Adapter",
         buyPath: "/shop/buy-accessory/apple-140w-usb-c-power-adapter",
         buyLabel: "View Pricing",
         storyPath: "/shop/buy-accessory/apple-140w-usb-c-power-adapter",
         storyLabel: "Details",
-        isDark: true,
+        isDark: false,
       },
     ],
     catalogTitle: "All Accessory Listings.",

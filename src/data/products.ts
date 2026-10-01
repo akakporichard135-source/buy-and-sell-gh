@@ -1,4 +1,4 @@
-import airpodsPro from "../assets/products/airpods-pro-premium.webp";
+import airpodsPro from "../assets/catalogue-products/airpods-pro-premium.webp";
 import appleWatch from "../assets/products/apple-watch-premium.webp";
 import appleWatchSe2 from "../assets/products/apple-watch-se-2-premium.webp";
 import appleWatchSe3 from "../assets/products/apple-watch-se-3-premium.webp";
@@ -776,7 +776,7 @@ export const products: Product[] = [
     colors: ["White"],
     stockStatus: "In Stock",
     stockQuantity: 10,
-    imageTone: "from-white via-zinc-100 to-yellow-100",
+    imageTone: "from-white via-white to-slate-50",
     badge: "Accessory Pick",
     badges: ["New Arrival", "Brand New"],
     isNewArrival: true,

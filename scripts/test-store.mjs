@@ -20,9 +20,16 @@ export function testStore({ presentation, product, productEditor, repository, ca
   assert.equal(published.price, 4500, "Admin confirmed pricing remains unchanged");
   assert.equal(saved({ available: true, priceOnRequest: true }).priceOnRequest, true, "Admin contact-price state survives save/load");
   assert.equal(productImages.resolveProductImage(published).src, ownerPhoto.src, "The real owner-uploaded image retains priority");
+  const cleanCase = { ...product, slug: "apple-magsafe-iphone-case", name: "Apple MagSafe iPhone Case", category: "Accessories", condition: "To Confirm", images: [{ src: "/old-gold-case.webp", alt: "Old render" }] };
+  assert.equal(productImages.resolveProductImage(cleanCase)?.src, productImages.resolveCatalogueProductImage(cleanCase)?.src, "Accessory cards and details share the clean catalogue image");
+  assert.notEqual(productImages.resolveProductImage(cleanCase)?.src, cleanCase.images[0].src, "Old seeded gold accessory art is not rendered");
+  const missingCleanPhoto = { ...cleanCase, slug: "apple-20w-usb-c-power-adapter" };
+  assert.equal(productImages.resolveProductImage(missingCleanPhoto), undefined, "Accessories without a clean local asset use the existing placeholder");
+  assert.equal(productImages.resolveProductImage({ ...missingCleanPhoto, images: [ownerPhoto] })?.src, ownerPhoto.src, "A real uploaded photo still overrides the placeholder");
   assert.ok(shopSource.includes("activeProducts.filter(isAppleCatalogueProduct)"), "Store preserves its existing inventory selector");
-  assert.ok(shopSource.includes("filtered.slice(0, visibleCount)"), "Batching occurs after search, filtering and sorting");
-  assert.ok(shopSource.includes('JSON.stringify([filters, sort])'), "Changing filters or sorting resets the visible batch");
+  assert.ok(shopSource.includes("<StoreMoreToLoveCarousel products={products} />"), "Store keeps the new favorites rail connected to the real catalogue");
+  assert.equal(shopSource.includes('id="all-products"'), false, "Store landing no longer renders the lower inventory grid");
+  assert.ok(shopSource.includes("<Navigate to={categoryPath[category]} replace />"), "Older category deep links resolve to existing family routes");
   assert.ok(cardSource.includes("productStoryPath(family, product.slug)"), "Learn More routes to the editorial product experience");
   assert.ok(cardSource.includes("productBuyPath(family, product.slug)"), "Buy and View Pricing route to the purchasing experience");
   assert.ok(cardSource.includes("isProductPurchasable(product)"), "Direct cart actions retain existing availability checks");

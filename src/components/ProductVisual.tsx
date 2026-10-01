@@ -23,10 +23,11 @@ function DeviceSilhouetteIcon({ category }: { category: string }) {
 
 export function ProductVisual({ product, size = "card", priority = false, imageVariant = "default" }: { product: Product; size?: "card" | "large"; priority?: boolean; imageVariant?: "default" | "catalogue" }) {
   const image = imageVariant === "catalogue" ? resolveCatalogueProductImage(product) : resolveProductImage(product);
+  const cleanProductStage = product.category === "Accessories" || product.category === "AirPods";
   if (image) {
     return (
       <div
-        className={`product-visual product-image-frame relative grid min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
+        className={`product-visual product-image-frame ${cleanProductStage ? "product-visual-clean" : ""} relative grid min-w-0 overflow-hidden rounded-2xl bg-gradient-to-br ${product.imageTone} ${
           size === "large" ? "min-h-[360px]" : "min-h-[230px]"
         } place-items-center`}
       >
@@ -46,7 +47,7 @@ export function ProductVisual({ product, size = "card", priority = false, imageV
   if (requiresRealProductPhotos(product) || !supportsDeviceIllustration) {
     return (
       <div
-        className={`product-visual product-photo-placeholder relative flex flex-col items-center justify-center gap-2.5 min-w-0 overflow-hidden rounded-2xl bg-[#f5f5f7] ${
+        className={`product-visual product-photo-placeholder ${cleanProductStage ? "product-visual-clean" : ""} relative flex flex-col items-center justify-center gap-2.5 min-w-0 overflow-hidden rounded-2xl bg-[#f5f5f7] ${
           size === "large" ? "min-h-[360px]" : "min-h-[230px]"
         } p-6 text-center`}
         role="img"

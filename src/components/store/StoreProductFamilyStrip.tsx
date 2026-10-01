@@ -1,101 +1,71 @@
+import { Link } from "react-router-dom";
+
 interface ProductFamilyItem {
   id: string;
   name: string;
   image: string;
   alt: string;
-  category: string;
+  path: string;
 }
 
 const productFamilies: ProductFamilyItem[] = [
   {
     id: "iphone",
     name: "iPhone",
-    image: "/products/campaigns/iphone-18-pro-colors.webp",
-    alt: "iPhone lineup",
-    category: "Phones",
+    image: "/products/campaigns/iphone-18-pro-silver.webp",
+    alt: "Silver iPhone 18 Pro",
+    path: "/iphone",
   },
   {
     id: "mac",
     name: "Mac",
     image: "/products/homepage/macbook-air.jpg",
     alt: "MacBook Air",
-    category: "Laptops",
+    path: "/mac",
   },
   {
     id: "ipad",
     name: "iPad",
     image: "/products/homepage/ipad-air.jpg",
     alt: "iPad Air",
-    category: "Tablets",
+    path: "/ipad",
   },
   {
     id: "watch",
     name: "Apple Watch",
     image: "/products/homepage/watch-series-12.webp",
     alt: "Apple Watch Series 12",
-    category: "Watches",
+    path: "/watch",
   },
   {
     id: "airpods",
     name: "AirPods",
-    image: "/products/homepage/airpods-5.jpg",
+    image: "/products/campaigns/airpods-5-earbuds.webp",
     alt: "AirPods 5 wireless earbuds",
-    category: "Audio",
+    path: "/airpods",
   },
   {
     id: "accessories",
     name: "Accessories",
     image: "/products/campaigns/accessory-magsafe-puck.webp",
     alt: "Apple MagSafe charger and accessories",
-    category: "Accessories",
+    path: "/accessories",
   },
 ];
 
-interface StoreProductFamilyStripProps {
-  activeCategory: string;
-  onSelectCategory: (category: string) => void;
-}
-
-export function StoreProductFamilyStrip({
-  activeCategory,
-  onSelectCategory,
-}: StoreProductFamilyStripProps) {
-  const handleClick = (category: string) => {
-    onSelectCategory(category);
-    const target = document.getElementById("all-products");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
+export function StoreProductFamilyStrip() {
   return (
     <section className="store-family-strip-section" aria-label="Browse by product family">
       <div className="store-family-strip-container">
-        <div className="store-family-strip-rail" role="tablist" aria-label="Product families">
-          {productFamilies.map((family) => {
-            const isSelected = activeCategory === family.category;
-            return (
-              <button
-                key={family.id}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                className={`store-family-item${isSelected ? " is-active" : ""}`}
-                onClick={() => handleClick(family.category)}
-              >
-                <div className="store-family-img-wrap">
-                  <img
-                    src={family.image}
-                    alt={family.alt}
-                    loading="lazy"
-                    decoding="async"
-                    className="store-family-img"
-                  />
-                </div>
-                <span className="store-family-name">{family.name}</span>
-              </button>
-            );
-          })}
+        <div className="store-family-strip-rail">
+          {productFamilies.map((family) => (
+            <Link key={family.id} to={family.path} className="store-family-item">
+              <span className="store-family-img-wrap">
+                <img src={family.image} alt={family.alt} loading="lazy" decoding="async" className="store-family-img" />
+              </span>
+              <span className="store-family-name">{family.name}</span>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

@@ -1,13 +1,13 @@
-import airpods2 from "../assets/products/airpods-2nd-generation-premium.webp";
-import airpods3 from "../assets/products/airpods-3rd-generation-premium.webp";
-import airpods4 from "../assets/products/airpods-4-premium.webp";
-import airpods4Anc from "../assets/products/airpods-4-anc-premium.webp";
-import airpodsPro1 from "../assets/products/airpods-pro-1-premium.webp";
-import airpodsPro2 from "../assets/products/airpods-pro-2-premium.webp";
-import airpodsPro3 from "../assets/products/airpods-pro-3-premium.webp";
-import airpodsMaxLightning from "../assets/products/airpods-max-lightning-premium.webp";
-import airpodsMaxUsbC from "../assets/products/airpods-max-usb-c-premium.webp";
-import airpodsMax2 from "../assets/products/airpods-max-2-premium.webp";
+import airpods2 from "../assets/catalogue-products/airpods-2nd-generation-premium.webp";
+import airpods3 from "../assets/catalogue-products/airpods-3rd-generation-premium.webp";
+import airpods4 from "../assets/catalogue-products/airpods-4-premium.webp";
+import airpods4Anc from "../assets/catalogue-products/airpods-4-anc-premium.webp";
+import airpodsPro1 from "../assets/catalogue-products/airpods-pro-1-premium.webp";
+import airpodsPro2 from "../assets/catalogue-products/airpods-pro-2-premium.webp";
+import airpodsPro3 from "../assets/catalogue-products/airpods-pro-3-premium.webp";
+import airpodsMaxLightning from "../assets/catalogue-products/airpods-max-lightning-premium.webp";
+import airpodsMaxUsbC from "../assets/catalogue-products/airpods-max-usb-c-premium.webp";
+import airpodsMax2 from "../assets/catalogue-products/airpods-max-2-premium.webp";
 import type { Product } from "../types/product";
 
 interface CatalogueAirpodsInput {
@@ -40,7 +40,7 @@ const createCatalogueAirpods = ({ slug, name, family, generation, image, caseOpt
   stockStatus: "Out of Stock",
   stockQuantity: 0,
   available: true,
-  imageTone: "from-stone-100 via-white to-yellow-100",
+  imageTone: "from-white via-white to-slate-50",
   badges: [],
   tags: ["airpods", family.toLowerCase(), name.toLowerCase(), generation.toLowerCase(), "contact for price"],
   images: [{ src: image, alt: `${name} premium product image for Buy & Sell GH` }],

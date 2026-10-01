@@ -78,7 +78,7 @@ export function StoreCarousel({
     const scrollAmount = step || Math.max(el.clientWidth * 0.72, 320);
     el.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
     });
   };
 
@@ -131,6 +131,12 @@ export function StoreCarousel({
         tabIndex={0}
         role="region"
         aria-label={label || title || "Horizontal scroll"}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            scroll(event.key === "ArrowLeft" ? "left" : "right");
+          }
+        }}
       >
         {children}
       </div>

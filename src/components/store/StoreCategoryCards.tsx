@@ -1,9 +1,10 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface CategoryCardItem {
   id: string;
-  categoryKey: string;
+  path: string;
   title: string;
   subtitle: string;
   image: string;
@@ -13,15 +14,15 @@ interface CategoryCardItem {
 const categoryCards: CategoryCardItem[] = [
   {
     id: "phones",
-    categoryKey: "Phones",
+    path: "/iphone",
     title: "Phones",
     subtitle: "iPhone 18 Pro, iPhone Duo and verified UK Used devices.",
-    image: "/products/campaigns/iphone-18-pro-colors.webp",
+    image: "/products/campaigns/iphone-18-pro-silver.webp",
     alt: "iPhone devices",
   },
   {
     id: "laptops",
-    categoryKey: "Laptops",
+    path: "/mac",
     title: "Mac & Laptops",
     subtitle: "MacBook Air, MacBook Pro and Apple silicon desktops.",
     image: "/products/campaigns/macbook-air-floating.webp",
@@ -29,7 +30,7 @@ const categoryCards: CategoryCardItem[] = [
   },
   {
     id: "tablets",
-    categoryKey: "Tablets",
+    path: "/ipad",
     title: "iPads",
     subtitle: "iPad Air, iPad Pro, and portable everyday iPads.",
     image: "/products/campaigns/ipad-air-colors.webp",
@@ -37,7 +38,7 @@ const categoryCards: CategoryCardItem[] = [
   },
   {
     id: "watches",
-    categoryKey: "Watches",
+    path: "/watch",
     title: "Apple Watch",
     subtitle: "Apple Watch Series 12, Ultra 4 and rugged sports bands.",
     image: "/products/homepage/watch-series-12.webp",
@@ -45,7 +46,7 @@ const categoryCards: CategoryCardItem[] = [
   },
   {
     id: "audio",
-    categoryKey: "Audio",
+    path: "/airpods",
     title: "AirPods & Audio",
     subtitle: "AirPods 5, Pro, Max and premium sound accessories.",
     image: "/products/homepage/airpods-5.jpg",
@@ -53,7 +54,7 @@ const categoryCards: CategoryCardItem[] = [
   },
   {
     id: "accessories",
-    categoryKey: "Accessories",
+    path: "/accessories",
     title: "Accessories",
     subtitle: "Genuine power adapters, MagSafe chargers and keyboards.",
     image: "/products/campaigns/accessory-magsafe-puck.webp",
@@ -61,35 +62,22 @@ const categoryCards: CategoryCardItem[] = [
   },
 ];
 
-interface StoreCategoryCardsProps {
-  onSelectCategory: (categoryKey: string) => void;
-}
-
-export function StoreCategoryCards({ onSelectCategory }: StoreCategoryCardsProps) {
-  const handleClick = (categoryKey: string) => {
-    onSelectCategory(categoryKey);
-    const target = document.getElementById("all-products");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
+export function StoreCategoryCards() {
   return (
     <section className="store-section store-category-section" aria-labelledby="store-category-title">
       <div className="store-container">
         <StoreCarousel
           eyebrow="SHOP BY CATEGORY"
           title="Browse by device."
-          subtitle="Select a category to instantly explore all confirmed items in our store."
+          subtitle="Explore devices by family."
           controlsAriaLabel="Shop by category carousel navigation"
           trackClassName="store-category-track"
         >
           {categoryCards.map((category) => (
-            <button
+            <Link
               key={category.id}
-              type="button"
+              to={category.path}
               className="store-category-card"
-              onClick={() => handleClick(category.categoryKey)}
             >
               <div className="store-category-card-top">
                 <h3 className="store-category-card-title">{category.title}</h3>
@@ -111,7 +99,7 @@ export function StoreCategoryCards({ onSelectCategory }: StoreCategoryCardsProps
                   Shop {category.title} <ArrowRight size={16} aria-hidden="true" />
                 </span>
               </div>
-            </button>
+            </Link>
           ))}
         </StoreCarousel>
       </div>
