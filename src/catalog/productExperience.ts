@@ -428,12 +428,26 @@ export function getProductStory(family: ProductFamilyKey, slug: string) {
 }
 
 export function familyMatchesProduct(product: Product, family: ProductFamilyKey) {
-  if (family === "iphone") return product.category === "iPhones";
-  if (family === "mac") return product.category === "MacBooks";
-  if (family === "ipad") return product.category === "iPads";
-  if (family === "watch") return product.category === "Apple Watches";
-  if (family === "airpods") return product.category === "AirPods";
-  return product.category === "Accessories";
+  const cat = product.category;
+  const brand = (product.brand || "").toLowerCase();
+  const name = (product.name || "").toLowerCase();
+
+  if (family === "iphone") {
+    return cat === "iPhones" || (cat === "Phones" && (brand === "apple" || name.includes("iphone"))) || cat === "Mobile Phones" || (brand === "apple" && name.includes("iphone"));
+  }
+  if (family === "mac") {
+    return cat === "MacBooks" || (cat === "Laptops" && (brand === "apple" || name.includes("macbook") || name.includes("mac mini") || name.includes("mac studio") || name.includes("imac"))) || (brand === "apple" && (name.includes("macbook") || name.includes("mac mini") || name.includes("mac studio")));
+  }
+  if (family === "ipad") {
+    return cat === "iPads" || (cat === "Tablets" && (brand === "apple" || name.includes("ipad"))) || (brand === "apple" && name.includes("ipad"));
+  }
+  if (family === "watch") {
+    return cat === "Apple Watches" || (cat === "Watches" && (brand === "apple" || name.includes("apple watch") || name.includes("watch"))) || (brand === "apple" && (name.includes("apple watch") || name.includes("watch")));
+  }
+  if (family === "airpods") {
+    return cat === "AirPods" || (cat === "Audio" && (brand === "apple" || name.includes("airpods") || name.includes("airpod"))) || (brand === "apple" && (name.includes("airpods") || name.includes("airpod")));
+  }
+  return cat === "Accessories" || (product.subcategory?.toLowerCase().includes("accessory") ?? false);
 }
 
 export function productStoryPath(family: ProductFamilyKey, slug: string) {

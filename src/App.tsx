@@ -140,9 +140,11 @@ function PublicShell() {
           <Route path="/repairs" element={<RepairsPage />} />
           <Route path="/gift-cards" element={<GiftCardsPage />} />
           <Route path="/refer-a-friend" element={<ReferFriendPage />} />
-          <Route path="/:categorySlug" element={<CategoryPage />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/sell-or-trade" element={<SellTradePage />} />
+          <Route path="/trade-in" element={<Navigate to="/sell-or-trade" replace />} />
+          <Route path="/sell-trade" element={<Navigate to="/sell-or-trade" replace />} />
+          <Route path="/services" element={<Navigate to="/store" replace />} />
           <Route path="/pre-order" element={<DeviceRequestPage />} />
           <Route path="/device-request" element={<Navigate to="/pre-order" replace />} />
           <Route path="/about" element={<AboutPage />} />
@@ -153,6 +155,7 @@ function PublicShell() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order-success/:reference" element={<OrderSuccessPage />} />
+          <Route path="/:categorySlug" element={<CategoryPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

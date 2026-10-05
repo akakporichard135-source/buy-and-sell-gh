@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
 import { whatsappUrl, productWhatsAppUrl } from "../../utils/whatsapp";
 import { isProductPurchasable } from "../../catalog/productCatalog";
 import { resolveProductGallery } from "../../utils/productImages";
+import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -34,14 +35,31 @@ export function GenericBuyExperience({
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
+  useEffect(() => {
+    if (product) {
+      if (product.storage && product.storage.length > 0 && (!storage || !product.storage.includes(storage))) {
+        setStorage(product.storage[0]);
+      }
+      if (product.colors && product.colors.length > 0 && (!color || !product.colors.includes(color))) {
+        setColor(product.colors[0]);
+      }
+    }
+  }, [product]);
+
   const name = product?.name ?? slug.split("-").map((s) => s ? `${s[0].toUpperCase()}${s.slice(1)}` : s).join(" ");
-  const gallery = product ? resolveProductGallery(product) : [];
+  const rawGallery = product ? resolveProductGallery(product) : [];
+  const fallbackAsset = localCatalogueImageBySlug[product?.slug ?? slug];
+  const gallery = rawGallery.length > 0
+    ? rawGallery
+    : fallbackAsset
+      ? [{ src: fallbackAsset, alt: name }]
+      : [];
   const purchasable = product ? isProductPurchasable(product) : false;
   const priceLabel = product && !product.priceOnRequest && product.price > 0
     ? formatGhs(product.price)
     : "Price confirmed on enquiry";
 
-  const activeImage = gallery[activeThumb]?.src || gallery[0]?.src;
+  const activeImage = gallery[activeThumb]?.src || gallery[0]?.src || fallbackAsset;
 
   const whatsAppEnquiry = product
     ? productWhatsAppUrl(product, storage, color)

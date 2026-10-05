@@ -13,8 +13,10 @@ import { WatchSeries12BuyExperience } from "../components/buy/WatchSeries12BuyEx
 import { WatchUltraBuyExperience } from "../components/buy/WatchUltraBuyExperience";
 import { AirpodsBuyExperience } from "../components/buy/AirpodsBuyExperience";
 import { MacbookBuyExperience } from "../components/buy/MacbookBuyExperience";
+import { MacbookProBuyExperience } from "../components/buy/MacbookProBuyExperience";
 import { MacMiniBuyExperience } from "../components/buy/MacMiniBuyExperience";
 import { IpadBuyExperience } from "../components/buy/IpadBuyExperience";
+import { IpadProBuyExperience } from "../components/buy/IpadProBuyExperience";
 import { IphoneDuoPricingExperience } from "../components/buy/IphoneDuoPricingExperience";
 import { GenericBuyExperience } from "../components/buy/GenericBuyExperience";
 
@@ -55,12 +57,22 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
     return <MacMiniBuyExperience catalogProduct={primaryProduct} />;
   }
 
-  // 7. MacBook Air
+  // 7. MacBook Pro (14-inch & 16-inch M4 / M4 Pro / M4 Max)
+  if (family === "mac" && (slug === "macbook-pro" || slug.includes("macbook-pro") || slug.includes("pro"))) {
+    return <MacbookProBuyExperience catalogProduct={primaryProduct} />;
+  }
+
+  // 8. MacBook Air
   if (family === "mac" && (slug === "macbook-air" || slug.includes("air"))) {
     return <MacbookBuyExperience catalogProduct={primaryProduct} />;
   }
 
-  // 8. iPad Air
+  // 9. iPad Pro (11-inch & 13-inch Ultra Retina XDR)
+  if (family === "ipad" && (slug === "ipad-pro" || slug.includes("ipad-pro") || slug.includes("pro"))) {
+    return <IpadProBuyExperience catalogProduct={primaryProduct} />;
+  }
+
+  // 10. iPad Air
   if (family === "ipad" && (slug === "ipad-air" || slug.includes("air"))) {
     return <IpadBuyExperience catalogProduct={primaryProduct} />;
   }
@@ -69,14 +81,35 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   return <GenericBuyExperience product={primaryProduct} family={family} slug={slug} />;
 }
 
-function resolveCandidates(products: Product[], family: ProductFamilyKey, slug: string) {
-  const familyProducts = products.filter((product) => familyMatchesProduct(product, family));
-  const exact = familyProducts.find((product) => product.slug === slug);
+function resolveCandidates(products: Product[], family: ProductFamilyKey, slug: string): Product[] {
+  if (!slug) return [];
+
+  // 1. Direct exact slug match across all active products
+  const exact = products.find((product) => product.slug === slug);
   if (exact) return [exact];
+
+  // 2. Normalized slug match (e.g. handles "-inch-" variations: macbook-pro-16-inch-m4-pro-max <-> macbook-pro-16-m4-pro-max)
+  const normSlug = slug.replace(/-inch-/g, "-").toLowerCase();
+  const normalized = products.find((product) => product.slug.replace(/-inch-/g, "-").toLowerCase() === normSlug);
+  if (normalized) return [normalized];
+
+  // 3. Family-filtered candidates
+  const familyProducts = products.filter((product) => familyMatchesProduct(product, family));
+  const familySlugMatch = familyProducts.find(
+    (product) => product.slug === slug || product.slug.replace(/-inch-/g, "-").toLowerCase() === normSlug
+  );
+  if (familySlugMatch) return [familySlugMatch];
+
   if (family === "mac" && slug === "macbook-air") return familyProducts.filter((product) => getMacbookFamily(product) === "MacBook Air");
   if (family === "mac" && slug === "macbook-pro") return familyProducts.filter((product) => getMacbookFamily(product) === "MacBook Pro");
   if (family === "ipad" && slug === "ipad-air") return familyProducts.filter((product) => getIpadFamily(product) === "iPad Air");
+  if (family === "ipad" && slug === "ipad-pro") return familyProducts.filter((product) => getIpadFamily(product) === "iPad Pro");
   if (family === "watch" && slug.includes("ultra")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Ultra");
   if (family === "watch" && slug.includes("series")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Series");
+
+  // 4. Substring candidate match within family
+  const partial = familyProducts.filter((product) => product.slug.includes(normSlug) || normSlug.includes(product.slug.replace(/-inch-/g, "-")));
+  if (partial.length > 0) return partial;
+
   return [];
 }
