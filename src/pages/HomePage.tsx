@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import { CinematicVideo } from "../components/CinematicVideo";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
@@ -14,7 +13,6 @@ import "../styles/homepage-video-showcase.css";
 import "../styles/homepage-services.css";
 import visaCardCampaign from "../assets/homepage/homepage-visa-card-white.webp";
 import { campaignAssets } from "../catalog/campaignAssets";
-
 import { getLatestMacLaunch } from "../utils/latestMac";
 
 type CampaignTheme = "black" | "light" | "warm";
@@ -27,11 +25,6 @@ type Campaign = {
   availabilityText?: string;
   image: string;
   imageAlt: string;
-  video?: {
-    src: string;
-    mobileSrc?: string;
-    poster: string;
-  };
   theme: CampaignTheme;
   primaryLabel: string;
   primaryTo: string;
@@ -111,7 +104,7 @@ export function HomePage() {
   const watchSeries12Price = useMemo(() => getProductPrice(activeProducts, "apple-watch-series-12", "From GH₵ 7,800"), [activeProducts]);
   const watchUltraPrice = useMemo(() => getProductPrice(activeProducts, "apple-watch-ultra-4", "From GH₵ 14,800"), [activeProducts]);
   const airpodsPrice = useMemo(() => getProductPrice(activeProducts, "airpods-5", "From GH₵ 2,800"), [activeProducts]);
-  const macbookAirPrice = useMemo(() => getProductPrice(activeProducts, "macbook-air", "From GH₵ 16,500"), [activeProducts]);
+  const macbookAirPrice = useMemo(() => getProductPrice(activeProducts, "macbook-air", "From GH₵ 13,500"), [activeProducts]);
   const macMiniPrice = useMemo(() => getProductPrice(activeProducts, "mac-mini", "From GH₵ 9,800"), [activeProducts]);
   const ipadAirPrice = useMemo(() => getProductPrice(activeProducts, "ipad-air", "From GH₵ 9,800"), [activeProducts]);
 
@@ -123,10 +116,6 @@ export function HomePage() {
       priceLabel: iphoneDuoPrice,
       image: "/products/homepage/iphone-duo.webp",
       imageAlt: campaignAssets.duo.hero.alt,
-      video: {
-        src: "/videos/homepage/iphone-duo.mp4",
-        poster: "/products/homepage/iphone-duo.webp",
-      },
       theme: "light",
       primaryLabel: "Learn more",
       primaryTo: "/iphone/iphone-duo",
@@ -139,11 +128,8 @@ export function HomePage() {
       description: "Stay connected to what moves you.",
       priceLabel: watchSeries12Price,
       image: "/products/homepage/watch-series-12.webp",
+      fallbackImage: campaignAssets.watch.series12.fallback,
       imageAlt: campaignAssets.watch.series12.alt,
-      video: {
-        src: "/videos/homepage/watch-series-12.mp4",
-        poster: "/products/homepage/watch-series-12.webp",
-      },
       theme: "light",
       primaryLabel: "Learn more",
       primaryTo: "/watch/apple-watch-series-12",
@@ -206,7 +192,7 @@ export function HomePage() {
     theme: "light",
     primaryLabel: "Check a Card",
     primaryTo: "/gift-cards",
-    secondaryLabel: "WhatsApp Help",
+    secondaryLabel: "Contact Us",
     secondaryTo: "/contact",
   };
 
@@ -244,30 +230,41 @@ function Iphone18Hero() {
   const priceLabel = useMemo(() => getProductPrice(activeProducts, "iphone-18-pro", "From GH₵ 20,500"), [activeProducts]);
 
   return (
-    <section className="iphone18-launch-hero" aria-labelledby="iphone18-hero-headline">
-      <div className="iphone18-launch-copy">
+    <section className="iphone18-hero" aria-labelledby="iphone18-hero-headline">
+      <div className="iphone18-hero-copy">
         <p className="store-eyebrow">A new era of Pro</p>
         <h1 id="iphone18-hero-headline">iPhone 18 Pro</h1>
-        <span className="iphone18-hero-subtitle">Pro further.</span>
-        <span className="store-hero-price-pill">
-          {priceLabel}
-        </span>
-        <div className="iphone18-launch-actions">
+        <p className="iphone18-hero-subtitle">Pro further.</p>
+        {priceLabel && (
+          <span className="store-hero-price-pill">
+            {priceLabel}
+          </span>
+        )}
+        <div className="iphone18-hero-actions">
           <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
           <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">Buy</Link>
         </div>
       </div>
-      <div className="iphone18-launch-media">
-        <span className="iphone18-launch-pro" aria-hidden="true">PRO</span>
-        <div className="iphone18-hero-img">
+      <div className="iphone18-hero-media">
+        <picture>
+          <source type="image/webp" srcSet="/products/homepage/iphone-18-pro-hero.webp 1x, /products/homepage/iphone-18-pro-hero-2x.webp 2x" />
           <img
-            src="/products/campaigns/iphone-18-pro-burgundy-finish.webp"
-            alt="iPhone 18 Pro titanium design in Deep Burgundy"
+            src="/products/homepage/iphone-18-pro-hero-original.jpg"
+            alt="iPhone 18 Pro with chrome PRO visual"
+            className="iphone18-hero-img"
             loading="eager"
             fetchPriority="high"
             decoding="async"
+            width={736}
+            height={225}
+            onError={(event) => {
+              if (campaignAssets.iphone18.hero.fallback && !event.currentTarget.dataset.fallbackApplied) {
+                event.currentTarget.dataset.fallbackApplied = "true";
+                event.currentTarget.src = campaignAssets.iphone18.hero.fallback;
+              }
+            }}
           />
-        </div>
+        </picture>
       </div>
     </section>
   );
@@ -280,37 +277,46 @@ function UltraAirpodsStory() {
 
   return (
     <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
-      <article className="ultra-airpods-panel ultra-airpods-ultra relative overflow-hidden" aria-labelledby="ultra-story-title">
-        <div className="ultra-airpods-copy relative z-10">
+      <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
+        <div className="ultra-airpods-copy">
           <p className="store-eyebrow">Built for beyond</p>
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
-          <span className="store-hero-price-pill inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-bold text-white/90 backdrop-blur-md mt-2">
-            {ultraPrice}
-          </span>
-          <div className="ultra-airpods-actions mt-3">
+          {ultraPrice && (
+            <span className="store-hero-price-pill">
+              {ultraPrice}
+            </span>
+          )}
+          <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">Buy</Link>
           </div>
         </div>
-        <div className="ultra-airpods-video-wrapper absolute inset-0 z-0 overflow-hidden">
-          <CinematicVideo
-            src="/videos/homepage/watch-ultra-4.mp4"
-            poster="/products/homepage/watch-ultra-4.webp"
-            alt={campaignAssets.watch.ultraHero.alt}
-          />
-        </div>
+        <img
+          src="/products/homepage/watch-ultra-4.webp"
+          alt={campaignAssets.watch.ultraHero.alt}
+          loading="lazy"
+          decoding="async"
+          onError={(event) => {
+            if (campaignAssets.watch.ultraHero.fallback && !event.currentTarget.dataset.fallbackApplied) {
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaignAssets.watch.ultraHero.fallback;
+            }
+          }}
+        />
       </article>
 
-      <article className="ultra-airpods-panel ultra-airpods-lifestyle relative overflow-hidden" aria-labelledby="airpods-story-title" id="airpods-5">
-        <div className="ultra-airpods-copy relative z-10">
+      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title" id="airpods-5">
+        <div className="ultra-airpods-copy">
           <p className="store-eyebrow">Move with your music</p>
           <h2 id="airpods-story-title">AirPods 5</h2>
           <span>Freedom to listen wherever the rhythm takes you.</span>
-          <span className="store-hero-price-pill inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-3.5 py-1 text-xs font-bold text-ink/80 backdrop-blur-md mt-2">
-            {airpodsPrice}
-          </span>
-          <div className="ultra-airpods-actions mt-3">
+          {airpodsPrice && (
+            <span className="store-hero-price-pill">
+              {airpodsPrice}
+            </span>
+          )}
+          <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">Buy</Link>
           </div>
@@ -387,7 +393,7 @@ function ProductCampaign({ campaign, top = false, priority = false }: { campaign
         <h2 id={`home-campaign-${slug}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
         {campaign.priceLabel && (
-          <span className="store-hero-price-pill mt-1 mb-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1 text-xs font-bold text-ink/80 dark:text-gold-light">
+          <span className="store-hero-price-pill">
             {campaign.priceLabel}
           </span>
         )}
@@ -400,31 +406,18 @@ function ProductCampaign({ campaign, top = false, priority = false }: { campaign
         </div>
       </div>
       <div className="home-product-campaign-art">
-        {campaign.video ? (
-          <div className="w-full max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-2xl">
-            <CinematicVideo
-              src={campaign.video.src}
-              mobileSrc={campaign.video.mobileSrc}
-              poster={campaign.video.poster}
-              alt={campaign.imageAlt}
-              priority={priority}
-              aspectRatio="16/10"
-            />
-          </div>
-        ) : (
-          <img
-            src={campaign.image}
-            alt={campaign.imageAlt}
-            loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : undefined}
-            decoding="async"
-            onError={(event) => {
-              if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-              event.currentTarget.dataset.fallbackApplied = "true";
-              event.currentTarget.src = campaign.fallbackImage;
-            }}
-          />
-        )}
+        <img
+          src={campaign.image}
+          alt={campaign.imageAlt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
+          decoding="async"
+          onError={(event) => {
+            if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+            event.currentTarget.dataset.fallbackApplied = "true";
+            event.currentTarget.src = campaign.fallbackImage;
+          }}
+        />
       </div>
     </section>
   );
@@ -488,7 +481,6 @@ function StoreServicesSection() {
             <p className="store-services-subtitle">Explore more ways to buy, upgrade, sell and get support.</p>
           </div>
 
-          {/* Apple-style Upper-Right Carousel Controls */}
           <div className="store-services-controls" aria-label="Services carousel navigation">
             <button
               type="button"
@@ -511,7 +503,6 @@ function StoreServicesSection() {
           </div>
         </div>
 
-        {/* Horizontal Carousel */}
         <div
           ref={carouselRef}
           className="store-services-carousel"

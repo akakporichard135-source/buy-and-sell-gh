@@ -23,6 +23,17 @@ export type EditorialInformation = {
   items: EditorialInfoItem[];
 };
 
+export type EditorialCinematicVideo = {
+  src: string;
+  mobileSrc?: string;
+  poster: string;
+  alt: string;
+  eyebrow?: string;
+  headline?: string;
+  subheadline?: string;
+  aspectRatio?: string;
+};
+
 export type EditorialStory = {
   slug: string;
   name: string;
@@ -33,6 +44,7 @@ export type EditorialStory = {
   hero: EditorialImage;
   heroTone: EditorialTone;
   highlights: Array<{ label: string; title: string; image: EditorialImage; tone: EditorialTone }>;
+  cinematicVideo?: EditorialCinematicVideo;
   chapters: Array<{
     id: string;
     label: string;
@@ -64,6 +76,16 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Display", title: "Super Retina XDR canvas.", image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of edge-to-edge Super Retina XDR display" }, tone: "light" },
       { label: "Finishes", title: "Four titanium expressions.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes in Space Black, Natural Titanium, Light Blue and Deep Burgundy" }, tone: "light" },
     ],
+    cinematicVideo: {
+      src: "/videos/homepage/iphone-18-pro.mp4",
+      mobileSrc: "/videos/homepage/iphone-18-pro-mobile.webm",
+      poster: "/products/story/iphone-18-pro-clean-frame.webp",
+      alt: "iPhone 18 Pro in aerospace titanium cinematic rotation",
+      eyebrow: "Cinematic Hardware",
+      headline: "Precision in continuous motion.",
+      subheadline: "Grade 5 titanium sculpted to catch every highlight, contoured for effortless grip.",
+      aspectRatio: "16/9",
+    },
     chapters: [
       {
         id: "craftsmanship",
@@ -163,6 +185,15 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Profile", title: "The form tells the story.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "Side profile of iPhone Duo highlighting ultra-slim hinge" }, tone: "light" },
       { label: "Together", title: "Two sides of one idea.", image: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Two iPhone Duo devices showing open and closed versatility" }, tone: "ink" },
     ],
+    cinematicVideo: {
+      src: "/videos/homepage/iphone-duo.mp4",
+      poster: "/products/homepage/iphone-duo.webp",
+      alt: "iPhone Duo dual-screen foldable phone in motion",
+      eyebrow: "Dual Canvas",
+      headline: "Engineered to unfold seamlessly.",
+      subheadline: "A continuous dual-display experience articulated on a precision multi-axis hinge.",
+      aspectRatio: "16/9",
+    },
     chapters: [
       { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "Closed, iPhone Duo travels effortlessly as a compact, pocket-ready phone. Unfold it, and an expansive dual-display canvas opens up new ways to read, multitask, and collaborate side by side.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo unfolded showcasing wide canvas" }, tone: "light", layout: "stage" },
       { id: "design", label: "Design", title: "A new angle on everyday.", copy: "A precision hinge engineered for smooth, stable articulation at every angle. It allows the device to rest freestanding on a table for video calls or fold seamlessly flat in your palm.", image: { src: `${campaign}/iphone-duo-side.webp`, alt: "iPhone Duo held at its slim edge" }, tone: "blue", layout: "split" },
@@ -211,6 +242,15 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Fast Charge", title: "80% battery in 30 minutes before leaving home.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile in space black finish" }, tone: "light" },
       { label: "Finishes", title: "Jet Black aluminum and polished titanium.", image: { src: `${campaign}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 case options and premium materials" }, tone: "light" },
     ],
+    cinematicVideo: {
+      src: "/videos/homepage/watch-series-12.mp4",
+      poster: "/products/homepage/watch-series-12.webp",
+      alt: "Apple Watch Series 12 slim profile and wide-angle OLED display",
+      eyebrow: "Sleek Geometry",
+      headline: "Thin. Vibrant. Built for the pulse of Accra.",
+      subheadline: "Wide-angle OLED brilliance in our thinnest case architecture ever made.",
+      aspectRatio: "16/9",
+    },
     chapters: [
       {
         id: "silhouette",
@@ -310,6 +350,15 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Endurance", title: "Up to 72 hours of battery in Low Power Mode.", image: { src: `${campaign}/watch-sensor-detail.webp`, alt: "Apple Watch Ultra 4 robust biometric sensor suite" }, tone: "ink" },
       { label: "Expedition", title: "Dual-frequency GPS and 100m water resistance.", image: { src: `${campaign}/watch-ultra-4-rugged.webp`, alt: "Apple Watch Ultra 4 expedition endurance" }, tone: "ink" },
     ],
+    cinematicVideo: {
+      src: "/videos/homepage/watch-ultra-4.mp4",
+      poster: "/products/homepage/watch-ultra-4.webp",
+      alt: "Apple Watch Ultra 4 rugged 49mm aerospace titanium in motion",
+      eyebrow: "Extreme Environments",
+      headline: "49mm of uncompromising titanium.",
+      subheadline: "Built to endure tropical trails, Atlantic currents, and multi-day expeditions across Ghana.",
+      aspectRatio: "16/9",
+    },
     chapters: [
       {
         id: "titanium",

@@ -5,6 +5,7 @@ import type { EditorialImage, EditorialStory } from "../catalog/editorialStories
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { SEO } from "./SEO";
+import { CinematicVideo } from "./CinematicVideo";
 import "../styles/editorial-product-story.css";
 
 function ProductImage({ image, eager = false, className = "" }: { image: EditorialImage; eager?: boolean; className?: string }) {
@@ -95,6 +96,37 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           ))}
         </div>
       </section>
+
+      {story.cinematicVideo && (
+        <section
+          className={`editorial-cinematic-sequence editorial-tone-${story.heroTone}`}
+          id="cinematic"
+          aria-labelledby="editorial-cinematic-title"
+        >
+          <div className="editorial-cinematic-container">
+            {story.cinematicVideo.headline && (
+              <div className="editorial-cinematic-header">
+                {story.cinematicVideo.eyebrow && (
+                  <p className="editorial-eyebrow">{story.cinematicVideo.eyebrow}</p>
+                )}
+                <h2 id="editorial-cinematic-title">{story.cinematicVideo.headline}</h2>
+                {story.cinematicVideo.subheadline && (
+                  <p className="editorial-cinematic-sub">{story.cinematicVideo.subheadline}</p>
+                )}
+              </div>
+            )}
+            <div className="editorial-cinematic-player-frame">
+              <CinematicVideo
+                src={story.cinematicVideo.src}
+                mobileSrc={story.cinematicVideo.mobileSrc}
+                poster={story.cinematicVideo.poster}
+                alt={story.cinematicVideo.alt}
+                aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       {story.chapters.map((chapter) => (
         <section className={`editorial-chapter editorial-chapter-${chapter.layout} editorial-tone-${chapter.tone}`} id={chapter.id} key={chapter.id} aria-labelledby={`${chapter.id}-title`}>

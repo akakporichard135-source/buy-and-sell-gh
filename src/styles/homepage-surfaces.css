@@ -140,6 +140,33 @@
   margin-top: 0;
 }
 
+.store-hero-price-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  align-self: center;
+}
+
+.home-product-campaign-black .store-hero-price-pill,
+.iphone18-hero .store-hero-price-pill,
+.ultra-airpods-ultra .store-hero-price-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
 .storefront-home .store-macbook-grid .store-button,
 .storefront-home .store-product-grid .store-button {
   flex: 0 1 auto;

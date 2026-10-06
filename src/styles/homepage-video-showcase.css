@@ -1,135 +1,104 @@
 /* Flagship hero and paired product story. Homepage-only presentation. */
 .iphone18-launch-hero {
   position: relative;
-  min-height: max(740px, calc(100svh - 64px));
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
+  min-height: max(720px, calc(100svh - 64px));
   overflow: hidden;
   color: #fff;
-  background: radial-gradient(ellipse 70% 60% at 50% 72%, rgba(138, 28, 62, 0.28) 0%, rgba(20, 6, 10, 0.1) 48%, #000000 78%), #000000;
+  background: #000;
   isolation: isolate;
-  padding-bottom: clamp(24px, 4vh, 48px);
 }
 
-.iphone18-launch-hero::before {
+.iphone18-launch-hero::before,
+.iphone18-launch-hero::after {
   position: absolute;
   z-index: 2;
   inset: 0;
   content: "";
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.2) 28%, transparent 55%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.iphone18-launch-hero::before {
+  background:
+    linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.96) 18%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.1) 58%, rgba(0, 0, 0, 0.32) 100%),
+    radial-gradient(ellipse 70% 82% at 50% 60%, transparent 35%, rgba(0, 0, 0, 0.32) 78%, #000 100%);
+}
+
+.iphone18-launch-hero::after {
+  background:
+    radial-gradient(ellipse 28% 23% at 27% 98%, #000 0%, rgba(0, 0, 0, 0.98) 46%, transparent 100%),
+    radial-gradient(ellipse 28% 23% at 73% 98%, #000 0%, rgba(0, 0, 0, 0.98) 46%, transparent 100%),
+    radial-gradient(ellipse 58% 88% at 50% 58%, transparent 44%, rgba(0, 0, 0, 0.24) 72%, #000 100%),
+    linear-gradient(180deg, transparent 72%, #000 100%);
 }
 
 .iphone18-launch-copy {
-  position: relative;
+  position: absolute;
   z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  top: clamp(48px, 6.2vh, 76px);
+  right: 0;
+  left: 0;
+  display: grid;
+  width: min(calc(100% - 40px), 900px);
+  justify-items: center;
+  gap: 11px;
+  margin: auto;
   text-align: center;
-  gap: 12px;
-  width: min(calc(100% - 40px), 880px);
-  margin-top: clamp(44px, 6.5vh, 76px);
   animation: iphone18-copy-reveal 850ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.iphone18-launch-copy .store-eyebrow {
-  color: #e5b438;
-  font-size: 0.82rem;
-  font-weight: 850;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.iphone18-launch-copy::before {
+  position: absolute;
+  z-index: -1;
+  inset: -34px -12vw -58px;
+  background: radial-gradient(ellipse 54% 70% at 50% 38%, rgba(0, 0, 0, 0.98) 0 38%, rgba(0, 0, 0, 0.86) 54%, rgba(0, 0, 0, 0.4) 68%, transparent 84%);
+  content: "";
+  pointer-events: none;
+}
+
+.iphone18-launch-copy p,
+.iphone18-launch-copy h1,
+.iphone18-launch-copy > span {
   margin: 0;
+}
+
+.iphone18-launch-copy p {
+  color: #e5b438;
+  font-size: 0.8rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .iphone18-launch-copy h1 {
-  font-size: clamp(3.6rem, 6.8vw, 7.2rem);
-  font-weight: 850;
-  letter-spacing: -0.03em;
-  line-height: 0.94;
-  color: #ffffff;
-  margin: 0;
+  max-width: 100%;
+  margin-top: 3px;
+  font-size: clamp(3.6rem, 6.2vw, 6.8rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.92;
+  text-wrap: balance;
 }
 
-.iphone18-launch-copy .iphone18-hero-subtitle {
-  font-size: clamp(1.2rem, 1.8vw, 1.65rem);
-  color: rgba(255, 255, 255, 0.78);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  margin: 0;
+.iphone18-launch-copy > span {
+  max-width: 31ch;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(1.05rem, 1.35vw, 1.28rem);
+  line-height: 1.45;
+  text-wrap: balance;
 }
 
-.iphone18-launch-copy .store-hero-price-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 18px;
-  border-radius: 999px;
-  background: rgba(229, 180, 56, 0.12);
-  border: 1px solid rgba(229, 180, 56, 0.38);
-  color: #f2c75a;
-  font-size: 0.88rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  backdrop-filter: blur(14px);
-  margin-top: 4px;
-}
-
-.iphone18-launch-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.iphone18-launch-actions a {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24px;
-  border-radius: 999px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.iphone18-launch-actions .store-button-primary {
-  background: var(--brand-gold, #c8961e);
-  color: #0c0c0e;
-  border: 1px solid var(--brand-gold, #c8961e);
-  box-shadow: 0 4px 18px rgba(200, 150, 30, 0.35);
-}
-
-.iphone18-launch-actions .store-button-primary:hover {
-  background: var(--brand-gold-hover, #e0b034);
-  border-color: var(--brand-gold-hover, #e0b034);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(200, 150, 30, 0.48);
-}
-
-.iphone18-launch-actions .store-button-secondary {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(12px);
-}
-
-.iphone18-launch-actions .store-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.65);
-  transform: translateY(-2px);
-}
-
+.iphone18-launch-actions,
 .ultra-airpods-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
   margin-top: 20px;
+}
+
+.iphone18-launch-actions {
+  justify-content: center;
 }
 
 .ultra-airpods-actions a {
@@ -169,63 +138,69 @@
 }
 
 .iphone18-launch-media {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  margin-top: auto;
-  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
 }
 
 .iphone18-launch-pro {
   position: absolute;
   z-index: 1;
-  top: 42%;
+  top: 57%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(8rem, 24vw, 22rem);
+  color: rgba(255, 255, 255, 0.026);
+  font-size: clamp(8rem, 20vw, 19rem);
   font-weight: 950;
-  letter-spacing: -0.04em;
-  color: rgba(255, 255, 255, 0.035);
-  line-height: 0.8;
+  letter-spacing: 0;
+  line-height: 0.75;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
   user-select: none;
   white-space: nowrap;
+}
+
+.iphone18-launch-video {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 52%;
+  filter: saturate(1.02) contrast(1.06);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 92%, transparent 100%);
+  opacity: 0;
+  transform: scale(1.035);
+  transform-origin: center;
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1200ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.iphone18-launch-video.is-ready {
+  opacity: 1;
+  transform: scale(1.015);
+}
+
+.iphone18-source-mask {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0 18%, rgba(0, 0, 0, 0.9) 23%, #000 27% 38%, rgba(0, 0, 0, 0.8) 42%, transparent 47%),
+    radial-gradient(ellipse 30% 36% at 0 0, #000 0 58%, rgba(0, 0, 0, 0.98) 69%, rgba(0, 0, 0, 0.7) 82%, transparent 100%);
   pointer-events: none;
 }
 
-.iphone18-hero-img {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  width: 100%;
-  max-width: 920px;
-  max-height: clamp(380px, 48vh, 540px);
-}
-
-.iphone18-hero-img img {
-  display: block;
-  max-height: clamp(380px, 48vh, 540px);
-  width: auto;
-  max-width: 90%;
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 35px rgba(138, 28, 62, 0.22));
-  animation: iphone18-img-reveal 1000ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes iphone18-img-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(28px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.iphone18-launch-video.is-ready.is-loop-resetting {
+  opacity: 0;
+  transition-duration: 240ms;
 }
 
 .iphone18-launch-hero a:focus-visible,
@@ -655,52 +630,64 @@
 
 @media (max-width: 600px) {
   .iphone18-launch-hero {
-    min-height: calc(100svh - 56px);
-    padding-bottom: 24px;
+    min-height: clamp(620px, 84svh, 700px);
   }
 
   .iphone18-launch-copy {
-    margin-top: 32px;
+    top: 30px;
     width: calc(100% - 24px);
     gap: 8px;
   }
 
   .iphone18-launch-copy h1 {
-    font-size: clamp(2.8rem, 13vw, 3.6rem);
+    max-width: 100%;
+    font-size: clamp(2.4rem, 12vw, 3.2rem);
     line-height: 0.96;
+    white-space: nowrap;
   }
 
-  .iphone18-launch-copy .iphone18-hero-subtitle {
-    font-size: 1.1rem;
+  .iphone18-launch-copy > span {
+    max-width: 26ch;
+    font-size: 0.98rem;
+    line-height: 1.4;
   }
 
-  .iphone18-launch-actions {
-    gap: 10px;
-    margin-top: 12px;
+  .iphone18-launch-actions,
+  .ultra-airpods-actions {
+    gap: 8px;
+    margin-top: 16px;
   }
 
-  .iphone18-launch-actions a {
-    min-height: 42px;
-    padding: 0 20px;
-    font-size: 0.88rem;
+  .iphone18-launch-actions a,
+  .ultra-airpods-actions a {
+    min-height: 44px;
+    padding: 0 18px;
   }
 
   .iphone18-launch-media {
-    margin-top: auto;
+    top: clamp(214px, 27svh, 232px);
+  }
+
+  .iphone18-launch-video {
+    object-fit: contain;
+    object-position: 50% 20%;
+    transform: scale(1.32);
+  }
+
+  .iphone18-launch-video.is-ready {
+    transform: scale(1.28);
+  }
+
+  .iphone18-source-mask {
+    background:
+      radial-gradient(ellipse 40% 9% at 50% 18%, #000 0 62%, rgba(0, 0, 0, 0.96) 76%, transparent 100%),
+      radial-gradient(ellipse 35% 38% at 0 0, #000 0 60%, rgba(0, 0, 0, 0.98) 73%, transparent 100%);
   }
 
   .iphone18-launch-pro {
-    top: 38%;
-    font-size: clamp(6.5rem, 30vw, 10rem);
-  }
-
-  .iphone18-hero-img {
-    max-height: clamp(300px, 46vh, 420px);
-  }
-
-  .iphone18-hero-img img {
-    max-height: clamp(300px, 46vh, 420px);
-    max-width: 95%;
+    top: 53%;
+    left: 50%;
+    font-size: clamp(6rem, 34vw, 9rem);
   }
 
   .ultra-airpods-story {
@@ -758,48 +745,4 @@
   .iphone18-launch-video.is-ready {
     transform: scale(1.28);
   }
-}
-
-/* Universal Cinematic Video */
-.cinematic-video-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #000000;
-}
-.cinematic-video-media,
-.cinematic-video-poster {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-.cinematic-video-toggle {
-  opacity: 0;
-  transition: opacity 240ms ease, transform 240ms ease;
-  backdrop-filter: blur(12px);
-}
-.cinematic-video-container:hover .cinematic-video-toggle,
-.cinematic-video-container:focus-within .cinematic-video-toggle {
-  opacity: 1;
-}
-@media (max-width: 768px) {
-  .cinematic-video-toggle {
-    opacity: 0.85;
-  }
-}
-
-.ultra-airpods-ultra .cinematic-video-container {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-.ultra-airpods-ultra .cinematic-video-media {
-  object-fit: cover;
-  object-position: center bottom;
 }
