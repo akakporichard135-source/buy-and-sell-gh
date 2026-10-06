@@ -32,6 +32,7 @@ export type EditorialCinematicVideo = {
   headline?: string;
   subheadline?: string;
   aspectRatio?: string;
+  isClean?: boolean;
 };
 
 export type EditorialStory = {
@@ -80,11 +81,12 @@ export const editorialStories: Record<string, EditorialStory> = {
       src: "/videos/homepage/iphone-18-pro.mp4",
       mobileSrc: "/videos/homepage/iphone-18-pro-mobile.webm",
       poster: "/products/story/iphone-18-pro-clean-frame.webp",
-      alt: "iPhone 18 Pro in aerospace titanium cinematic rotation",
+      alt: "iPhone 18 Pro in aerospace titanium cinematic presentation",
       eyebrow: "Cinematic Hardware",
       headline: "Precision in continuous motion.",
       subheadline: "Grade 5 titanium sculpted to catch every highlight, contoured for effortless grip.",
       aspectRatio: "16/9",
+      isClean: false,
     },
     chapters: [
       {
@@ -193,6 +195,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       headline: "Engineered to unfold seamlessly.",
       subheadline: "A continuous dual-display experience articulated on a precision multi-axis hinge.",
       aspectRatio: "16/9",
+      isClean: false,
     },
     chapters: [
       { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "Closed, iPhone Duo travels effortlessly as a compact, pocket-ready phone. Unfold it, and an expansive dual-display canvas opens up new ways to read, multitask, and collaborate side by side.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo unfolded showcasing wide canvas" }, tone: "light", layout: "stage" },
@@ -250,6 +253,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       headline: "Thin. Vibrant. Built for the pulse of Accra.",
       subheadline: "Wide-angle OLED brilliance in our thinnest case architecture ever made.",
       aspectRatio: "16/9",
+      isClean: false,
     },
     chapters: [
       {
@@ -358,6 +362,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       headline: "49mm of uncompromising titanium.",
       subheadline: "Built to endure tropical trails, Atlantic currents, and multi-day expeditions across Ghana.",
       aspectRatio: "16/9",
+      isClean: false,
     },
     chapters: [
       {

@@ -6,7 +6,6 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
-import { getCardPriceDisplay } from "../utils/productPricing";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
 import "../styles/homepage-video-showcase.css";
@@ -21,7 +20,6 @@ type Campaign = {
   eyebrow: string;
   title: string;
   description: string;
-  priceLabel?: string;
   availabilityText?: string;
   image: string;
   imageAlt: string;
@@ -87,33 +85,15 @@ const homepageServices: ServiceCardItem[] = [
   },
 ];
 
-function getProductPrice(activeProducts: Product[], slug: string, fallback: string) {
-  const prod = activeProducts.find((p) => p.slug === slug || p.slug.startsWith(slug));
-  if (!prod) return fallback;
-  const cardPrice = getCardPriceDisplay(prod);
-  return cardPrice.isEnquiry ? fallback : cardPrice.current;
-}
-
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
-
-  // Dynamic live starting prices from database
-  const iphone18Price = useMemo(() => getProductPrice(activeProducts, "iphone-18-pro", "From GH₵ 20,500"), [activeProducts]);
-  const iphoneDuoPrice = useMemo(() => getProductPrice(activeProducts, "iphone-duo", "From GH₵ 23,500"), [activeProducts]);
-  const watchSeries12Price = useMemo(() => getProductPrice(activeProducts, "apple-watch-series-12", "From GH₵ 7,800"), [activeProducts]);
-  const watchUltraPrice = useMemo(() => getProductPrice(activeProducts, "apple-watch-ultra-4", "From GH₵ 14,800"), [activeProducts]);
-  const airpodsPrice = useMemo(() => getProductPrice(activeProducts, "airpods-5", "From GH₵ 2,800"), [activeProducts]);
-  const macbookAirPrice = useMemo(() => getProductPrice(activeProducts, "macbook-air", "From GH₵ 13,500"), [activeProducts]);
-  const macMiniPrice = useMemo(() => getProductPrice(activeProducts, "mac-mini", "From GH₵ 9,800"), [activeProducts]);
-  const ipadAirPrice = useMemo(() => getProductPrice(activeProducts, "ipad-air", "From GH₵ 9,800"), [activeProducts]);
 
   const topCampaigns: Campaign[] = useMemo(() => [
     {
       eyebrow: "A new way to unfold",
       title: "iPhone Duo",
       description: "Open up more room for everything you do.",
-      priceLabel: iphoneDuoPrice,
       image: "/products/homepage/iphone-duo.webp",
       imageAlt: campaignAssets.duo.hero.alt,
       theme: "light",
@@ -126,7 +106,6 @@ export function HomePage() {
       eyebrow: "Everyday momentum",
       title: "Apple Watch Series 12",
       description: "Stay connected to what moves you.",
-      priceLabel: watchSeries12Price,
       image: "/products/homepage/watch-series-12.webp",
       fallbackImage: campaignAssets.watch.series12.fallback,
       imageAlt: campaignAssets.watch.series12.alt,
@@ -136,13 +115,12 @@ export function HomePage() {
       secondaryLabel: "Buy",
       secondaryTo: "/shop/buy-watch/apple-watch-series-12",
     },
-  ], [iphoneDuoPrice, watchSeries12Price]);
+  ], []);
 
   const featuredMacbookAirCampaign: Campaign = useMemo(() => ({
     eyebrow: latestMacbookAir ? `${latestMacbookAir.generation} · MacBook Air` : "MacBook Air",
     title: "MacBook Air",
     description: "A light, capable Mac for work, study and everyday creativity.",
-    priceLabel: macbookAirPrice,
     availabilityText: latestMacbookAir ? getLaunchAvailability(latestMacbookAir.variants, latestMacbookAir.featuredProduct.name) : undefined,
     image: "/products/homepage/macbook-air.jpg",
     imageAlt: "MacBook Air in an ultra-thin opening profile",
@@ -152,13 +130,12 @@ export function HomePage() {
     secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-mac/macbook-air",
     variant: "macbook-air",
-  }), [latestMacbookAir, macbookAirPrice]);
+  }), [latestMacbookAir]);
 
   const macMiniCampaign: Campaign = useMemo(() => ({
     eyebrow: "All-new",
     title: "Mac mini",
     description: "Now with M6 and M5 Pro.",
-    priceLabel: macMiniPrice,
     image: "/products/homepage/mac-mini-device.jpg",
     fallbackImage: "/products/homepage/mac-mini.jpg",
     imageAlt: "Mac mini with M6 and M5 Pro held in hand",
@@ -167,13 +144,12 @@ export function HomePage() {
     primaryTo: "/mac-mini",
     secondaryLabel: "Pre-order",
     secondaryTo: "/shop/buy-mac/mac-mini",
-  }), [macMiniPrice]);
+  }), []);
 
   const ipadAirCampaign: Campaign = useMemo(() => ({
     eyebrow: "Fresh. Powerful. Colourful.",
     title: "iPad Air",
     description: "Made for work, study, creativity and everything in between.",
-    priceLabel: ipadAirPrice,
     image: "/products/homepage/ipad-air.jpg",
     imageAlt: "iPad Air in a layered premium product presentation",
     theme: "light",
@@ -181,7 +157,7 @@ export function HomePage() {
     primaryTo: "/ipad/ipad-air",
     secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-ipad/ipad-air",
-  }), [ipadAirPrice]);
+  }), []);
 
   const visaTradingCampaign: Campaign = {
     eyebrow: "Buy & Sell GH Service",
@@ -226,20 +202,12 @@ export function HomePage() {
 }
 
 function Iphone18Hero() {
-  const { activeProducts } = useProductCatalog();
-  const priceLabel = useMemo(() => getProductPrice(activeProducts, "iphone-18-pro", "From GH₵ 20,500"), [activeProducts]);
-
   return (
     <section className="iphone18-hero" aria-labelledby="iphone18-hero-headline">
       <div className="iphone18-hero-copy">
         <p className="store-eyebrow">A new era of Pro</p>
         <h1 id="iphone18-hero-headline">iPhone 18 Pro</h1>
         <p className="iphone18-hero-subtitle">Pro further.</p>
-        {priceLabel && (
-          <span className="store-hero-price-pill">
-            {priceLabel}
-          </span>
-        )}
         <div className="iphone18-hero-actions">
           <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
           <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">Buy</Link>
@@ -271,10 +239,6 @@ function Iphone18Hero() {
 }
 
 function UltraAirpodsStory() {
-  const { activeProducts } = useProductCatalog();
-  const ultraPrice = useMemo(() => getProductPrice(activeProducts, "apple-watch-ultra-4", "From GH₵ 14,800"), [activeProducts]);
-  const airpodsPrice = useMemo(() => getProductPrice(activeProducts, "airpods-5", "From GH₵ 2,800"), [activeProducts]);
-
   return (
     <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
       <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
@@ -282,11 +246,6 @@ function UltraAirpodsStory() {
           <p className="store-eyebrow">Built for beyond</p>
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
-          {ultraPrice && (
-            <span className="store-hero-price-pill">
-              {ultraPrice}
-            </span>
-          )}
           <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">Buy</Link>
@@ -311,11 +270,6 @@ function UltraAirpodsStory() {
           <p className="store-eyebrow">Move with your music</p>
           <h2 id="airpods-story-title">AirPods 5</h2>
           <span>Freedom to listen wherever the rhythm takes you.</span>
-          {airpodsPrice && (
-            <span className="store-hero-price-pill">
-              {airpodsPrice}
-            </span>
-          )}
           <div className="ultra-airpods-actions">
             <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">Buy</Link>
@@ -392,11 +346,6 @@ function ProductCampaign({ campaign, top = false, priority = false }: { campaign
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2 id={`home-campaign-${slug}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
-        {campaign.priceLabel && (
-          <span className="store-hero-price-pill">
-            {campaign.priceLabel}
-          </span>
-        )}
         {campaign.availabilityText && <p className="store-launch-availability">{campaign.availabilityText}</p>}
         <div className="store-actions">
           <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>

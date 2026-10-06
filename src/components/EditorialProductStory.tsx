@@ -61,7 +61,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
   return (
     <main className={`editorial-story editorial-story-${story.slug}`}>
       <SEO title={`${story.name} | Learn More`} description={`${story.name}. ${story.tagline} Explore the product and shop with Buy & Sell GH.`} />
-      <section className={`editorial-hero editorial-tone-${story.heroTone}`} id="overview" aria-labelledby="editorial-title">
+      <section className={`editorial-hero ${story.cinematicVideo ? "editorial-hero-cinematic" : ""} editorial-tone-${story.heroTone}`} id="overview" aria-labelledby="editorial-title">
         <div className="editorial-hero-copy">
           <p className="editorial-eyebrow">{story.eyebrow}</p>
           <h1 id="editorial-title">{story.name}</h1>
@@ -71,9 +71,23 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
             <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
           </div>
         </div>
-        <div className="editorial-hero-art">
-          <ProductImage image={story.hero} eager />
-        </div>
+        {story.cinematicVideo ? (
+          <div className="editorial-cinematic-opening-media">
+            <CinematicVideo
+              src={story.cinematicVideo.src}
+              mobileSrc={story.cinematicVideo.mobileSrc}
+              poster={story.cinematicVideo.poster}
+              alt={story.cinematicVideo.alt}
+              aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
+              isClean={story.cinematicVideo.isClean}
+              priority
+            />
+          </div>
+        ) : (
+          <div className="editorial-hero-art">
+            <ProductImage image={story.hero} eager />
+          </div>
+        )}
       </section>
 
       <section className="editorial-highlights" id="highlights" aria-labelledby="editorial-highlights-title">
@@ -99,30 +113,24 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
 
       {story.cinematicVideo && (
         <section
-          className={`editorial-cinematic-sequence editorial-tone-${story.heroTone}`}
-          id="cinematic"
-          aria-labelledby="editorial-cinematic-title"
+          className={`editorial-hardware-anchor editorial-tone-${story.heroTone}`}
+          id="hardware-anchor"
+          aria-labelledby="editorial-hardware-anchor-title"
         >
-          <div className="editorial-cinematic-container">
-            {story.cinematicVideo.headline && (
-              <div className="editorial-cinematic-header">
-                {story.cinematicVideo.eyebrow && (
-                  <p className="editorial-eyebrow">{story.cinematicVideo.eyebrow}</p>
-                )}
-                <h2 id="editorial-cinematic-title">{story.cinematicVideo.headline}</h2>
-                {story.cinematicVideo.subheadline && (
-                  <p className="editorial-cinematic-sub">{story.cinematicVideo.subheadline}</p>
-                )}
-              </div>
-            )}
-            <div className="editorial-cinematic-player-frame">
-              <CinematicVideo
-                src={story.cinematicVideo.src}
-                mobileSrc={story.cinematicVideo.mobileSrc}
-                poster={story.cinematicVideo.poster}
-                alt={story.cinematicVideo.alt}
-                aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
-              />
+          <div className="editorial-hardware-anchor-container">
+            <div className="editorial-hardware-anchor-header">
+              {story.cinematicVideo.eyebrow && (
+                <p className="editorial-eyebrow">{story.cinematicVideo.eyebrow}</p>
+              )}
+              <h2 id="editorial-hardware-anchor-title">
+                {story.cinematicVideo.headline || `${story.name} Design`}
+              </h2>
+              {story.cinematicVideo.subheadline && (
+                <p className="editorial-hardware-anchor-sub">{story.cinematicVideo.subheadline}</p>
+              )}
+            </div>
+            <div className="editorial-hardware-anchor-art">
+              <ProductImage image={story.hero} />
             </div>
           </div>
         </section>

@@ -14,7 +14,9 @@ const MIME = {
   ".jpg": "image/jpeg",
   ".webp": "image/webp",
   ".svg": "image/svg+xml",
-  ".woff2": "font/woff2"
+  ".woff2": "font/woff2",
+  ".mp4": "video/mp4",
+  ".webm": "video/webm"
 };
 
 const server = http.createServer((req, res) => {

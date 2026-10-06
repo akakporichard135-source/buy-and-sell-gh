@@ -1,4 +1,3 @@
-import { Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export interface CinematicVideoProps {
@@ -10,6 +9,7 @@ export interface CinematicVideoProps {
   aspectRatio?: string;
   autoPlayThreshold?: number;
   priority?: boolean;
+  isClean?: boolean;
 }
 
 export function CinematicVideo({
@@ -21,12 +21,12 @@ export function CinematicVideo({
   aspectRatio,
   autoPlayThreshold = 0.25,
   priority = false,
+  isClean = true,
 }: CinematicVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isUserPaused, setIsUserPaused] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -42,7 +42,7 @@ export function CinematicVideo({
 
   // IntersectionObserver to only play when video is visible in the viewport
   useEffect(() => {
-    if (prefersReducedMotion || hasError) return;
+    if (!isClean || prefersReducedMotion || hasError) return;
 
     const videoEl = videoRef.current;
     const containerEl = containerRef.current;
@@ -50,9 +50,8 @@ export function CinematicVideo({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !isUserPaused) {
+        if (entry.isIntersecting) {
           videoEl.play().then(() => setIsPlaying(true)).catch(() => {
-            // Autoplay policy fallback
             setIsPlaying(false);
           });
         } else {
@@ -70,8 +69,6 @@ export function CinematicVideo({
       if (document.hidden) {
         videoEl.pause();
         setIsPlaying(false);
-      } else if (!isUserPaused && observer) {
-        // re-check if intersecting
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
@@ -80,29 +77,14 @@ export function CinematicVideo({
       observer.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [autoPlayThreshold, isUserPaused, prefersReducedMotion, hasError]);
+  }, [autoPlayThreshold, prefersReducedMotion, hasError, isClean]);
 
-  const togglePlayPause = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isPlaying) {
-      video.pause();
-      setIsPlaying(false);
-      setIsUserPaused(true);
-    } else {
-      video.play().then(() => {
-        setIsPlaying(true);
-        setIsUserPaused(false);
-      }).catch(() => {});
-    }
-  };
-
-  if (prefersReducedMotion || hasError) {
+  // Clean static hero presentation when clean footage is not available or reduced-motion is requested
+  if (!isClean || prefersReducedMotion || hasError) {
     return (
       <div
         ref={containerRef}
-        className={`cinematic-video-container ${className}`}
+        className={`cinematic-video-container cinematic-clean-fallback ${className}`}
         style={aspectRatio ? { aspectRatio } : undefined}
       >
         <img
@@ -120,7 +102,7 @@ export function CinematicVideo({
   return (
     <div
       ref={containerRef}
-      className={`cinematic-video-container ${className} relative overflow-hidden group`}
+      className={`cinematic-video-container ${className} relative overflow-hidden`}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
       {/* High-res poster until video loads */}
@@ -153,19 +135,6 @@ export function CinematicVideo({
         )}
         <source src={src} type="video/mp4" />
       </video>
-
-      {/* Discreet floating playback control for accessibility */}
-      {isLoaded && (
-        <button
-          type="button"
-          onClick={togglePlayPause}
-          className="cinematic-video-toggle absolute bottom-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white/80 backdrop-blur-md transition hover:bg-black/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-gold/60"
-          aria-label={isPlaying ? "Pause cinematic background video" : "Play cinematic background video"}
-          title={isPlaying ? "Pause video" : "Play video"}
-        >
-          {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
-        </button>
-      )}
     </div>
   );
 }
