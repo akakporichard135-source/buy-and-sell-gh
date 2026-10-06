@@ -40,6 +40,17 @@ export function CinematicVideo({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
+  // Ensure video element has muted property explicitly set and plays smoothly
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+    videoEl.muted = true;
+    videoEl.defaultMuted = true;
+    videoEl.play().then(() => setIsPlaying(true)).catch(() => {
+      // autoplay may be deferred until interaction or intersection
+    });
+  }, [src]);
+
   // IntersectionObserver to only play when video is visible in the viewport
   useEffect(() => {
     if (!isClean || prefersReducedMotion || hasError) return;
@@ -59,7 +70,7 @@ export function CinematicVideo({
           setIsPlaying(false);
         }
       },
-      { threshold: autoPlayThreshold }
+      { threshold: Math.min(autoPlayThreshold, 0.1) }
     );
 
     observer.observe(containerEl);
@@ -69,6 +80,8 @@ export function CinematicVideo({
       if (document.hidden) {
         videoEl.pause();
         setIsPlaying(false);
+      } else {
+        videoEl.play().then(() => setIsPlaying(true)).catch(() => {});
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
@@ -122,12 +135,20 @@ export function CinematicVideo({
         className={`cinematic-video-media transition-opacity duration-700 ease-out ${
           isLoaded ? "opacity-100" : "opacity-0"
         }`}
+        autoPlay
         muted
         playsInline
         loop
         preload={priority ? "auto" : "metadata"}
         poster={poster}
-        onLoadedData={() => setIsLoaded(true)}
+        onLoadedData={() => {
+          setIsLoaded(true);
+          videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+        }}
+        onCanPlay={() => {
+          setIsLoaded(true);
+          videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+        }}
         onError={() => setHasError(true)}
       >
         {mobileSrc && (
