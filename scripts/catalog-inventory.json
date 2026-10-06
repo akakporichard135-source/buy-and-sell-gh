@@ -1,0 +1,3408 @@
+[
+  {
+    "id": "iphone-17-pro-max",
+    "slug": "iphone-17-pro-max",
+    "name": "iPhone 17 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 17",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Cosmic Orange",
+      "Deep Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.9-inch Super Retina XDR display",
+      "A19 Pro chip",
+      "Triple 48MP Fusion camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-17-pro",
+    "slug": "iphone-17-pro",
+    "name": "iPhone 17 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 17",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Silver",
+      "Cosmic Orange",
+      "Deep Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.3-inch Super Retina XDR display",
+      "A19 Pro chip",
+      "Triple 48MP Fusion camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-air",
+    "slug": "iphone-air",
+    "name": "iPhone Air",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 17",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Cloud White",
+      "Light Gold",
+      "Sky Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.5-inch Super Retina XDR display",
+      "A19 Pro chip",
+      "48MP Fusion camera",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-17",
+    "slug": "iphone-17",
+    "name": "iPhone 17",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 17",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Black",
+      "White",
+      "Mist Blue",
+      "Sage",
+      "Lavender"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.3-inch Super Retina XDR display",
+      "A19 chip",
+      "Dual Fusion camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-16-plus",
+    "slug": "iphone-16-plus",
+    "name": "iPhone 16 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 16",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Black",
+      "White",
+      "Pink",
+      "Teal",
+      "Ultramarine"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A18 chip",
+      "Dual camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-16",
+    "slug": "iphone-16",
+    "name": "iPhone 16",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 16",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Black",
+      "White",
+      "Pink",
+      "Teal",
+      "Ultramarine"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A18 chip",
+      "Dual camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-16e",
+    "slug": "iphone-16e",
+    "name": "iPhone 16e",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 16",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Black",
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A18 chip",
+      "48MP Fusion camera",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-15-pro",
+    "slug": "iphone-15-pro",
+    "name": "iPhone 15 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 15",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Black Titanium",
+      "White Titanium",
+      "Blue Titanium",
+      "Natural Titanium"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A17 Pro chip",
+      "Pro camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-15-plus",
+    "slug": "iphone-15-plus",
+    "name": "iPhone 15 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 15",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Black",
+      "Blue",
+      "Green",
+      "Yellow",
+      "Pink"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A16 Bionic chip",
+      "Dual camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-14-pro",
+    "slug": "iphone-14-pro",
+    "name": "iPhone 14 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 14",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver",
+      "Gold",
+      "Deep Purple"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A16 Bionic chip",
+      "Pro camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-14-plus",
+    "slug": "iphone-14-plus",
+    "name": "iPhone 14 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 14",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Midnight",
+      "Purple",
+      "Starlight",
+      "Red",
+      "Blue",
+      "Yellow"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-14",
+    "slug": "iphone-14",
+    "name": "iPhone 14",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 14",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Midnight",
+      "Purple",
+      "Starlight",
+      "Red",
+      "Blue",
+      "Yellow"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-13-pro",
+    "slug": "iphone-13-pro",
+    "name": "iPhone 13 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 13",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Graphite",
+      "Gold",
+      "Silver",
+      "Sierra Blue",
+      "Alpine Green"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "Pro camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-13",
+    "slug": "iphone-13",
+    "name": "iPhone 13",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 13",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Pink",
+      "Blue",
+      "Midnight",
+      "Starlight",
+      "Red",
+      "Green"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-13-mini",
+    "slug": "iphone-13-mini",
+    "name": "iPhone 13 mini",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 13",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Pink",
+      "Blue",
+      "Midnight",
+      "Starlight",
+      "Red",
+      "Green"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "5.4-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-12-pro",
+    "slug": "iphone-12-pro",
+    "name": "iPhone 12 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 12",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Silver",
+      "Graphite",
+      "Gold",
+      "Pacific Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A14 Bionic chip",
+      "Pro camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-12",
+    "slug": "iphone-12",
+    "name": "iPhone 12",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 12",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "128GB",
+      "256GB"
+    ],
+    "colors": [
+      "Black",
+      "White",
+      "Red",
+      "Green",
+      "Blue",
+      "Purple"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "A14 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-12-mini",
+    "slug": "iphone-12-mini",
+    "name": "iPhone 12 mini",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 12",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "128GB",
+      "256GB"
+    ],
+    "colors": [
+      "Black",
+      "White",
+      "Red",
+      "Green",
+      "Blue",
+      "Purple"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "5.4-inch Super Retina XDR display",
+      "A14 Bionic chip",
+      "Dual camera system",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "iphone-16-pro-max",
+    "slug": "iphone-16-pro-max",
+    "name": "iPhone 16 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 16",
+    "condition": "Brand New",
+    "price": 20500,
+    "priceOnRequest": false,
+    "previousPrice": 21800,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Desert Titanium",
+      "Natural Titanium",
+      "Black Titanium"
+    ],
+    "stockQuantity": 2,
+    "stockStatus": "Low Stock",
+    "specs": [
+      "6.9-inch Super Retina XDR display",
+      "A18 Pro chip",
+      "Pro camera system",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-16-pro",
+    "slug": "iphone-16-pro",
+    "name": "iPhone 16 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 16",
+    "condition": "Brand New",
+    "price": 17800,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Natural Titanium",
+      "White Titanium",
+      "Black Titanium"
+    ],
+    "stockQuantity": 4,
+    "stockStatus": "In Stock",
+    "specs": [
+      "6.3-inch Super Retina XDR display",
+      "A18 Pro chip",
+      "ProMotion display",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-15-pro-max",
+    "slug": "iphone-15-pro-max",
+    "name": "iPhone 15 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 15",
+    "condition": "UK Used",
+    "price": 14500,
+    "priceOnRequest": false,
+    "previousPrice": 15500,
+    "storage": [
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Natural Titanium",
+      "Blue Titanium",
+      "Black Titanium"
+    ],
+    "stockQuantity": 5,
+    "stockStatus": "In Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A17 Pro chip",
+      "Titanium design",
+      "Action Button"
+    ]
+  },
+  {
+    "id": "iphone-15",
+    "slug": "iphone-15",
+    "name": "iPhone 15",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 15",
+    "condition": "Excellent",
+    "price": 9800,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB"
+    ],
+    "colors": [
+      "Pink",
+      "Blue",
+      "Black",
+      "Green"
+    ],
+    "stockQuantity": 7,
+    "stockStatus": "In Stock",
+    "specs": [
+      "6.1-inch Super Retina XDR display",
+      "Dynamic Island",
+      "48MP main camera",
+      "USB-C charging"
+    ]
+  },
+  {
+    "id": "iphone-14-pro-max",
+    "slug": "iphone-14-pro-max",
+    "name": "iPhone 14 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 14",
+    "condition": "UK Used",
+    "price": 11200,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Deep Purple",
+      "Gold",
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 2,
+    "stockStatus": "Low Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A16 Bionic chip",
+      "Dynamic Island",
+      "Pro camera system"
+    ]
+  },
+  {
+    "id": "iphone-13-pro-max",
+    "slug": "iphone-13-pro-max",
+    "name": "iPhone 13 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 13",
+    "condition": "Very Good",
+    "price": 8200,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB"
+    ],
+    "colors": [
+      "Sierra Blue",
+      "Gold",
+      "Graphite"
+    ],
+    "stockQuantity": 6,
+    "stockStatus": "In Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A15 Bionic chip",
+      "120Hz ProMotion",
+      "Triple camera system"
+    ]
+  },
+  {
+    "id": "iphone-12-pro-max",
+    "slug": "iphone-12-pro-max",
+    "name": "iPhone 12 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 12",
+    "condition": "Very Good",
+    "price": 6400,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB"
+    ],
+    "colors": [
+      "Pacific Blue",
+      "Gold",
+      "Graphite"
+    ],
+    "stockQuantity": 1,
+    "stockStatus": "Low Stock",
+    "specs": [
+      "6.7-inch Super Retina XDR display",
+      "A14 Bionic chip",
+      "5G capable",
+      "MagSafe support"
+    ]
+  },
+  {
+    "id": "iphone-11-pro-max",
+    "slug": "iphone-11-pro-max",
+    "name": "iPhone 11 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "generation": "iPhone 11",
+    "condition": "Very Good",
+    "price": 4700,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "256GB"
+    ],
+    "colors": [
+      "Midnight Green",
+      "Space Gray",
+      "Gold"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Sold",
+    "specs": [
+      "6.5-inch Super Retina XDR display",
+      "A13 Bionic chip",
+      "Triple camera system",
+      "Face ID"
+    ]
+  },
+  {
+    "id": "ipad-10th-generation",
+    "slug": "ipad-10th-generation",
+    "name": "iPad (10th generation)",
+    "category": "iPads",
+    "subcategory": "iPad",
+    "generation": "iPad 10th generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "256GB"
+    ],
+    "colors": [
+      "Silver",
+      "Blue",
+      "Pink",
+      "Yellow"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "10.9-inch Liquid Retina display",
+      "A14 Bionic chip",
+      "Touch ID in the top button",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-a16",
+    "slug": "ipad-a16",
+    "name": "iPad (A16)",
+    "category": "iPads",
+    "subcategory": "iPad",
+    "generation": "iPad (A16)",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Silver",
+      "Blue",
+      "Pink",
+      "Yellow"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "10.86-inch Liquid Retina display",
+      "A16 chip",
+      "Touch ID in the top button",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-mini-6",
+    "slug": "ipad-mini-6",
+    "name": "iPad mini (6th generation)",
+    "category": "iPads",
+    "subcategory": "iPad mini",
+    "generation": "iPad mini 6",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "256GB"
+    ],
+    "colors": [
+      "Space Gray",
+      "Pink",
+      "Purple",
+      "Starlight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "8.3-inch Liquid Retina display",
+      "A15 Bionic chip",
+      "Touch ID in the top button",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-mini-a17-pro",
+    "slug": "ipad-mini-a17-pro",
+    "name": "iPad mini (A17 Pro)",
+    "category": "iPads",
+    "subcategory": "iPad mini",
+    "generation": "iPad mini 7",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "8.3-inch Liquid Retina display",
+      "A17 Pro chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-5",
+    "slug": "ipad-air-5",
+    "name": "iPad Air (5th generation)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air 5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "64GB",
+      "256GB"
+    ],
+    "colors": [
+      "Space Gray",
+      "Starlight",
+      "Pink",
+      "Purple",
+      "Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "10.9-inch Liquid Retina display",
+      "Apple M1 chip",
+      "Apple Pencil (2nd generation) support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m2",
+    "slug": "ipad-air-11-inch-m2",
+    "name": "iPad Air 11-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11-inch Liquid Retina display",
+      "Apple M2 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m2",
+    "slug": "ipad-air-13-inch-m2",
+    "name": "iPad Air 13-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "13-inch Liquid Retina display",
+      "Apple M2 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m3",
+    "slug": "ipad-air-11-inch-m3",
+    "name": "iPad Air 11-inch (M3)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11-inch Liquid Retina display",
+      "Apple M3 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m3",
+    "slug": "ipad-air-13-inch-m3",
+    "name": "iPad Air 13-inch (M3)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "13-inch Liquid Retina display",
+      "Apple M3 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m4",
+    "slug": "ipad-air-11-inch-m4",
+    "name": "iPad Air 11-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11-inch Liquid Retina display",
+      "Apple M4 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m4",
+    "slug": "ipad-air-13-inch-m4",
+    "name": "iPad Air 13-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "generation": "iPad Air M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB"
+    ],
+    "colors": [
+      "Blue",
+      "Purple",
+      "Starlight",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "13-inch Liquid Retina display",
+      "Apple M4 chip",
+      "Apple Pencil Pro support",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m2",
+    "slug": "ipad-pro-11-inch-m2",
+    "name": "iPad Pro 11-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11-inch Liquid Retina display with ProMotion",
+      "Apple M2 chip",
+      "Dual rear cameras with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-12-9-inch-m2",
+    "slug": "ipad-pro-12-9-inch-m2",
+    "name": "iPad Pro 12.9-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "128GB",
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "12.9-inch Liquid Retina XDR display with ProMotion",
+      "Apple M2 chip",
+      "Dual rear cameras with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m4",
+    "slug": "ipad-pro-11-inch-m4",
+    "name": "iPad Pro 11-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11.1-inch Ultra Retina XDR display with ProMotion",
+      "Apple M4 chip",
+      "12MP Wide camera with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-13-inch-m4",
+    "slug": "ipad-pro-13-inch-m4",
+    "name": "iPad Pro 13-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "13-inch Ultra Retina XDR display with ProMotion",
+      "Apple M4 chip",
+      "12MP Wide camera with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m5",
+    "slug": "ipad-pro-11-inch-m5",
+    "name": "iPad Pro 11-inch (M5)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "11.1-inch Ultra Retina XDR display with ProMotion",
+      "Apple M5 chip",
+      "12MP Wide camera with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro-13-inch-m5",
+    "slug": "ipad-pro-13-inch-m5",
+    "name": "iPad Pro 13-inch (M5)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "generation": "iPad Pro M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "13-inch Ultra Retina XDR display with ProMotion",
+      "Apple M5 chip",
+      "12MP Wide camera with LiDAR Scanner",
+      "Thunderbolt / USB 4 connector"
+    ]
+  },
+  {
+    "id": "ipad-pro",
+    "slug": "ipad-pro",
+    "name": "iPad Pro",
+    "category": "iPads",
+    "subcategory": "",
+    "generation": "",
+    "condition": "Excellent",
+    "price": 13800,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Black"
+    ],
+    "stockQuantity": 2,
+    "stockStatus": "Low Stock",
+    "specs": [
+      "Liquid Retina display",
+      "Apple Pencil support",
+      "USB-C charging",
+      "Wi-Fi options"
+    ]
+  },
+  {
+    "id": "apple-watch-ultra-3",
+    "slug": "apple-watch-ultra-3",
+    "name": "Apple Watch Ultra 3",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "generation": "Apple Watch Ultra 3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Natural Titanium",
+      "Black Titanium"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "49mm titanium case",
+      "S10 chip with 64GB capacity",
+      "Always-On Retina LTPO3 OLED display",
+      "100m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-series-11",
+    "slug": "apple-watch-series-11",
+    "name": "Apple Watch Series 11",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "generation": "Apple Watch Series 11",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Rose Gold",
+      "Silver",
+      "Space Gray",
+      "Jet Black",
+      "Gold",
+      "Natural",
+      "Slate"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "42mm or 46mm case",
+      "S10 chip with 64GB capacity",
+      "Always-On wide-angle OLED LTPO3 display",
+      "50m water resistance and IP6X dust resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-se-3",
+    "slug": "apple-watch-se-3",
+    "name": "Apple Watch SE 3",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch SE",
+    "generation": "Apple Watch SE 3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Starlight",
+      "Midnight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "40mm or 44mm aluminum case",
+      "S10 chip with 64GB capacity",
+      "Always-On Retina OLED display",
+      "50m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-series-10",
+    "slug": "apple-watch-series-10",
+    "name": "Apple Watch Series 10",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "generation": "Apple Watch Series 10",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Jet Black",
+      "Rose Gold",
+      "Silver",
+      "Slate",
+      "Gold",
+      "Natural"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "42mm or 46mm case",
+      "S10 chip with 64GB capacity",
+      "Always-On wide-angle OLED LTPO3 display",
+      "50m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-ultra-2",
+    "slug": "apple-watch-ultra-2",
+    "name": "Apple Watch Ultra 2",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "generation": "Apple Watch Ultra 2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Natural Titanium",
+      "Black Titanium"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "49mm titanium case",
+      "S9 chip with 64GB capacity",
+      "Always-On Retina LTPO2 OLED display up to 3000 nits",
+      "100m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-series-9",
+    "slug": "apple-watch-series-9",
+    "name": "Apple Watch Series 9",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "generation": "Apple Watch Series 9",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Pink",
+      "Midnight",
+      "Starlight",
+      "Silver",
+      "(PRODUCT)RED",
+      "Gold",
+      "Graphite"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "41mm or 45mm case",
+      "S9 chip with 64GB capacity",
+      "Always-On Retina LTPO OLED display up to 2000 nits",
+      "50m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-series-8",
+    "slug": "apple-watch-series-8",
+    "name": "Apple Watch Series 8",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "generation": "Apple Watch Series 8",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Silver",
+      "(PRODUCT)RED",
+      "Graphite",
+      "Gold"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "41mm or 45mm case",
+      "S8 chip with 32GB capacity",
+      "Always-On Retina LTPO OLED display",
+      "50m water resistance and IP6X dust resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-ultra",
+    "slug": "apple-watch-ultra",
+    "name": "Apple Watch Ultra",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "generation": "Apple Watch Ultra",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Natural Titanium"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "49mm titanium case",
+      "S8 chip with 32GB capacity",
+      "Always-On Retina LTPO2 OLED display up to 2000 nits",
+      "100m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-series-7",
+    "slug": "apple-watch-series-7",
+    "name": "Apple Watch Series 7",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "generation": "Apple Watch Series 7",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Green",
+      "Blue",
+      "(PRODUCT)RED",
+      "Graphite",
+      "Silver",
+      "Gold",
+      "Titanium",
+      "Space Black"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "41mm or 45mm case",
+      "S7 chip with 32GB capacity",
+      "Always-On Retina LTPO OLED display",
+      "50m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch-se-2",
+    "slug": "apple-watch-se-2",
+    "name": "Apple Watch SE (2nd generation)",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch SE",
+    "generation": "Apple Watch SE 2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "40mm or 44mm aluminum case",
+      "S8 chip with 32GB capacity",
+      "Retina LTPO OLED display up to 1000 nits",
+      "50m water resistance"
+    ]
+  },
+  {
+    "id": "apple-watch",
+    "slug": "apple-watch",
+    "name": "Apple Watch",
+    "category": "Apple Watches",
+    "subcategory": "",
+    "generation": "",
+    "condition": "Excellent",
+    "price": 2600,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "GPS",
+      "GPS + Cellular"
+    ],
+    "colors": [
+      "Midnight",
+      "Silver",
+      "Starlight"
+    ],
+    "stockQuantity": 8,
+    "stockStatus": "In Stock",
+    "specs": [
+      "Health tracking",
+      "Workout modes",
+      "Water resistance",
+      "iPhone pairing"
+    ]
+  },
+  {
+    "id": "airpods-pro",
+    "slug": "airpods-pro",
+    "name": "AirPods Pro",
+    "category": "AirPods",
+    "subcategory": "",
+    "generation": "",
+    "condition": "Brand New",
+    "price": 2200,
+    "priceOnRequest": false,
+    "previousPrice": null,
+    "storage": [
+      "USB-C Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 10,
+    "stockStatus": "In Stock",
+    "specs": [
+      "Active Noise Cancellation",
+      "Transparency mode",
+      "USB-C case",
+      "Spatial audio support"
+    ]
+  },
+  {
+    "id": "airpods-2nd-generation",
+    "slug": "airpods-2nd-generation",
+    "name": "AirPods (2nd generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "generation": "2nd generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Lightning Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H1 headphone chip",
+      "Up to 5 hours of listening time on one charge",
+      "Lightning Charging Case",
+      "Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "airpods-3rd-generation",
+    "slug": "airpods-3rd-generation",
+    "name": "AirPods (3rd generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "generation": "3rd generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Lightning Charging Case",
+      "MagSafe Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H1 headphone chip",
+      "Personalized Spatial Audio with dynamic head tracking",
+      "Adaptive EQ",
+      "Up to 6 hours of listening time on one charge",
+      "Sweat and water resistant (IPX4)"
+    ]
+  },
+  {
+    "id": "airpods-4",
+    "slug": "airpods-4",
+    "name": "AirPods 4",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "generation": "4th generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H2 headphone chip",
+      "Personalized Spatial Audio with dynamic head tracking",
+      "Voice Isolation",
+      "Up to 5 hours of listening time on one charge",
+      "Dust, sweat and water resistant (IP54)"
+    ]
+  },
+  {
+    "id": "airpods-4-anc",
+    "slug": "airpods-4-anc",
+    "name": "AirPods 4 with Active Noise Cancellation",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "generation": "4th generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C Wireless Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H2 headphone chip",
+      "Active Noise Cancellation",
+      "Adaptive Audio and Transparency mode",
+      "Up to 4 hours of listening time with Active Noise Cancellation",
+      "Dust, sweat and water resistant (IP54)"
+    ]
+  },
+  {
+    "id": "airpods-pro-1",
+    "slug": "airpods-pro-1",
+    "name": "AirPods Pro (1st generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "generation": "1st generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Lightning Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H1 headphone chip",
+      "Active Noise Cancellation",
+      "Transparency mode",
+      "Spatial Audio with dynamic head tracking",
+      "Sweat and water resistant (IPX4)"
+    ]
+  },
+  {
+    "id": "airpods-pro-2",
+    "slug": "airpods-pro-2",
+    "name": "AirPods Pro 2",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "generation": "2nd generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C MagSafe Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H2 headphone chip",
+      "Active Noise Cancellation",
+      "Adaptive Audio and Transparency mode",
+      "Up to 6 hours of listening time with Active Noise Cancellation",
+      "Dust, sweat and water resistant (IP54)"
+    ]
+  },
+  {
+    "id": "airpods-pro-3",
+    "slug": "airpods-pro-3",
+    "name": "AirPods Pro 3",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "generation": "3rd generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C MagSafe Charging Case"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H2 headphone chip",
+      "Active Noise Cancellation and Adaptive Audio",
+      "Heart rate sensing during workouts",
+      "Up to 8 hours of listening time with Active Noise Cancellation",
+      "Dust, sweat and water resistant (IP57)"
+    ]
+  },
+  {
+    "id": "airpods-max-lightning",
+    "slug": "airpods-max-lightning",
+    "name": "AirPods Max (Lightning)",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "generation": "1st generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Lightning"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray",
+      "Sky Blue",
+      "Pink",
+      "Green"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H1 headphone chip in each ear cup",
+      "Active Noise Cancellation and Transparency mode",
+      "Personalized Spatial Audio with dynamic head tracking",
+      "Up to 20 hours of listening time",
+      "Lightning connector"
+    ]
+  },
+  {
+    "id": "airpods-max-usb-c",
+    "slug": "airpods-max-usb-c",
+    "name": "AirPods Max (USB-C)",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "generation": "1st generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Blue",
+      "Purple",
+      "Orange"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H1 headphone chip in each ear cup",
+      "Active Noise Cancellation and Transparency mode",
+      "Personalized Spatial Audio with dynamic head tracking",
+      "Up to 20 hours of listening time",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "airpods-max-2",
+    "slug": "airpods-max-2",
+    "name": "AirPods Max 2",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "generation": "2nd generation",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Blue",
+      "Purple",
+      "Orange"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Apple H2 headphone chip in each ear cup",
+      "Active Noise Cancellation",
+      "Adaptive Audio and Transparency mode",
+      "Lossless Audio and ultra-low latency audio via USB-C",
+      "USB-C connector"
+    ]
+  },
+  {
+    "id": "macbook-air-13-m5",
+    "slug": "macbook-air-13-m5",
+    "name": "MacBook Air 13-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB"
+    ],
+    "colors": [
+      "Sky Blue",
+      "Silver",
+      "Starlight",
+      "Midnight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "13.6-inch Liquid Retina display",
+      "Apple M5 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 7 and Bluetooth 6"
+    ]
+  },
+  {
+    "id": "macbook-air-15-m5",
+    "slug": "macbook-air-15-m5",
+    "name": "MacBook Air 15-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB"
+    ],
+    "colors": [
+      "Sky Blue",
+      "Silver",
+      "Starlight",
+      "Midnight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "15.3-inch Liquid Retina display",
+      "Apple M5 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 7 and Bluetooth 6"
+    ]
+  },
+  {
+    "id": "macbook-air-13-m4",
+    "slug": "macbook-air-13-m4",
+    "name": "MacBook Air 13-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Sky Blue",
+      "Silver",
+      "Starlight",
+      "Midnight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "13.6-inch Liquid Retina display",
+      "Apple M4 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-15-m4",
+    "slug": "macbook-air-15-m4",
+    "name": "MacBook Air 15-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Sky Blue",
+      "Silver",
+      "Starlight",
+      "Midnight"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "15.3-inch Liquid Retina display",
+      "Apple M4 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-13-m3",
+    "slug": "macbook-air-13-m3",
+    "name": "MacBook Air 13-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Space Gray",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "13.6-inch Liquid Retina display",
+      "Apple M3 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-15-m3",
+    "slug": "macbook-air-15-m3",
+    "name": "MacBook Air 15-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Space Gray",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "15.3-inch Liquid Retina display",
+      "Apple M3 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-13-m2",
+    "slug": "macbook-air-13-m2",
+    "name": "MacBook Air 13-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Space Gray",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "13.6-inch Liquid Retina display",
+      "Apple M2 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-15-m2",
+    "slug": "macbook-air-15-m2",
+    "name": "MacBook Air 15-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Midnight",
+      "Starlight",
+      "Space Gray",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "15.3-inch Liquid Retina display",
+      "Apple M2 chip",
+      "MagSafe 3 charging port, 3.5mm headphone jack and two Thunderbolt ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-air-13-m1",
+    "slug": "macbook-air-13-m1",
+    "name": "MacBook Air 13-inch (M1)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "generation": "M1",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Gold",
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB",
+      "13.3-inch Retina display",
+      "Apple M1 chip",
+      "Two Thunderbolt / USB 4 ports and 3.5mm headphone jack",
+      "720p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m5",
+    "slug": "macbook-pro-14-m5",
+    "name": "MacBook Pro 14-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M5 chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m5-pro-max",
+    "slug": "macbook-pro-14-m5-pro-max",
+    "name": "MacBook Pro 14-inch (M5 Pro / M5 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 24GB, 36GB, 48GB, 64GB, 128GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M5 Pro or M5 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 5 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 7 and Bluetooth 6"
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m5-pro-max",
+    "slug": "macbook-pro-16-m5-pro-max",
+    "name": "MacBook Pro 16-inch (M5 Pro / M5 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M5",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 24GB, 36GB, 48GB, 64GB, 128GB",
+      "16.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M5 Pro or M5 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 5 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 7 and Bluetooth 6"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m4",
+    "slug": "macbook-pro-14-m4",
+    "name": "MacBook Pro 14-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 24GB, 32GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M4 chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m4-pro-max",
+    "slug": "macbook-pro-14-m4-pro-max",
+    "name": "MacBook Pro 14-inch (M4 Pro / M4 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 24GB, 36GB, 48GB, 64GB, 128GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M4 Pro or M4 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 5 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m4-pro-max",
+    "slug": "macbook-pro-16-m4-pro-max",
+    "name": "MacBook Pro 16-inch (M4 Pro / M4 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M4",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 24GB, 36GB, 48GB, 64GB, 128GB",
+      "16.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M4 Pro or M4 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 5 ports",
+      "12MP Center Stage camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m3",
+    "slug": "macbook-pro-14-m3",
+    "name": "MacBook Pro 14-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M3 chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and two Thunderbolt / USB 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m3-pro-max",
+    "slug": "macbook-pro-14-m3-pro-max",
+    "name": "MacBook Pro 14-inch (M3 Pro / M3 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 18GB, 36GB, 48GB, 64GB, 96GB, 128GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M3 Pro or M3 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m3-pro-max",
+    "slug": "macbook-pro-16-m3-pro-max",
+    "name": "MacBook Pro 16-inch (M3 Pro / M3 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M3",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Space Black",
+      "Silver"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 18GB, 36GB, 48GB, 64GB, 96GB, 128GB",
+      "16.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M3 Pro or M3 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-13-m2",
+    "slug": "macbook-pro-13-m2",
+    "name": "MacBook Pro 13-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB, 24GB",
+      "13.3-inch Retina display",
+      "Apple M2 chip",
+      "Touch Bar and Touch ID",
+      "Two Thunderbolt / USB 4 ports and 3.5mm headphone jack",
+      "720p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m2-pro-max",
+    "slug": "macbook-pro-14-m2-pro-max",
+    "name": "MacBook Pro 14-inch (M2 Pro / M2 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 32GB, 64GB, 96GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M2 Pro or M2 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m2-pro-max",
+    "slug": "macbook-pro-16-m2-pro-max",
+    "name": "MacBook Pro 16-inch (M2 Pro / M2 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M2",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 32GB, 64GB, 96GB",
+      "16.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M2 Pro or M2 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6E and Bluetooth 5.3"
+    ]
+  },
+  {
+    "id": "macbook-pro-13-m1",
+    "slug": "macbook-pro-13-m1",
+    "name": "MacBook Pro 13-inch (M1)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M1",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "256GB",
+      "512GB",
+      "1TB",
+      "2TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 8GB, 16GB",
+      "13.3-inch Retina display",
+      "Apple M1 chip",
+      "Touch Bar and Touch ID",
+      "Two Thunderbolt / USB 4 ports and 3.5mm headphone jack",
+      "720p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m1-pro-max",
+    "slug": "macbook-pro-14-m1-pro-max",
+    "name": "MacBook Pro 14-inch (M1 Pro / M1 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M1",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 32GB, 64GB",
+      "14.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M1 Pro or M1 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m1-pro-max",
+    "slug": "macbook-pro-16-m1-pro-max",
+    "name": "MacBook Pro 16-inch (M1 Pro / M1 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "generation": "M1",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "512GB",
+      "1TB",
+      "2TB",
+      "4TB",
+      "8TB"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Memory options: 16GB, 32GB, 64GB",
+      "16.2-inch Liquid Retina XDR display with ProMotion",
+      "Apple M1 Pro or M1 Max chip",
+      "MagSafe 3, HDMI, SDXC, 3.5mm headphone jack and three Thunderbolt 4 ports",
+      "1080p FaceTime HD camera",
+      "Wi-Fi 6 and Bluetooth 5.0"
+    ]
+  },
+  {
+    "id": "apple-20w-usb-c-power-adapter",
+    "slug": "apple-20w-usb-c-power-adapter",
+    "name": "Apple 20W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "20W USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 20W",
+      "Connector: USB-C",
+      "Compatibility: USB-C enabled iPhone and iPad models; other USB-C devices",
+      "Charging: Fast charging supported with a compatible cable and device"
+    ]
+  },
+  {
+    "id": "apple-30w-usb-c-power-adapter",
+    "slug": "apple-30w-usb-c-power-adapter",
+    "name": "Apple 30W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "30W USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 30W",
+      "Connector: USB-C",
+      "Compatibility: MacBook Air and compatible USB-C Apple devices",
+      "Charging: USB-C Power Delivery"
+    ]
+  },
+  {
+    "id": "apple-35w-dual-usb-c-power-adapter",
+    "slug": "apple-35w-dual-usb-c-power-adapter",
+    "name": "Apple 35W Dual USB-C Port Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "35W Dual USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 35W total",
+      "Connector: Two USB-C ports",
+      "Compatibility: Compatible USB-C Apple devices",
+      "Charging: Charge two devices at the same time"
+    ]
+  },
+  {
+    "id": "apple-70w-usb-c-power-adapter",
+    "slug": "apple-70w-usb-c-power-adapter",
+    "name": "Apple 70W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "70W USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 70W",
+      "Connector: USB-C",
+      "Compatibility: Compatible MacBook and USB-C Apple devices",
+      "Charging: Fast charging supported on compatible MacBook models"
+    ]
+  },
+  {
+    "id": "apple-96w-usb-c-power-adapter",
+    "slug": "apple-96w-usb-c-power-adapter",
+    "name": "Apple 96W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "96W USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 96W",
+      "Connector: USB-C",
+      "Compatibility: Compatible MacBook Pro and USB-C devices",
+      "Charging: USB-C Power Delivery"
+    ]
+  },
+  {
+    "id": "apple-140w-usb-c-power-adapter",
+    "slug": "apple-140w-usb-c-power-adapter",
+    "name": "Apple 140W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "140W USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: 140W",
+      "Connector: USB-C",
+      "Compatibility: Compatible MacBook Pro and USB-C devices",
+      "Charging: USB-C Power Delivery 3.1"
+    ]
+  },
+  {
+    "id": "apple-magsafe-charger",
+    "slug": "apple-magsafe-charger",
+    "name": "Apple MagSafe Charger",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C / 1m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C",
+      "Cable length: 1 metre",
+      "MagSafe support: Magnetic alignment for compatible iPhone models",
+      "Compatibility: MagSafe iPhone models, Qi-compatible iPhone and AirPods charging cases"
+    ]
+  },
+  {
+    "id": "apple-usb-c-charge-cable",
+    "slug": "apple-usb-c-charge-cable",
+    "name": "Apple USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C to USB-C / 1m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C to USB-C",
+      "Cable length: 1 metre",
+      "Charging: Charging and USB 2 data transfer",
+      "Compatibility: USB-C Apple devices and power adapters"
+    ]
+  },
+  {
+    "id": "apple-usb-c-to-lightning-cable",
+    "slug": "apple-usb-c-to-lightning-cable",
+    "name": "Apple USB-C to Lightning Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C to Lightning / 1m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C to Lightning",
+      "Cable length: 1 metre",
+      "Charging: Charging and syncing",
+      "Compatibility: Lightning-equipped iPhone, iPad, AirPods and Apple accessories"
+    ]
+  },
+  {
+    "id": "apple-60w-usb-c-charge-cable",
+    "slug": "apple-60w-usb-c-charge-cable",
+    "name": "Apple 60W USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C to USB-C / 1m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: Up to 60W charging",
+      "Connector: USB-C to USB-C",
+      "Cable length: 1 metre",
+      "Compatibility: USB-C Apple devices and displays; USB 2 data transfer"
+    ]
+  },
+  {
+    "id": "apple-240w-usb-c-charge-cable",
+    "slug": "apple-240w-usb-c-charge-cable",
+    "name": "Apple 240W USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C to USB-C / 2m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Wattage: Up to 240W charging",
+      "Connector: USB-C to USB-C",
+      "Cable length: 2 metres",
+      "Compatibility: USB-C Apple devices; USB 2 data transfer"
+    ]
+  },
+  {
+    "id": "apple-usb-c-to-magsafe-3-cable",
+    "slug": "apple-usb-c-to-magsafe-3-cable",
+    "name": "Apple USB-C to MagSafe 3 Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C to MagSafe 3 / 2m"
+    ],
+    "colors": [
+      "Silver",
+      "Space Gray",
+      "Midnight",
+      "Starlight",
+      "Space Black",
+      "Sky Blue"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C to MagSafe 3",
+      "Cable length: 2 metres",
+      "Charging: Magnetic Mac notebook charging connection",
+      "Compatibility: MacBook Air and MacBook Pro models with MagSafe 3"
+    ]
+  },
+  {
+    "id": "apple-magsafe-iphone-case",
+    "slug": "apple-magsafe-iphone-case",
+    "name": "Apple MagSafe iPhone Case",
+    "category": "Accessories",
+    "subcategory": "iPhone Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Confirm iPhone model"
+    ],
+    "colors": [
+      "Colour to Confirm"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "MagSafe support: Built-in magnets for MagSafe alignment",
+      "Compatibility: Exact iPhone model must be confirmed",
+      "Material: Official Apple case material varies by selected model",
+      "Charging: Works with compatible MagSafe chargers"
+    ]
+  },
+  {
+    "id": "apple-clear-iphone-case-magsafe",
+    "slug": "apple-clear-iphone-case-magsafe",
+    "name": "Apple iPhone Clear Case with MagSafe",
+    "category": "Accessories",
+    "subcategory": "iPhone Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Confirm iPhone model"
+    ],
+    "colors": [
+      "Clear"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "MagSafe support: Built-in magnets for MagSafe alignment",
+      "Compatibility: Exact iPhone model must be confirmed",
+      "Material: Clear polycarbonate and flexible materials",
+      "Charging: Works with compatible MagSafe chargers"
+    ]
+  },
+  {
+    "id": "apple-pencil-usb-c",
+    "slug": "apple-pencil-usb-c",
+    "name": "Apple Pencil (USB-C)",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C under sliding cap",
+      "Charging: USB-C cable pairing and charging",
+      "Compatibility: Compatible USB-C iPad models; confirm exact iPad before payment",
+      "Features: Pixel-perfect precision, low latency and tilt sensitivity"
+    ]
+  },
+  {
+    "id": "apple-pencil-pro",
+    "slug": "apple-pencil-pro",
+    "name": "Apple Pencil Pro",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Magnetic charging"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Charging: Magnetic pairing and charging",
+      "Compatibility: Compatible iPad Pro and iPad Air models; confirm exact model",
+      "Features: Squeeze, barrel roll, haptic feedback and Find My support",
+      "Connector: Magnetic iPad attachment"
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-ipad",
+    "slug": "apple-magic-keyboard-ipad",
+    "name": "Magic Keyboard for iPad",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "Confirm iPad size/model"
+    ],
+    "colors": [
+      "Black",
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: Smart Connector and USB-C pass-through charging",
+      "Compatibility: Model-specific iPad Pro or iPad Air versions",
+      "Features: Trackpad, function row and adjustable floating design",
+      "Charging: Pass-through USB-C charging"
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-folio",
+    "slug": "apple-magic-keyboard-folio",
+    "name": "Magic Keyboard Folio",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "iPad (A16) / iPad 10th generation"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: Smart Connector",
+      "Compatibility: iPad (A16) and iPad (10th generation)",
+      "Features: Detachable keyboard, trackpad, 14-key function row and adjustable back panel",
+      "Charging: Powered by iPad; no separate charging required"
+    ]
+  },
+  {
+    "id": "apple-magic-mouse",
+    "slug": "apple-magic-mouse",
+    "name": "Magic Mouse",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "White Multi-Touch Surface",
+      "Black Multi-Touch Surface"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C charging cable",
+      "Compatibility: Bluetooth-enabled Mac and iPad models",
+      "Features: Wireless Multi-Touch surface",
+      "Charging: Rechargeable internal battery"
+    ]
+  },
+  {
+    "id": "apple-magic-trackpad",
+    "slug": "apple-magic-trackpad",
+    "name": "Magic Trackpad",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "White Multi-Touch Surface",
+      "Black Multi-Touch Surface"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C charging cable",
+      "Compatibility: Bluetooth-enabled Mac and iPad models",
+      "Features: Force Touch, Multi-Touch gestures and edge-to-edge glass surface",
+      "Charging: Rechargeable internal battery"
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard",
+    "slug": "apple-magic-keyboard",
+    "name": "Magic Keyboard",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C"
+    ],
+    "colors": [
+      "White Keys"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C charging cable",
+      "Compatibility: Bluetooth-enabled Mac, iPad and iPhone models",
+      "Features: Compact wireless keyboard with scissor mechanism",
+      "Charging: Rechargeable internal battery"
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-touch-id",
+    "slug": "apple-magic-keyboard-touch-id",
+    "name": "Magic Keyboard with Touch ID",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C / Touch ID"
+    ],
+    "colors": [
+      "White Keys",
+      "Black Keys"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C charging cable",
+      "Compatibility: Mac models with Apple silicon",
+      "Features: Touch ID, compact wireless keyboard and scissor mechanism",
+      "Charging: Rechargeable internal battery"
+    ]
+  },
+  {
+    "id": "apple-watch-magnetic-fast-charger-usb-c",
+    "slug": "apple-watch-magnetic-fast-charger-usb-c",
+    "name": "Apple Watch Magnetic Fast Charger to USB-C Cable",
+    "category": "Accessories",
+    "subcategory": "Watch Accessories",
+    "generation": "",
+    "condition": "To Confirm",
+    "price": 0,
+    "priceOnRequest": true,
+    "previousPrice": null,
+    "storage": [
+      "USB-C / 1m"
+    ],
+    "colors": [
+      "White"
+    ],
+    "stockQuantity": 0,
+    "stockStatus": "Out of Stock",
+    "specs": [
+      "Connector: USB-C",
+      "Cable length: 1 metre",
+      "Charging: Magnetic fast charging on supported Apple Watch models",
+      "Compatibility: Apple Watch models; fast-charge support varies by model"
+    ]
+  }
+]

@@ -1,4 +1,5 @@
 import { categories as seedCategories, products as seedProducts } from "../data/products";
+import { initialProductPricingSeed } from "../data/productPricingSeed";
 import type { Product, ProductCategory, ProductCondition, StockStatus } from "../types/product";
 import { isValidProductImage, resolveProductImage } from "../utils/productImages";
 
@@ -45,23 +46,44 @@ export const getPrimaryImage = (product: Product) => {
 };
 
 export const normalizeProduct = (product: Product): Product => {
-  const stockStatus = normalizeStockStatus(product);
+  const seedPricing = initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug];
+  const price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
+  const previousPrice = product.previousPrice ?? product.oldPrice ?? seedPricing?.previousPrice;
+  const variants = (product.variants && product.variants.length > 0) ? product.variants : (seedPricing?.variants ?? []);
+  const condition = (product.condition === "To Confirm" && seedPricing?.condition)
+    ? normalizeCondition(seedPricing.condition as ProductCondition)
+    : normalizeCondition(product.condition);
+  const stockQuantity = (product.stockQuantity === 0 && price > 0 && product.stockStatus !== "Sold")
+    ? 10
+    : product.stockQuantity;
+  const initialStockStatus = normalizeStockStatus({ ...product, stockQuantity });
+  const stockStatus = (initialStockStatus === "Out of Stock" && price > 0 && product.stockStatus !== "Sold")
+    ? "In Stock"
+    : initialStockStatus;
+
   const now = new Date().toISOString();
-  const previousPrice = product.previousPrice ?? product.oldPrice;
   const specs = product.specifications ?? product.specs;
   const includedItems = product.includedItems ?? product.box;
   const warranty = product.warranty ?? product.warrantyInfo;
   const deliveryInfo = product.deliveryInfo ?? product.deliveryNote;
   const primaryImage = resolveProductImage(product);
+  const priceOnRequest = product.slug === "iphone-duo"
+    ? true
+    : (product.price <= 0 && seedPricing && seedPricing.price > 0)
+      ? false
+      : (product.priceOnRequest !== undefined ? product.priceOnRequest : (price <= 0));
 
   return {
     ...product,
+    price,
     previousPrice,
     oldPrice: previousPrice,
-    priceOnRequest: product.priceOnRequest ?? product.price <= 0,
+    priceOnRequest,
+    variants,
     defaultColor: product.defaultColor ?? product.colors[0] ?? "",
-    condition: normalizeCondition(product.condition),
+    condition,
     stockStatus,
+    stockQuantity,
     badges: product.badges?.map((badge) => (badge === "Sold Out" ? "Sold" : badge === "Limited Stock" ? "Low Stock" : badge)),
     popular: product.popular ?? product.isPopular ?? false,
     newArrival: product.newArrival ?? product.isNewArrival ?? false,

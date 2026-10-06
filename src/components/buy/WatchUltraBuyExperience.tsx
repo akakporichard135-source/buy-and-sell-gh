@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
-import { formatGhs } from "../../utils/format";
+import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
@@ -42,29 +42,75 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const [tradeIn, setTradeIn] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
+  const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const activeImage = "/products/homepage/watch-ultra-4.webp";
+  const thumbnails = useMemo(() => [
+    { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra 4 in rugged titanium" },
+    { src: "/products/campaigns/watch-ultra-4-rugged.webp", alt: "Apple Watch Ultra 4 on rugged terrain" },
+    { src: "/products/campaigns/watch-ultra-4-interface.webp", alt: "Apple Watch Ultra 4 high-contrast interface" },
+    { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra 4 with orange Alpine Loop" },
+    { src: "/products/campaigns/watch-sensor-detail.webp", alt: "Apple Watch Ultra 4 biometric sensors" },
+  ], []);
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Price confirmed on enquiry";
+  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/watch-ultra-4-hero.webp";
+
+  const fallbackProduct: Product = useMemo(() => {
+    const slug = "apple-watch-ultra-4";
+    return {
+      id: slug,
+      slug,
+      name: "Apple Watch Ultra 4",
+      model: "Apple Watch Ultra 4",
+      brand: "Apple",
+      category: "Watches",
+      condition: "Brand New",
+      price: 14800,
+      previousPrice: 15800,
+      storage: ["49mm"],
+      colors: ULTRA_FINISHES.map((f) => f.name),
+      description: "Apple Watch Ultra 4 in 49mm aerospace-grade titanium with precision dual-frequency GPS and up to 72 hours of battery life.",
+      specs: ["49mm Titanium Case", "3000 Nits Sapphire Display", "Action Button", "100m Water Resistance", "EN13319 Dive Certified"],
+      box: ["Apple Watch Ultra 4", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+      imageTone: "ink",
+      images: thumbnails,
+      variants: [
+        { id: "awu4-49-cell", productId: slug, title: "49mm GPS + Cellular", screenSize: "49mm", connectivity: "GPS + Cellular", price: 14800, previousPrice: 15800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: true, stockStatus: "In Stock" as const },
+      ],
+      available: true,
+      stockStatus: "In Stock" as const,
+      stockQuantity: 10,
+      featured: true,
+    };
+  }, [thumbnails]);
+
+  const isExactMatch = Boolean(catalogProduct && (catalogProduct.slug === "apple-watch-ultra-4" || catalogProduct.name?.includes("4")));
+  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+
+  const configured = resolveConfiguredPrice(activeProduct, {
+    screenSize: "49mm",
+    connectivity: "GPS + Cellular",
+  });
+  const priceLabel = configured.formattedPrice;
+  const previousPriceLabel = configured.formattedPreviousPrice;
+  const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const fullConfigurationTitle = `Apple Watch Ultra 4 (49mm, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability and current Ghana pricing.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    if (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const added = addItem(catalogProduct, "GPS + Cellular", `${finish} / ${bandStyle}`, 1);
-      if (added) {
-        setNotice(`${fullConfigurationTitle} added to your bag.`);
-      }
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp enquiry...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+    const added = addItem(
+      activeProduct,
+      "49mm GPS + Cellular",
+      `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
+      1,
+      configured.variant
+    );
+    if (added) {
+      setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);
     }
   };
 
@@ -78,6 +124,9 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       priceLabel={priceLabel}
       badge="Ultra"
       darkStage={true}
+      thumbnails={thumbnails}
+      activeThumbnailIndex={activeThumb}
+      onSelectThumbnail={setActiveThumb}
       mobileActionLabel="Add to Bag"
       onMobileAction={handleAddToBag}
     >
@@ -197,6 +246,8 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel="Add to Bag"
         whatsAppHref={whatsAppEnquiry}

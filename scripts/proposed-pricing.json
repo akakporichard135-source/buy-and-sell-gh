@@ -1,0 +1,3325 @@
+[
+  {
+    "id": "iphone-17-pro-max",
+    "slug": "iphone-17-pro-max",
+    "name": "iPhone 17 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1299,
+    "refSource": "Future Lineup / Advance Reservation Guide",
+    "proposedBaseGhs": 22500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 22500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 25000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 27500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 30000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-17-pro",
+    "slug": "iphone-17-pro",
+    "name": "iPhone 17 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1099,
+    "refSource": "Future Lineup / Advance Reservation Guide",
+    "proposedBaseGhs": 19500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 19500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 22000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 24500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-air",
+    "slug": "iphone-air",
+    "name": "iPhone Air",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 999,
+    "refSource": "Future Lineup / Advance Reservation Guide",
+    "proposedBaseGhs": 17500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 17500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 20000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 22500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-17",
+    "slug": "iphone-17",
+    "name": "iPhone 17",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 899,
+    "refSource": "Future Lineup / Advance Reservation Guide",
+    "proposedBaseGhs": 15500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 15500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 18000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-16-plus",
+    "slug": "iphone-16-plus",
+    "name": "iPhone 16 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 899,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 15200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "price": 16800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 19800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-16",
+    "slug": "iphone-16",
+    "name": "iPhone 16",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 13500,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 13500,
+        "previousPrice": 14200,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 18200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-16e",
+    "slug": "iphone-16e",
+    "name": "iPhone 16e",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 599,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 10200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 10200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 14500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-15-pro",
+    "slug": "iphone-15-pro",
+    "name": "iPhone 15 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 750,
+    "refSource": "Secondary Market (Certified Pre-Owned / UK Used)",
+    "proposedBaseGhs": 12800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 12800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 13900,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "1TB",
+        "price": 16500,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-15-plus",
+    "slug": "iphone-15-plus",
+    "name": "iPhone 15 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple Official / Secondary Market",
+    "proposedBaseGhs": 11800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 13200,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 14800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-14-pro",
+    "slug": "iphone-14-pro",
+    "name": "iPhone 14 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 580,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 9800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 9800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 10800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 11900,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "1TB",
+        "price": 12900,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-14-plus",
+    "slug": "iphone-14-plus",
+    "name": "iPhone 14 Plus",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 490,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 8500,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 8500,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 9500,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 10800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-14",
+    "slug": "iphone-14",
+    "name": "iPhone 14",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 599,
+    "refSource": "Apple US Official ($599) / UK Used",
+    "proposedBaseGhs": 7800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 7800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 8800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 10000,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-13-pro",
+    "slug": "iphone-13-pro",
+    "name": "iPhone 13 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 460,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 7400,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 7400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 8200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 9200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 10200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-13",
+    "slug": "iphone-13",
+    "name": "iPhone 13",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 380,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 6200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 6200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 7200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 8200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-13-mini",
+    "slug": "iphone-13-mini",
+    "name": "iPhone 13 mini",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 340,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 5400,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 5400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 6200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 7200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-12-pro",
+    "slug": "iphone-12-pro",
+    "name": "iPhone 12 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 360,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 5400,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 5400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 6000,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 6700,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-12",
+    "slug": "iphone-12",
+    "name": "iPhone 12",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 290,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 4400,
+    "variants": [
+      {
+        "storage": "64GB",
+        "price": 4400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "128GB",
+        "price": 4900,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 5600,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-12-mini",
+    "slug": "iphone-12-mini",
+    "name": "iPhone 12 mini",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 250,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 3900,
+    "variants": [
+      {
+        "storage": "64GB",
+        "price": 3900,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "128GB",
+        "price": 4400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 4900,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-16-pro-max",
+    "slug": "iphone-16-pro-max",
+    "name": "iPhone 16 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "Brand New",
+    "currentPrice": 20500,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 1199,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 20500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 20500,
+        "previousPrice": 21500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 23800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 27200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-16-pro",
+    "slug": "iphone-16-pro",
+    "name": "iPhone 16 Pro",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "Brand New",
+    "currentPrice": 17800,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 999,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 17800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 17800,
+        "previousPrice": 18500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "price": 19500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "price": 22800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 25800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "iphone-15-pro-max",
+    "slug": "iphone-15-pro-max",
+    "name": "iPhone 15 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "UK Used",
+    "currentPrice": 14500,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 850,
+    "refSource": "Secondary Market (Certified Pre-Owned / UK Used)",
+    "proposedBaseGhs": 14500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 14500,
+        "previousPrice": 15200,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 16200,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "1TB",
+        "price": 17800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-15",
+    "slug": "iphone-15",
+    "name": "iPhone 15",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "Excellent",
+    "currentPrice": 9800,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 699,
+    "refSource": "Apple US Official ($699) / Ghana Retail",
+    "proposedBaseGhs": 9800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 9800,
+        "previousPrice": 10500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "256GB",
+        "price": 11200,
+        "previousPrice": null,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "512GB",
+        "price": 12800,
+        "previousPrice": null,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "iphone-14-pro-max",
+    "slug": "iphone-14-pro-max",
+    "name": "iPhone 14 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "UK Used",
+    "currentPrice": 11200,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 680,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 11200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 11200,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "256GB",
+        "price": 12200,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "512GB",
+        "price": 13500,
+        "previousPrice": null,
+        "condition": "UK Used"
+      },
+      {
+        "storage": "1TB",
+        "price": 14800,
+        "previousPrice": null,
+        "condition": "UK Used"
+      }
+    ]
+  },
+  {
+    "id": "iphone-13-pro-max",
+    "slug": "iphone-13-pro-max",
+    "name": "iPhone 13 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "Very Good",
+    "currentPrice": 8200,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 520,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 8200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 8200,
+        "previousPrice": 8800,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 9200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 10200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 11200,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "iphone-12-pro-max",
+    "slug": "iphone-12-pro-max",
+    "name": "iPhone 12 Pro Max",
+    "category": "iPhones",
+    "subcategory": "",
+    "condition": "Very Good",
+    "currentPrice": 6400,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 410,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 6400,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 6400,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 7100,
+        "previousPrice": null,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 7800,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "ipad-10th-generation",
+    "slug": "ipad-10th-generation",
+    "name": "iPad (10th generation)",
+    "category": "iPads",
+    "subcategory": "iPad",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 349,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 5800,
+    "variants": [
+      {
+        "storage": "64GB",
+        "connectivity": "Wi-Fi",
+        "price": 5800,
+        "previousPrice": 6200,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 7800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-a16",
+    "slug": "ipad-a16",
+    "name": "iPad (A16)",
+    "category": "iPads",
+    "subcategory": "iPad",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 349,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 5800,
+    "variants": [
+      {
+        "storage": "64GB",
+        "connectivity": "Wi-Fi",
+        "price": 5800,
+        "previousPrice": 6200,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 7800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-mini-6",
+    "slug": "ipad-mini-6",
+    "name": "iPad mini (6th generation)",
+    "category": "iPads",
+    "subcategory": "iPad mini",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 350,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 5500,
+    "variants": [
+      {
+        "storage": "64GB",
+        "price": 5500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "256GB",
+        "price": 6900,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "ipad-mini-a17-pro",
+    "slug": "ipad-mini-a17-pro",
+    "name": "iPad mini (A17 Pro)",
+    "category": "iPads",
+    "subcategory": "iPad mini",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 499,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 8200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 8200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 9800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 12500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-5",
+    "slug": "ipad-air-5",
+    "name": "iPad Air (5th generation)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 420,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 6800,
+    "variants": [
+      {
+        "storage": "64GB",
+        "price": 6800,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "256GB",
+        "price": 8200,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m2",
+    "slug": "ipad-air-11-inch-m2",
+    "name": "iPad Air 11-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 599,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 10200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 10200,
+        "previousPrice": 10800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 14500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 17500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m2",
+    "slug": "ipad-air-13-inch-m2",
+    "name": "iPad Air 13-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 13500,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 13500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 17800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 20800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m3",
+    "slug": "ipad-air-11-inch-m3",
+    "name": "iPad Air 11-inch (M3)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 599,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 10200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 10200,
+        "previousPrice": 10800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 14500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 17500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m3",
+    "slug": "ipad-air-13-inch-m3",
+    "name": "iPad Air 13-inch (M3)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 13500,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 13500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 17800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 20800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-11-inch-m4",
+    "slug": "ipad-air-11-inch-m4",
+    "name": "iPad Air 11-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 599,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 10200,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 10200,
+        "previousPrice": 10800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 14500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 17500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-air-13-inch-m4",
+    "slug": "ipad-air-13-inch-m4",
+    "name": "iPad Air 13-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 13500,
+    "variants": [
+      {
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "price": 13500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 15200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 17800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 20800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m2",
+    "slug": "ipad-pro-11-inch-m2",
+    "name": "iPad Pro 11-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 680,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 11800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 11800,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "256GB",
+        "price": 13800,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "512GB",
+        "price": 15800,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-12-9-inch-m2",
+    "slug": "ipad-pro-12-9-inch-m2",
+    "name": "iPad Pro 12.9-inch (M2)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 680,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 14800,
+    "variants": [
+      {
+        "storage": "128GB",
+        "price": 14800,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "256GB",
+        "price": 16800,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "512GB",
+        "price": 18800,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m4",
+    "slug": "ipad-pro-11-inch-m4",
+    "name": "iPad Pro 11-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 999,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 17200,
+    "variants": [
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 17200,
+        "previousPrice": 18000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 20200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 25500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "connectivity": "Wi-Fi",
+        "price": 31000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-13-inch-m4",
+    "slug": "ipad-pro-13-inch-m4",
+    "name": "iPad Pro 13-inch (M4)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1299,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 21500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 21500,
+        "previousPrice": 22800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 24500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 29800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "connectivity": "Wi-Fi",
+        "price": 35500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-11-inch-m5",
+    "slug": "ipad-pro-11-inch-m5",
+    "name": "iPad Pro 11-inch (M5)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 999,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 17200,
+    "variants": [
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 17200,
+        "previousPrice": 18000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 20200,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 25500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "connectivity": "Wi-Fi",
+        "price": 31000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro-13-inch-m5",
+    "slug": "ipad-pro-13-inch-m5",
+    "name": "iPad Pro 13-inch (M5)",
+    "category": "iPads",
+    "subcategory": "iPad Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1299,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 21500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "price": 21500,
+        "previousPrice": 22800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "connectivity": "Wi-Fi",
+        "price": 24500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "connectivity": "Wi-Fi",
+        "price": 29800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "connectivity": "Wi-Fi",
+        "price": 35500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "ipad-pro",
+    "slug": "ipad-pro",
+    "name": "iPad Pro",
+    "category": "iPads",
+    "subcategory": "",
+    "condition": "Excellent",
+    "currentPrice": 13800,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 0,
+    "refSource": "Catalog Existing Price",
+    "proposedBaseGhs": 13800,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 13800,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-ultra-3",
+    "slug": "apple-watch-ultra-3",
+    "name": "Apple Watch Ultra 3",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 12500,
+    "variants": [
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "49mm",
+        "price": 12500,
+        "previousPrice": 13500,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-series-11",
+    "slug": "apple-watch-series-11",
+    "name": "Apple Watch Series 11",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 399,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 6800,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "42mm",
+        "price": 6800,
+        "previousPrice": 7200,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "46mm",
+        "price": 7400,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "42mm",
+        "price": 8400,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "46mm",
+        "price": 9000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-se-3",
+    "slug": "apple-watch-se-3",
+    "name": "Apple Watch SE 3",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch SE",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 249,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 4200,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "40mm",
+        "price": 4200,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "44mm",
+        "price": 4700,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-series-10",
+    "slug": "apple-watch-series-10",
+    "name": "Apple Watch Series 10",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 399,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 6800,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "42mm",
+        "price": 6800,
+        "previousPrice": 7200,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "46mm",
+        "price": 7400,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "42mm",
+        "price": 8400,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "46mm",
+        "price": 9000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-ultra-2",
+    "slug": "apple-watch-ultra-2",
+    "name": "Apple Watch Ultra 2",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 799,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 12500,
+    "variants": [
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "49mm",
+        "price": 12500,
+        "previousPrice": 13500,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-series-9",
+    "slug": "apple-watch-series-9",
+    "name": "Apple Watch Series 9",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 280,
+    "refSource": "Secondary Market (UK Used / Discontinued)",
+    "proposedBaseGhs": 4600,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "41mm",
+        "price": 4600,
+        "condition": "Very Good"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "45mm",
+        "price": 5100,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-series-8",
+    "slug": "apple-watch-series-8",
+    "name": "Apple Watch Series 8",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 220,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 3800,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "41mm",
+        "price": 3800,
+        "condition": "Very Good"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "45mm",
+        "price": 4200,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-ultra",
+    "slug": "apple-watch-ultra",
+    "name": "Apple Watch Ultra",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Ultra",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 480,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 7800,
+    "variants": [
+      {
+        "connectivity": "GPS + Cellular",
+        "screenSize": "49mm",
+        "price": 7800,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-series-7",
+    "slug": "apple-watch-series-7",
+    "name": "Apple Watch Series 7",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch Series",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 180,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 3100,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "41mm",
+        "price": 3100,
+        "condition": "Very Good"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "45mm",
+        "price": 3500,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-se-2",
+    "slug": "apple-watch-se-2",
+    "name": "Apple Watch SE (2nd generation)",
+    "category": "Apple Watches",
+    "subcategory": "Apple Watch SE",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 249,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 3200,
+    "variants": [
+      {
+        "connectivity": "GPS",
+        "screenSize": "40mm",
+        "price": 3200,
+        "condition": "Very Good"
+      },
+      {
+        "connectivity": "GPS",
+        "screenSize": "44mm",
+        "price": 3700,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch",
+    "slug": "apple-watch",
+    "name": "Apple Watch",
+    "category": "Apple Watches",
+    "subcategory": "",
+    "condition": "Excellent",
+    "currentPrice": 2600,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 0,
+    "refSource": "Catalog Existing Price",
+    "proposedBaseGhs": 2600,
+    "variants": [
+      {
+        "price": 2600,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "airpods-pro",
+    "slug": "airpods-pro",
+    "name": "AirPods Pro",
+    "category": "AirPods",
+    "subcategory": "",
+    "condition": "Brand New",
+    "currentPrice": 2200,
+    "currentPriceOnRequest": false,
+    "usRefMSRP": 140,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 2200,
+    "variants": [
+      {
+        "title": "AirPods Pro (1st gen)",
+        "price": 2200,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "airpods-2nd-generation",
+    "slug": "airpods-2nd-generation",
+    "name": "AirPods (2nd generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 80,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 1400,
+    "variants": [
+      {
+        "title": "AirPods 2",
+        "price": 1400,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "airpods-3rd-generation",
+    "slug": "airpods-3rd-generation",
+    "name": "AirPods (3rd generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 110,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 1900,
+    "variants": [
+      {
+        "title": "AirPods 3",
+        "price": 1900,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "airpods-4",
+    "slug": "airpods-4",
+    "name": "AirPods 4",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 129,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 2100,
+    "variants": [
+      {
+        "title": "AirPods 4 (USB-C)",
+        "price": 2100,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "airpods-4-anc",
+    "slug": "airpods-4-anc",
+    "name": "AirPods 4 with Active Noise Cancellation",
+    "category": "AirPods",
+    "subcategory": "AirPods",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 179,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 2800,
+    "variants": [
+      {
+        "title": "AirPods 4 with ANC",
+        "price": 2800,
+        "previousPrice": 3000,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "airpods-pro-1",
+    "slug": "airpods-pro-1",
+    "name": "AirPods Pro (1st generation)",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 140,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 2200,
+    "variants": [
+      {
+        "title": "AirPods Pro (1st gen)",
+        "price": 2200,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "airpods-pro-2",
+    "slug": "airpods-pro-2",
+    "name": "AirPods Pro 2",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 249,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 3600,
+    "variants": [
+      {
+        "title": "AirPods Pro 2 (USB-C MagSafe)",
+        "price": 3600,
+        "previousPrice": 3900,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "airpods-pro-3",
+    "slug": "airpods-pro-3",
+    "name": "AirPods Pro 3",
+    "category": "AirPods",
+    "subcategory": "AirPods Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 249,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 3600,
+    "variants": [
+      {
+        "title": "AirPods Pro 2 (USB-C MagSafe)",
+        "price": 3600,
+        "previousPrice": 3900,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "airpods-max-lightning",
+    "slug": "airpods-max-lightning",
+    "name": "AirPods Max (Lightning)",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 380,
+    "refSource": "Secondary Market (UK Used)",
+    "proposedBaseGhs": 6200,
+    "variants": [
+      {
+        "title": "AirPods Max (Lightning)",
+        "price": 6200,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "airpods-max-usb-c",
+    "slug": "airpods-max-usb-c",
+    "name": "AirPods Max (USB-C)",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 549,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 8900,
+    "variants": [
+      {
+        "title": "AirPods Max (USB-C)",
+        "price": 8900,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "airpods-max-2",
+    "slug": "airpods-max-2",
+    "name": "AirPods Max 2",
+    "category": "AirPods",
+    "subcategory": "AirPods Max",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 549,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 8900,
+    "variants": [
+      {
+        "title": "AirPods Max (USB-C)",
+        "price": 8900,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-13-m5",
+    "slug": "macbook-air-13-m5",
+    "name": "MacBook Air 13-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1199,
+    "refSource": "Next-Gen / Future Silicon Guide",
+    "proposedBaseGhs": 19000,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 19000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 22500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 26000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "4TB",
+        "price": 29500,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-15-m5",
+    "slug": "macbook-air-15-m5",
+    "name": "MacBook Air 15-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1199,
+    "refSource": "Next-Gen / Future Silicon Guide",
+    "proposedBaseGhs": 19000,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 19000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 22500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 26000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "4TB",
+        "price": 29500,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-13-m4",
+    "slug": "macbook-air-13-m4",
+    "name": "MacBook Air 13-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1099,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 17500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "16GB",
+        "price": 17500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 20500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "24GB",
+        "price": 23500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "memory": "24GB",
+        "price": 26800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-15-m4",
+    "slug": "macbook-air-15-m4",
+    "name": "MacBook Air 15-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1299,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 20500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "16GB",
+        "price": 20500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 23500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "24GB",
+        "price": 26500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "memory": "24GB",
+        "price": 29800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-13-m3",
+    "slug": "macbook-air-13-m3",
+    "name": "MacBook Air 13-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 999,
+    "refSource": "Apple US Official / Active Retail ($999)",
+    "proposedBaseGhs": 15800,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "16GB",
+        "price": 15800,
+        "previousPrice": 16800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 18800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "24GB",
+        "price": 21800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-15-m3",
+    "slug": "macbook-air-15-m3",
+    "name": "MacBook Air 15-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1199,
+    "refSource": "Apple US Official / Active Retail ($1199)",
+    "proposedBaseGhs": 18800,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "16GB",
+        "price": 18800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 21800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "memory": "24GB",
+        "price": 24800,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-13-m2",
+    "slug": "macbook-air-13-m2",
+    "name": "MacBook Air 13-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 899,
+    "refSource": "Secondary / Discontinued Market ($899)",
+    "proposedBaseGhs": 13500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "8GB/16GB",
+        "price": 13500,
+        "previousPrice": 14500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 16200,
+        "previousPrice": null,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-15-m2",
+    "slug": "macbook-air-15-m2",
+    "name": "MacBook Air 15-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1049,
+    "refSource": "Secondary / Discontinued Market ($1049)",
+    "proposedBaseGhs": 15800,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "8GB/16GB",
+        "price": 15800,
+        "previousPrice": null,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "512GB",
+        "memory": "16GB",
+        "price": 18500,
+        "previousPrice": null,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "macbook-air-13-m1",
+    "slug": "macbook-air-13-m1",
+    "name": "MacBook Air 13-inch (M1)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Air",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 650,
+    "refSource": "Secondary Market / UK Used Certified ($650)",
+    "proposedBaseGhs": 9800,
+    "variants": [
+      {
+        "storage": "256GB",
+        "memory": "8GB",
+        "price": 9800,
+        "previousPrice": 10500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "memory": "8GB/16GB",
+        "price": 11800,
+        "previousPrice": null,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m5",
+    "slug": "macbook-pro-14-m5",
+    "name": "MacBook Pro 14-inch (M5)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1799,
+    "refSource": "Next-Gen / Future Silicon Guide",
+    "proposedBaseGhs": 27500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 27500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "price": 31000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 34500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "4TB",
+        "price": 38000,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m5-pro-max",
+    "slug": "macbook-pro-14-m5-pro-max",
+    "name": "MacBook Pro 14-inch (M5 Pro / M5 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1799,
+    "refSource": "Next-Gen / Future Silicon Guide",
+    "proposedBaseGhs": 27500,
+    "variants": [
+      {
+        "storage": "1TB",
+        "price": 27500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 31000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "4TB",
+        "price": 34500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "8TB",
+        "price": 38000,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m5-pro-max",
+    "slug": "macbook-pro-16-m5-pro-max",
+    "name": "MacBook Pro 16-inch (M5 Pro / M5 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 2699,
+    "refSource": "Next-Gen / Future Silicon Guide",
+    "proposedBaseGhs": 41500,
+    "variants": [
+      {
+        "storage": "1TB",
+        "price": 41500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "2TB",
+        "price": 45000,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "4TB",
+        "price": 48500,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "8TB",
+        "price": 52000,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m4",
+    "slug": "macbook-pro-14-m4",
+    "name": "MacBook Pro 14-inch (M4)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1599,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 24500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "chip": "M4",
+        "memory": "16GB",
+        "price": 24500,
+        "previousPrice": 25800,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4",
+        "memory": "16GB",
+        "price": 27500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4",
+        "memory": "24GB",
+        "price": 30500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m4-pro-max",
+    "slug": "macbook-pro-14-m4-pro-max",
+    "name": "MacBook Pro 14-inch (M4 Pro / M4 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1999,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 31000,
+    "variants": [
+      {
+        "storage": "512GB",
+        "chip": "M4 Pro",
+        "memory": "24GB",
+        "price": 31000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4 Pro",
+        "memory": "24GB",
+        "price": 34000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4 Max",
+        "memory": "36GB",
+        "price": 46500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m4-pro-max",
+    "slug": "macbook-pro-16-m4-pro-max",
+    "name": "MacBook Pro 16-inch (M4 Pro / M4 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 2499,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 38500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "chip": "M4 Pro",
+        "memory": "24GB",
+        "price": 38500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "512GB",
+        "chip": "M4 Pro",
+        "memory": "48GB",
+        "price": 44500,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4 Max",
+        "memory": "36GB",
+        "price": 52000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      },
+      {
+        "storage": "1TB",
+        "chip": "M4 Max",
+        "memory": "48GB",
+        "price": 58000,
+        "previousPrice": null,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m3",
+    "slug": "macbook-pro-14-m3",
+    "name": "MacBook Pro 14-inch (M3)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1400,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 21500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 21500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "1TB",
+        "price": 24500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "2TB",
+        "price": 27500,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m3-pro-max",
+    "slug": "macbook-pro-14-m3-pro-max",
+    "name": "MacBook Pro 14-inch (M3 Pro / M3 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1400,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 21500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 21500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "1TB",
+        "price": 24500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "2TB",
+        "price": 27500,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m3-pro-max",
+    "slug": "macbook-pro-16-m3-pro-max",
+    "name": "MacBook Pro 16-inch (M3 Pro / M3 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1400,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 28500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 28500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "1TB",
+        "price": 31500,
+        "condition": "Excellent"
+      },
+      {
+        "storage": "2TB",
+        "price": 34500,
+        "condition": "Excellent"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-13-m2",
+    "slug": "macbook-pro-13-m2",
+    "name": "MacBook Pro 13-inch (M2)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1100,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 17500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 17500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 20000,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 22500,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m2-pro-max",
+    "slug": "macbook-pro-14-m2-pro-max",
+    "name": "MacBook Pro 14-inch (M2 Pro / M2 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1100,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 17500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 17500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 20000,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "2TB",
+        "price": 22500,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m2-pro-max",
+    "slug": "macbook-pro-16-m2-pro-max",
+    "name": "MacBook Pro 16-inch (M2 Pro / M2 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 1100,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 24000,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 24000,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 26500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "2TB",
+        "price": 29000,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-13-m1",
+    "slug": "macbook-pro-13-m1",
+    "name": "MacBook Pro 13-inch (M1)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 900,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 14500,
+    "variants": [
+      {
+        "storage": "256GB",
+        "price": 14500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "512GB",
+        "price": 16700,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 18900,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-14-m1-pro-max",
+    "slug": "macbook-pro-14-m1-pro-max",
+    "name": "MacBook Pro 14-inch (M1 Pro / M1 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 900,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 14500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 14500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 16700,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "2TB",
+        "price": 18900,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "macbook-pro-16-m1-pro-max",
+    "slug": "macbook-pro-16-m1-pro-max",
+    "name": "MacBook Pro 16-inch (M1 Pro / M1 Max)",
+    "category": "MacBooks",
+    "subcategory": "MacBook Pro",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 900,
+    "refSource": "Secondary Market (UK Used / Certified Refurbished)",
+    "proposedBaseGhs": 19500,
+    "variants": [
+      {
+        "storage": "512GB",
+        "price": 19500,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "1TB",
+        "price": 21700,
+        "condition": "Very Good"
+      },
+      {
+        "storage": "2TB",
+        "price": 23900,
+        "condition": "Very Good"
+      }
+    ]
+  },
+  {
+    "id": "apple-20w-usb-c-power-adapter",
+    "slug": "apple-20w-usb-c-power-adapter",
+    "name": "Apple 20W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 19,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 350,
+    "variants": [
+      {
+        "title": "20W USB-C",
+        "price": 350,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-30w-usb-c-power-adapter",
+    "slug": "apple-30w-usb-c-power-adapter",
+    "name": "Apple 30W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 39,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 550,
+    "variants": [
+      {
+        "title": "30W USB-C",
+        "price": 550,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-35w-dual-usb-c-power-adapter",
+    "slug": "apple-35w-dual-usb-c-power-adapter",
+    "name": "Apple 35W Dual USB-C Port Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 59,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 850,
+    "variants": [
+      {
+        "title": "35W Dual USB-C",
+        "price": 850,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-70w-usb-c-power-adapter",
+    "slug": "apple-70w-usb-c-power-adapter",
+    "name": "Apple 70W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 59,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 950,
+    "variants": [
+      {
+        "title": "70W USB-C",
+        "price": 950,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-96w-usb-c-power-adapter",
+    "slug": "apple-96w-usb-c-power-adapter",
+    "name": "Apple 96W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 79,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 1250,
+    "variants": [
+      {
+        "title": "96W USB-C",
+        "price": 1250,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-140w-usb-c-power-adapter",
+    "slug": "apple-140w-usb-c-power-adapter",
+    "name": "Apple 140W USB-C Power Adapter",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 99,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 1600,
+    "variants": [
+      {
+        "title": "140W USB-C",
+        "price": 1600,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magsafe-charger",
+    "slug": "apple-magsafe-charger",
+    "name": "Apple MagSafe Charger",
+    "category": "Accessories",
+    "subcategory": "Charging & Power",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 39,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 650,
+    "variants": [
+      {
+        "title": "MagSafe Charger (1m)",
+        "price": 650,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-usb-c-charge-cable",
+    "slug": "apple-usb-c-charge-cable",
+    "name": "Apple USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 19,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 320,
+    "variants": [
+      {
+        "title": "60W USB-C Cable (1m)",
+        "price": 320,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-usb-c-to-lightning-cable",
+    "slug": "apple-usb-c-to-lightning-cable",
+    "name": "Apple USB-C to Lightning Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 19,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 320,
+    "variants": [
+      {
+        "title": "USB-C to Lightning (1m)",
+        "price": 320,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-60w-usb-c-charge-cable",
+    "slug": "apple-60w-usb-c-charge-cable",
+    "name": "Apple 60W USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 19,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 320,
+    "variants": [
+      {
+        "title": "60W USB-C Cable (1m)",
+        "price": 320,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-240w-usb-c-charge-cable",
+    "slug": "apple-240w-usb-c-charge-cable",
+    "name": "Apple 240W USB-C Charge Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 29,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 480,
+    "variants": [
+      {
+        "title": "240W USB-C Cable (2m)",
+        "price": 480,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-usb-c-to-magsafe-3-cable",
+    "slug": "apple-usb-c-to-magsafe-3-cable",
+    "name": "Apple USB-C to MagSafe 3 Cable",
+    "category": "Accessories",
+    "subcategory": "Cables",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 49,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 780,
+    "variants": [
+      {
+        "title": "USB-C to MagSafe 3 (2m)",
+        "price": 780,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magsafe-iphone-case",
+    "slug": "apple-magsafe-iphone-case",
+    "name": "Apple MagSafe iPhone Case",
+    "category": "Accessories",
+    "subcategory": "iPhone Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 49,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 750,
+    "variants": [
+      {
+        "title": "MagSafe Case",
+        "price": 750,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-clear-iphone-case-magsafe",
+    "slug": "apple-clear-iphone-case-magsafe",
+    "name": "Apple iPhone Clear Case with MagSafe",
+    "category": "Accessories",
+    "subcategory": "iPhone Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 49,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 750,
+    "variants": [
+      {
+        "title": "MagSafe Case",
+        "price": 750,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-pencil-usb-c",
+    "slug": "apple-pencil-usb-c",
+    "name": "Apple Pencil (USB-C)",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 79,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 1250,
+    "variants": [
+      {
+        "title": "Apple Pencil (USB-C)",
+        "price": 1250,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-pencil-pro",
+    "slug": "apple-pencil-pro",
+    "name": "Apple Pencil Pro",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 129,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 2100,
+    "variants": [
+      {
+        "title": "Apple Pencil Pro",
+        "price": 2100,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-ipad",
+    "slug": "apple-magic-keyboard-ipad",
+    "name": "Magic Keyboard for iPad",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 299,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 4800,
+    "variants": [
+      {
+        "title": "Magic Keyboard for iPad (11-inch)",
+        "price": 4800,
+        "condition": "Brand New"
+      },
+      {
+        "title": "Magic Keyboard for iPad (13-inch)",
+        "price": 5400,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-folio",
+    "slug": "apple-magic-keyboard-folio",
+    "name": "Magic Keyboard Folio",
+    "category": "Accessories",
+    "subcategory": "iPad Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 249,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 3900,
+    "variants": [
+      {
+        "title": "Magic Keyboard Folio (iPad 10th)",
+        "price": 3900,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-mouse",
+    "slug": "apple-magic-mouse",
+    "name": "Magic Mouse",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 79,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 1250,
+    "variants": [
+      {
+        "title": "Magic Mouse (USB-C)",
+        "price": 1250,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-trackpad",
+    "slug": "apple-magic-trackpad",
+    "name": "Magic Trackpad",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 129,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 2100,
+    "variants": [
+      {
+        "title": "Magic Trackpad (USB-C)",
+        "price": 2100,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard",
+    "slug": "apple-magic-keyboard",
+    "name": "Magic Keyboard",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 99,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 1600,
+    "variants": [
+      {
+        "title": "Magic Keyboard",
+        "price": 1600,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-magic-keyboard-touch-id",
+    "slug": "apple-magic-keyboard-touch-id",
+    "name": "Magic Keyboard with Touch ID",
+    "category": "Accessories",
+    "subcategory": "Mac Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 149,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 2400,
+    "variants": [
+      {
+        "title": "Magic Keyboard with Touch ID",
+        "price": 2400,
+        "condition": "Brand New"
+      }
+    ]
+  },
+  {
+    "id": "apple-watch-magnetic-fast-charger-usb-c",
+    "slug": "apple-watch-magnetic-fast-charger-usb-c",
+    "name": "Apple Watch Magnetic Fast Charger to USB-C Cable",
+    "category": "Accessories",
+    "subcategory": "Watch Accessories",
+    "condition": "To Confirm",
+    "currentPrice": 0,
+    "currentPriceOnRequest": true,
+    "usRefMSRP": 29,
+    "refSource": "Apple US Official MSRP",
+    "proposedBaseGhs": 480,
+    "variants": [
+      {
+        "title": "Watch Fast Charger (1m)",
+        "price": 480,
+        "condition": "Brand New"
+      }
+    ]
+  }
+]

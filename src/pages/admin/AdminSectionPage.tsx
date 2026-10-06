@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { AdminOrdersPage } from "./AdminOrdersPage";
 import { AdminProductManager } from "./AdminProductManager";
+import { AdminPricingManager } from "./AdminPricingManager";
 
 type AdminSection =
   | "products"
+  | "pricing"
   | "orders"
   | "trade-ins"
   | "device-requests"
@@ -21,6 +23,12 @@ const sectionCopy: Record<AdminSection, { title: string; eyebrow: string; descri
     title: "Products",
     description: "Manage the catalogue source that powers public products, homepage sections, search, filters, cart and product detail pages.",
     availability: "Product management is active.",
+  },
+  pricing: {
+    eyebrow: "Pricing & Stock Management",
+    title: "Pricing & Stock",
+    description: "Authoritatively manage retail pricing, sale discounts (strikethroughs), variant tiers, and stock availability across all configurations.",
+    availability: "Pricing and inventory management is active.",
   },
   orders: {
     eyebrow: "Order Requests",
@@ -77,6 +85,7 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
   const { session } = useAdminAuth();
 
   if (section === "products") return <AdminProductManager />;
+  if (section === "pricing") return <AdminPricingManager />;
   if (section === "orders") return <AdminOrdersPage />;
 
   return (

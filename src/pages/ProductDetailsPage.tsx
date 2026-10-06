@@ -1,14 +1,16 @@
-import { CheckCircle2, Link as LinkIcon, MessageCircle, Minus, Phone, Plus, Share2, ShoppingBag, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Link as LinkIcon, MessageCircle, Minus, Phone, Plus, Share2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
+import { productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { business } from "../config/business";
 import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
+import { resolveConfiguredPrice } from "../utils/productPricing";
 import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { hasOwnerUploadedProductImages, requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
@@ -89,9 +91,14 @@ export function ProductDetailsPage() {
   const gallery = resolveProductGallery(product);
   const active = gallery[activeImage] ?? resolveProductImage(product);
   const realPhotosPending = requiresRealProductPhotos(product);
-  const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl);
+  const configured = resolveConfiguredPrice(product, { storage });
+  const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl, configured.price);
+  const studioFamily = getProductFamilyKey(product);
+  const studioBuyPath = studioFamily ? productBuyPath(studioFamily, product.slug) : null;
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
-  const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
+  const isPriceOnRequest = configured.isEnquiry;
+  const currentPriceLabel = configured.formattedPrice;
+  const oldPriceLabel = configured.formattedPreviousPrice ?? (!isPriceOnRequest && product.oldPrice ? formatGhs(product.oldPrice) : undefined);
   const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
   const primaryOptionLabel = product.category === "Apple Watches" || product.category === "Watches"
     ? "Connectivity"
@@ -125,7 +132,7 @@ export function ProductDetailsPage() {
       setVariantError(`Only ${product.stockQuantity} available right now.`);
       return;
     }
-    if (addItem(product, storage, color, quantity)) setVariantError("");
+    if (addItem(product, storage, color, quantity, configured.variant)) setVariantError("");
   };
 
   const handleBuyNow = () => {
@@ -141,7 +148,7 @@ export function ProductDetailsPage() {
       setVariantError(`Only ${product.stockQuantity} available right now.`);
       return;
     }
-    const added = addItem(product, storage, color, quantity);
+    const added = addItem(product, storage, color, quantity, configured.variant);
     if (added) navigate("/cart");
   };
 
@@ -197,8 +204,8 @@ export function ProductDetailsPage() {
           <p className="eyebrow-dark mt-5">{product.category}</p>
           <h1 className="mt-3 text-4xl font-black text-ink sm:text-5xl">{product.name}</h1>
           <div className="mt-5 flex flex-wrap items-end gap-3">
-            <p className="text-4xl font-black">{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</p>
-            {!isPriceOnRequest && product.oldPrice && <p className="pb-1 font-bold text-ink/40 line-through">{formatGhs(product.oldPrice)}</p>}
+            <p className="text-4xl font-black">{currentPriceLabel}</p>
+            {oldPriceLabel && <p className="pb-1 font-bold text-ink/40 line-through">{oldPriceLabel}</p>}
           </div>
           <p className="mt-2 text-sm font-bold text-ink/58">Confirm availability and final details before payment.</p>
 
@@ -269,6 +276,27 @@ export function ProductDetailsPage() {
             <span><MessageCircle size={16} /> WhatsApp support for final details</span>
             {hasOwnerUploadedProductImages(product) && <span><CheckCircle2 size={16} /> Photos show the listed device</span>}
           </div>
+          {studioBuyPath && (
+            <div className="mt-5 rounded-xl border border-black/10 bg-gradient-to-r from-zinc-900 via-neutral-900 to-black p-4 text-white shadow-card">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/10 text-gold-light">
+                    <Sparkles size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold tracking-tight text-white">Interactive Device Studio</h4>
+                    <p className="text-xs text-white/70">Customise finishes, storage & instant trade-in value</p>
+                  </div>
+                </div>
+                <Link
+                  to={studioBuyPath}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-bold text-ink transition hover:bg-gold hover:text-black whitespace-nowrap"
+                >
+                  Configure in Studio <ArrowRight size={13} />
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -294,13 +322,43 @@ export function ProductDetailsPage() {
       <div className="product-sticky-spacer" aria-hidden="true" />
       <div className="sticky-product-actions">
         <div className="sticky-product-price">
-          <span>{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</span>
+          <span>{currentPriceLabel}</span>
           <small>{displayStockLabel}</small>
         </div>
-        <a className="btn-ghost" href={whatsappHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> WhatsApp</a>
+        <div className="flex items-center justify-end gap-2">
+          <button
+            className="btn-primary !py-2.5 !px-3.5 text-sm flex items-center gap-1.5 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-45"
+            type="button"
+            disabled={isSoldOut}
+            onClick={handleAddToCart}
+          >
+            <ShoppingBag size={15} />
+            <span>Add to Cart</span>
+          </button>
+          <a
+            className="btn-ghost !py-2.5 !px-3 text-sm flex items-center gap-1.5 whitespace-nowrap"
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Enquire on WhatsApp"
+          >
+            <MessageCircle size={15} />
+            <span className="hidden xs:inline">WhatsApp</span>
+          </a>
+        </div>
       </div>
     </>
   );
+}
+
+function getProductFamilyKey(product: Product): ProductFamilyKey | null {
+  if (product.category === "iPhones" || (product.brand === "Apple" && (product.category === "Phones" || product.name.toLowerCase().includes("iphone")))) return "iphone";
+  if (product.category === "MacBooks" || (product.brand === "Apple" && (product.category === "Laptops" || product.name.toLowerCase().includes("macbook") || product.name.toLowerCase().includes("mac mini")))) return "mac";
+  if (product.category === "iPads" || (product.brand === "Apple" && (product.category === "Tablets" || product.name.toLowerCase().includes("ipad")))) return "ipad";
+  if (product.category === "Apple Watches" || (product.brand === "Apple" && (product.category === "Watches" || product.name.toLowerCase().includes("watch")))) return "watch";
+  if (product.category === "AirPods" || (product.brand === "Apple" && (product.category === "Audio" || product.name.toLowerCase().includes("airpod")))) return "airpods";
+  if (product.category === "Accessories") return "accessories";
+  return null;
 }
 
 function InfoBlock({ title, items }: { title: string; items: string[] }) {

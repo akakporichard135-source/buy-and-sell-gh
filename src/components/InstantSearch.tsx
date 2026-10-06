@@ -6,6 +6,7 @@ import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import { useCart } from "../context/CartContext";
 import { formatGhs } from "../utils/format";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import { normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
@@ -82,7 +83,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   <span>
                     <b className={`instant-search-scope instant-search-scope-${resultType.toLowerCase()}`}>{resultType}</b>
                     <strong>{product.name}</strong>
-                    <small>{product.brand} | {product.condition} | {product.storage.join(", ")} | {product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</small>
+                    <small>{product.brand} | {product.condition} | {product.storage.join(", ")} | {getCardPriceDisplay(product).current}</small>
                   </span>
                   <em className={productBadgeClass(stockLabel)}>{stockLabel}</em>
                 </Link>

@@ -1,7 +1,9 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { EditorialImage, EditorialStory } from "../catalog/editorialStories";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import { SEO } from "./SEO";
 import "../styles/editorial-product-story.css";
 
@@ -11,8 +13,8 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
       className={`${className} editorial-image-${image.fit ?? "contain"}`}
       src={image.src}
       alt={image.alt}
-      loading={eager ? "eager" : "lazy"}
-      fetchPriority={eager ? "high" : undefined}
+      loading="eager"
+      fetchPriority={eager ? "high" : "auto"}
       decoding="async"
       draggable={false}
       style={image.position ? { objectPosition: image.position } : undefined}
@@ -22,6 +24,22 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
 
 export function EditorialProductStory({ story }: { story: EditorialStory }) {
   const railRef = useRef<HTMLDivElement>(null);
+  const { activeProducts } = useProductCatalog();
+
+  const startingPrice = useMemo(() => {
+    const prod = activeProducts.find((p) => p.slug === story.slug || story.buyPath.endsWith(`/${p.slug}`));
+    if (prod) {
+      const cardPrice = getCardPriceDisplay(prod);
+      if (!cardPrice.isEnquiry) return cardPrice.current;
+    }
+    if (story.slug === "iphone-18-pro") return "From GH₵ 20,500";
+    if (story.slug === "macbook-air") return "From GH₵ 13,500";
+    if (story.slug === "apple-watch-series-12") return "From GH₵ 7,800";
+    if (story.slug === "apple-watch-ultra-4") return "From GH₵ 14,800";
+    if (story.slug === "ipad-air") return "From GH₵ 9,800";
+    if (story.slug === "airpods-5") return "From GH₵ 2,800";
+    return null;
+  }, [activeProducts, story.slug, story.buyPath]);
 
   useEffect(() => {
     if (railRef.current) {
@@ -47,7 +65,10 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           <p className="editorial-eyebrow">{story.eyebrow}</p>
           <h1 id="editorial-title">{story.name}</h1>
           <p className="editorial-hero-tagline">{story.tagline}</p>
-          <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
+          <div className="editorial-hero-actions">
+            {startingPrice && <span className="editorial-hero-price-pill">{startingPrice}</span>}
+            <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
+          </div>
         </div>
         <div className="editorial-hero-art">
           <ProductImage image={story.hero} eager />

@@ -48,7 +48,7 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   }
 
   // 5. AirPods 5
-  if (family === "airpods" && slug === "airpods-5") {
+  if (family === "airpods" && (slug === "airpods-5" || slug.includes("airpods"))) {
     return <AirpodsBuyExperience catalogProduct={primaryProduct} />;
   }
 

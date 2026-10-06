@@ -18,12 +18,12 @@ export const whatsappUrl = (message: string, number = business.whatsapp.primary)
 
 export const intentWhatsAppUrl = (intent: WhatsAppIntent) => whatsappUrl(defaultMessages[intent]);
 
-export const productWhatsAppUrl = (product: Product, storage: string, color: string, pageUrl?: string) =>
+export const productWhatsAppUrl = (product: Product, storage: string, color: string, pageUrl?: string, price?: number) =>
   whatsappUrl(
     [
       `Hello Buy & Sell GH, I'm interested in the ${product.name}, ${storage}, ${color}.`,
       `Condition: ${product.condition}.`,
-      product.priceOnRequest || product.price <= 0 ? "Price: Please confirm the current price." : `Listed price: ${formatGhs(product.price)}.`,
+      product.priceOnRequest || (price ?? product.price) <= 0 ? "Price: Please confirm the current price." : `Listed price: ${formatGhs(price ?? product.price)}.`,
       pageUrl ? `Product page: ${pageUrl}` : "",
       "Please confirm availability and final details.",
     ].filter(Boolean).join(" "),

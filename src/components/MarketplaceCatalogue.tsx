@@ -6,6 +6,7 @@ import { filterMarketplaceProducts, marketplaceOptions } from "../catalog/market
 import { business } from "../config/business";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import { resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
@@ -191,7 +192,7 @@ function MarketplaceProductCard({ product }: { product: Product }) {
         {image ? <img src={image.src} alt={image.alt} loading="lazy" decoding="async" /> : <span>No product photo</span>}
       </Link>
       <div className="marketplace-listing-body">
-        <p className="marketplace-listing-price">{product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</p>
+        <p className="marketplace-listing-price">{getCardPriceDisplay(product).current}</p>
         <h2><Link to={`/product/${product.slug}`}>{product.name}</Link></h2>
         <div className="marketplace-listing-facts">
           <span>{product.brand}</span>{primaryStorage && <span>{primaryStorage}</span>}<span>{product.condition}</span>{product.newArrival && <span>New Arrival</span>}

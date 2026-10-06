@@ -1,7 +1,78 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
 import { assertAdminAal2 } from "../admin/adminAuthorization";
-import type { Product, ProductImage } from "../types/product";
+import type { Product, ProductCondition, ProductImage, ProductVariant } from "../types/product";
 import { normalizeProduct } from "./productCatalog";
+
+export interface VariantRow {
+  id: string;
+  product_id: string;
+  title: string;
+  sku: string | null;
+  storage: string | null;
+  condition: ProductCondition;
+  screen_size: string | null;
+  chip: string | null;
+  memory: string | null;
+  connectivity: string | null;
+  finish: string | null;
+  glass: string | null;
+  price: number;
+  previous_price: number | null;
+  is_sale: boolean;
+  stock_status: Product["stockStatus"];
+  stock_quantity: number;
+  available: boolean;
+  position: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const rowToVariant = (row: VariantRow): ProductVariant => ({
+  id: row.id,
+  productId: row.product_id,
+  title: row.title,
+  sku: row.sku ?? undefined,
+  storage: row.storage ?? undefined,
+  condition: row.condition,
+  screenSize: row.screen_size ?? undefined,
+  chip: row.chip ?? undefined,
+  memory: row.memory ?? undefined,
+  connectivity: row.connectivity ?? undefined,
+  finish: row.finish ?? undefined,
+  glass: row.glass ?? undefined,
+  price: Number(row.price),
+  previousPrice: row.previous_price === null || row.previous_price === undefined ? null : Number(row.previous_price),
+  isSale: Boolean(row.is_sale),
+  stockStatus: row.stock_status,
+  stockQuantity: Number(row.stock_quantity ?? 10),
+  available: Boolean(row.available),
+  position: Number(row.position ?? 0),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const variantToRow = (variant: ProductVariant): Partial<VariantRow> => ({
+  id: variant.id,
+  product_id: variant.productId,
+  title: variant.title,
+  sku: variant.sku ?? null,
+  storage: variant.storage ?? null,
+  condition: variant.condition,
+  screen_size: variant.screenSize ?? null,
+  chip: variant.chip ?? null,
+  memory: variant.memory ?? null,
+  connectivity: variant.connectivity ?? null,
+  finish: variant.finish ?? null,
+  glass: variant.glass ?? null,
+  price: variant.price,
+  previous_price: variant.previousPrice ?? null,
+  is_sale: Boolean(variant.isSale),
+  stock_status: variant.stockStatus,
+  stock_quantity: variant.stockQuantity,
+  available: variant.available,
+  position: variant.position,
+  updated_at: new Date().toISOString(),
+});
 
 interface ProductRow {
   id: string;
@@ -38,8 +109,10 @@ interface ProductRow {
   updated_at: string;
   archived: boolean;
   tags: string[] | null;
+  product_variants?: VariantRow[];
 }
 
+const productSelectWithVariants = "*, product_variants(*)";
 const productSelect = "*";
 
 export const isProductDatabaseConfigured = () => Boolean(supabase);
@@ -91,6 +164,7 @@ export const rowToProduct = (row: ProductRow): Product =>
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archived: row.archived,
+    variants: row.product_variants && row.product_variants.length > 0 ? row.product_variants.map(rowToVariant) : undefined,
   });
 
 export const productToRow = (product: Product): Partial<ProductRow> => {
@@ -134,16 +208,67 @@ export const productToRow = (product: Product): Partial<ProductRow> => {
 
 export const fetchProducts = async () => {
   const client = getSupabaseOrThrow();
-  const { data, error } = await client.from("products").select(productSelect).order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map((row) => rowToProduct(row as ProductRow));
+  const { data, error } = await client.from("products").select(productSelectWithVariants).order("created_at", { ascending: false });
+  if (!error && data) {
+    return data.map((row) => rowToProduct(row as ProductRow));
+  }
+  const fallback = await client.from("products").select(productSelect).order("created_at", { ascending: false });
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []).map((row) => rowToProduct(row as ProductRow));
 };
 
 export const fetchProductBySlug = async (slug: string) => {
   const client = getSupabaseOrThrow();
-  const { data, error } = await client.from("products").select(productSelect).eq("slug", slug).maybeSingle();
+  const { data, error } = await client.from("products").select(productSelectWithVariants).eq("slug", slug).maybeSingle();
+  if (!error && data) return rowToProduct(data as ProductRow);
+  const fallback = await client.from("products").select(productSelect).eq("slug", slug).maybeSingle();
+  if (fallback.error) throw fallback.error;
+  return fallback.data ? rowToProduct(fallback.data as ProductRow) : undefined;
+};
+
+export const upsertProductVariants = async (variants: ProductVariant[]) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const rows = variants.map(variantToRow);
+  const { data, error } = await client
+    .from("product_variants")
+    .upsert(rows, { onConflict: "id" })
+    .select("*");
   if (error) throw error;
-  return data ? rowToProduct(data as ProductRow) : undefined;
+  return (data as VariantRow[]).map(rowToVariant);
+};
+
+export const updateVariantPriceAndStock = async (
+  variantId: string,
+  fields: {
+    price?: number;
+    previousPrice?: number | null;
+    isSale?: boolean;
+    stockStatus?: Product["stockStatus"];
+    stockQuantity?: number;
+    available?: boolean;
+  }
+) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const updateData: Partial<VariantRow> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (fields.price !== undefined) updateData.price = fields.price;
+  if (fields.previousPrice !== undefined) updateData.previous_price = fields.previousPrice;
+  if (fields.isSale !== undefined) updateData.is_sale = fields.isSale;
+  if (fields.stockStatus !== undefined) updateData.stock_status = fields.stockStatus;
+  if (fields.stockQuantity !== undefined) updateData.stock_quantity = fields.stockQuantity;
+  if (fields.available !== undefined) updateData.available = fields.available;
+
+  const { data, error } = await client
+    .from("product_variants")
+    .update(updateData)
+    .eq("id", variantId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return rowToVariant(data as VariantRow);
 };
 
 export const upsertProduct = async (product: Product) => {

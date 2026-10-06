@@ -1,4 +1,4 @@
-import { BarChart3, Bell, LogOut, Menu, Package, Settings, ShieldCheck, ShoppingBag, Star, Tag, UserCircle, X } from "lucide-react";
+import { BarChart3, Bell, DollarSign, LogOut, Menu, Package, Settings, ShieldCheck, ShoppingBag, Star, Tag, UserCircle, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { business } from "../config/business";
@@ -9,6 +9,7 @@ import { Logo } from "../components/Logo";
 const adminLinks = [
   { label: "Overview", to: "/admin", icon: BarChart3 },
   { label: "Products", to: "/admin/products", icon: Package },
+  { label: "Pricing & Stock", to: "/admin/pricing", icon: DollarSign },
   { label: "Order Requests", to: "/admin/orders", icon: ShoppingBag },
   { label: "Trade-In Requests", to: "/admin/trade-ins", icon: Tag },
   { label: "Device Requests", to: "/admin/device-requests", icon: Bell },

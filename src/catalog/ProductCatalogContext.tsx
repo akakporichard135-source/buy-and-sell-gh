@@ -7,6 +7,8 @@ import {
   fetchProducts,
   markProductOutOfStockById,
   markProductSoldById,
+  updateProductFields,
+  updateVariantPriceAndStock as updateVariantPriceAndStockRepo,
   upsertProduct,
 } from "./supabaseProductRepository";
 import {
@@ -26,6 +28,18 @@ interface ProductCatalogValue {
   getProductBySlug: (slug: string) => Product | undefined;
   refreshProducts: () => Promise<void>;
   saveProduct: (product: Product) => Promise<Product>;
+  updateVariantPriceAndStock: (
+    variantId: string,
+    fields: {
+      price?: number;
+      previousPrice?: number | null;
+      isSale?: boolean;
+      stockStatus?: Product["stockStatus"];
+      stockQuantity?: number;
+      available?: boolean;
+    }
+  ) => Promise<void>;
+  updateProductBasePrice: (productId: string, price: number, previousPrice?: number | null) => Promise<void>;
   archiveProduct: (productId: string) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   markSold: (productId: string) => Promise<void>;
@@ -124,6 +138,37 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
           : [normalized, ...products];
         persistLocal(next);
         return normalized;
+      },
+      updateVariantPriceAndStock: async (variantId, fields) => {
+        if (backendStatus === "supabase") {
+          await updateVariantPriceAndStockRepo(variantId, fields);
+        }
+        setProducts((current) => {
+          const next = current.map((product) => {
+            const hasVariant = product.variants?.some((v) => v.id === variantId);
+            if (!hasVariant) return product;
+            const updatedVariants = product.variants!.map((v) =>
+              v.id === variantId ? { ...v, ...fields } : v
+            );
+            return normalizeProduct({ ...product, variants: updatedVariants });
+          });
+          if (backendStatus !== "supabase") persistLocal(next);
+          return next;
+        });
+      },
+      updateProductBasePrice: async (productId, price, previousPrice) => {
+        if (backendStatus === "supabase") {
+          await updateProductFields(productId, { price, previous_price: previousPrice ?? null, price_on_request: price <= 0 });
+        }
+        setProducts((current) => {
+          const next = current.map((product) =>
+            product.id === productId
+              ? normalizeProduct({ ...product, price, previousPrice: previousPrice ?? undefined, priceOnRequest: price <= 0 })
+              : product
+          );
+          if (backendStatus !== "supabase") persistLocal(next);
+          return next;
+        });
       },
       archiveProduct: async (productId) => {
         if (backendStatus === "supabase") {

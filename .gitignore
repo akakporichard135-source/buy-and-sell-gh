@@ -9,3 +9,4 @@ vite-dev*.log
 .vercel
 qa-previews/
 scratch/
+supabase/.temp/

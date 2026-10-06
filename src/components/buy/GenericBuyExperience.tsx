@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
+import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl, productWhatsAppUrl } from "../../utils/whatsapp";
 import { isProductPurchasable } from "../../catalog/productCatalog";
 import { resolveProductGallery } from "../../utils/productImages";
@@ -54,10 +55,16 @@ export function GenericBuyExperience({
     : fallbackAsset
       ? [{ src: fallbackAsset, alt: name }]
       : [];
-  const purchasable = product ? isProductPurchasable(product) : false;
-  const priceLabel = product && !product.priceOnRequest && product.price > 0
-    ? formatGhs(product.price)
-    : "Price confirmed on enquiry";
+
+  const configured = resolveConfiguredPrice(product, { storage });
+  const purchasable = product ? (configured.price > 0 && !product.priceOnRequest) : false;
+  const priceLabel = configured.price > 0
+    ? configured.formattedPrice
+    : (product && !product.priceOnRequest && product.price > 0
+        ? formatGhs(product.price)
+        : "Price confirmed on enquiry");
+  const previousPriceLabel = configured.formattedPreviousPrice;
+  const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const activeImage = gallery[activeThumb]?.src || gallery[0]?.src || fallbackAsset;
 
@@ -67,9 +74,9 @@ export function GenericBuyExperience({
 
   const handleAddToBag = () => {
     if (product && purchasable) {
-      const added = addItem(product, storage, color, 1);
+      const added = addItem(product, storage || "Standard", color || "Standard", 1, configured.variant);
       if (added) {
-        setNotice(`${product.name} added to your bag.`);
+        setNotice(`${product.name}${storage ? ` (${storage})` : ""} - ${priceLabel} added to your bag.`);
       }
     } else {
       setNotice(`Connecting to WhatsApp to confirm ${name} availability...`);
@@ -175,6 +182,8 @@ export function GenericBuyExperience({
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}

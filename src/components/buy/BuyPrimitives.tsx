@@ -314,6 +314,15 @@ export interface BuySummaryCardProps {
   title: string;
   items: SummaryItem[];
   priceLabel: string;
+  previousPriceLabel?: string;
+  tradeInBreakdown?: {
+    retailPrice: number;
+    tradeInCredit: number;
+    estimatedDue: number;
+    formattedRetailPrice: string;
+    formattedTradeInCredit: string;
+    formattedEstimatedDue: string;
+  };
   onAddToBag: () => void;
   addToBagLabel?: string;
   whatsAppHref: string;
@@ -325,6 +334,8 @@ export function BuySummaryCard({
   title,
   items,
   priceLabel,
+  previousPriceLabel,
+  tradeInBreakdown,
   onAddToBag,
   addToBagLabel = "Add to Bag",
   whatsAppHref,
@@ -352,9 +363,36 @@ export function BuySummaryCard({
       </ul>
 
       <div className="apple-buy-summary-pricing">
-        <span className="apple-buy-summary-price-label">Total</span>
-        <span className="apple-buy-summary-price-val">{priceLabel}</span>
+        <span className="apple-buy-summary-price-label">Price</span>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+          {previousPriceLabel && (
+            <span style={{ textDecoration: "line-through", color: "#86868b", fontSize: "1.1rem" }}>
+              {previousPriceLabel}
+            </span>
+          )}
+          <span className="apple-buy-summary-price-val">{priceLabel}</span>
+        </div>
       </div>
+
+      {tradeInBreakdown && tradeInBreakdown.tradeInCredit > 0 && (
+        <div style={{ margin: "12px 0", padding: "12px 14px", background: "#f5f5f7", borderRadius: "12px", fontSize: "0.88rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+            <span style={{ color: "#6e6e73" }}>Device Retail Price:</span>
+            <span style={{ fontWeight: 600 }}>{tradeInBreakdown.formattedRetailPrice}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", color: "#2e7d32" }}>
+            <span>Estimated Trade-in Credit:</span>
+            <span style={{ fontWeight: 600 }}>{tradeInBreakdown.formattedTradeInCredit}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #e5e5e7", paddingTop: "6px", fontWeight: 700, fontSize: "0.95rem" }}>
+            <span>Estimated Balance Due:</span>
+            <span>{tradeInBreakdown.formattedEstimatedDue}</span>
+          </div>
+          <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: "#86868b", lineHeight: 1.35 }}>
+            *Final trade-in credit confirmed upon physical inspection at Dome Pillar 2.
+          </p>
+        </div>
+      )}
 
       {notice && (
         <div style={{ padding: "10px 14px", background: "#e8f5e9", color: "#2e7d32", borderRadius: "10px", fontSize: "0.88rem", fontWeight: 600 }}>

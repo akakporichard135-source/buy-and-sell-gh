@@ -1,5 +1,6 @@
-import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, RotateCcw, Save, Search, Trash2 } from "lucide-react";
+import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, RotateCcw, Save, Search, Tag, Trash2 } from "lucide-react";
 import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
@@ -197,7 +198,12 @@ export function AdminProductManager() {
           <h2>Catalogue control</h2>
           <p>Manage the product source used by homepage sections, shop filters, search, product details, cart and enquiries. Current persistence: {getBackendLabel(backendStatus)}.</p>
         </div>
-        <button className="btn-primary" type="button" onClick={startAdd}><Plus size={17} /> Add Product</button>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+          <Link className="btn-secondary" to="/admin/pricing" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <Tag size={16} /> Pricing &amp; Stock
+          </Link>
+          <button className="btn-primary" type="button" onClick={startAdd}><Plus size={17} /> Add Product</button>
+        </div>
       </section>
 
       {message && <div className="admin-success" role="status" aria-live="polite">{message}</div>}

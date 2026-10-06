@@ -4,16 +4,18 @@ import { useCart } from "../context/CartContext";
 import { isProductUnavailable } from "../catalog/productCatalog";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 import { ProductVisual } from "./ProductVisual";
 
 export function ProductCard({ product, variant = "default", imageVariant = "default" }: { product: Product; variant?: "default" | "compact"; imageVariant?: "default" | "catalogue" }) {
   const { addItem } = useCart();
+  const priceDisplay = getCardPriceDisplay(product);
   const storage = product.storage[0];
   const color = product.colors[0];
   const isSoldOut = isProductUnavailable(product);
-  const isPriceOnRequest = product.priceOnRequest === true || product.price <= 0;
+  const isPriceOnRequest = priceDisplay.isEnquiry;
   const isCompact = variant === "compact";
   const badges = getProductBadges(product, 1);
   const conditionLabel = normalizeDisplayBadge(product.condition);
@@ -50,8 +52,8 @@ export function ProductCard({ product, variant = "default", imageVariant = "defa
           <h3>{product.name}</h3>
         </div>
         <div className="product-card-price-row">
-          <p>{isPriceOnRequest ? "Contact for Price" : formatGhs(product.price)}</p>
-          {!isPriceOnRequest && product.oldPrice && <span>{formatGhs(product.oldPrice)}</span>}
+          <p>{priceDisplay.current}</p>
+          {priceDisplay.previous && <span>{priceDisplay.previous}</span>}
         </div>
         <div className="product-card-meta">
           {macbookChip && <span>Chip: {macbookChip}</span>}

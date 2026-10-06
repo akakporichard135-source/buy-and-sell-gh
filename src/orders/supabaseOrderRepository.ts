@@ -188,6 +188,7 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
       selected_storage: item.selectedStorage,
       selected_colour: item.selectedColour,
       quantity: item.quantity,
+      variant_id: item.variantId ?? null,
     })),
     submission_token: input.submissionToken,
   });

@@ -77,16 +77,18 @@ export interface OrderSubmissionInput {
     selectedStorage: string;
     selectedColour: string;
     quantity: number;
+    variantId?: string;
   }>;
 }
 
 export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
   items.map((item) => {
     const image = resolveProductImage(item.product);
+    const unitPrice = typeof item.configuredPrice === "number" && item.configuredPrice > 0 ? item.configuredPrice : item.product.price;
     return {
       productId: item.product.id,
       productSlug: item.product.slug,
-      productName: item.product.name,
+      productName: item.variantTitle ?? item.product.name,
       productImage: image?.src ?? "",
       storage: item.storage,
       colour: item.color,
@@ -94,7 +96,7 @@ export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
       batteryHealth: item.product.batteryHealth,
       warranty: item.product.warranty ?? item.product.warrantyInfo,
       quantity: item.quantity,
-      unitPrice: item.product.price,
-      lineTotal: item.product.price * item.quantity,
+      unitPrice,
+      lineTotal: unitPrice * item.quantity,
     };
   });

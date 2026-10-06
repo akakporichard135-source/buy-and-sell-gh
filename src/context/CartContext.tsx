@@ -1,13 +1,25 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import type { CartItem, Product } from "../types/product";
+import type { CartItem, Product, ProductVariant } from "../types/product";
 import { addCartItem, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (product: Product, storage?: string, color?: string, quantity?: number) => boolean;
-  removeItem: (productId: string, storage: string, color: string) => void;
-  updateQuantity: (productId: string, storage: string, color: string, quantity: number) => void;
+  addItem: (
+    product: Product,
+    storage?: string,
+    color?: string,
+    quantity?: number,
+    variant?: ProductVariant
+  ) => boolean;
+  removeItem: (productId: string, storage: string, color: string, variantId?: string) => void;
+  updateQuantity: (
+    productId: string,
+    storage: string,
+    color: string,
+    quantity: number,
+    variantId?: string
+  ) => void;
   clearCart: () => void;
   toast: string | null;
   dismissToast: () => void;
@@ -45,8 +57,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const addItem = (product: Product, storage = product.storage[0], color = product.colors[0], quantity = 1) => {
-    const currentProduct = getProductBySlug(product.slug);
+  const addItem = (
+    product: Product,
+    storage = product.storage[0],
+    color = product.colors[0],
+    quantity = 1,
+    variant?: ProductVariant
+  ) => {
+    const currentProduct = getProductBySlug(product.slug) ?? product;
     if (!currentProduct) {
       setToast(`${product.name} is not available for cart right now.`);
       return false;
@@ -55,21 +73,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast(`${currentProduct.name} is not available for cart right now.`);
       return false;
     }
-    if (quantity > currentProduct.stockQuantity) {
-      setToast(`Only ${currentProduct.stockQuantity} ${currentProduct.name} available right now.`);
+    const effectiveStock = variant?.stockQuantity ?? currentProduct.stockQuantity;
+    if (quantity > effectiveStock) {
+      setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity));
+    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant));
     setToast(`${currentProduct.name} added to cart.`);
     return true;
   };
 
-  const removeItem = (productId: string, storage: string, color: string) => {
-    setItems((current) => removeCartItem(current, productId, storage, color));
+  const removeItem = (productId: string, storage: string, color: string, variantId?: string) => {
+    setItems((current) => removeCartItem(current, productId, storage, color, variantId));
   };
 
-  const updateQuantity = (productId: string, storage: string, color: string, quantity: number) => {
-    setItems((current) => updateCartQuantity(current, productId, storage, color, quantity));
+  const updateQuantity = (
+    productId: string,
+    storage: string,
+    color: string,
+    quantity: number,
+    variantId?: string
+  ) => {
+    setItems((current) => updateCartQuantity(current, productId, storage, color, quantity, variantId));
   };
 
   const value = useMemo(

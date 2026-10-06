@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
+import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 import {
@@ -62,38 +63,68 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     }
   }, [screenSize, chip, memory, storage]);
 
-  const proImage14 = localCatalogueImageBySlug["macbook-pro-14-m4"] || "/products/campaigns/macbook-pro-floating.webp";
-  const proImage16 = localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"] || "/products/campaigns/macbook-pro-floating.webp";
+  const proImage14 = "/products/campaigns/macbook-pro-cutout.webp";
+  const proImage16 = "/products/campaigns/macbook-pro-cinematic.webp";
 
   const currentDisplayImg = screenSize === "16-inch" ? proImage16 : proImage14;
 
   const thumbnails = [
     { src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` },
-    { src: "/products/campaigns/macbook-pro-floating.webp", alt: "MacBook Pro Liquid Retina XDR display with pro ports" },
-    { src: "/products/campaigns/macbook-pro-banner.webp", alt: "MacBook Pro high-performance architecture" },
+    { src: "/products/campaigns/macbook-pro-cinematic.webp", alt: "MacBook Pro Liquid Retina XDR display on dark stage" },
+    { src: "/products/campaigns/macbook-pro-cutout.webp", alt: "MacBook Pro high-performance architecture profile" },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Price confirmed on enquiry";
+  const fallbackProduct: Product = useMemo(() => {
+    const is16 = screenSize === "16-inch";
+    const basePrice = is16 ? 32000 : 22000;
+    const slug = is16 ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4";
+    return {
+      id: slug,
+      slug,
+      name: `MacBook Pro ${screenSize}`,
+      model: `MacBook Pro ${screenSize}`,
+      brand: "Apple",
+      category: "MacBooks",
+      condition: "Brand New",
+      price: basePrice,
+      storage: ["512GB", "1TB", "2TB", "4TB"],
+      colors: ["Space Black", "Silver"],
+      description: `Flagship MacBook Pro ${screenSize} with Liquid Retina XDR display, pro ports, and extreme Apple Silicon.`,
+      specs: ["Apple M4 / M4 Pro / M4 Max", "Liquid Retina XDR display", "120Hz ProMotion", "1600 nits peak brightness", "MagSafe 3 & HDMI"],
+      box: ["MacBook Pro", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
+      imageTone: "dark",
+      images: [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }],
+      variants: [
+        { id: `mbp-${is16 ? "16" : "14"}-512`, productId: slug, title: `${screenSize} 512GB`, storage: "512GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mbp-${is16 ? "16" : "14"}-1tb`, productId: slug, title: `${screenSize} 1TB`, storage: "1TB", price: basePrice + 3500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mbp-${is16 ? "16" : "14"}-2tb`, productId: slug, title: `${screenSize} 2TB`, storage: "2TB", price: basePrice + 7500, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mbp-${is16 ? "16" : "14"}-4tb`, productId: slug, title: `${screenSize} 4TB`, storage: "4TB", price: basePrice + 14000, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
+      ],
+      available: true,
+      stockStatus: "In Stock" as const,
+      stockQuantity: 10,
+      featured: true,
+    };
+  }, [screenSize, currentDisplayImg, finish]);
+
+  const activeProduct = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const configured = resolveConfiguredPrice(activeProduct, { screenSize, chip, memory, storage });
+  const priceLabel = configured.formattedPrice;
+  const previousPriceLabel = configured.formattedPreviousPrice;
+  const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const fullConfigurationTitle = `MacBook Pro ${screenSize} (${chip}, ${memory} RAM, ${storage} SSD, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability and current Ghana pricing.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    if (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const added = addItem(catalogProduct, storage, `${finish} / ${chip} / ${memory}`, 1);
-      if (added) {
-        setNotice(`${fullConfigurationTitle} added to your bag.`);
-      }
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp enquiry...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant);
+    if (added) {
+      setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }
   };
 
@@ -309,6 +340,8 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel="Add to Bag"
         whatsAppHref={whatsAppEnquiry}

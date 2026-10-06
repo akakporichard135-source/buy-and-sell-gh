@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { SEO } from "../components/SEO";
+import { CinematicVideo } from "../components/CinematicVideo";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import "../styles/homepage-surfaces.css";
 import "../styles/homepage-campaigns.css";
 import "../styles/homepage-video-showcase.css";
@@ -21,9 +23,15 @@ type Campaign = {
   eyebrow: string;
   title: string;
   description: string;
+  priceLabel?: string;
   availabilityText?: string;
   image: string;
   imageAlt: string;
+  video?: {
+    src: string;
+    mobileSrc?: string;
+    poster: string;
+  };
   theme: CampaignTheme;
   primaryLabel: string;
   primaryTo: string;
@@ -33,65 +41,6 @@ type Campaign = {
   variant?: "macbook-air" | "macbook-pro";
   showImage?: boolean;
 };
-
-const ipadAirCampaign: Campaign = {
-  eyebrow: "Fresh. Powerful. Colourful.",
-  title: "iPad Air",
-  description: "Made for work, study, creativity and everything in between.",
-  image: "/products/homepage/ipad-air.jpg",
-  imageAlt: "iPad Air in a layered premium product presentation",
-  theme: "light",
-  primaryLabel: "Learn more",
-  primaryTo: "/ipad/ipad-air",
-  secondaryLabel: "Buy",
-  secondaryTo: "/shop/buy-ipad/ipad-air",
-};
-
-const visaTradingCampaign: Campaign = {
-  eyebrow: "Visa Card Trading",
-  title: "Turn supported Visa cards into value.",
-  description: "Send card details for review and confirmation. Buy & Sell GH does not issue payment cards.",
-  image: visaCardCampaign,
-  imageAlt: "One original unbranded black and gold card for supported card review",
-  theme: "light",
-  primaryLabel: "Check a Card",
-  primaryTo: "/gift-cards",
-  secondaryLabel: "Contact Us",
-  secondaryTo: "/contact",
-};
-
-const topCampaigns: Campaign[] = [
-  {
-    eyebrow: "A new way to unfold",
-    title: "iPhone Duo",
-    description: "Open up more room for everything you do.",
-    image: "/products/homepage/iphone-duo.webp",
-    imageAlt: campaignAssets.duo.hero.alt,
-    theme: "light",
-    primaryLabel: "Learn more",
-    primaryTo: "/iphone/iphone-duo",
-    secondaryLabel: "View Pricing",
-    secondaryTo: "/shop/buy-iphone/iphone-duo",
-  },
-  {
-    eyebrow: "Everyday momentum",
-    title: "Apple Watch Series 12",
-    description: "Stay connected to what moves you.",
-    image: "/products/homepage/watch-series-12.webp",
-    fallbackImage: campaignAssets.watch.series12.fallback,
-    imageAlt: campaignAssets.watch.series12.alt,
-    theme: "light",
-    primaryLabel: "Learn more",
-    primaryTo: "/watch/apple-watch-series-12",
-    secondaryLabel: "Buy",
-    secondaryTo: "/shop/buy-watch/apple-watch-series-12",
-  },
-];
-
-const productTiles: Campaign[] = [
-  ipadAirCampaign,
-  visaTradingCampaign,
-];
 
 interface ServiceCardItem {
   id: string;
@@ -145,14 +94,69 @@ const homepageServices: ServiceCardItem[] = [
   },
 ];
 
+function getProductPrice(activeProducts: Product[], slug: string, fallback: string) {
+  const prod = activeProducts.find((p) => p.slug === slug || p.slug.startsWith(slug));
+  if (!prod) return fallback;
+  const cardPrice = getCardPriceDisplay(prod);
+  return cardPrice.isEnquiry ? fallback : cardPrice.current;
+}
+
 export function HomePage() {
   const { activeProducts } = useProductCatalog();
   const latestMacbookAir = useMemo(() => getLatestMacLaunch(activeProducts, "MacBook Air"), [activeProducts]);
 
-  const featuredMacbookAirCampaign: Campaign = {
+  // Dynamic live starting prices from database
+  const iphone18Price = useMemo(() => getProductPrice(activeProducts, "iphone-18-pro", "From GH₵ 20,500"), [activeProducts]);
+  const iphoneDuoPrice = useMemo(() => getProductPrice(activeProducts, "iphone-duo", "From GH₵ 23,500"), [activeProducts]);
+  const watchSeries12Price = useMemo(() => getProductPrice(activeProducts, "apple-watch-series-12", "From GH₵ 7,800"), [activeProducts]);
+  const watchUltraPrice = useMemo(() => getProductPrice(activeProducts, "apple-watch-ultra-4", "From GH₵ 14,800"), [activeProducts]);
+  const airpodsPrice = useMemo(() => getProductPrice(activeProducts, "airpods-5", "From GH₵ 2,800"), [activeProducts]);
+  const macbookAirPrice = useMemo(() => getProductPrice(activeProducts, "macbook-air", "From GH₵ 16,500"), [activeProducts]);
+  const macMiniPrice = useMemo(() => getProductPrice(activeProducts, "mac-mini", "From GH₵ 9,800"), [activeProducts]);
+  const ipadAirPrice = useMemo(() => getProductPrice(activeProducts, "ipad-air", "From GH₵ 9,800"), [activeProducts]);
+
+  const topCampaigns: Campaign[] = useMemo(() => [
+    {
+      eyebrow: "A new way to unfold",
+      title: "iPhone Duo",
+      description: "Open up more room for everything you do.",
+      priceLabel: iphoneDuoPrice,
+      image: "/products/homepage/iphone-duo.webp",
+      imageAlt: campaignAssets.duo.hero.alt,
+      video: {
+        src: "/videos/homepage/iphone-duo.mp4",
+        poster: "/products/homepage/iphone-duo.webp",
+      },
+      theme: "light",
+      primaryLabel: "Learn more",
+      primaryTo: "/iphone/iphone-duo",
+      secondaryLabel: "View Pricing",
+      secondaryTo: "/shop/buy-iphone/iphone-duo",
+    },
+    {
+      eyebrow: "Everyday momentum",
+      title: "Apple Watch Series 12",
+      description: "Stay connected to what moves you.",
+      priceLabel: watchSeries12Price,
+      image: "/products/homepage/watch-series-12.webp",
+      imageAlt: campaignAssets.watch.series12.alt,
+      video: {
+        src: "/videos/homepage/watch-series-12.mp4",
+        poster: "/products/homepage/watch-series-12.webp",
+      },
+      theme: "light",
+      primaryLabel: "Learn more",
+      primaryTo: "/watch/apple-watch-series-12",
+      secondaryLabel: "Buy",
+      secondaryTo: "/shop/buy-watch/apple-watch-series-12",
+    },
+  ], [iphoneDuoPrice, watchSeries12Price]);
+
+  const featuredMacbookAirCampaign: Campaign = useMemo(() => ({
     eyebrow: latestMacbookAir ? `${latestMacbookAir.generation} · MacBook Air` : "MacBook Air",
     title: "MacBook Air",
     description: "A light, capable Mac for work, study and everyday creativity.",
+    priceLabel: macbookAirPrice,
     availabilityText: latestMacbookAir ? getLaunchAvailability(latestMacbookAir.variants, latestMacbookAir.featuredProduct.name) : undefined,
     image: "/products/homepage/macbook-air.jpg",
     imageAlt: "MacBook Air in an ultra-thin opening profile",
@@ -162,12 +166,13 @@ export function HomePage() {
     secondaryLabel: "Buy",
     secondaryTo: "/shop/buy-mac/macbook-air",
     variant: "macbook-air",
-  };
+  }), [latestMacbookAir, macbookAirPrice]);
 
-  const macMiniCampaign: Campaign = {
+  const macMiniCampaign: Campaign = useMemo(() => ({
     eyebrow: "All-new",
     title: "Mac mini",
     description: "Now with M6 and M5 Pro.",
+    priceLabel: macMiniPrice,
     image: "/products/homepage/mac-mini-device.jpg",
     fallbackImage: "/products/homepage/mac-mini.jpg",
     imageAlt: "Mac mini with M6 and M5 Pro held in hand",
@@ -176,16 +181,52 @@ export function HomePage() {
     primaryTo: "/mac-mini",
     secondaryLabel: "Pre-order",
     secondaryTo: "/shop/buy-mac/mac-mini",
+  }), [macMiniPrice]);
+
+  const ipadAirCampaign: Campaign = useMemo(() => ({
+    eyebrow: "Fresh. Powerful. Colourful.",
+    title: "iPad Air",
+    description: "Made for work, study, creativity and everything in between.",
+    priceLabel: ipadAirPrice,
+    image: "/products/homepage/ipad-air.jpg",
+    imageAlt: "iPad Air in a layered premium product presentation",
+    theme: "light",
+    primaryLabel: "Learn more",
+    primaryTo: "/ipad/ipad-air",
+    secondaryLabel: "Buy",
+    secondaryTo: "/shop/buy-ipad/ipad-air",
+  }), [ipadAirPrice]);
+
+  const visaTradingCampaign: Campaign = {
+    eyebrow: "Buy & Sell GH Service",
+    title: "Visa Card Trading",
+    description: "Turn supported Visa cards into verified value. Fast evaluation with our Accra team.",
+    image: visaCardCampaign,
+    imageAlt: "Buy & Sell GH supported card evaluation",
+    theme: "light",
+    primaryLabel: "Check a Card",
+    primaryTo: "/gift-cards",
+    secondaryLabel: "WhatsApp Help",
+    secondaryTo: "/contact",
   };
 
   const featuredMacCampaigns = [featuredMacbookAirCampaign, macMiniCampaign];
+  const productTiles: Campaign[] = [
+    ipadAirCampaign,
+    visaTradingCampaign,
+  ];
 
   return (
     <>
-      <SEO title="Premium Tech Store in Accra | Buy & Sell GH" description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra." />
+      <SEO
+        title="Premium Tech Store in Accra | Buy & Sell GH"
+        description="Shop original devices and get trusted trade-in, repair, pre-order and customer support from Buy & Sell GH in Accra."
+      />
       <main className="storefront-home">
         <Iphone18Hero />
-        {topCampaigns.map((campaign) => <ProductCampaign campaign={campaign} key={campaign.title} top />)}
+        {topCampaigns.map((campaign) => (
+          <ProductCampaign campaign={campaign} key={campaign.title} top />
+        ))}
         <UltraAirpodsStory />
 
         <CampaignPair campaigns={featuredMacCampaigns} label="MacBook Air and Mac mini" className="home-product-pair-macbooks" />
@@ -193,81 +234,83 @@ export function HomePage() {
 
         <StoreServicesSection />
         <PremiumTrustStrip />
-
       </main>
     </>
   );
 }
 
 function Iphone18Hero() {
+  const { activeProducts } = useProductCatalog();
+  const priceLabel = useMemo(() => getProductPrice(activeProducts, "iphone-18-pro", "From GH₵ 20,500"), [activeProducts]);
+
   return (
-    <section className="iphone18-hero" aria-labelledby="iphone18-hero-headline">
-      <div className="iphone18-hero-copy">
+    <section className="iphone18-launch-hero" aria-labelledby="iphone18-hero-headline">
+      <div className="iphone18-launch-copy">
         <p className="store-eyebrow">A new era of Pro</p>
         <h1 id="iphone18-hero-headline">iPhone 18 Pro</h1>
-        <p className="iphone18-hero-subtitle">Pro further.</p>
-        <div className="iphone18-hero-actions">
+        <span className="iphone18-hero-subtitle">Pro further.</span>
+        <span className="store-hero-price-pill">
+          {priceLabel}
+        </span>
+        <div className="iphone18-launch-actions">
           <Link className="store-button store-button-primary" to="/iphone/iphone-18-pro">Learn more</Link>
           <Link className="store-button store-button-secondary" to="/shop/buy-iphone/iphone-18-pro">Buy</Link>
         </div>
       </div>
-      <div className="iphone18-hero-media">
-        <picture>
-          <source type="image/webp" srcSet="/products/homepage/iphone-18-pro-hero.webp 1x, /products/homepage/iphone-18-pro-hero-2x.webp 2x" />
+      <div className="iphone18-launch-media">
+        <span className="iphone18-launch-pro" aria-hidden="true">PRO</span>
+        <div className="iphone18-hero-img">
           <img
-            src="/products/homepage/iphone-18-pro-hero-original.jpg"
-            alt="iPhone 18 Pro with chrome PRO visual"
-            className="iphone18-hero-img"
+            src="/products/campaigns/iphone-18-pro-burgundy-finish.webp"
+            alt="iPhone 18 Pro titanium design in Deep Burgundy"
             loading="eager"
             fetchPriority="high"
             decoding="async"
-            width={736}
-            height={225}
-            onError={(event) => {
-              if (campaignAssets.iphone18.hero.fallback && !event.currentTarget.dataset.fallbackApplied) {
-                event.currentTarget.dataset.fallbackApplied = "true";
-                event.currentTarget.src = campaignAssets.iphone18.hero.fallback;
-              }
-            }}
           />
-        </picture>
+        </div>
       </div>
     </section>
   );
 }
 
 function UltraAirpodsStory() {
+  const { activeProducts } = useProductCatalog();
+  const ultraPrice = useMemo(() => getProductPrice(activeProducts, "apple-watch-ultra-4", "From GH₵ 14,800"), [activeProducts]);
+  const airpodsPrice = useMemo(() => getProductPrice(activeProducts, "airpods-5", "From GH₵ 2,800"), [activeProducts]);
+
   return (
     <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
-      <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
-        <div className="ultra-airpods-copy">
+      <article className="ultra-airpods-panel ultra-airpods-ultra relative overflow-hidden" aria-labelledby="ultra-story-title">
+        <div className="ultra-airpods-copy relative z-10">
           <p className="store-eyebrow">Built for beyond</p>
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
-          <div className="ultra-airpods-actions">
+          <span className="store-hero-price-pill inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-3.5 py-1 text-xs font-bold text-white/90 backdrop-blur-md mt-2">
+            {ultraPrice}
+          </span>
+          <div className="ultra-airpods-actions mt-3">
             <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">Buy</Link>
           </div>
         </div>
-        <img
-          src="/products/homepage/watch-ultra-4.webp"
-          alt={campaignAssets.watch.ultraHero.alt}
-          loading="lazy"
-          decoding="async"
-          onError={(event) => {
-            if (campaignAssets.watch.ultraHero.fallback && !event.currentTarget.dataset.fallbackApplied) {
-              event.currentTarget.dataset.fallbackApplied = "true";
-              event.currentTarget.src = campaignAssets.watch.ultraHero.fallback;
-            }
-          }}
-        />
+        <div className="ultra-airpods-video-wrapper absolute inset-0 z-0 overflow-hidden">
+          <CinematicVideo
+            src="/videos/homepage/watch-ultra-4.mp4"
+            poster="/products/homepage/watch-ultra-4.webp"
+            alt={campaignAssets.watch.ultraHero.alt}
+          />
+        </div>
       </article>
-      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title" id="airpods-5">
-        <div className="ultra-airpods-copy">
+
+      <article className="ultra-airpods-panel ultra-airpods-lifestyle relative overflow-hidden" aria-labelledby="airpods-story-title" id="airpods-5">
+        <div className="ultra-airpods-copy relative z-10">
           <p className="store-eyebrow">Move with your music</p>
           <h2 id="airpods-story-title">AirPods 5</h2>
           <span>Freedom to listen wherever the rhythm takes you.</span>
-          <div className="ultra-airpods-actions">
+          <span className="store-hero-price-pill inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-black/5 px-3.5 py-1 text-xs font-bold text-ink/80 backdrop-blur-md mt-2">
+            {airpodsPrice}
+          </span>
+          <div className="ultra-airpods-actions mt-3">
             <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">Buy</Link>
           </div>
@@ -281,7 +324,7 @@ function UltraAirpodsStory() {
               className="ultra-airpods-lifestyle-img"
               width={590}
               height={610}
-              loading="eager"
+              loading="lazy"
               decoding="async"
             />
           </picture>
@@ -295,10 +338,10 @@ function PremiumTrustStrip() {
   return (
     <section className="premium-trust-strip" aria-label="Buy and Sell GH customer benefits">
       <div className="premium-trust-strip-inner">
-        <TrustPoint icon={<BadgeCheck aria-hidden="true" />} title="Clear Availability" description="Stock and enquiry products are labelled separately." />
-        <TrustPoint icon={<ShieldCheck aria-hidden="true" />} title="Order Review" description="Details are reviewed before payment instructions." />
-        <TrustPoint icon={<Truck aria-hidden="true" />} title="Pickup & Delivery" description="Final arrangements are confirmed directly." />
-        <TrustPoint icon={<RefreshCcw aria-hidden="true" />} title="Trade-In Available" description="Upgrade using your current device." />
+        <TrustPoint icon={<BadgeCheck aria-hidden="true" />} title="Verified Devices" description="100% original hardware, tested and backed with shop warranty." />
+        <TrustPoint icon={<Truck aria-hidden="true" />} title="Ghana-Wide Delivery" description="Same-day dispatch in Accra · Secure tracked nationwide delivery." />
+        <TrustPoint icon={<ShieldCheck aria-hidden="true" />} title="Dome Pillar 2 Pickup" description="Inspect and pick up directly at our verified Accra store." />
+        <TrustPoint icon={<RefreshCcw aria-hidden="true" />} title="Instant Trade-In" description="Upgrade or swap with top value for your current device." />
       </div>
     </section>
   );
@@ -334,30 +377,54 @@ function ProductCampaign({ campaign, top = false, priority = false }: { campaign
   }, []);
 
   return (
-    <section ref={sectionRef} className={`home-product-campaign home-product-campaign-${campaign.theme} home-product-campaign-${slug}${top ? " home-product-campaign-top" : ""}`} aria-labelledby={`home-campaign-${slug}`}>
+    <section
+      ref={sectionRef}
+      className={`home-product-campaign home-product-campaign-${campaign.theme} home-product-campaign-${slug}${top ? " home-product-campaign-top" : ""}`}
+      aria-labelledby={`home-campaign-${slug}`}
+    >
       <div className="home-product-campaign-copy">
         <p className="store-eyebrow">{campaign.eyebrow}</p>
         <h2 id={`home-campaign-${slug}`}>{campaign.title}</h2>
         <p>{campaign.description}</p>
+        {campaign.priceLabel && (
+          <span className="store-hero-price-pill mt-1 mb-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/10 px-3.5 py-1 text-xs font-bold text-ink/80 dark:text-gold-light">
+            {campaign.priceLabel}
+          </span>
+        )}
         {campaign.availabilityText && <p className="store-launch-availability">{campaign.availabilityText}</p>}
         <div className="store-actions">
           <Link className="store-button store-button-primary" to={campaign.primaryTo}>{campaign.primaryLabel}</Link>
-          {campaign.secondaryLabel && campaign.secondaryTo && <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>}
+          {campaign.secondaryLabel && campaign.secondaryTo && (
+            <Link className="store-button store-button-secondary" to={campaign.secondaryTo}>{campaign.secondaryLabel}</Link>
+          )}
         </div>
       </div>
       <div className="home-product-campaign-art">
-        <img
-          src={campaign.image}
-          alt={campaign.imageAlt}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : undefined}
-          decoding="async"
-          onError={(event) => {
-            if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
-            event.currentTarget.dataset.fallbackApplied = "true";
-            event.currentTarget.src = campaign.fallbackImage;
-          }}
-        />
+        {campaign.video ? (
+          <div className="w-full max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-2xl">
+            <CinematicVideo
+              src={campaign.video.src}
+              mobileSrc={campaign.video.mobileSrc}
+              poster={campaign.video.poster}
+              alt={campaign.imageAlt}
+              priority={priority}
+              aspectRatio="16/10"
+            />
+          </div>
+        ) : (
+          <img
+            src={campaign.image}
+            alt={campaign.imageAlt}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            decoding="async"
+            onError={(event) => {
+              if (!campaign.fallbackImage || event.currentTarget.dataset.fallbackApplied) return;
+              event.currentTarget.dataset.fallbackApplied = "true";
+              event.currentTarget.src = campaign.fallbackImage;
+            }}
+          />
+        )}
       </div>
     </section>
   );
@@ -486,5 +553,3 @@ function getLaunchAvailability(products: Product[], fallbackName: string) {
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
-
-

@@ -5,6 +5,7 @@ import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import type { Product } from "../../../types/product";
 import { formatGhs } from "../../../utils/format";
 import { resolveCatalogueProductImage, resolveProductImage } from "../../../utils/productImages";
+import { getCardPriceDisplay } from "../../../utils/productPricing";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 
 interface StoreCategoryCatalogGridProps {
@@ -142,15 +143,12 @@ export function StoreCategoryCatalogGrid({
 function StoreCatalogProductCard({ product, family }: { product: Product; family: ProductFamilyKey }) {
   const isPurchasable = isProductPurchasable(product);
   const isIphoneDuo = product.slug?.includes("iphone-duo") || product.name?.toLowerCase().includes("iphone duo");
-  const isViewPricing = isIphoneDuo || product.priceOnRequest || product.price <= 0;
+  const priceDisplay = getCardPriceDisplay(product);
+  const isViewPricing = isIphoneDuo || priceDisplay.isEnquiry;
   const primaryCta = isViewPricing ? "View Pricing" : (isPurchasable ? "Buy" : "View Pricing");
 
   const buyPath = getProductBuyPath(family, product.slug);
   const resolvedImg = resolveCatalogueProductImage(product) || resolveProductImage(product);
-
-  const priceText = product.priceOnRequest || product.price <= 0
-    ? "Contact for price"
-    : `From ${formatGhs(product.price)}`;
 
   return (
     <article className="store-cat-grid-card">
@@ -194,7 +192,7 @@ function StoreCatalogProductCard({ product, family }: { product: Product; family
         )}
 
         <div className="store-cat-grid-card-bottom">
-          <span className="store-cat-grid-card-price">{priceText}</span>
+          <span className="store-cat-grid-card-price">{priceDisplay.current}</span>
 
           <Link
             to={buyPath}

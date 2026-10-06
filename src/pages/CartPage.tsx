@@ -151,33 +151,46 @@ export function CartPage() {
           {items.length === 0 ? (
             <EmptyCart />
           ) : (
-            items.map((item) => (
-              <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={`${item.product.id}-${item.storage}-${item.color}`}>
-                <Link to={`/product/${item.product.slug}`} aria-label={`View ${item.product.name}`}>
-                  <ProductVisual product={item.product} />
-                </Link>
-                <div className="min-w-0">
-                  <Link to={`/product/${item.product.slug}`} className="text-xl font-black text-ink hover:text-gold-dark">{item.product.name}</Link>
-                  <dl className="mt-3 grid gap-1 text-sm font-bold text-ink/64 sm:grid-cols-2">
-                    <Detail label="Storage" value={item.storage} />
-                    <Detail label="Colour" value={item.color} />
-                    <Detail label="Condition" value={item.product.condition} />
-                    {item.product.batteryHealth && <Detail label="Battery" value={item.product.batteryHealth} />}
-                    {item.product.warrantyInfo && <Detail label="Warranty" value={item.product.warrantyInfo} />}
-                    <Detail label="Unit price" value={formatGhs(item.product.price)} />
-                  </dl>
-                  <p className="mt-3 text-lg font-black">Line total: {formatGhs(item.product.price * item.quantity)}</p>
-                </div>
-                <div className="cart-item-controls flex items-center gap-2 sm:flex-col sm:items-end">
-                  <div className="quantity-stepper">
-                    <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity - 1)}><Minus size={16} /></button>
-                    <span className="min-w-8 text-center font-black">{item.quantity}</span>
-                    <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity + 1)}><Plus size={16} /></button>
+            items.map((item) => {
+              const unitPrice = typeof item.configuredPrice === "number" && item.configuredPrice > 0 ? item.configuredPrice : item.product.price;
+              const hasSale = Boolean(item.originalPrice && item.originalPrice > unitPrice);
+              const displayName = item.variantTitle ?? item.product.name;
+              const itemKey = `${item.product.id}-${item.storage}-${item.color}-${item.variantId ?? "def"}`;
+
+              return (
+                <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={itemKey}>
+                  <Link to={`/product/${item.product.slug}`} aria-label={`View ${displayName}`}>
+                    <ProductVisual product={item.product} />
+                  </Link>
+                  <div className="min-w-0">
+                    <Link to={`/product/${item.product.slug}`} className="text-xl font-black text-ink hover:text-gold-dark">{displayName}</Link>
+                    <dl className="mt-3 grid gap-1 text-sm font-bold text-ink/64 sm:grid-cols-2">
+                      <Detail label="Storage" value={item.storage} />
+                      <Detail label="Colour" value={item.color} />
+                      <Detail label="Condition" value={item.product.condition} />
+                      {item.product.batteryHealth && <Detail label="Battery" value={item.product.batteryHealth} />}
+                      {item.product.warrantyInfo && <Detail label="Warranty" value={item.product.warrantyInfo} />}
+                      <div className="flex gap-2 items-center">
+                        <dt className="text-ink/50">Unit price:</dt>
+                        <dd className="font-bold text-ink">
+                          {formatGhs(unitPrice)}
+                          {hasSale && <span className="ml-2 text-xs line-through text-ink/40">{formatGhs(item.originalPrice!)}</span>}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="mt-3 text-lg font-black">Line total: {formatGhs(unitPrice * item.quantity)}</p>
                   </div>
-                  <button className="icon-button" type="button" aria-label="Remove item" onClick={() => removeItem(item.product.id, item.storage, item.color)}><Trash2 size={18} /></button>
-                </div>
-              </article>
-            ))
+                  <div className="cart-item-controls flex items-center gap-2 sm:flex-col sm:items-end">
+                    <div className="quantity-stepper">
+                      <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity - 1, item.variantId)}><Minus size={16} /></button>
+                      <span className="min-w-8 text-center font-black">{item.quantity}</span>
+                      <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(item.product.id, item.storage, item.color, item.quantity + 1, item.variantId)}><Plus size={16} /></button>
+                    </div>
+                    <button className="icon-button" type="button" aria-label="Remove item" onClick={() => removeItem(item.product.id, item.storage, item.color, item.variantId)}><Trash2 size={18} /></button>
+                  </div>
+                </article>
+              );
+            })
           )}
         </div>
 
@@ -188,20 +201,26 @@ export function CartPage() {
           <div className="mt-5 rounded-lg border border-black/7 bg-page p-4">
             <h3 className="text-base font-black">Summary</h3>
             <div className="mt-4 grid gap-3">
-              {items.map((item) => (
-                <div className="order-summary-line" key={`summary-${item.product.id}-${item.storage}-${item.color}`}>
-                  {resolveProductImage(item.product) ? (
-                    <img src={resolveProductImage(item.product)?.src} alt={resolveProductImage(item.product)?.alt ?? item.product.name} loading="lazy" />
-                  ) : (
-                    <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>
-                  )}
-                  <div>
-                    <strong>{item.product.name}</strong>
-                    <span>{item.storage} | {item.color} | {item.product.condition}</span>
-                    <small>{item.quantity} x {formatGhs(item.product.price)} = {formatGhs(item.product.price * item.quantity)}</small>
+              {items.map((item) => {
+                const unitPrice = typeof item.configuredPrice === "number" && item.configuredPrice > 0 ? item.configuredPrice : item.product.price;
+                const displayName = item.variantTitle ?? item.product.name;
+                const summaryKey = `summary-${item.product.id}-${item.storage}-${item.color}-${item.variantId ?? "def"}`;
+
+                return (
+                  <div className="order-summary-line" key={summaryKey}>
+                    {resolveProductImage(item.product) ? (
+                      <img src={resolveProductImage(item.product)?.src} alt={resolveProductImage(item.product)?.alt ?? displayName} loading="lazy" />
+                    ) : (
+                      <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>
+                    )}
+                    <div>
+                      <strong>{displayName}</strong>
+                      <span>{item.storage} | {item.color} | {item.product.condition}</span>
+                      <small>{item.quantity} x {formatGhs(unitPrice)} = {formatGhs(unitPrice * item.quantity)}</small>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {!hasItems && <p className="text-sm font-bold text-ink/60">No products selected yet.</p>}
             </div>
             <div className="mt-5 grid gap-2 border-t border-black/10 pt-4 text-sm font-bold text-ink/65">

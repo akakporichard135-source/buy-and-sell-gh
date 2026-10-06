@@ -2,12 +2,19 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CategoryFeaturedCardData } from "./categoryData";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
+import { useProductCatalog } from "../../../catalog/ProductCatalogContext";
+import { getCardPriceDisplay } from "../../../utils/productPricing";
 
 interface StoreCategoryCardProps {
   card: CategoryFeaturedCardData;
 }
 
 export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
+  const { activeProducts } = useProductCatalog();
+  const matchedProduct = activeProducts.find((p) => p.slug === card.id || card.buyPath.endsWith(`/${p.slug}`));
+  const livePriceDisplay = matchedProduct ? getCardPriceDisplay(matchedProduct) : null;
+  const displayPrice = livePriceDisplay && !livePriceDisplay.isEnquiry ? livePriceDisplay.current : card.price;
+
   // Strictly enforce iPhone Duo has NO "Buy" button (only "View Pricing")
   const isIphoneDuo = card.id.includes("duo") || card.title.toLowerCase().includes("duo");
   const isViewPricing = isIphoneDuo || card.isViewPricingOnly;
@@ -31,7 +38,7 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
         <p className="store-cat-card-subtitle">{card.subtitle}</p>
 
         <div className="store-cat-card-price-row">
-          <span className="store-cat-card-price">{card.price}</span>
+          <span className="store-cat-card-price">{displayPrice}</span>
         </div>
       </div>
 

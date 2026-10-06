@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
+import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
-import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -39,10 +39,8 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
 
   // Sync state if catalogProduct changes
   useEffect(() => {
-    if (catalogProduct) {
-      if (catalogProduct.slug.includes("13")) {
-        setScreenSize("13-inch");
-      }
+    if (catalogProduct && catalogProduct.slug.includes("13")) {
+      setScreenSize("13-inch");
     }
   }, [catalogProduct]);
 
@@ -53,37 +51,121 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     }
   }, [storage, glass]);
 
-  const proImage11 = localCatalogueImageBySlug["ipad-pro-11-inch-m4"] || "/products/campaigns/ipad-air-colors.webp";
-  const proImage13 = localCatalogueImageBySlug["ipad-pro-13-inch-m4"] || "/products/campaigns/ipad-air-colors.webp";
+  const thumbnails = useMemo(() => [
+    { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro in ${finish} on studio stage` },
+    { src: "/products/campaigns/ipad-pro-11.webp", alt: "11-inch iPad Pro Ultra Retina XDR display" },
+    { src: "/products/campaigns/ipad-pro-13.webp", alt: "13-inch iPad Pro Ultra Retina XDR expansive display" },
+    { src: "/products/campaigns/ipad-air-detail.webp", alt: "iPad Pro ultra-thin profile and camera system" },
+    { src: "/products/campaigns/ipad-keyboard-accessory.webp", alt: "iPad Pro with Magic Keyboard workstation" },
+  ], [finish]);
 
-  const currentDisplayImg = screenSize === "13-inch" ? proImage13 : proImage11;
+  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/ipad-pro-cinematic.webp";
 
-  const thumbnails = [
-    { src: currentDisplayImg, alt: `iPad Pro ${screenSize} in ${finish}` },
-    { src: "/products/campaigns/ipad-air-detail.webp", alt: "iPad Pro ultra-thin design and camera system" },
-    { src: "/products/campaigns/ipad-air-space-gray.webp", alt: "iPad Pro in Space Black" },
-  ];
+  const fallbackProduct: Product = useMemo(() => {
+    const is13 = screenSize === "13-inch";
+    const isCell = connectivity === "Wi-Fi + Cellular";
+    const isNano = (storage === "1TB" || storage === "2TB") && glass === "Nano-texture glass";
 
-  const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
+    const storagePriceAdd: Record<string, number> = {
+      "256GB": 0,
+      "512GB": 2200,
+      "1TB": 5800,
+      "2TB": 10800,
+    };
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Price confirmed on enquiry";
+    const basePrice = (is13 ? 21500 : 16800) +
+      (storagePriceAdd[storage] || 0) +
+      (isCell ? 2400 : 0) +
+      (isNano ? 1600 : 0);
+
+    const slug = "ipad-pro";
+
+    const variantList = [
+      // 11-inch Wi-Fi
+      { id: "ip-11-256-wifi", productId: slug, title: "11-inch 256GB Wi-Fi", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi", price: 16800, previousPrice: 17800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-512-wifi", productId: slug, title: "11-inch 512GB Wi-Fi", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi", price: 19000, previousPrice: 20000, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-1tb-wifi", productId: slug, title: "11-inch 1TB Wi-Fi", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi", price: 22600, previousPrice: 23600, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-2tb-wifi", productId: slug, title: "11-inch 2TB Wi-Fi", screenSize: "11-inch", storage: "2TB", connectivity: "Wi-Fi", price: 27600, previousPrice: 28600, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: true, stockStatus: "In Stock" as const },
+      // 11-inch Cellular
+      { id: "ip-11-256-cell", productId: slug, title: "11-inch 256GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 19200, previousPrice: 20200, condition: "Brand New" as const, stockQuantity: 10, position: 5, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-512-cell", productId: slug, title: "11-inch 512GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 21400, previousPrice: 22400, condition: "Brand New" as const, stockQuantity: 10, position: 6, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-1tb-cell", productId: slug, title: "11-inch 1TB Wi-Fi + Cellular", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi + Cellular", price: 25000, previousPrice: 26000, condition: "Brand New" as const, stockQuantity: 10, position: 7, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-11-2tb-cell", productId: slug, title: "11-inch 2TB Wi-Fi + Cellular", screenSize: "11-inch", storage: "2TB", connectivity: "Wi-Fi + Cellular", price: 30000, previousPrice: 31000, condition: "Brand New" as const, stockQuantity: 10, position: 8, available: true, isSale: true, stockStatus: "In Stock" as const },
+      // 13-inch Wi-Fi
+      { id: "ip-13-256-wifi", productId: slug, title: "13-inch 256GB Wi-Fi", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi", price: 21500, previousPrice: 22800, condition: "Brand New" as const, stockQuantity: 10, position: 9, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-512-wifi", productId: slug, title: "13-inch 512GB Wi-Fi", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi", price: 23700, previousPrice: 25000, condition: "Brand New" as const, stockQuantity: 10, position: 10, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-1tb-wifi", productId: slug, title: "13-inch 1TB Wi-Fi", screenSize: "13-inch", storage: "1TB", connectivity: "Wi-Fi", price: 27300, previousPrice: 28600, condition: "Brand New" as const, stockQuantity: 10, position: 11, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-2tb-wifi", productId: slug, title: "13-inch 2TB Wi-Fi", screenSize: "13-inch", storage: "2TB", connectivity: "Wi-Fi", price: 32300, previousPrice: 33600, condition: "Brand New" as const, stockQuantity: 10, position: 12, available: true, isSale: true, stockStatus: "In Stock" as const },
+      // 13-inch Cellular
+      { id: "ip-13-256-cell", productId: slug, title: "13-inch 256GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 23900, previousPrice: 25200, condition: "Brand New" as const, stockQuantity: 10, position: 13, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-512-cell", productId: slug, title: "13-inch 512GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 26100, previousPrice: 27400, condition: "Brand New" as const, stockQuantity: 10, position: 14, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-1tb-cell", productId: slug, title: "13-inch 1TB Wi-Fi + Cellular", screenSize: "13-inch", storage: "1TB", connectivity: "Wi-Fi + Cellular", price: 29700, previousPrice: 31000, condition: "Brand New" as const, stockQuantity: 10, position: 15, available: true, isSale: true, stockStatus: "In Stock" as const },
+      { id: "ip-13-2tb-cell", productId: slug, title: "13-inch 2TB Wi-Fi + Cellular", screenSize: "13-inch", storage: "2TB", connectivity: "Wi-Fi + Cellular", price: 34700, previousPrice: 36000, condition: "Brand New" as const, stockQuantity: 10, position: 16, available: true, isSale: true, stockStatus: "In Stock" as const },
+    ];
+
+    return {
+      id: slug,
+      slug,
+      name: "iPad Pro",
+      model: "iPad Pro",
+      brand: "Apple",
+      category: "iPads",
+      condition: "Brand New",
+      price: basePrice,
+      storage: ["256GB", "512GB", "1TB", "2TB"],
+      colors: IPAD_PRO_FINISHES.map((c) => c.name),
+      description: "iPad Pro with Ultra Retina XDR display powered by Tandem OLED, Apple M4 chip, and ultra-thin design.",
+      specs: ["11-inch or 13-inch Ultra Retina XDR Display", "Tandem OLED Technology", "Apple M4 Silicon", "Nano-texture Glass Option", "Pro Camera System with LiDAR"],
+      box: ["iPad Pro", "USB-C Charge Cable (1m)", "20W USB-C Power Adapter"],
+      imageTone: "dark",
+      images: thumbnails,
+      variants: variantList,
+      available: true,
+      stockStatus: "In Stock" as const,
+      stockQuantity: 10,
+      featured: true,
+    };
+  }, [screenSize, storage, connectivity, glass, thumbnails]);
+
+  const isExactMatch = Boolean(
+    catalogProduct &&
+      catalogProduct.slug === "ipad-pro" &&
+      catalogProduct.condition === "Brand New" &&
+      catalogProduct.variants &&
+      catalogProduct.variants.length > 0
+  );
+  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+
+  const configured = resolveConfiguredPrice(activeProduct, {
+    screenSize,
+    storage,
+    connectivity,
+  });
+
+  const nanoTextureDelta = (storage === "1TB" || storage === "2TB") && glass === "Nano-texture glass" ? 1600 : 0;
+  const finalPrice = configured.price + nanoTextureDelta;
+  const priceLabel = formatGhs(finalPrice);
+  const previousPriceLabel = configured.previousPrice ? formatGhs(configured.previousPrice + nanoTextureDelta) : undefined;
+  const tradeInBreakdown = calculateTradeInBreakdown(finalPrice, tradeIn);
 
   const fullConfigurationTitle = `iPad Pro ${screenSize} (${storage}, ${finish}, ${connectivity}${glass === "Nano-texture glass" ? ", Nano-texture" : ""})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability and current Ghana pricing.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    if (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const added = addItem(catalogProduct, storage, `${finish} / ${connectivity} / ${glass}`, 1);
-      if (added) {
-        setNotice(`${fullConfigurationTitle} added to your bag.`);
-      }
+    const added = addItem(
+      activeProduct,
+      storage,
+      `${screenSize} / ${finish} / ${connectivity}${glass === "Nano-texture glass" ? " / Nano-texture" : ""}`,
+      1,
+      configured.variant
+    );
+    if (added) {
+      setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp enquiry...`);
+      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp concierge...`);
       window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
     }
   };
@@ -96,7 +178,8 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       activeImageSrc={activeImage}
       activeImageAlt={`iPad Pro ${screenSize}`}
       priceLabel={priceLabel}
-      badge="Ultra Retina XDR"
+      badge="Ultra Retina XDR OLED"
+      darkStage={true}
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
@@ -257,6 +340,8 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel="Add to Bag"
         whatsAppHref={whatsAppEnquiry}

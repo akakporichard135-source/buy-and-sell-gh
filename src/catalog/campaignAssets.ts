@@ -34,6 +34,10 @@ export const campaignAssets = {
     front: { src: `${root}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro" },
     silver: { src: `${root}/iphone-18-pro-silver.webp`, alt: "Silver iPhone 18 Pro shown from the back" },
     colors: { src: `${root}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes" },
+    burgundy: { src: `${root}/iphone-18-pro-burgundy-finish.webp`, alt: "iPhone 18 Pro in Deep Burgundy aerospace-grade titanium finish" },
+    cameraMacro: { src: `${root}/iphone-18-pro-camera-macro.jpg`, alt: "Close-up macro of the iPhone 18 Pro triple camera system plateau" },
+    chipA19: { src: `${root}/iphone-18-pro-chip-a19.jpg`, alt: "A19 Pro silicon chip architecture" },
+    lifestyle: { src: `${root}/iphone-18-pro-lifestyle-accra.jpg`, alt: "Ghanaian creative director holding iPhone 18 Pro in Accra" },
   },
   duo: {
     hero: { src: "/products/homepage/iphone-duo.webp", alt: "An open premium foldable phone held naturally in two hands" },

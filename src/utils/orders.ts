@@ -53,6 +53,7 @@ export const buildOrderSubmissionInput = (
     selectedStorage: item.storage,
     selectedColour: item.color,
     quantity: item.quantity,
+    variantId: item.variantId,
   })),
 });
 

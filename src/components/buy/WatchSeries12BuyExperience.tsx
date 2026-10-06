@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
-import { formatGhs } from "../../utils/format";
+import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
@@ -52,33 +52,77 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = [
+  const thumbnails = useMemo(() => [
+    { src: "/products/campaigns/watch-series-12-cinematic.webp", alt: "Apple Watch Series 12 floating in precision studio light" },
     { src: "/products/campaigns/watch-series-12-hero.webp", alt: "Apple Watch Series 12 with sport band" },
     { src: "/products/campaigns/watch-series-12-angle.webp", alt: "Apple Watch Series 12 profile" },
     { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
-  ];
+    { src: "/products/campaigns/watch-sensor-detail.webp", alt: "Apple Watch Series 12 biosensor array" },
+  ], []);
 
-  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/watch-series-12-hero.webp";
+  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/watch-series-12-cinematic.webp";
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Price confirmed on enquiry";
+  const fallbackProduct: Product = useMemo(() => {
+    const is46 = caseSize === "46mm";
+    const isCellular = connectivity === "GPS + Cellular";
+    const basePrice = isCellular ? (is46 ? 10200 : 9500) : (is46 ? 8400 : 7800);
+    const slug = "apple-watch-series-12";
+    return {
+      id: slug,
+      slug,
+      name: "Apple Watch Series 12",
+      model: "Apple Watch Series 12",
+      brand: "Apple",
+      category: "Watches",
+      condition: "Brand New",
+      price: basePrice,
+      storage: ["42mm", "46mm"],
+      colors: WATCH_12_FINISHES.map((f) => f.name),
+      description: "Apple Watch Series 12 with ultra-thin case, wide-angle OLED display, and advanced health sensors.",
+      specs: ["Wide-Angle OLED Display", "S10 SiP", "Sleep Apnea Notifications", "50m Water Resistance"],
+      box: ["Apple Watch Series 12", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
+      imageTone: "light",
+      images: thumbnails,
+      variants: [
+        { id: "aws12-42-gps", productId: slug, title: "42mm GPS", screenSize: "42mm", connectivity: "GPS", price: 7800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: "aws12-46-gps", productId: slug, title: "46mm GPS", screenSize: "46mm", connectivity: "GPS", price: 8400, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: "aws12-42-cell", productId: slug, title: "42mm GPS + Cellular", screenSize: "42mm", connectivity: "GPS + Cellular", price: 9500, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: "aws12-46-cell", productId: slug, title: "46mm GPS + Cellular", screenSize: "46mm", connectivity: "GPS + Cellular", price: 10200, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
+      ],
+      available: true,
+      stockStatus: "In Stock" as const,
+      stockQuantity: 10,
+      featured: true,
+    };
+  }, [caseSize, connectivity, thumbnails]);
+
+  const isExactMatch = Boolean(catalogProduct && (catalogProduct.slug === "apple-watch-series-12" || catalogProduct.name?.includes("12")));
+  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+
+  const configured = resolveConfiguredPrice(activeProduct, {
+    screenSize: caseSize,
+    connectivity,
+  });
+  const priceLabel = configured.formattedPrice;
+  const previousPriceLabel = configured.formattedPreviousPrice;
+  const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const fullConfigurationTitle = `Apple Watch Series 12 (${caseSize}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability and current Ghana pricing.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    if (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const added = addItem(catalogProduct, connectivity, `${finish} / ${bandStyle}`, 1);
-      if (added) {
-        setNotice(`${fullConfigurationTitle} added to your bag.`);
-      }
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp enquiry...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+    const added = addItem(
+      activeProduct,
+      `${caseSize} / ${connectivity}`,
+      `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
+      1,
+      configured.variant
+    );
+    if (added) {
+      setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);
     }
   };
 
@@ -238,6 +282,8 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel="Add to Bag"
         whatsAppHref={whatsAppEnquiry}

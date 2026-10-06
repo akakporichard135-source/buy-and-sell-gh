@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
+import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
@@ -23,10 +24,10 @@ const MACBOOK_FINISHES: ColorOption[] = [
 ];
 
 const FINISH_IMAGE_MAP: Record<string, string> = {
-  Midnight: "/products/campaigns/macbook-air-midnight-shell.webp",
-  Starlight: "/products/homepage/macbook-air.jpg",
-  "Space Gray": "/products/campaigns/macbook-air-floating.webp",
-  Silver: "/products/campaigns/macbook-air-floating.webp",
+  Midnight: "/products/campaigns/macbook-air-cinematic.webp",
+  Starlight: "/products/campaigns/macbook-air-starlight-studio.jpg",
+  "Space Gray": "/products/campaigns/macbook-air-cutout.webp",
+  Silver: "/products/campaigns/macbook-air-cutout.webp",
 };
 
 export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -46,31 +47,63 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
 
   const thumbnails = [
     { src: currentFinishImg, alt: `MacBook Air in ${finish}` },
-    { src: "/products/campaigns/macbook-air-floating.webp", alt: "MacBook Air open Liquid Retina display" },
-    { src: "/products/campaigns/macbook-air-lineup.webp", alt: "MacBook Air lineup in all finishes" },
+    { src: "/products/campaigns/macbook-air-cutout.webp", alt: "MacBook Air open Liquid Retina display" },
+    { src: "/products/campaigns/macbook-air-starlight-studio.jpg", alt: "MacBook Air studio profile" },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Price confirmed on enquiry";
+  const storageOptions = useMemo(() => ["256GB", "512GB", "1TB", "2TB"], []);
+
+  const fallbackProduct: Product = useMemo(() => {
+    const is15 = screenSize === "15-inch";
+    const basePrice = is15 ? 18500 : 13500;
+    const slug = is15 ? "macbook-air-15-m4" : "macbook-air-13-m4";
+    return {
+      id: slug,
+      slug,
+      name: `MacBook Air ${screenSize}`,
+      model: `MacBook Air ${screenSize}`,
+      brand: "Apple",
+      category: "MacBooks",
+      condition: "Brand New",
+      price: basePrice,
+      storage: storageOptions,
+      colors: ["Midnight", "Starlight", "Space Gray", "Silver"],
+      description: `All-new MacBook Air ${screenSize} with Liquid Retina display, Apple Silicon, and all-day battery life.`,
+      specs: ["Apple Silicon", "Liquid Retina display", "1080p FaceTime HD camera", "MagSafe 3"],
+      box: ["MacBook Air", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
+      imageTone: "light",
+      images: [{ src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` }],
+      variants: [
+        { id: `mba-${is15 ? "15" : "13"}-256`, productId: slug, title: `${screenSize} 16GB / 256GB`, storage: "256GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mba-${is15 ? "15" : "13"}-512`, productId: slug, title: `${screenSize} 16GB / 512GB`, storage: "512GB", price: basePrice + 2500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mba-${is15 ? "15" : "13"}-1tb`, productId: slug, title: `${screenSize} 16GB / 1TB`, storage: "1TB", price: basePrice + 5500, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
+        { id: `mba-${is15 ? "15" : "13"}-2tb`, productId: slug, title: `${screenSize} 16GB / 2TB`, storage: "2TB", price: basePrice + 9500, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
+      ],
+      available: true,
+      stockStatus: "In Stock" as const,
+      stockQuantity: 10,
+      featured: true,
+    };
+  }, [screenSize, storageOptions, currentFinishImg, finish]);
+
+  const activeProduct = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const configured = resolveConfiguredPrice(activeProduct, { screenSize, memory, storage });
+  const priceLabel = configured.formattedPrice;
+  const previousPriceLabel = configured.formattedPreviousPrice;
+  const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const fullConfigurationTitle = `MacBook Air ${screenSize} (${memory} / ${storage}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability and current Ghana pricing.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    if (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const added = addItem(catalogProduct, storage, `${finish} / ${memory}`, 1);
-      if (added) {
-        setNotice(`${fullConfigurationTitle} added to your bag.`);
-      }
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp enquiry...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant);
+    if (added) {
+      setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }
   };
 
@@ -209,6 +242,8 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
+        tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
         addToBagLabel="Add to Bag"
         whatsAppHref={whatsAppEnquiry}

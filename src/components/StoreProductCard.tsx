@@ -5,12 +5,14 @@ import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../cata
 import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
+import { getCardPriceDisplay } from "../utils/productPricing";
 import { storeCardFacts } from "../utils/storePresentation";
 import { ProductVisual } from "./ProductVisual";
 
 export function StoreProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
-  const enquiry = product.priceOnRequest === true || product.price <= 0;
+  const priceDisplay = getCardPriceDisplay(product);
+  const enquiry = priceDisplay.isEnquiry;
   const isPurchasable = isProductPurchasable(product);
   // iPhone Duo is strictly View Pricing only, never direct Buy
   const canDirectBuy = isPurchasable && product.slug !== "iphone-duo";
@@ -46,8 +48,8 @@ export function StoreProductCard({ product }: { product: Product }) {
         )}
 
         <div className={`store-product-price${enquiry ? " is-enquiry" : ""}`}>
-          <span className="price-current">{enquiry ? "Request Pricing" : formatGhs(product.price)}</span>
-          {!enquiry && Boolean(product.oldPrice) && <del className="price-old">{formatGhs(product.oldPrice!)}</del>}
+          <span className="price-current">{priceDisplay.current}</span>
+          {priceDisplay.previous && <del className="price-old">{priceDisplay.previous}</del>}
         </div>
 
         <div className="store-product-actions">

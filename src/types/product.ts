@@ -27,6 +27,30 @@ export interface ProductImage {
   alt: string;
 }
 
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  title: string;
+  sku?: string;
+  storage?: string;
+  condition: ProductCondition;
+  screenSize?: string;
+  chip?: string;
+  memory?: string;
+  connectivity?: string;
+  finish?: string;
+  glass?: string;
+  price: number;
+  previousPrice?: number | null;
+  isSale?: boolean;
+  stockStatus: StockStatus;
+  stockQuantity: number;
+  available: boolean;
+  position: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -40,6 +64,7 @@ export interface Product {
   previousPrice?: number;
   oldPrice?: number;
   priceOnRequest?: boolean;
+  variants?: ProductVariant[];
   storage: string[];
   condition: ProductCondition;
   colors: string[];
@@ -84,4 +109,9 @@ export interface CartItem {
   storage: string;
   color: string;
   quantity: number;
+  variantId?: string;
+  variantTitle?: string;
+  configuredPrice?: number;
+  originalPrice?: number | null;
 }
+

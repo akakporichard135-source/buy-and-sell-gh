@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SEO } from "../SEO";
 import { formatGhs } from "../../utils/format";
+import { resolveConfiguredPrice } from "../../utils/productPricing";
 import { whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
@@ -34,14 +35,24 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     ? ["512GB", "1TB", "2TB", "4TB"]
     : ["256GB", "512GB", "1TB", "2TB"];
 
-  const priceLabel = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
-    ? formatGhs(catalogProduct.price)
-    : "Advance Pre-order / Price on arrival";
+  const configured = resolveConfiguredPrice(catalogProduct, {
+    chip: chipConfig,
+    memory,
+    storage,
+  });
+
+  const priceLabel = configured.price > 0
+    ? configured.formattedPrice
+    : (catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest
+        ? formatGhs(catalogProduct.price)
+        : "Advance Pre-order / Price on arrival");
+
+  const previousPriceLabel = configured.formattedPreviousPrice;
 
   const fullConfigurationTitle = `Mac mini (${chipConfig === "M6" ? "Apple M6 chip" : "Apple M5 Pro chip"}, ${memory} / ${storage})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to place a Pre-order for ${fullConfigurationTitle}. Payment preference: ${paymentMethod}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Please confirm my pre-order registration and current arrival schedule.`
+    `Hello Buy & Sell GH, I would like to place a Pre-order for ${fullConfigurationTitle}. Price: ${priceLabel}, Payment preference: ${paymentMethod}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Please confirm my pre-order registration and current arrival schedule.`
   );
 
   const handlePreorder = () => {
@@ -182,6 +193,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Fulfillment", value: fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival" },
         ]}
         priceLabel={priceLabel}
+        previousPriceLabel={previousPriceLabel}
         onAddToBag={handlePreorder}
         addToBagLabel="Pre-order with Buy & Sell GH"
         whatsAppHref={whatsAppEnquiry}
