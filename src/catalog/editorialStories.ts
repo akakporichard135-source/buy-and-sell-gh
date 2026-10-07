@@ -24,7 +24,7 @@ export type EditorialInformation = {
 };
 
 export type EditorialCinematicVideo = {
-  src?: string;
+  src: string;
   mobileSrc?: string;
   poster: string;
   alt: string;
@@ -33,7 +33,7 @@ export type EditorialCinematicVideo = {
   subheadline?: string;
   aspectRatio?: string;
   isClean?: boolean;
-  isDesktopClean?: boolean;
+  fit?: "contain" | "cover";
 };
 
 export type EditorialStory = {
@@ -79,16 +79,16 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Finishes", title: "Four titanium expressions.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes in Space Black, Natural Titanium, Light Blue and Deep Burgundy" }, tone: "light" },
     ],
     cinematicVideo: {
-      src: "",
-      mobileSrc: "/videos/homepage/iphone-18-pro-mobile.webm?v=clean-20261006",
-      poster: "/products/story/iphone-18-pro-clean-frame.webp?v=clean-20261006",
+      src: "/videos/homepage/iphone-18-pro-mobile.webm",
+      mobileSrc: "/videos/homepage/iphone-18-pro-mobile.webm",
+      poster: "/products/story/iphone-18-pro-clean-frame.webp",
       alt: "iPhone 18 Pro in aerospace titanium cinematic presentation",
       eyebrow: "Cinematic Hardware",
       headline: "Precision in continuous motion.",
       subheadline: "Grade 5 titanium sculpted to catch every highlight, contoured for effortless grip.",
       aspectRatio: "16/9",
       isClean: true,
-      isDesktopClean: false,
+      fit: "contain",
     },
     chapters: [
       {
@@ -190,15 +190,14 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Together", title: "Two sides of one idea.", image: { src: `${campaign}/iphone-duo-pair.webp`, alt: "Two iPhone Duo devices showing open and closed versatility" }, tone: "ink" },
     ],
     cinematicVideo: {
-      src: "",
-      poster: "/products/homepage/iphone-duo.webp?v=clean-20261006",
+      src: "/videos/homepage/iphone-duo.mp4",
+      poster: "/products/homepage/iphone-duo.webp",
       alt: "iPhone Duo dual-screen foldable phone in motion",
       eyebrow: "Dual Canvas",
       headline: "Engineered to unfold seamlessly.",
       subheadline: "A continuous dual-display experience articulated on a precision multi-axis hinge.",
       aspectRatio: "16/9",
-      isClean: false,
-      isDesktopClean: false,
+      isClean: true,
     },
     chapters: [
       { id: "fold", label: "The fold", title: "Open up the possibilities.", copy: "Closed, iPhone Duo travels effortlessly as a compact, pocket-ready phone. Unfold it, and an expansive dual-display canvas opens up new ways to read, multitask, and collaborate side by side.", image: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo unfolded showcasing wide canvas" }, tone: "light", layout: "stage" },
@@ -249,15 +248,14 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Finishes", title: "Jet Black aluminum and polished titanium.", image: { src: `${campaign}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 case options and premium materials" }, tone: "light" },
     ],
     cinematicVideo: {
-      src: "",
-      poster: "/products/homepage/watch-series-12.webp?v=clean-20261006",
+      src: "/videos/homepage/watch-series-12.mp4",
+      poster: "/products/homepage/watch-series-12.webp",
       alt: "Apple Watch Series 12 slim profile and wide-angle OLED display",
       eyebrow: "Sleek Geometry",
       headline: "Thin. Vibrant. Built for the pulse of Accra.",
       subheadline: "Wide-angle OLED brilliance in our thinnest case architecture ever made.",
       aspectRatio: "16/9",
-      isClean: false,
-      isDesktopClean: false,
+      isClean: true,
     },
     chapters: [
       {
@@ -359,15 +357,14 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Expedition", title: "Dual-frequency GPS and 100m water resistance.", image: { src: `${campaign}/watch-ultra-4-rugged.webp`, alt: "Apple Watch Ultra 4 expedition endurance" }, tone: "ink" },
     ],
     cinematicVideo: {
-      src: "",
-      poster: "/products/homepage/watch-ultra-4.webp?v=clean-20261006",
+      src: "/videos/homepage/watch-ultra-4.mp4",
+      poster: "/products/homepage/watch-ultra-4.webp",
       alt: "Apple Watch Ultra 4 rugged 49mm aerospace titanium in motion",
       eyebrow: "Extreme Environments",
       headline: "49mm of uncompromising titanium.",
       subheadline: "Built to endure tropical trails, Atlantic currents, and multi-day expeditions across Ghana.",
       aspectRatio: "16/9",
-      isClean: false,
-      isDesktopClean: false,
+      isClean: true,
     },
     chapters: [
       {

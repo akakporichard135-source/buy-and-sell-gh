@@ -1069,6 +1069,30 @@
   object-position: center;
 }
 
+.cinematic-video-fit-contain .cinematic-video-media,
+.cinematic-video-fit-contain .cinematic-video-poster {
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Art-directed Presentation for iPhone 18 Pro Clean Cinematic */
+.editorial-story-iphone-18-pro .editorial-cinematic-opening-media {
+  max-width: min(100vw, 1020px);
+}
+
+.editorial-story-iphone-18-pro .editorial-cinematic-opening-media .cinematic-video-container {
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 80px rgba(138, 28, 62, 0.14);
+}
+
+@media (min-width: 1024px) {
+  .editorial-story-iphone-18-pro .editorial-cinematic-opening-media .cinematic-video-container {
+    aspect-ratio: 16/10 !important;
+    max-height: 580px;
+  }
+}
+
 .editorial-tone-ink .cinematic-clean-fallback {
   background: #000000;
 }
@@ -1084,6 +1108,10 @@
   .editorial-cinematic-opening-media .cinematic-video-container {
     border-radius: 14px;
     aspect-ratio: 16/10 !important;
+  }
+  .editorial-story-iphone-18-pro .editorial-cinematic-opening-media .cinematic-video-container {
+    aspect-ratio: 4/5 !important;
+    max-height: 480px;
   }
   .editorial-hardware-anchor {
     padding-block: 48px;

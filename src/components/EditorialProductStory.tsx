@@ -80,7 +80,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               alt={story.cinematicVideo.alt}
               aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
               isClean={story.cinematicVideo.isClean}
-              isDesktopClean={story.cinematicVideo.isDesktopClean}
+              fit={story.cinematicVideo.fit || "cover"}
               priority
             />
           </div>
