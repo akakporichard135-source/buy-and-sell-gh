@@ -189,7 +189,7 @@ export function HomePage() {
         {topCampaigns.map((campaign) => (
           <ProductCampaign campaign={campaign} key={campaign.title} top />
         ))}
-        <UltraAirpodsStory />
+        <WatchUltraStory />
 
         <CampaignPair campaigns={featuredMacCampaigns} label="MacBook Air and Mac mini" className="home-product-pair-macbooks" />
         <CampaignPair campaigns={productTiles} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" />
@@ -238,15 +238,15 @@ function Iphone18Hero() {
   );
 }
 
-function UltraAirpodsStory() {
+function WatchUltraStory() {
   return (
-    <section className="ultra-airpods-story" aria-label="Apple Watch Ultra 4 and AirPods 5">
-      <article className="ultra-airpods-panel ultra-airpods-ultra" aria-labelledby="ultra-story-title">
-        <div className="ultra-airpods-copy">
+    <section className="watch-ultra-story" aria-label="Apple Watch Ultra 4">
+      <article className="watch-ultra-panel" aria-labelledby="ultra-story-title">
+        <div className="watch-ultra-copy">
           <p className="store-eyebrow">Built for beyond</p>
           <h2 id="ultra-story-title">Apple Watch Ultra 4</h2>
           <span>Rugged capability. Precision without compromise.</span>
-          <div className="ultra-airpods-actions">
+          <div className="watch-ultra-actions">
             <Link className="store-button store-button-primary" to="/watch/apple-watch-ultra-4">Learn more</Link>
             <Link className="store-button store-button-secondary" to="/shop/buy-watch/apple-watch-ultra-4">Buy</Link>
           </div>
@@ -263,32 +263,6 @@ function UltraAirpodsStory() {
             }
           }}
         />
-      </article>
-
-      <article className="ultra-airpods-panel ultra-airpods-lifestyle" aria-labelledby="airpods-story-title" id="airpods-5">
-        <div className="ultra-airpods-copy">
-          <p className="store-eyebrow">Move with your music</p>
-          <h2 id="airpods-story-title">AirPods 5</h2>
-          <span>Freedom to listen wherever the rhythm takes you.</span>
-          <div className="ultra-airpods-actions">
-            <Link className="store-button store-button-primary" to="/airpods/airpods-5">Learn more</Link>
-            <Link className="store-button store-button-secondary" to="/shop/buy-airpods/airpods-5">Buy</Link>
-          </div>
-        </div>
-        <div className="ultra-airpods-lifestyle-media">
-          <picture>
-            <source type="image/webp" srcSet="/products/homepage/airpods-5.webp" />
-            <img
-              src="/products/homepage/airpods-5.jpg"
-              alt="AirPods 5 wireless earbuds with open charging case"
-              className="ultra-airpods-lifestyle-img"
-              width={590}
-              height={610}
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
-        </div>
       </article>
     </section>
   );

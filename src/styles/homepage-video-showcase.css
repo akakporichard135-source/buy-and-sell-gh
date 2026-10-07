@@ -204,9 +204,139 @@
 }
 
 .iphone18-launch-hero a:focus-visible,
-.ultra-airpods-story a:focus-visible {
+.ultra-airpods-story a:focus-visible,
+.watch-ultra-story a:focus-visible {
   outline: 2px solid #e5b438;
   outline-offset: 3px;
+}
+
+.watch-ultra-story {
+  display: block;
+  width: 100%;
+  padding: clamp(6px, 0.6vw, 10px) clamp(8px, 0.8vw, 12px) clamp(4px, 0.4vw, 6px);
+  background: #f5f5f7;
+  box-sizing: border-box;
+}
+
+.watch-ultra-panel {
+  position: relative;
+  min-height: clamp(540px, 46vw, 680px);
+  overflow: hidden;
+  padding: clamp(44px, 4.5vw, 64px) 24px clamp(24px, 3vw, 40px);
+  text-align: center;
+  isolation: isolate;
+  color: #fff;
+  background: #030304;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.watch-ultra-panel::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  height: 49%;
+  background: linear-gradient(180deg, #030304 0 66%, rgba(3, 3, 4, 0.96) 76%, transparent 100%);
+  content: "";
+  pointer-events: none;
+}
+
+.watch-ultra-copy {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.watch-ultra-copy .store-eyebrow {
+  color: #ff6a00;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.watch-ultra-copy h2 {
+  margin: 8px 0 0;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  color: #fff;
+}
+
+.watch-ultra-copy > span {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(1.1rem, 1.4vw, 1.35rem);
+  line-height: 1.4;
+  max-width: 44ch;
+}
+
+.watch-ultra-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 4;
+}
+
+.watch-ultra-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 180ms ease;
+}
+
+.watch-ultra-actions a:first-child {
+  background: var(--brand-gold);
+  color: #111;
+  border: 1px solid var(--brand-gold);
+}
+
+.watch-ultra-actions a:first-child:hover {
+  background: var(--brand-gold-hover);
+  border-color: var(--brand-gold-hover);
+}
+
+.watch-ultra-actions .store-button-secondary,
+.watch-ultra-actions a + a {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+}
+
+.watch-ultra-actions .store-button-secondary:hover,
+.watch-ultra-actions a + a:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.watch-ultra-panel > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center 90%;
+  transform: translateY(30px) scale(1.02);
 }
 
 .ultra-airpods-story {

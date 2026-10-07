@@ -279,7 +279,7 @@ try {
   assert.equal((homepageSource.match(/<IphoneCinematicShowcase/g) ?? []).length, 0, "The former iPhone 17 cinematic showcase is removed from the homepage");
   assert.equal((homepageSource.match(/<Iphone18Hero \/>/g) ?? []).length, 1, "Homepage renders exactly one iPhone 18 Pro launch hero");
   assert.doesNotMatch(homepageSource, /HomepageVideoShowcase|home-product-reel/, "The story-player reel is removed from the homepage");
-  assert.match(homepageSource, /<Iphone18Hero \/>[\s\S]*topCampaigns\.map\([\s\S]*<UltraAirpodsStory \/>/, "The corrected launch stack keeps the approved order");
+  assert.match(homepageSource, /<Iphone18Hero \/>[\s\S]*topCampaigns\.map\([\s\S]*<WatchUltraStory \/>/, "The corrected launch stack keeps the approved order");
   assert.doesNotMatch(homepageSource, /latestIphoneCampaign|variant:\s*"iphone"/, "The duplicate iPhone product launch is removed");
   const topCampaignNames = ["iPhone Duo", "Apple Watch Series 12"];
   let priorCampaignIndex = -1;
@@ -289,7 +289,8 @@ try {
     priorCampaignIndex = campaignIndex;
   }
   assert.doesNotMatch(homepageSource, /title: "Apple Watch"/, "The generic Watch homepage campaign is removed");
-  assert.match(homepageSource, /<UltraAirpodsStory \/>/, "Watch Ultra 4 and AirPods 5 share the approved split campaign");
+  assert.match(homepageSource, /<WatchUltraStory \/>/, "Watch Ultra 4 renders as a standalone launch story");
+  assert.doesNotMatch(homepageSource, /AirPods 5|airpods-5/, "AirPods 5 is completely removed from the homepage");
   assert.doesNotMatch(homepageSource, /Built Around You\.|Power for ideas without limits\.|Everything you need to get more done\.|Buy &amp; Sell GH Concierge|EditorialDeviceGuide|ConciergeSection/, "The removed editorial and Concierge area does not return");
   assert.doesNotMatch(homepageSource, /NewMacLaunchCampaign|newMacLaunches\[/, "Mac mini and Mac Studio are removed from the homepage without changing their routes");
   assert.match(homepageSource, /iphone18-hero-(?:still-)?img|campaignAssets\.iphone18\.hero/, "The homepage hero uses the approved still image hero");
@@ -305,7 +306,7 @@ try {
   }
   const airpodsImg = await readFile(path.join(projectRoot, "public/products/homepage", "airpods-5.jpg"));
   assert.ok(airpodsImg.length > 0, "airpods-5.jpg is a real asset");
-  assert.match(homepageMediaSource, /\/products\/homepage\/airpods-5\.jpg/, "airpods-5.jpg is used by the homepage");
+  assert.doesNotMatch(homepageMediaSource, /\/products\/homepage\/airpods-5\.(?:jpg|webp)/, "AirPods 5 media is removed from the homepage");
   const heroVideo = await readFile(path.join(projectRoot, "public/videos/homepage/iphone-18-pro.mp4"));
   assert.equal(heroVideo.toString("ascii", 4, 8), "ftyp", "The iPhone 18 Pro hero source is a real MP4 asset");
   assert.match(homepageSource, /const productTiles: Campaign\[\] = \[\s*ipadAirCampaign,\s*visaTradingCampaign,\s*\]/, "Visa trading replaces iPad Pro in the paired homepage campaign data");

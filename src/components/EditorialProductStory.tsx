@@ -149,6 +149,19 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
             <p className="editorial-eyebrow">{chapter.label}</p>
             <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>
             {chapter.copy && <p className="editorial-chapter-description">{chapter.copy}</p>}
+            {chapter.metric && (
+              <div className="editorial-chapter-metric">
+                <span className="editorial-metric-val">{chapter.metric.value}</span>
+                <span className="editorial-metric-lbl">{chapter.metric.label}</span>
+              </div>
+            )}
+            {chapter.pills && (
+              <div className="editorial-chapter-pills">
+                {chapter.pills.map((pill) => (
+                  <span className="editorial-chapter-pill" key={pill}>{pill}</span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="editorial-chapter-art"><ProductImage image={chapter.image} /></div>
         </section>

@@ -417,7 +417,8 @@
   }
 
   /* Apple Watch Ultra 4 Mobile Layout - clean vertical column, no dead height */
-  .ultra-airpods-panel.ultra-airpods-ultra {
+  .ultra-airpods-panel.ultra-airpods-ultra,
+  .watch-ultra-panel {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -429,7 +430,8 @@
     overflow: hidden !important;
   }
 
-  .ultra-airpods-ultra .ultra-airpods-copy {
+  .ultra-airpods-ultra .ultra-airpods-copy,
+  .watch-ultra-copy {
     width: 100% !important;
     max-width: 360px !important;
     margin: 0 auto !important;
@@ -441,7 +443,8 @@
     z-index: 3 !important;
   }
 
-  .ultra-airpods-ultra .store-eyebrow {
+  .ultra-airpods-ultra .store-eyebrow,
+  .watch-ultra-copy .store-eyebrow {
     font-size: 0.75rem !important;
     font-weight: 600 !important;
     color: #86868b !important;
@@ -450,7 +453,8 @@
     margin-bottom: 6px !important;
   }
 
-  .ultra-airpods-ultra h2 {
+  .ultra-airpods-ultra h2,
+  .watch-ultra-copy h2 {
     font-size: clamp(2.2rem, 9.5vw, 2.9rem) !important;
     font-weight: 700 !important;
     letter-spacing: -0.025em !important;
@@ -459,7 +463,8 @@
     margin-bottom: 6px !important;
   }
 
-  .ultra-airpods-ultra .ultra-airpods-copy > span {
+  .ultra-airpods-ultra .ultra-airpods-copy > span,
+  .watch-ultra-copy > span {
     font-size: 1.05rem !important;
     color: #86868b !important;
     max-width: 28ch !important;
@@ -468,7 +473,8 @@
     line-height: 1.35 !important;
   }
 
-  .ultra-airpods-ultra > img {
+  .ultra-airpods-ultra > img,
+  .watch-ultra-panel > img {
     position: relative !important;
     inset: auto !important;
     width: 100% !important;
@@ -480,7 +486,8 @@
     display: block !important;
   }
 
-  .ultra-airpods-ultra::after {
+  .ultra-airpods-ultra::after,
+  .watch-ultra-panel::after {
     display: none !important;
   }
 
