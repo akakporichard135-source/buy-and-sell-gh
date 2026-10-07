@@ -11,6 +11,12 @@ export interface CinematicVideoProps {
   priority?: boolean;
   isClean?: boolean;
   fit?: "contain" | "cover";
+  loopStart?: number;
+  loopEnd?: number;
+  playbackRate?: number;
+  mobileLoopStart?: number;
+  mobileLoopEnd?: number;
+  mobilePlaybackRate?: number;
 }
 
 export function CinematicVideo({
@@ -24,6 +30,12 @@ export function CinematicVideo({
   priority = false,
   isClean = true,
   fit = "cover",
+  loopStart,
+  loopEnd,
+  playbackRate,
+  mobileLoopStart,
+  mobileLoopEnd,
+  mobilePlaybackRate,
 }: CinematicVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,6 +45,30 @@ export function CinematicVideo({
     () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
   const [hasError, setHasError] = useState(false);
+
+  const hasLoopRange = loopStart !== undefined && loopEnd !== undefined;
+
+  const getTiming = () => {
+    const videoEl = videoRef.current;
+    const isMobile = Boolean(
+      videoEl && (
+        (mobileSrc && videoEl.currentSrc.includes(mobileSrc)) ||
+        (typeof window !== "undefined" && window.innerWidth <= 640 && mobileSrc)
+      )
+    );
+    if (isMobile && mobileLoopEnd !== undefined) {
+      return {
+        start: mobileLoopStart ?? 0,
+        end: mobileLoopEnd,
+        rate: mobilePlaybackRate ?? 1,
+      };
+    }
+    return {
+      start: loopStart ?? 0,
+      end: loopEnd ?? (videoEl?.duration || 10),
+      rate: playbackRate ?? 1,
+    };
+  };
 
   // Check for prefers-reduced-motion
   useEffect(() => {
@@ -44,16 +80,64 @@ export function CinematicVideo({
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  // Ensure video element has muted property explicitly set and plays smoothly
+  // Ensure video element has muted property explicitly set, starts at correct loop point & rate, and plays smoothly
   useEffect(() => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
     videoEl.muted = true;
     videoEl.defaultMuted = true;
+    const { start, rate } = getTiming();
+    if (hasLoopRange) {
+      videoEl.currentTime = start;
+    }
+    videoEl.playbackRate = rate;
     videoEl.play().then(() => setIsPlaying(true)).catch(() => {
       // autoplay may be deferred until interaction or intersection
     });
-  }, [src]);
+  }, [src, hasLoopRange]);
+
+  // Range-based loop controller and playback rate maintenance
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl || !hasLoopRange) return;
+
+    let rafId: number;
+
+    const applyTiming = () => {
+      const { rate } = getTiming();
+      if (videoEl.playbackRate !== rate) {
+        videoEl.playbackRate = rate;
+      }
+    };
+
+    const monitorLoop = () => {
+      if (!videoEl.paused && !videoEl.ended) {
+        const { start, end } = getTiming();
+        if (videoEl.currentTime >= end) {
+          videoEl.currentTime = start;
+        } else if (videoEl.currentTime < start - 0.05) {
+          videoEl.currentTime = start;
+        }
+      }
+      rafId = requestAnimationFrame(monitorLoop);
+    };
+
+    const handleLoadedMetadata = () => {
+      const { start, rate } = getTiming();
+      videoEl.currentTime = start;
+      videoEl.playbackRate = rate;
+    };
+
+    videoEl.addEventListener("loadedmetadata", handleLoadedMetadata);
+    videoEl.addEventListener("play", applyTiming);
+    rafId = requestAnimationFrame(monitorLoop);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      videoEl.removeEventListener("play", applyTiming);
+    };
+  }, [hasLoopRange, loopStart, loopEnd, playbackRate, mobileLoopStart, mobileLoopEnd, mobilePlaybackRate, mobileSrc, src]);
 
   // IntersectionObserver to only play when video is visible in the viewport
   useEffect(() => {
@@ -66,6 +150,8 @@ export function CinematicVideo({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
+          const { rate } = getTiming();
+          videoEl.playbackRate = rate;
           videoEl.play().then(() => setIsPlaying(true)).catch(() => {
             setIsPlaying(false);
           });
@@ -85,6 +171,8 @@ export function CinematicVideo({
         videoEl.pause();
         setIsPlaying(false);
       } else {
+        const { rate } = getTiming();
+        videoEl.playbackRate = rate;
         videoEl.play().then(() => setIsPlaying(true)).catch(() => {});
       }
     };
@@ -145,16 +233,29 @@ export function CinematicVideo({
         autoPlay
         muted
         playsInline
-        loop
+        loop={!hasLoopRange}
         preload={priority ? "auto" : "metadata"}
         poster={poster}
         onLoadedData={() => {
           setIsLoaded(true);
-          videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+          const videoEl = videoRef.current;
+          if (videoEl) {
+            const { start, rate } = getTiming();
+            if (hasLoopRange) {
+              videoEl.currentTime = start;
+            }
+            videoEl.playbackRate = rate;
+            videoEl.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
         }}
         onCanPlay={() => {
           setIsLoaded(true);
-          videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => {});
+          const videoEl = videoRef.current;
+          if (videoEl) {
+            const { rate } = getTiming();
+            videoEl.playbackRate = rate;
+            videoEl.play().then(() => setIsPlaying(true)).catch(() => {});
+          }
         }}
         onError={() => setHasError(true)}
       >

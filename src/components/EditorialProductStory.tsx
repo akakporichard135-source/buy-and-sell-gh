@@ -81,6 +81,12 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
               isClean={story.cinematicVideo.isClean}
               fit={story.cinematicVideo.fit || "cover"}
+              loopStart={story.cinematicVideo.loopStart}
+              loopEnd={story.cinematicVideo.loopEnd}
+              playbackRate={story.cinematicVideo.playbackRate}
+              mobileLoopStart={story.cinematicVideo.mobileLoopStart}
+              mobileLoopEnd={story.cinematicVideo.mobileLoopEnd}
+              mobilePlaybackRate={story.cinematicVideo.mobilePlaybackRate}
               priority
             />
           </div>

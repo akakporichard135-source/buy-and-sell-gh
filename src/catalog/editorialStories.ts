@@ -34,6 +34,12 @@ export type EditorialCinematicVideo = {
   aspectRatio?: string;
   isClean?: boolean;
   fit?: "contain" | "cover";
+  loopStart?: number;
+  loopEnd?: number;
+  playbackRate?: number;
+  mobileLoopStart?: number;
+  mobileLoopEnd?: number;
+  mobilePlaybackRate?: number;
 };
 
 export type EditorialStory = {
@@ -79,7 +85,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Finishes", title: "Four titanium expressions.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes in Space Black, Natural Titanium, Light Blue and Deep Burgundy" }, tone: "light" },
     ],
     cinematicVideo: {
-      src: "/videos/homepage/iphone-18-pro-mobile.webm",
+      src: "/videos/homepage/iphone-18-pro.mp4",
       mobileSrc: "/videos/homepage/iphone-18-pro-mobile.webm",
       poster: "/products/story/iphone-18-pro-clean-frame.webp",
       alt: "iPhone 18 Pro in aerospace titanium cinematic presentation",
@@ -88,7 +94,13 @@ export const editorialStories: Record<string, EditorialStory> = {
       subheadline: "Grade 5 titanium sculpted to catch every highlight, contoured for effortless grip.",
       aspectRatio: "16/9",
       isClean: true,
-      fit: "contain",
+      fit: "cover",
+      loopStart: 0.08,
+      loopEnd: 2.88,
+      playbackRate: 0.72,
+      mobileLoopStart: 0.02,
+      mobileLoopEnd: 7.35,
+      mobilePlaybackRate: 1,
     },
     chapters: [
       {
