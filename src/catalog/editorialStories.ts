@@ -58,17 +58,19 @@ export type EditorialStory = {
     label: string;
     title: string;
     copy?: string;
-    image: EditorialImage;
+    image?: EditorialImage;
     tone: EditorialTone;
     layout: "stage" | "split";
     metric?: { value: string; label: string };
     pills?: string[];
   }>;
+  finalImage?: EditorialImage;
   information: EditorialInformation;
 };
 
 const campaign = "/products/campaigns";
 const homepage = "/products/homepage";
+const suppliedIphone = "/products/story";
 
 export const editorialStories: Record<string, EditorialStory> = {
   "iphone-18-pro": {
@@ -77,14 +79,14 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "A new perspective on Pro",
     tagline: "Pro further.",
     buyPath: "/shop/buy-iphone/iphone-18-pro",
-    hero: { src: `${campaign}/iphone-18-pro-burgundy-finish.webp`, alt: "iPhone 18 Pro dual front and rear presentation in Deep Burgundy" },
+    hero: { src: `${suppliedIphone}/iphone-18-pro-supplied-burgundy-front-back.jpg`, alt: "Burgundy iPhone 18 Pro shown from the front and back" },
     heroTone: "ink",
     highlights: [
-      { label: "Camera", title: "Pro optical plateau.", image: { src: `${campaign}/iphone-18-pro-camera-macro.jpg`, alt: "Triple-lens camera plateau macro with titanium knurled bezels", fit: "cover" }, tone: "ink" },
-      { label: "Silicon", title: "A19 Pro architecture.", image: { src: `${campaign}/iphone-18-pro-chip-a19.jpg`, alt: "A19 Pro silicon architecture with gold traces", fit: "cover" }, tone: "ink" },
-      { label: "Craftsmanship", title: "Contoured titanium rail.", image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Brushed titanium frame and tactile buttons in profile" }, tone: "ink" },
-      { label: "Display", title: "Super Retina XDR canvas.", image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of edge-to-edge Super Retina XDR display" }, tone: "light" },
-      { label: "Finishes", title: "Four titanium expressions.", image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro titanium finishes in Space Black, Natural Titanium, Light Blue and Deep Burgundy" }, tone: "light" },
+      { label: "Camera", title: "Pro optical plateau.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-blue-front-back.jpg`, alt: "Close crop of the blue iPhone's rear camera plateau", fit: "cover", position: "left top" }, tone: "light" },
+      { label: "Silicon", title: "A19 Pro architecture.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-a19-pro.jpg`, alt: "Supplied A19 Pro chip visual on a black background", fit: "cover" }, tone: "ink" },
+      { label: "Craftsmanship", title: "Contoured titanium rail.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-burgundy-side.jpg`, alt: "Burgundy iPhone side profile showing its frame and controls" }, tone: "ink" },
+      { label: "Display", title: "Super Retina XDR canvas.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-silver-front.jpg`, alt: "Straight-on view of a silver iPhone display and its narrow border" }, tone: "light" },
+      { label: "Finishes", title: "Four titanium expressions.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-four-finishes.jpg`, alt: "Rear views of black, silver, blue and burgundy iPhone finishes", fit: "cover" }, tone: "ink" },
     ],
     cinematicVideo: {
       src: "/videos/homepage/iphone-18-pro.mp4",
@@ -110,7 +112,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Craftsmanship",
         title: "Forged in aerospace-grade titanium.",
         copy: "The contoured grade 5 titanium enclosure gives iPhone 18 Pro an unmistakable presence in hand. Softened edges, refined satin finishes, and precision-engineered glass meet to create our lightest, strongest, and most ergonomically balanced Pro device ever crafted.",
-        image: { src: `${campaign}/iphone-18-pro-coffee.webp`, alt: "Close profile view of iPhone 18 Pro titanium frame and contoured edges" },
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-burgundy-side.jpg`, alt: "Burgundy iPhone 18 Pro side profile with visible frame and buttons" },
         tone: "ink",
         layout: "split",
         metric: { value: "Grade 5", label: "Aerospace Titanium" },
@@ -121,7 +123,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Super Retina XDR",
         title: "Borders pushed to the absolute edge.",
         copy: "An expansive all-screen OLED canvas featuring ProMotion technology with adaptive refresh rates up to 120Hz. With peak outdoor brightness of 2500 nits and ultra-thin borders, every HDR video, photograph, and graphic renders with extraordinary clarity and depth.",
-        image: { src: `${campaign}/iphone-18-pro-front.webp`, alt: "Front view of iPhone 18 Pro Super Retina XDR display with edge-to-edge glass" },
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-silver-front.jpg`, alt: "Full front view of the silver iPhone display and bezel" },
         tone: "light",
         layout: "stage",
         metric: { value: "2500 nits", label: "Peak Outdoor Brightness" },
@@ -132,7 +134,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Pro Optical Architecture",
         title: "A studio in your pocket. From macro to telephoto.",
         copy: "A knurled titanium plateau houses three breakthrough sensors: a 48MP Fusion primary sensor with 2nd-gen Sensor-shift OIS, a high-resolution Ultra Wide, and a dedicated 5x Telephoto periscope lens. Capture cinema-grade ProRes log video and authentic skin tones in any lighting.",
-        image: { src: `${campaign}/iphone-18-pro-camera-macro.jpg`, alt: "Close-up macro of the iPhone 18 Pro triple camera system plateau with knurled titanium lens bezels", fit: "cover" },
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-burgundy-front-back.jpg`, alt: "Burgundy iPhone rear camera plateau in a close editorial crop", fit: "cover", position: "left top" },
         tone: "ink",
         layout: "split",
         metric: { value: "5x Optical", label: "Periscope Telephoto" },
@@ -143,7 +145,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "A19 Pro Silicon",
         title: "Monumental speed. Relentless efficiency.",
         copy: "Built on an advanced 3nm architecture, the A19 Pro chip delivers unprecedented CPU computing power and hardware-accelerated ray tracing. Experience console-quality gaming, instant AI intelligence, and phenomenal power efficiency for true all-day battery life.",
-        image: { src: `${campaign}/iphone-18-pro-chip-a19.jpg`, alt: "A19 Pro silicon chip architecture on dark circuit board", fit: "cover" },
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-a19-pro.jpg`, alt: "A19 Pro chip visual supplied for the performance story", fit: "cover" },
         tone: "ink",
         layout: "stage",
         metric: { value: "3nm", label: "Advanced Silicon Architecture" },
@@ -154,8 +156,8 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Apple Intelligence",
         title: "Personal, private, powerful system intelligence.",
         copy: "Integrated deeply across iOS, Apple Intelligence combines on-device processing and Private Cloud Compute to generate text, synthesize priority notifications, and understand personal context while keeping sensitive personal information strictly protected.",
-        image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "iPhone 18 Pro in Silver titanium displaying Apple Intelligence" },
-        tone: "ink",
+        image: { src: `${campaign}/iphone-18-pro-silver.webp`, alt: "Rear view of the iPhone 18 Pro in silver" },
+        tone: "light",
         layout: "split",
         metric: { value: "On-Device", label: "Private Cloud Compute" },
         pills: ["Writing Tools", "Contextual Siri", "End-to-End Privacy"],
@@ -165,7 +167,6 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "All-Day Battery & USB-C",
         title: "Endurance engineered for your most demanding days.",
         copy: "A high-density battery cell pairs with the power efficiency of A19 Pro silicon to deliver dependable all-day stamina. Charge up to 50 percent in thirty minutes with fast USB-C, or snap effortlessly onto MagSafe wireless chargers at your desk or bedside.",
-        image: { src: `${campaign}/iphone-18-pro-lineup.webp`, alt: "iPhone 18 Pro lineup highlighting battery efficiency and fast USB-C" },
         tone: "light",
         layout: "split",
         metric: { value: "All-Day", label: "Battery Stamina" },
@@ -176,9 +177,9 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Everyday Ambition",
         title: "Engineered for Ghana's brightest creators.",
         copy: "From sunrise creative sessions in Cantonments to dusk meetings overlooking the Accra skyline, iPhone 18 Pro is built to keep pace with visionary entrepreneurs, artists, and leaders shaping the future of West Africa. Trusted original hardware backed by Buy & Sell GH.",
-        image: { src: `${campaign}/iphone-18-pro-lifestyle-accra.jpg`, alt: "Ghanaian creative director holding iPhone 18 Pro in a modern Accra penthouse at sunset", fit: "cover" },
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-blue-lifestyle.jpg`, alt: "Person holding a blue iPhone by a pool", fit: "cover", position: "center top" },
         tone: "light",
-        layout: "stage",
+        layout: "split",
         metric: { value: "100%", label: "Verified Authentic Hardware" },
         pills: ["Accra Showroom", "Dome Pillar 2", "Ghana-wide Delivery"],
       },
@@ -187,12 +188,13 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Finishes",
         title: "Four expressions of pure titanium.",
         copy: "Available in Deep Burgundy, Space Black, Natural Titanium, and Light Blue. Each finish utilizes an advanced physical vapor deposition process to bond color directly into the titanium matrix for enduring beauty and scratch resistance.",
-        image: { src: `${campaign}/iphone-18-pro-colors.webp`, alt: "Four iPhone 18 Pro finishes: Space Black, Natural Titanium, Light Blue, Deep Burgundy" },
-        tone: "light",
+        image: { src: `${suppliedIphone}/iphone-18-pro-supplied-four-finishes.jpg`, alt: "Black, silver, blue and burgundy iPhone 18 Pro rear views", fit: "cover" },
+        tone: "ink",
         layout: "stage",
         pills: ["Deep Burgundy", "Space Black", "Natural Titanium", "Light Blue"],
       },
     ],
+    finalImage: { src: `${suppliedIphone}/iphone-18-pro-supplied-blue-front-back.jpg`, alt: "Blue iPhone 18 Pro shown from the front and back" },
     information: {
       eyebrow: "EVERYTHING TO KNOW",
       title: "Designed for what matters most.",

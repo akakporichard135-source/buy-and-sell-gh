@@ -6,15 +6,16 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { SEO } from "./SEO";
 import { CinematicVideo } from "./CinematicVideo";
+import { Iphone18ProEducation } from "./Iphone18ProEducation";
 import "../styles/editorial-product-story.css";
 
-function ProductImage({ image, eager = false, className = "" }: { image: EditorialImage; eager?: boolean; className?: string }) {
+function ProductImage({ image, eager = false, lazy = false, className = "" }: { image: EditorialImage; eager?: boolean; lazy?: boolean; className?: string }) {
   return (
     <img
       className={`${className} editorial-image-${image.fit ?? "contain"}`}
       src={image.src}
       alt={image.alt}
-      loading="eager"
+      loading={lazy && !eager ? "lazy" : "eager"}
       fetchPriority={eager ? "high" : "auto"}
       decoding="async"
       draggable={false}
@@ -77,7 +78,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               src={story.cinematicVideo.src}
               mobileSrc={story.cinematicVideo.mobileSrc}
               poster={story.cinematicVideo.poster}
-              alt={story.cinematicVideo.alt}
+              alt={story.slug === "iphone-18-pro" ? "iPhone 18 Pro cinematic presentation" : story.cinematicVideo.alt}
               aspectRatio={story.cinematicVideo.aspectRatio || "16/9"}
               isClean={story.cinematicVideo.isClean}
               fit={story.cinematicVideo.fit || "cover"}
@@ -97,6 +98,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         )}
       </section>
 
+      {story.slug === "iphone-18-pro" ? <Iphone18ProEducation buyPath={story.buyPath} hero={story.hero} /> : <>
       <section className="editorial-highlights" id="highlights" aria-labelledby="editorial-highlights-title">
         <div className="editorial-highlights-heading">
           <h2 id="editorial-highlights-title">Get the highlights.</h2>
@@ -112,7 +114,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
                 <p className="editorial-eyebrow">{highlight.label}</p>
                 <h3>{highlight.title}</h3>
               </div>
-              <div className="editorial-highlight-art"><ProductImage image={highlight.image} /></div>
+              <div className="editorial-highlight-art"><ProductImage image={highlight.image} lazy={story.slug === "iphone-18-pro"} /></div>
             </article>
           ))}
         </div>
@@ -137,14 +139,14 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               )}
             </div>
             <div className="editorial-hardware-anchor-art">
-              <ProductImage image={story.hero} />
+              <ProductImage image={story.hero} lazy={story.slug === "iphone-18-pro"} />
             </div>
           </div>
         </section>
       )}
 
       {story.chapters.map((chapter) => (
-        <section className={`editorial-chapter editorial-chapter-${chapter.layout} editorial-tone-${chapter.tone}`} id={chapter.id} key={chapter.id} aria-labelledby={`${chapter.id}-title`}>
+        <section className={`editorial-chapter editorial-chapter-${chapter.layout} editorial-tone-${chapter.tone}${chapter.image ? "" : " editorial-chapter-no-image"}`} id={chapter.id} key={chapter.id} aria-labelledby={`${chapter.id}-title`}>
           <div className="editorial-chapter-copy">
             <p className="editorial-eyebrow">{chapter.label}</p>
             <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>
@@ -163,7 +165,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               </div>
             )}
           </div>
-          <div className="editorial-chapter-art"><ProductImage image={chapter.image} /></div>
+          {chapter.image && <div className="editorial-chapter-art"><ProductImage image={chapter.image} lazy={story.slug === "iphone-18-pro"} /></div>}
         </section>
       ))}
 
@@ -187,6 +189,14 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           </div>
         </section>
       )}
+
+      {story.finalImage && (
+        <section className="editorial-final-beauty" aria-label={`${story.name} final product view`}>
+          <div className="editorial-final-beauty-art"><ProductImage image={story.finalImage} lazy /></div>
+          <Link className="editorial-buy" to={story.buyPath}>View pricing</Link>
+        </section>
+      )}
+      </>}
 
     </main>
   );

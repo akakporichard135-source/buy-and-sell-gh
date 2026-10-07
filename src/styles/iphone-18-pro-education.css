@@ -1,0 +1,66 @@
+.iphone-edu { background: #fff; color: #17191c; }
+.iphone-edu-inner { width: min(100% - 48px, 1120px); margin-inline: auto; }
+.iphone-edu-section, .iphone-edu-overview, .iphone-edu-before { padding-block: 88px; }
+.iphone-edu-overview { background: #f4f5f5; }
+.iphone-edu-dark { background: #111315; color: #f7f7f7; }
+.iphone-edu-index { display: block; margin-bottom: 18px; color: #9c5d68; font-size: 12px; font-weight: 800; line-height: 1.3; }
+.iphone-edu-dark .iphone-edu-index, .iphone-edu-finale .iphone-edu-index { color: #e4a8b5; }
+.iphone-edu h2 { max-width: 18ch; font-size: clamp(34px, 4vw, 54px); font-weight: 760; line-height: 1.06; }
+.iphone-edu-overview h2 { max-width: none; }
+.iphone-edu-lead, .iphone-edu-heading > p, .iphone-edu-before p { max-width: 760px; margin-top: 22px; color: #50555a; font-size: 18px; line-height: 1.62; }
+.iphone-edu-dark .iphone-edu-heading > p { color: #c6c7ca; }
+.iphone-edu-heading { margin-bottom: 44px; }
+.iphone-edu-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; padding-top: 44px; margin-top: 42px; border-top: 1px solid #d6d8d9; }
+.iphone-edu-facts > div { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.iphone-edu-facts strong { font-size: 28px; font-weight: 780; line-height: 1.1; }
+.iphone-edu-facts span { color: #63676c; font-size: 14px; line-height: 1.4; }
+.iphone-edu-lessons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 32px; }
+.iphone-edu-lesson { min-width: 0; padding-top: 19px; border-top: 1px solid #d4d6d8; }
+.iphone-edu-dark .iphone-edu-lesson { border-color: #505357; }
+.iphone-edu-lesson h3, .iphone-edu-audience h3 { margin: 0 0 11px; font-size: 19px; font-weight: 740; line-height: 1.25; }
+.iphone-edu-lesson p, .iphone-edu-audience p { margin: 0; color: #545960; font-size: 15px; line-height: 1.65; }
+.iphone-edu-dark .iphone-edu-lesson p { color: #c5c8cb; }
+.iphone-edu-figure { margin: 48px 0 0; }
+.iphone-edu-figure img { width: 100%; height: 100%; object-fit: contain; }
+.iphone-edu-figure figcaption { margin-top: 12px; color: #73777b; font-size: 12px; line-height: 1.5; }
+.iphone-edu-figure-hero { display: grid; justify-items: center; }
+.iphone-edu-figure-hero img { width: min(100%, 720px); max-height: 560px; }
+.iphone-edu-dark .iphone-edu-figure figcaption { color: #a7aaae; }
+.iphone-edu-figure-camera { width: min(100%, 560px); margin: 0 auto 54px; }
+.iphone-edu-camera-media { height: 430px; overflow: hidden; background: #f7f7f7; }
+.iphone-edu-figure-camera img { width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.45); transform-origin: center 8%; }
+.iphone-edu-audience { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; margin-top: 42px; }
+.iphone-edu-audience > div { padding-top: 22px; border-top: 1px solid #d4d6d8; }
+.iphone-edu-finale { overflow: hidden; padding: 76px 0 0; background: #090a0d; color: #fff; text-align: center; }
+.iphone-edu-finale h2 { max-width: none; }
+.iphone-edu-figure-side { margin-top: 30px; }
+.iphone-edu-figure-side img { width: min(100%, 550px); max-height: 600px; margin: auto; object-fit: contain; object-position: center top; }
+.iphone-edu-figure-side figcaption { color: #a7aaae; padding-bottom: 20px; }
+.iphone-edu-before { background: #f3f4f4; }
+.iphone-edu-before h2 { max-width: 22ch; }
+.iphone-edu-before-actions { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; margin-top: 28px; }
+.iphone-edu-before-actions > a:not(.editorial-buy) { color: #384855; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.iphone-edu-before-actions .editorial-buy { min-height: 42px; padding-inline: 24px; }
+
+@media (max-width: 800px) {
+  .iphone-edu-section, .iphone-edu-overview, .iphone-edu-before { padding-block: 64px; }
+  .iphone-edu-lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .iphone-edu-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .iphone-edu-inner { width: min(100% - 36px, 1120px); }
+  .iphone-edu-section, .iphone-edu-overview, .iphone-edu-before { padding-block: 52px; }
+  .iphone-edu h2 { font-size: 34px; }
+  .iphone-edu-lead, .iphone-edu-heading > p, .iphone-edu-before p { font-size: 16px; line-height: 1.6; }
+  .iphone-edu-heading { margin-bottom: 32px; }
+  .iphone-edu-lessons { grid-template-columns: 1fr; gap: 22px; }
+  .iphone-edu-facts { gap: 28px 16px; padding-top: 28px; margin-top: 30px; }
+  .iphone-edu-facts strong { font-size: 24px; }
+  .iphone-edu-figure { margin-top: 35px; }
+  .iphone-edu-figure-camera { margin: 0 auto 36px; }
+  .iphone-edu-camera-media { height: 360px; }
+  .iphone-edu-audience { grid-template-columns: 1fr; gap: 26px; }
+  .iphone-edu-finale { padding-top: 56px; }
+  .iphone-edu-figure-side img { max-height: 470px; }
+}

@@ -349,12 +349,18 @@ try {
     assert.equal(story.information.items.length, 4, `${slug} has a complete two-column information section`);
     assert.ok(story.information.items.every((item) => item.description.length >= 80), `${slug} explains every information item`);
     assert.ok(story.buyPath.startsWith("/shop/buy-") || story.buyPath.startsWith("/pre-order?"), `${slug} uses its existing commerce flow`);
-    for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.map((item) => item.image)]) {
+    assert.deepEqual(story.chapters.filter((chapter) => !chapter.image).map((chapter) => chapter.id), slug === "iphone-18-pro" ? ["endurance"] : [], `${slug} only omits explicitly unsupported imagery`);
+    for (const media of [story.hero, ...story.highlights.map((item) => item.image), ...story.chapters.flatMap((item) => item.image ? [item.image] : []), ...(story.finalImage ? [story.finalImage] : [])]) {
       assert.ok(!/\.(mp4|webm)$/i.test(media.src), `${slug} uses still media`);
     }
   }
   const editorialComponentSource = await readFile(path.join(projectRoot, "src/components/EditorialProductStory.tsx"), "utf8");
-  assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 1, "Editorial stories have one hero purchase CTA");
+  assert.match(editorialComponentSource, /story\.slug === "iphone-18-pro" \? <Iphone18ProEducation/, "The iPhone 18 Pro uses its focused educational story");
+  const iphoneEducationSource = await readFile(path.join(projectRoot, "src/components/Iphone18ProEducation.tsx"), "utf8");
+  assert.equal((iphoneEducationSource.match(/<img\b/g) ?? []).length, 3, "The educational story uses exactly three product images");
+  assert.doesNotMatch(iphoneEducationSource, /A19 Pro|titanium|2500 nits/i, "The educational story omits superseded hardware claims");
+  assert.match(iphoneEducationSource, /apple\.com\/iphone-18-pro\/specs\//, "The educational story links to Apple's published specifications");
+  assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 2, "Editorial stories have a hero CTA and an optional final-image CTA");
   assert.doesNotMatch(editorialComponentSource, /editorial-subnav|editorial-close/, "Editorial stories omit duplicate product navigation and closing purchase banner");
   const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
   assert.doesNotMatch(productFamilySource, /<FamilyLocalNav/, "Product family pages omit duplicate page-specific navigation");
