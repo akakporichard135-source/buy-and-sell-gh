@@ -52,6 +52,7 @@ export function Iphone18ProEducation({ buyPath, hero }: { buyPath: string; hero:
         { title: "More useful outdoors", explanation: "Apple rates peak outdoor brightness at 3,000 nits and adds an anti-reflective coating. That helps visibility in strong light, though real-world readability still depends on the conditions." },
         { title: "Information at a glance", explanation: "Always-On can keep the time and useful updates visible without fully waking the phone. HDR support gives compatible video and photos a wider range between light and dark areas." },
       ]} />
+      <figure className="iphone-edu-figure iphone-edu-figure-display"><img src="/products/story/iphone-18-pro-supplied-blue-front-back.jpg" alt="Illustrative Glacier iPhone front and back showing its full display and camera plateau" loading="lazy" decoding="async" /><figcaption>Illustrative Glacier finish and display render.</figcaption></figure>
     </Section>
 
     <Section id="silicon" number="03" label="PERFORMANCE" title="Speed you notice after the first tap." intro="A20 Pro combines a 6-core CPU, 7-core GPU, and hardware-accelerated ray tracing. The point is not the core count by itself: apps should respond quickly, editing has more headroom, and supported games can render richer scenes." dark>
@@ -72,6 +73,7 @@ export function Iphone18ProEducation({ buyPath, hero }: { buyPath: string; hero:
         { title: "Video that travels well", explanation: "The phone supports 4K Dolby Vision video, stabilization, and Cinematic mode. Creators can use ProRes and Apple Log workflows, but those formats take more storage and may need external recording for some settings." },
         { title: "The front camera matters too", explanation: "The 18MP Center Stage camera can help keep you framed for selfies and video calls. It also supports autofocus, portraits, and stabilized video." },
       ]} />
+      <figure className="iphone-edu-figure iphone-edu-figure-finishes"><img src="/products/story/iphone-18-pro-supplied-four-finishes.jpg" alt="Illustrative rear views of iPhone 18 Pro in Black, Silver, Glacier, and Burgundy finishes" loading="lazy" decoding="async" /><figcaption>Illustrative finish lineup; check the exact listing for available colours and camera appearance.</figcaption></figure>
     </Section>
 
     <Section id="endurance" number="05" label="BATTERY & CHARGING" title="Power for a full working day." intro="Apple rates the iPhone 18 Pro for up to 24 hours of typical use and up to 36 hours of video playback under its test conditions. Treat these as guideposts, not a guarantee: navigation, 5G signal, camera use, and screen brightness all affect your day." dark>

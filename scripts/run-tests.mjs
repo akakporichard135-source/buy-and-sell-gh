@@ -357,7 +357,9 @@ try {
   const editorialComponentSource = await readFile(path.join(projectRoot, "src/components/EditorialProductStory.tsx"), "utf8");
   assert.match(editorialComponentSource, /story\.slug === "iphone-18-pro" \? <Iphone18ProEducation/, "The iPhone 18 Pro uses its focused educational story");
   const iphoneEducationSource = await readFile(path.join(projectRoot, "src/components/Iphone18ProEducation.tsx"), "utf8");
-  assert.equal((iphoneEducationSource.match(/<img\b/g) ?? []).length, 3, "The educational story uses exactly three product images");
+  assert.equal((iphoneEducationSource.match(/<img\b/g) ?? []).length, 5, "The educational story uses five focused product images");
+  assert.match(iphoneEducationSource, /iphone-18-pro-supplied-blue-front-back\.jpg/, "The educational display section includes the recovered Glacier composition");
+  assert.match(iphoneEducationSource, /iphone-18-pro-supplied-four-finishes\.jpg/, "The educational camera section includes the recovered rear-finish lineup");
   assert.doesNotMatch(iphoneEducationSource, /A19 Pro|titanium|2500 nits/i, "The educational story omits superseded hardware claims");
   assert.match(iphoneEducationSource, /apple\.com\/iphone-18-pro\/specs\//, "The educational story links to Apple's published specifications");
   assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 2, "Editorial stories have a hero CTA and an optional final-image CTA");
