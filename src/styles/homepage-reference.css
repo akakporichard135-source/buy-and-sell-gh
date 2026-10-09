@@ -1,0 +1,563 @@
+.home-reference {
+  overflow: clip;
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.home-ref-announcement {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.5rem 1rem;
+  background: #f5f5f7;
+  color: #434348;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.home-ref-announcement a {
+  color: #8c6411;
+  white-space: nowrap;
+}
+
+.home-ref-announcement a:hover,
+.home-ref-announcement a:focus-visible {
+  text-decoration: underline;
+}
+
+.home-ref-hero,
+.home-ref-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  text-align: center;
+}
+
+.home-ref-dark {
+  background: #000;
+  color: #f5f5f7;
+}
+
+.home-ref-light {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.home-ref-ipad-air,
+.home-ref-visa-card-trading,
+.home-ref-mac-mini {
+  background: #fff;
+}
+
+.home-ref-mist {
+  background: #e9f5fa;
+  color: #1d1d1f;
+}
+
+.home-ref-hero {
+  height: min(600px, calc(100svh - 90px));
+  min-height: 540px;
+}
+
+.home-ref-hero + .home-ref-hero {
+  margin-top: 12px;
+}
+
+.home-ref-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding: 52px 20px 0;
+}
+
+.home-ref-copy h1,
+.home-ref-copy h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.home-ref-hero .home-ref-copy h1 {
+  font-size: clamp(2.9rem, 4vw, 3.7rem);
+  line-height: 1.08;
+}
+
+.home-ref-copy p {
+  margin: 7px 0 0;
+  font-size: clamp(1rem, 1.55vw, 1.35rem);
+  line-height: 1.35;
+}
+
+.home-ref-dark .home-ref-copy p {
+  color: #eeeef0;
+}
+
+.home-ref-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.home-ref-button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 17px;
+  border: 1px solid var(--brand-gold);
+  border-radius: 999px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.home-ref-button-primary {
+  background: var(--brand-gold);
+  color: #171307;
+}
+
+.home-ref-button-primary:hover {
+  background: var(--brand-gold-soft);
+  border-color: var(--brand-gold-soft);
+  color: #171307;
+}
+
+.home-ref-button-secondary {
+  background: transparent;
+  color: #8c6411;
+}
+
+.home-ref-dark .home-ref-button-secondary {
+  color: var(--brand-gold-soft);
+}
+
+.home-ref-button-secondary:hover {
+  background: var(--brand-gold);
+  color: #171307;
+}
+
+.home-ref-button:focus-visible,
+.home-ref-service-controls button:focus-visible,
+.home-ref-service-card:focus-visible {
+  outline: 3px solid var(--brand-gold);
+  outline-offset: 3px;
+}
+
+.home-ref-hero-image,
+.home-ref-tile-image {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  max-width: none;
+}
+
+.home-ref-iphone-18-pro .home-ref-hero-image {
+  width: min(1120px, 88vw);
+  height: auto;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.home-ref-iphone-duo .home-ref-hero-image {
+  width: min(900px, 78vw);
+  height: min(390px, 67%);
+  object-fit: contain;
+  object-position: center bottom;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  mix-blend-mode: multiply;
+}
+
+.home-ref-watch-series-12 .home-ref-hero-image {
+  height: min(380px, 64%);
+  width: auto;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+
+.home-ref-grid {
+  display: grid;
+  gap: 12px;
+  padding: 12px 12px 0;
+}
+
+.home-ref-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-ref-tile {
+  height: min(590px, 52vw);
+  min-height: 475px;
+}
+
+.home-ref-tile .home-ref-copy {
+  padding-top: 42px;
+}
+
+.home-ref-tile .home-ref-copy h2 {
+  font-size: clamp(2rem, 2.8vw, 3rem);
+  line-height: 1.09;
+}
+
+.home-ref-tile .home-ref-copy p {
+  font-size: clamp(0.98rem, 1.15vw, 1.15rem);
+}
+
+.home-ref-watch-ultra-4 .home-ref-tile-image {
+  width: min(100%, 850px);
+  height: 62%;
+  left: 50%;
+  bottom: -2%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.home-ref-airpods-5 .home-ref-tile-image {
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  object-position: center 28%;
+}
+
+.home-ref-airpods-5::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 55% 0 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+}
+
+.home-ref-airpods-pro-3 {
+  background: #fff;
+}
+
+.home-ref-airpods-pro-3 .home-ref-tile-image {
+  width: 100%;
+  height: 79%;
+  top: 0;
+  left: 0;
+  object-fit: contain;
+  object-position: center top;
+}
+
+.home-ref-airpods-pro-3::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 65% 0 0;
+  background: linear-gradient(transparent, #fff 55%);
+}
+
+.home-ref-copy-bottom .home-ref-copy {
+  position: absolute;
+  inset: auto 0 22px;
+  padding-top: 0;
+}
+
+.home-ref-ipad-air .home-ref-tile-image {
+  width: min(94%, 700px);
+  height: 66%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.home-ref-macbook-air .home-ref-tile-image {
+  width: min(95%, 670px);
+  height: 65%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+  mix-blend-mode: multiply;
+}
+
+.home-ref-visa-card-trading .home-ref-tile-image {
+  width: min(95%, 700px);
+  height: 67%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.home-ref-mac-mini .home-ref-tile-image {
+  width: min(96%, 730px);
+  height: 67%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.home-ref-services {
+  padding: 72px 0 76px;
+  background: #f5f5f7;
+}
+
+.home-ref-services-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto 28px;
+  padding-inline: 24px;
+}
+
+.home-ref-services-heading h2 {
+  margin: 0;
+  font-size: clamp(2.2rem, 3vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+
+.home-ref-services-heading p {
+  margin: 8px 0 0;
+  color: #6e6e73;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.home-ref-service-controls {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+
+.home-ref-service-controls button {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--brand-gold);
+  border-radius: 50%;
+  background: transparent;
+  color: #1d1d1f;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.home-ref-service-controls button:hover:not(:disabled) {
+  background: var(--brand-gold);
+}
+
+.home-ref-service-controls button:disabled {
+  border-color: #c8c8ca;
+  color: #9c9ca1;
+  cursor: default;
+}
+
+.home-ref-service-track {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  padding-inline: max(24px, calc((100vw - 1232px) / 2));
+}
+
+.home-ref-service-track::-webkit-scrollbar {
+  display: none;
+}
+
+.home-ref-service-card {
+  flex: 0 0 clamp(290px, 28vw, 370px);
+  aspect-ratio: 2 / 3;
+  display: block;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+}
+
+.home-ref-service-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+body:has(.home-reference) .store-footer {
+  background: #f5f5f7;
+  padding-inline: max(24px, calc((100vw - 1120px) / 2));
+}
+
+@media (max-width: 800px) {
+  .home-ref-hero {
+    height: 600px;
+    min-height: 0;
+  }
+
+  .home-ref-hero .home-ref-copy h1 {
+    font-size: 3rem;
+  }
+
+  .home-ref-iphone-18-pro .home-ref-hero-image {
+    width: 104vw;
+    bottom: 90px;
+  }
+
+  .home-ref-iphone-duo .home-ref-hero-image {
+    width: 96vw;
+    height: 62%;
+  }
+
+  .home-ref-watch-series-12 .home-ref-hero-image {
+    height: 61%;
+  }
+
+  .home-ref-tile {
+    height: 520px;
+    min-height: 0;
+  }
+
+  .home-ref-tile .home-ref-copy h2 {
+    font-size: 2.4rem;
+  }
+
+  .home-ref-service-card {
+    flex-basis: min(43vw, 360px);
+  }
+}
+
+@media (max-width: 620px) {
+  .home-ref-announcement {
+    display: block;
+    min-height: 48px;
+    font-size: 0.72rem;
+  }
+
+  .home-ref-hero,
+  .home-ref-tile {
+    height: 540px;
+  }
+
+  .home-ref-hero + .home-ref-hero {
+    margin-top: 8px;
+  }
+
+  .home-ref-copy,
+  .home-ref-tile .home-ref-copy {
+    padding: 43px 18px 0;
+  }
+
+  .home-ref-hero .home-ref-copy h1 {
+    font-size: clamp(2.15rem, 11vw, 2.9rem);
+  }
+
+  .home-ref-copy p,
+  .home-ref-tile .home-ref-copy p {
+    font-size: 0.98rem;
+  }
+
+  .home-ref-actions {
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .home-ref-button {
+    min-height: 32px;
+    padding: 6px 13px;
+    font-size: 0.74rem;
+  }
+
+  .home-ref-iphone-18-pro .home-ref-hero-image {
+    width: 128vw;
+    bottom: 45px;
+  }
+
+  .home-ref-iphone-duo .home-ref-hero-image {
+    width: 120vw;
+    height: 66%;
+  }
+
+  .home-ref-watch-series-12 .home-ref-hero-image {
+    height: 59%;
+    bottom: 20px;
+  }
+
+  .home-ref-grid {
+    gap: 8px;
+    padding: 8px 8px 0;
+  }
+
+  .home-ref-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-ref-tile .home-ref-copy h2 {
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+  }
+
+  .home-ref-copy-bottom .home-ref-copy {
+    padding: 0 18px;
+    bottom: 25px;
+  }
+
+  .home-ref-services {
+    padding: 56px 0 58px;
+  }
+
+  .home-ref-services-heading {
+    margin-bottom: 22px;
+    padding-inline: 20px;
+  }
+
+  .home-ref-services-heading h2 {
+    font-size: 2.15rem;
+  }
+
+  .home-ref-services-heading p {
+    font-size: 0.85rem;
+  }
+
+  .home-ref-service-controls button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .home-ref-service-track {
+    gap: 12px;
+    padding-inline: 20px;
+  }
+
+  .home-ref-service-card {
+    flex-basis: min(88vw, 360px);
+  }
+
+  body:has(.home-reference) .store-footer {
+    padding-inline: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-ref-button {
+    transition: none;
+  }
+}

@@ -277,57 +277,49 @@ try {
   assert.deepEqual(iphoneShowcase.getIphoneShowcaseScenes([{ slug: "iphone-17-pro" }, { slug: "apple-watch" }, { slug: "iphone-18" }]).map((scene) => scene.slug), ["iphone-17-pro"], "Showcase uses only supported models present in the active catalogue");
   assert.equal(iphoneShowcase.getIphoneShowcaseScenes([]).length, 0, "Empty catalogue does not invent showcase models");
   assert.equal((homepageSource.match(/<IphoneCinematicShowcase/g) ?? []).length, 0, "The former iPhone 17 cinematic showcase is removed from the homepage");
-  assert.equal((homepageSource.match(/<Iphone18Hero \/>/g) ?? []).length, 1, "Homepage renders exactly one iPhone 18 Pro launch hero");
-  assert.doesNotMatch(homepageSource, /HomepageVideoShowcase|home-product-reel/, "The story-player reel is removed from the homepage");
-  assert.match(homepageSource, /<Iphone18Hero \/>[\s\S]*topCampaigns\.map\([\s\S]*<WatchUltraStory \/>/, "The corrected launch stack keeps the approved order");
-  assert.doesNotMatch(homepageSource, /latestIphoneCampaign|variant:\s*"iphone"/, "The duplicate iPhone product launch is removed");
-  const topCampaignNames = ["iPhone Duo", "Apple Watch Series 12"];
-  let priorCampaignIndex = -1;
-  for (const name of topCampaignNames) {
-    const campaignIndex = homepageSource.indexOf(`title: "${name}"`);
-    assert.ok(campaignIndex > priorCampaignIndex, `${name} keeps the approved top campaign order`);
-    priorCampaignIndex = campaignIndex;
+  const sectionIds = ["iphone-18-pro", "iphone-duo", "watch-series-12", "watch-ultra-4", "airpods-pro-3", "ipad-air", "macbook-air", "visa-card-trading", "mac-mini"];
+  let priorSectionIndex = -1;
+  for (const id of sectionIds) {
+    const sectionIndex = homepageSource.indexOf(`id: "${id}"`);
+    assert.ok(sectionIndex > priorSectionIndex, `${id} follows the reference homepage section order`);
+    priorSectionIndex = sectionIndex;
   }
-  assert.doesNotMatch(homepageSource, /title: "Apple Watch"/, "The generic Watch homepage campaign is removed");
-  assert.match(homepageSource, /<WatchUltraStory \/>/, "Watch Ultra 4 renders as a standalone launch story");
-  assert.doesNotMatch(homepageSource, /AirPods 5|airpods-5/, "AirPods 5 is completely removed from the homepage");
-  assert.doesNotMatch(homepageSource, /Built Around You\.|Power for ideas without limits\.|Everything you need to get more done\.|Buy &amp; Sell GH Concierge|EditorialDeviceGuide|ConciergeSection/, "The removed editorial and Concierge area does not return");
-  assert.doesNotMatch(homepageSource, /NewMacLaunchCampaign|newMacLaunches\[/, "Mac mini and Mac Studio are removed from the homepage without changing their routes");
-  assert.match(homepageSource, /iphone18-hero-(?:still-)?img|campaignAssets\.iphone18\.hero/, "The homepage hero uses the approved still image hero");
-  assert.doesNotMatch(homepageSource, /<video[^>]*\scontrols(?:\s|=|>)/i, "The flagship hero does not expose native controls");
-  assert.doesNotMatch(homepageSource, /home-(?:video|story)-(?:controls|progress)|aria-label="Pause/i, "The flagship hero exposes no player-style controls");
+  assert.match(homepageSource, /heroes\.map\([\s\S]*tileRows\.map\([\s\S]*<ServiceFlyerCarousel \/>/, "Homepage keeps the approved heroes and tiles ahead of service flyers");
+  assert.match(homepageSource, /Our Services[\s\S]*Professional device repairs and support from Buy & Sell GH\./, "Original service flyers have the requested heading and support text");
+  assert.doesNotMatch(homepageSource, /More to explore\.|EditorialCarousel|home-ref-promo/, "The former editorial carousel and promotional cards are removed");
+  assert.match(homepageSource, /iphone18-hero-img/, "The homepage hero uses the approved still image");
+  assert.match(homepageSource, /\/products\/homepage\/iphone-18-pro-hero-2x\.webp/, "The homepage uses the approved iPhone 18 Pro hero asset");
+  assert.doesNotMatch(homepageSource, /<video|HomepageVideoShowcase|home-product-reel/, "Homepage does not add a cinematic video");
   assert.doesNotMatch(homepageSource, /iphone-18-pro-cinematic\.webp/, "The rejected generated iPhone 18 Pro hardware is not used");
-  const homepageMediaSource = homepageSource;
   for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp"]) {
     const image = await readFile(path.join(projectRoot, "public/products/homepage", filename));
     assert.equal(image.toString("ascii", 0, 4), "RIFF", `${filename} is a real WebP asset`);
     assert.equal(image.toString("ascii", 8, 12), "WEBP", `${filename} is a real WebP asset`);
-    assert.match(homepageMediaSource, new RegExp(`/products/homepage/${filename}`), `${filename} is used by the homepage`);
+    assert.match(homepageSource, new RegExp(`/products/homepage/${filename}`), `${filename} is used by the homepage`);
   }
-  const airpodsImg = await readFile(path.join(projectRoot, "public/products/homepage", "airpods-5.jpg"));
-  assert.ok(airpodsImg.length > 0, "airpods-5.jpg is a real asset");
-  assert.doesNotMatch(homepageMediaSource, /\/products\/homepage\/airpods-5\.(?:jpg|webp)/, "AirPods 5 media is removed from the homepage");
-  const heroVideo = await readFile(path.join(projectRoot, "public/videos/homepage/iphone-18-pro.mp4"));
-  assert.equal(heroVideo.toString("ascii", 4, 8), "ftyp", "The iPhone 18 Pro hero source is a real MP4 asset");
-  assert.match(homepageSource, /const productTiles: Campaign\[\] = \[\s*ipadAirCampaign,\s*visaTradingCampaign,\s*\]/, "Visa trading replaces iPad Pro in the paired homepage campaign data");
-  assert.doesNotMatch(homepageSource, /ipadProCampaignArt|title:\s*"iPad Pro"/, "The iPad Pro campaign is removed from the homepage");
-  assert.doesNotMatch(homepageSource, /<section className="store-(?:feature|product)-grid"/, "Homepage product campaigns no longer use paired grids");
-  assert.match(homepageSource, /<CampaignPair campaigns=\{productTiles\} label="iPad Air and Visa Card Trading" className="home-product-pair-ipad-visa" \/>[\s\S]*<StoreServicesSection \/>[\s\S]*<PremiumTrustStrip \/>/, "The iPad and Visa pair is followed by store services and trust benefits");
-  for (const serviceImg of ["installment-payment.png", "repairs.png", "upgrade-and-save.png", "sell-your-device.png", "refer-a-friend.png"]) {
-    const imgData = await readFile(path.join(projectRoot, "public/services", serviceImg));
-    assert.equal(imgData.toString("ascii", 1, 4), "PNG", `${serviceImg} is a real PNG asset`);
-    assert.match(homepageSource, new RegExp(`/services/${serviceImg}`), `${serviceImg} is used by the homepage services section`);
+  const airpodsImg = await readFile(path.join(projectRoot, "public/products/story/airpods-pro-3-apple.jpg"));
+  assert.equal(airpodsImg[0], 0xff, "The supplied AirPods Pro 3 image is a JPEG asset");
+  assert.equal(airpodsImg[1], 0xd8, "The supplied AirPods Pro 3 image has a valid JPEG header");
+  assert.match(homepageSource, /airpods-pro-3-apple\.jpg/, "AirPods Pro 3 uses the supplied product photo");
+  assert.doesNotMatch(homepageSource, /airpods-5-lifestyle\.webp|id: "airpods-5"/, "The homepage no longer promotes AirPods 5");
+  for (const filename of ["repairs.png", "installment-payment.png", "upgrade-and-save.png", "sell-your-device.png", "refer-a-friend.png"]) {
+    const image = await readFile(path.join(projectRoot, "public/services", filename));
+    assert.equal(image.toString("ascii", 1, 4), "PNG", `${filename} is an original PNG service flyer`);
+    assert.match(homepageSource, new RegExp(`/services/${filename.replace(".", "\\.")}`), `${filename} is linked from the homepage carousel`);
   }
-  for (const serviceRoute of ["/installment", "/repairs", "/sell-or-trade\\?mode=upgrade", "/sell-or-trade", "/refer-a-friend"]) {
-    assert.match(homepageSource, new RegExp(`to:\\s*"${serviceRoute}"`), `${serviceRoute} is linked in the homepage services section`);
+  for (const route of ["/iphone/iphone-18-pro", "/shop/buy-iphone/iphone-18-pro", "/airpods/airpods-pro-3", "/shop/buy-airpods/airpods-pro-3", "/ipad/ipad-air", "/shop/buy-ipad/ipad-air", "/gift-cards", "/mac-mini", "/shop/buy-mac/mac-mini"]) {
+    assert.match(homepageSource, new RegExp(`to: "${route}"`), `${route} remains linked on the homepage`);
   }
-  assert.doesNotMatch(homepageSource, /moreStoreInstallmentArtwork|moreStoreRepairsArtwork|moreStoreSellCashArtwork|moreStoreUpgradeArtwork/, "Obsolete service flyer imports are removed");
-  assert.match(homepageSource, /store-services-carousel/, "The services section uses a horizontal carousel");
-  assert.match(homepageSource, /store-services-prev[\s\S]*store-services-next/, "The services section includes carousel navigation arrows");
-  assert.doesNotMatch(homepageSource, /store-service-cta|store-service-link|Learn more <ChevronRight/, "The extra blue Learn more text is removed from underneath posters");
-  assert.doesNotMatch(homepageSource, /Browse beyond Apple|MarketplaceDiscovery|marketplace-discovery/, "Browse Beyond Apple is completely removed from the homepage");
-  assert.doesNotMatch(homepageSource, /title:\s*"(?:iPhone 18 Pro|iPhone Duo|Apple Watch Series 12|Apple Watch Ultra 4|AirPods 5|iPad Air|MacBook Air)"[^}]*?secondaryLabel:\s*"Pre-order"/, "Normal homepage campaigns never use a generic Pre-order CTA");
-  assert.doesNotMatch(homepageSource, /HumanTechCampaign|humanTechCampaign/, "The former people campaign is removed without leaving unused homepage code");
+  for (const filename of ["homepage-ipad-air-white.webp", "homepage-visa-card-white.webp", "homepage-mac-mini-white.webp"]) {
+    const image = await readFile(path.join(projectRoot, "src/assets/homepage", filename));
+    assert.equal(image.toString("ascii", 0, 4), "RIFF", `${filename} is a real WebP asset`);
+    assert.match(homepageSource, new RegExp(filename), `${filename} is used by the homepage`);
+  }
+  const homepageCss = await readFile(path.join(projectRoot, "src/styles/homepage-reference.css"), "utf8");
+  assert.match(homepageCss, /var\(--brand-gold\)/, "Homepage CTAs use the existing Buy & Sell GH yellow");
+  assert.match(homepageCss, /@media \(max-width: 620px\)/, "Homepage includes a stacked mobile layout");
+  assert.match(homepageCss, /\.home-ref-service-track[\s\S]*scroll-snap-type: x mandatory/, "Service flyers use horizontal snap scrolling");
+  assert.match(homepageCss, /\.home-ref-service-card img[\s\S]*object-fit: contain/, "Service flyer text is never cropped");
   const appSource = await readFile(path.join(projectRoot, "src/App.tsx"), "utf8");
   for (const familyPath of ["iphone", "mac", "ipad", "watch", "airpods", "accessories"]) {
     assert.match(appSource, new RegExp(`path="/${familyPath}"`), `${familyPath} has a canonical product-family route`);
@@ -338,8 +330,14 @@ try {
   assert.equal(productExperience.productFamilies.iphone.path, "/iphone", "Product experience exposes the canonical iPhone family path");
   assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").buyPath, "/shop/buy-iphone/iphone-18-pro", "iPhone 18 Pro story links to the dedicated buying flow");
   assert.equal(productExperience.getProductStory("accessories", "charging-and-power").buyPath, "/shop/buy-accessory/charging-and-power", "Accessories featured Learn More route has a matching enquiry journey");
-  const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "macbook-air", "mac-mini", "ipad-air"];
-  assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All eight requested Learn More stories are configured");
+  const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "airpods-pro-3", "macbook-air", "mac-mini", "ipad-air"];
+  assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All nine Learn More stories are configured, including the preserved AirPods 5 route");
+  const airpodsPro3Story = editorialStories.editorialStories["airpods-pro-3"];
+  assert.equal(airpodsPro3Story.buyPath, "/shop/buy-airpods/airpods-pro-3", "AirPods Pro 3 never links to AirPods 5 pricing");
+  assert.equal(airpodsPro3Story.chapters.length + airpodsPro3Story.information.items.length, 10, "AirPods Pro 3 explains all ten requested feature topics");
+  assert.doesNotMatch(JSON.stringify(airpodsPro3Story), /AirPods 5|airpods-5/, "AirPods Pro 3 story contains no AirPods 5 copy or imagery");
+  const productBuySource = await readFile(path.join(projectRoot, "src/pages/ProductBuyPage.tsx"), "utf8");
+  assert.ok(productBuySource.indexOf('slug === "airpods-pro-3"') < productBuySource.indexOf('slug === "airpods-5"'), "AirPods Pro 3 resolves through its own catalogue product before the legacy AirPods 5 flow");
   for (const slug of editorialSlugs) {
     const story = editorialStories.editorialStories[slug];
     assert.ok(story.hero.src && story.hero.alt, `${slug} has accessible hero imagery`);
@@ -374,6 +372,10 @@ try {
   assert.match(appSource, /path="\/phones-tablets"/, "Phones & Tablets has a dedicated public route");
   assert.match(appSource, /path="\/electronics"/, "Electronics has a dedicated public route");
   assert.match(appSource, /path="\/mac-mini"/, "Mac mini has a dedicated launch route");
+  const macMiniBuySource = await readFile(path.join(projectRoot, "src/components/buy/MacMiniBuyExperience.tsx"), "utf8");
+  assert.match(macMiniBuySource, /Apple M6 \(12-core CPU \/ 12-core GPU\)/, "Mac mini Buy lists Apple's M6 chip correctly");
+  assert.match(macMiniBuySource, /Apple M5 Pro \(15-core CPU \/ 16-core GPU\)/, "Mac mini Buy lists Apple's M5 Pro chip correctly");
+  assert.match(macMiniBuySource, /resolveConfiguredPrice\(catalogProduct/, "Mac mini Buy preserves catalogue-backed price resolution");
   assert.match(appSource, /path="\/mac-studio"/, "Mac Studio has a dedicated launch route");
   const newMacLaunchSource = await readFile(path.join(projectRoot, "src/data/newMacLaunches.ts"), "utf8");
   assert.match(newMacLaunchSource, /Mac mini \(M6 or M5 Pro\)/, "Mac mini preorder preserves both announced chip options");

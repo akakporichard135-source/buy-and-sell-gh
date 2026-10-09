@@ -47,6 +47,11 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
     return <WatchSeries12BuyExperience catalogProduct={primaryProduct} />;
   }
 
+  // AirPods Pro 3 uses its own catalogue record and variant, never AirPods 5 pricing.
+  if (family === "airpods" && slug === "airpods-pro-3") {
+    return <GenericBuyExperience product={primaryProduct} family={family} slug={slug} />;
+  }
+
   // 5. AirPods 5
   if (family === "airpods" && (slug === "airpods-5" || slug.includes("airpods"))) {
     return <AirpodsBuyExperience catalogProduct={primaryProduct} />;

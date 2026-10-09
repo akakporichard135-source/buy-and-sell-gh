@@ -97,7 +97,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         <div className="apple-buy-cards-grid">
           <BuyOptionCard
             title="Apple M6 Chip"
-            subtitle="10-core CPU, 10-core GPU, 16-core Neural Engine. Thunderbolt 4 ports, HDMI, and Gigabit Ethernet."
+            subtitle="12-core CPU, 12-core GPU, dual 16-core Neural Engine. Thunderbolt 4, HDMI, and 2.5Gb Ethernet."
             selected={chipConfig === "M6"}
             onClick={() => {
               setChipConfig("M6");
@@ -107,7 +107,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           />
           <BuyOptionCard
             title="Apple M5 Pro Chip"
-            subtitle="12-core CPU, 16-core GPU, 16-core Neural Engine. Thunderbolt 5 ports with up to 120Gb/s bandwidth."
+            subtitle="15-core CPU, 16-core GPU, 16-core Neural Engine. Thunderbolt 5 ports with up to 120Gb/s bandwidth."
             selected={chipConfig === "M5 Pro"}
             onClick={() => {
               setChipConfig("M5 Pro");
@@ -186,7 +186,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         title="Your Pre-order Mac mini"
         items={[
           { label: "Model", value: "Mac mini (Silver Aluminum)" },
-          { label: "Chip", value: chipConfig === "M6" ? "Apple M6 (10-core CPU / 10-core GPU)" : "Apple M5 Pro (12-core CPU / 16-core GPU)" },
+          { label: "Chip", value: chipConfig === "M6" ? "Apple M6 (12-core CPU / 12-core GPU)" : "Apple M5 Pro (15-core CPU / 16-core GPU)" },
           { label: "Unified Memory", value: `${memory} Unified Memory` },
           { label: "Storage", value: `${storage} SSD Storage` },
           { label: "Payment Preference", value: paymentMethod },
