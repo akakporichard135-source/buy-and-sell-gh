@@ -289,7 +289,7 @@ try {
   assert.doesNotMatch(homepageSource, /More to explore\.|EditorialCarousel|home-ref-promo/, "The former editorial carousel and promotional cards are removed");
   assert.match(homepageSource, /iphone18-hero-img/, "The homepage hero uses the approved still image");
   assert.match(homepageSource, /\/products\/homepage\/iphone-18-pro-hero-2x\.webp/, "The homepage uses the approved iPhone 18 Pro hero asset");
-  assert.doesNotMatch(homepageSource, /<video|HomepageVideoShowcase|home-product-reel/, "Homepage does not add a cinematic video");
+  assert.doesNotMatch(homepageSource, /HomepageVideoShowcase|home-product-reel/, "Homepage keeps the approved still-image heroes");
   assert.doesNotMatch(homepageSource, /iphone-18-pro-cinematic\.webp/, "The rejected generated iPhone 18 Pro hardware is not used");
   for (const filename of ["iphone-duo.webp", "watch-series-12.webp", "watch-ultra-4.webp"]) {
     const image = await readFile(path.join(projectRoot, "public/products/homepage", filename));
@@ -300,7 +300,14 @@ try {
   const airpodsImg = await readFile(path.join(projectRoot, "public/products/story/airpods-pro-3-apple.jpg"));
   assert.equal(airpodsImg[0], 0xff, "The supplied AirPods Pro 3 image is a JPEG asset");
   assert.equal(airpodsImg[1], 0xd8, "The supplied AirPods Pro 3 image has a valid JPEG header");
-  assert.match(homepageSource, /airpods-pro-3-apple\.jpg/, "AirPods Pro 3 uses the supplied product photo");
+  assert.match(homepageSource, /airpods-pro-3-lifestyle\.mp4/, "AirPods Pro 3 homepage tile uses the supplied lifestyle video");
+  assert.match(homepageSource, /airpods-pro-3-lifestyle-poster\.webp/, "AirPods Pro 3 homepage tile has a poster fallback");
+  assert.match(homepageSource, /autoPlay[\s\S]*muted[\s\S]*loop[\s\S]*playsInline/, "AirPods Pro 3 video is configured for inline silent looping");
+  assert.match(homepageSource, /prefers-reduced-motion: reduce/, "AirPods Pro 3 video respects reduced-motion preferences");
+  const airpodsVideo = await readFile(path.join(projectRoot, "public/videos/homepage/airpods-pro-3-lifestyle.mp4"));
+  assert.equal(airpodsVideo.toString("ascii", 4, 8), "ftyp", "AirPods Pro 3 lifestyle video is a real MP4");
+  const airpodsPoster = await readFile(path.join(projectRoot, "public/videos/homepage/airpods-pro-3-lifestyle-poster.webp"));
+  assert.equal(airpodsPoster.toString("ascii", 0, 4), "RIFF", "AirPods Pro 3 video poster is a real WebP");
   assert.doesNotMatch(homepageSource, /airpods-5-lifestyle\.webp|id: "airpods-5"/, "The homepage no longer promotes AirPods 5");
   for (const filename of ["repairs.png", "installment-payment.png", "upgrade-and-save.png", "sell-your-device.png", "refer-a-friend.png"]) {
     const image = await readFile(path.join(projectRoot, "public/services", filename));
@@ -332,6 +339,20 @@ try {
   assert.equal(productExperience.getProductStory("accessories", "charging-and-power").buyPath, "/shop/buy-accessory/charging-and-power", "Accessories featured Learn More route has a matching enquiry journey");
   const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "airpods-pro-3", "macbook-air", "mac-mini", "ipad-air"];
   assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All nine Learn More stories are configured, including the preserved AirPods 5 route");
+  for (const [slug, filename] of [
+    ["iphone-18-pro", "iphone-18-pro-showcase.mp4"],
+    ["iphone-duo", "iphone-duo-showcase.mp4"],
+    ["apple-watch-series-12", "watch-series-12-showcase.mp4"],
+  ]) {
+    const src = `/videos/learn-more/${filename}`;
+    assert.equal(editorialStories.editorialStories[slug].cinematicVideo.src, src, `${slug} uses its supplied showcase clip`);
+    const video = await readFile(path.join(projectRoot, "public/videos/learn-more", filename));
+    assert.equal(video.toString("ascii", 4, 8), "ftyp", `${filename} is a real MP4 asset`);
+  }
+  assert.equal(productExperience.getProductStory("watch", "apple-watch-series-12").media.src, "/videos/learn-more/watch-series-12-showcase.mp4", "Watch Series 12 fallback story uses the same clip");
+  assert.equal(editorialStories.editorialStories["iphone-18-pro"].cinematicVideo.mobileSrc, "/videos/learn-more/iphone-18-pro-showcase.mp4", "iPhone 18 Pro mobile story uses the supplied clip too");
+  assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").media.src, "/videos/learn-more/iphone-18-pro-showcase.mp4", "iPhone 18 Pro fallback story uses the same clip");
+  assert.equal(editorialStories.editorialStories["apple-watch-ultra-4"].cinematicVideo.src, "/videos/homepage/watch-ultra-4.mp4", "Watch Ultra 4 remains unchanged pending a clean original");
   const airpodsPro3Story = editorialStories.editorialStories["airpods-pro-3"];
   assert.equal(airpodsPro3Story.buyPath, "/shop/buy-airpods/airpods-pro-3", "AirPods Pro 3 never links to AirPods 5 pricing");
   assert.equal(airpodsPro3Story.chapters.length + airpodsPro3Story.information.items.length, 10, "AirPods Pro 3 explains all ten requested feature topics");

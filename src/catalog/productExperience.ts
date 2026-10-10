@@ -154,7 +154,7 @@ export const productStories: ProductStoryDefinition[] = [
     introduction: "Pro from every angle. Designed to make every interaction feel extraordinary.",
     introductionLead: "Pro from every angle.",
     introductionSub: "Designed to make every interaction feel extraordinary.",
-    media: { type: "video", src: "/videos/homepage/iphone-18-pro.mp4", alt: "iPhone 18 Pro cinematic product film" },
+    media: { type: "video", src: "/videos/learn-more/iphone-18-pro-showcase.mp4", alt: "iPhone 18 Pro cinematic product film" },
     designMedia: { type: "image", src: "/products/campaigns/iphone-18-pro-banner.webp", alt: "iPhone 18 Pro cinematic banner with PRO glass letters" },
     galleryMedia: [
       { src: "/products/campaigns/iphone-18-pro-hero.webp", alt: "iPhone 18 Pro PRO stage presentation" },
@@ -225,7 +225,7 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Everyday momentum",
     tagline: "Stay connected to what moves you.",
     introduction: "Apple Watch Series 12 brings everyday performance, advanced health notifications, and all-day battery life in a refined, comfortable design.",
-    media: { type: "video", src: "/videos/homepage/watch-series-12.mp4", alt: "Apple Watch Series 12 cinematic showcase" },
+    media: { type: "video", src: "/videos/learn-more/watch-series-12-showcase.mp4", alt: "Apple Watch Series 12 cinematic showcase" },
     designMedia: { type: "image", src: "/products/campaigns/watch-series-12-product.webp", alt: "Apple Watch Series 12 with new features overview" },
     galleryMedia: [
       { src: "/products/homepage/watch-series-12.webp", alt: "Apple Watch Series 12 campaign presentation" },
