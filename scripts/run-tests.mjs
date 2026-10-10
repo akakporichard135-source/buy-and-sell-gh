@@ -300,12 +300,13 @@ try {
   const airpodsImg = await readFile(path.join(projectRoot, "public/products/story/airpods-pro-3-apple.jpg"));
   assert.equal(airpodsImg[0], 0xff, "The supplied AirPods Pro 3 image is a JPEG asset");
   assert.equal(airpodsImg[1], 0xd8, "The supplied AirPods Pro 3 image has a valid JPEG header");
-  assert.match(homepageSource, /airpods-pro-3-lifestyle\.mp4/, "AirPods Pro 3 homepage tile uses the supplied lifestyle video");
-  assert.match(homepageSource, /airpods-pro-3-lifestyle-poster\.webp/, "AirPods Pro 3 homepage tile has a poster fallback");
-  assert.match(homepageSource, /autoPlay[\s\S]*muted[\s\S]*loop[\s\S]*playsInline/, "AirPods Pro 3 video is configured for inline silent looping");
-  assert.match(homepageSource, /prefers-reduced-motion: reduce/, "AirPods Pro 3 video respects reduced-motion preferences");
+  assert.match(homepageSource, /image:\s*"\/products\/story\/airpods-pro-3-apple\.jpg"/, "AirPods Pro 3 homepage tile uses the restored static image");
+  assert.doesNotMatch(homepageSource, /id:\s*"airpods-pro-3"[\s\S]*?video:/, "AirPods Pro 3 homepage tile has no video playback");
   const airpodsVideo = await readFile(path.join(projectRoot, "public/videos/homepage/airpods-pro-3-lifestyle.mp4"));
   assert.equal(airpodsVideo.toString("ascii", 4, 8), "ftyp", "AirPods Pro 3 lifestyle video is a real MP4");
+  const airpodsMobileVideo = await readFile(path.join(projectRoot, "public/videos/homepage/airpods-pro-3-lifestyle-mobile.mp4"));
+  assert.equal(airpodsMobileVideo.toString("ascii", 4, 8), "ftyp", "AirPods Pro 3 mobile lifestyle video is a real MP4");
+  assert.ok(airpodsMobileVideo.length < airpodsVideo.length, "The mobile video is smaller than the desktop source");
   const airpodsPoster = await readFile(path.join(projectRoot, "public/videos/homepage/airpods-pro-3-lifestyle-poster.webp"));
   assert.equal(airpodsPoster.toString("ascii", 0, 4), "RIFF", "AirPods Pro 3 video poster is a real WebP");
   assert.doesNotMatch(homepageSource, /airpods-5-lifestyle\.webp|id: "airpods-5"/, "The homepage no longer promotes AirPods 5");
@@ -317,7 +318,11 @@ try {
   for (const route of ["/iphone/iphone-18-pro", "/shop/buy-iphone/iphone-18-pro", "/airpods/airpods-pro-3", "/shop/buy-airpods/airpods-pro-3", "/ipad/ipad-air", "/shop/buy-ipad/ipad-air", "/gift-cards", "/mac-mini", "/shop/buy-mac/mac-mini"]) {
     assert.match(homepageSource, new RegExp(`to: "${route}"`), `${route} remains linked on the homepage`);
   }
-  for (const filename of ["homepage-ipad-air-white.webp", "homepage-visa-card-white.webp", "homepage-mac-mini-white.webp"]) {
+  const macMiniHandImg = await readFile(path.join(projectRoot, "public/products/homepage/mac-mini-device.jpg"));
+  assert.equal(macMiniHandImg[0], 0xff, "Mac mini hand image is a JPEG asset");
+  assert.equal(macMiniHandImg[1], 0xd8, "Mac mini hand image has a valid JPEG header");
+  assert.match(homepageSource, /\/products\/homepage\/mac-mini-device\.jpg/, "Mac mini homepage tile uses the hand holding device asset");
+  for (const filename of ["homepage-ipad-air-white.webp", "homepage-visa-card-white.webp"]) {
     const image = await readFile(path.join(projectRoot, "src/assets/homepage", filename));
     assert.equal(image.toString("ascii", 0, 4), "RIFF", `${filename} is a real WebP asset`);
     assert.match(homepageSource, new RegExp(filename), `${filename} is used by the homepage`);
@@ -354,6 +359,9 @@ try {
   assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").media.src, "/videos/learn-more/iphone-18-pro-showcase.mp4", "iPhone 18 Pro fallback story uses the same clip");
   assert.equal(editorialStories.editorialStories["apple-watch-ultra-4"].cinematicVideo.src, "/videos/homepage/watch-ultra-4.mp4", "Watch Ultra 4 remains unchanged pending a clean original");
   const airpodsPro3Story = editorialStories.editorialStories["airpods-pro-3"];
+  assert.equal(airpodsPro3Story.cinematicVideo.src, "/videos/homepage/airpods-pro-3-lifestyle.mp4", "AirPods Pro 3 story includes the cinematic lifestyle video");
+  assert.equal(airpodsPro3Story.cinematicVideo.mobileSrc, "/videos/homepage/airpods-pro-3-lifestyle-mobile.mp4", "AirPods Pro 3 story includes mobile-optimized video source");
+  assert.equal(airpodsPro3Story.cinematicVideo.poster, "/videos/homepage/airpods-pro-3-lifestyle-poster.webp", "AirPods Pro 3 story includes video poster fallback");
   assert.equal(airpodsPro3Story.buyPath, "/shop/buy-airpods/airpods-pro-3", "AirPods Pro 3 never links to AirPods 5 pricing");
   assert.equal(airpodsPro3Story.chapters.length + airpodsPro3Story.information.items.length, 10, "AirPods Pro 3 explains all ten requested feature topics");
   assert.doesNotMatch(JSON.stringify(airpodsPro3Story), /AirPods 5|airpods-5/, "AirPods Pro 3 story contains no AirPods 5 copy or imagery");

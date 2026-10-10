@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import ipadAirArt from "../assets/homepage/homepage-ipad-air-white.webp";
-import macMiniArt from "../assets/homepage/homepage-mac-mini-white.webp";
 import visaCardArt from "../assets/homepage/homepage-visa-card-white.webp";
 import "../styles/homepage-reference.css";
 
@@ -13,7 +12,6 @@ type Campaign = {
   title: string;
   subtitle: string;
   image: string;
-  video?: string;
   alt: string;
   tone: "dark" | "light" | "mist";
   primary: Action;
@@ -70,9 +68,8 @@ const tileRows: Campaign[][] = [
       id: "airpods-pro-3",
       title: "AirPods Pro 3",
       subtitle: "Premium sound. A more immersive experience.",
-      image: "/videos/homepage/airpods-pro-3-lifestyle-poster.webp",
-      video: "/videos/homepage/airpods-pro-3-lifestyle.mp4",
-      alt: "Person wearing AirPods Pro 3 in a cinematic listening scene",
+      image: "/products/story/airpods-pro-3-apple.jpg",
+      alt: "AirPods Pro 3 earbuds above their open MagSafe Charging Case",
       tone: "light",
       primary: { label: "Learn more", to: "/airpods/airpods-pro-3" },
       secondary: { label: "View pricing", to: "/shop/buy-airpods/airpods-pro-3" },
@@ -115,8 +112,8 @@ const tileRows: Campaign[][] = [
       id: "mac-mini",
       title: "Mac mini",
       subtitle: "Small footprint. Serious capability.",
-      image: macMiniArt,
-      alt: "Silver Mac mini with front USB-C ports and headphone jack",
+      image: "/products/homepage/mac-mini-device.jpg",
+      alt: "Mac mini held in hand",
       tone: "light",
       primary: { label: "Learn more", to: "/mac-mini" },
       secondary: { label: "Buy", to: "/shop/buy-mac/mac-mini" },
@@ -187,42 +184,8 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
 }
 
 function ProductTile({ campaign }: { campaign: Campaign }) {
-  const tileRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const [inView, setInView] = useState(false);
-  const [loadVideo, setLoadVideo] = useState(false);
-  const [videoReady, setVideoReady] = useState(false);
-  const [videoFailed, setVideoFailed] = useState(false);
-
-  useEffect(() => {
-    if (!campaign.video) return;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(media.matches);
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, [campaign.video]);
-
-  useEffect(() => {
-    if (!campaign.video || !tileRef.current) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      setInView(entry.isIntersecting);
-      if (entry.isIntersecting) setLoadVideo(true);
-    }, { rootMargin: "200px 0px", threshold: 0.01 });
-    observer.observe(tileRef.current);
-    return () => observer.disconnect();
-  }, [campaign.video]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (inView && !reducedMotion) void video.play().catch(() => {});
-    else video.pause();
-  }, [inView, reducedMotion, loadVideo]);
-
   return (
     <section
-      ref={tileRef}
       className={`home-ref-tile home-ref-${campaign.id} home-ref-${campaign.tone}${campaign.placement === "bottom" ? " home-ref-copy-bottom" : ""}`}
       aria-labelledby={`home-ref-${campaign.id}-title`}
     >
@@ -231,23 +194,7 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
         <p>{campaign.subtitle}</p>
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      <img className="home-ref-tile-image" src={campaign.image} alt={campaign.alt} loading={campaign.video ? "eager" : "lazy"} decoding={campaign.video ? "sync" : "async"} />
-      {campaign.video && loadVideo && !reducedMotion && !videoFailed && (
-        <video
-          ref={videoRef}
-          className={`home-ref-tile-video${videoReady ? " home-ref-tile-video-ready" : ""}`}
-          src={campaign.video}
-          poster={campaign.image}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-label={campaign.alt}
-          onLoadedData={() => setVideoReady(true)}
-          onError={() => setVideoFailed(true)}
-        />
-      )}
+      <img className="home-ref-tile-image" src={campaign.image} alt={campaign.alt} loading="lazy" decoding="async" />
     </section>
   );
 }

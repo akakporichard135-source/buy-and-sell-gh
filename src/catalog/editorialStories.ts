@@ -704,6 +704,18 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Battery", title: "Up to 8 hours with ANC; up to 24 with the case.", image: { src: airpodsPro3Catalogue, alt: "AirPods Pro 3 MagSafe Charging Case" }, tone: "blue" },
       { label: "Workouts", title: "A heart rate sensor can track supported workouts.", image: { src: airpodsPro3Apple, alt: "AirPods Pro 3 earbuds with built-in heart rate sensing" }, tone: "sage" },
     ],
+    cinematicVideo: {
+      src: "/videos/homepage/airpods-pro-3-lifestyle.mp4",
+      mobileSrc: "/videos/homepage/airpods-pro-3-lifestyle-mobile.mp4",
+      poster: "/videos/homepage/airpods-pro-3-lifestyle-poster.webp",
+      alt: "AirPods Pro 3 in a cinematic listening scene",
+      eyebrow: "Acoustic Immersion",
+      headline: "Sound sculpted for movement.",
+      subheadline: "Precision acoustic seal meets next-generation computational audio.",
+      aspectRatio: "16/9",
+      isClean: true,
+      fit: "cover",
+    },
     chapters: [
       {
         id: "pro3-sound",
