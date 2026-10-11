@@ -91,9 +91,9 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Finishes", title: "Four titanium expressions.", image: { src: `${suppliedIphone}/iphone-18-pro-supplied-four-finishes.jpg`, alt: "Rear views of black, silver, blue and burgundy iPhone finishes", fit: "cover" }, tone: "ink" },
     ],
     cinematicVideo: {
-      src: "/videos/learn-more/iphone-18-pro-showcase.mp4",
-      mobileSrc: "/videos/learn-more/iphone-18-pro-showcase.mp4",
-      poster: "/products/story/iphone-18-pro-clean-frame.webp",
+      src: "/videos/learn-more/iphone-18-pro-cinematic-20261011.mp4",
+      mobileSrc: "/videos/learn-more/iphone-18-pro-cinematic-20261011.mp4",
+      poster: "/products/story/iphone-18-pro-cinematic-poster-20261011.webp",
       alt: "iPhone 18 Pro in aerospace titanium cinematic presentation",
       eyebrow: "Cinematic Hardware",
       headline: "Precision in continuous motion.",
@@ -472,7 +472,7 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Expedition", title: "Dual-frequency GPS and 100m water resistance.", image: { src: `${campaign}/watch-ultra-4-rugged.webp`, alt: "Apple Watch Ultra 4 expedition endurance" }, tone: "ink" },
     ],
     cinematicVideo: {
-      src: "/videos/homepage/watch-ultra-4.mp4",
+      src: "/videos/learn-more/watch-ultra-4-cinematic-20261011.mp4",
       poster: "/products/homepage/watch-ultra-4.webp",
       alt: "Apple Watch Ultra 4 rugged 49mm aerospace titanium in motion",
       eyebrow: "Extreme Environments",

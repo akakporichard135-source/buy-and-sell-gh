@@ -345,7 +345,7 @@ try {
   const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "airpods-pro-3", "macbook-air", "mac-mini", "ipad-air"];
   assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All nine Learn More stories are configured, including the preserved AirPods 5 route");
   for (const [slug, filename] of [
-    ["iphone-18-pro", "iphone-18-pro-showcase.mp4"],
+    ["iphone-18-pro", "iphone-18-pro-cinematic-20261011.mp4"],
     ["iphone-duo", "iphone-duo-showcase.mp4"],
     ["apple-watch-series-12", "watch-series-12-showcase.mp4"],
   ]) {
@@ -355,9 +355,15 @@ try {
     assert.equal(video.toString("ascii", 4, 8), "ftyp", `${filename} is a real MP4 asset`);
   }
   assert.equal(productExperience.getProductStory("watch", "apple-watch-series-12").media.src, "/videos/learn-more/watch-series-12-showcase.mp4", "Watch Series 12 fallback story uses the same clip");
-  assert.equal(editorialStories.editorialStories["iphone-18-pro"].cinematicVideo.mobileSrc, "/videos/learn-more/iphone-18-pro-showcase.mp4", "iPhone 18 Pro mobile story uses the supplied clip too");
-  assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").media.src, "/videos/learn-more/iphone-18-pro-showcase.mp4", "iPhone 18 Pro fallback story uses the same clip");
-  assert.equal(editorialStories.editorialStories["apple-watch-ultra-4"].cinematicVideo.src, "/videos/homepage/watch-ultra-4.mp4", "Watch Ultra 4 remains unchanged pending a clean original");
+  assert.equal(editorialStories.editorialStories["iphone-18-pro"].cinematicVideo.mobileSrc, "/videos/learn-more/iphone-18-pro-cinematic-20261011.mp4", "iPhone 18 Pro mobile story uses the supplied clip too");
+  assert.equal(editorialStories.editorialStories["iphone-18-pro"].cinematicVideo.poster, "/products/story/iphone-18-pro-cinematic-poster-20261011.webp", "iPhone 18 Pro story uses a poster from the new clip");
+  const iphonePoster = await readFile(path.join(projectRoot, "public/products/story/iphone-18-pro-cinematic-poster-20261011.webp"));
+  assert.equal(iphonePoster.toString("ascii", 0, 4), "RIFF", "iPhone 18 Pro video poster is a real WebP");
+  assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").media.src, "/videos/learn-more/iphone-18-pro-cinematic-20261011.mp4", "iPhone 18 Pro fallback story uses the same clip");
+  assert.equal(editorialStories.editorialStories["apple-watch-ultra-4"].cinematicVideo.src, "/videos/learn-more/watch-ultra-4-cinematic-20261011.mp4", "Watch Ultra 4 story uses the supplied clean video");
+  assert.equal(productExperience.getProductStory("watch", "apple-watch-ultra-4").media.src, "/videos/learn-more/watch-ultra-4-cinematic-20261011.mp4", "Watch Ultra 4 fallback story uses the same video");
+  const ultraVideo = await readFile(path.join(projectRoot, "public/videos/learn-more/watch-ultra-4-cinematic-20261011.mp4"));
+  assert.equal(ultraVideo.toString("ascii", 4, 8), "ftyp", "Watch Ultra 4 cinematic is a real MP4");
   const airpodsPro3Story = editorialStories.editorialStories["airpods-pro-3"];
   assert.equal(airpodsPro3Story.cinematicVideo.src, "/videos/homepage/airpods-pro-3-lifestyle.mp4", "AirPods Pro 3 story includes the cinematic lifestyle video");
   assert.equal(airpodsPro3Story.cinematicVideo.mobileSrc, "/videos/homepage/airpods-pro-3-lifestyle-mobile.mp4", "AirPods Pro 3 story includes mobile-optimized video source");

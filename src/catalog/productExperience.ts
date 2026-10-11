@@ -154,7 +154,7 @@ export const productStories: ProductStoryDefinition[] = [
     introduction: "Pro from every angle. Designed to make every interaction feel extraordinary.",
     introductionLead: "Pro from every angle.",
     introductionSub: "Designed to make every interaction feel extraordinary.",
-    media: { type: "video", src: "/videos/learn-more/iphone-18-pro-showcase.mp4", alt: "iPhone 18 Pro cinematic product film" },
+    media: { type: "video", src: "/videos/learn-more/iphone-18-pro-cinematic-20261011.mp4", alt: "iPhone 18 Pro cinematic product film" },
     designMedia: { type: "image", src: "/products/campaigns/iphone-18-pro-banner.webp", alt: "iPhone 18 Pro cinematic banner with PRO glass letters" },
     galleryMedia: [
       { src: "/products/campaigns/iphone-18-pro-hero.webp", alt: "iPhone 18 Pro PRO stage presentation" },
@@ -258,7 +258,7 @@ export const productStories: ProductStoryDefinition[] = [
     eyebrow: "Built for beyond",
     tagline: "Rugged capability. Precision without compromise.",
     introduction: "Engineered for endurance, outdoor exploration, and ocean adventures. The most rugged Apple Watch designed for demanding environments.",
-    media: { type: "video", src: "/videos/homepage/watch-ultra-4.mp4", alt: "Apple Watch Ultra 4 cinematic showcase" },
+    media: { type: "video", src: "/videos/learn-more/watch-ultra-4-cinematic-20261011.mp4", alt: "Apple Watch Ultra 4 cinematic showcase" },
     designMedia: { type: "image", src: "/products/homepage/watch-ultra-4.webp", alt: "Apple Watch Ultra 4 rugged titanium smartwatch" },
     galleryMedia: [
       { src: "/products/homepage/watch-ultra-4.webp", alt: "Apple Watch Ultra 4 on pure black cinematic stage" },
