@@ -1,6 +1,8 @@
 import macMiniHero from "../assets/homepage/homepage-mac-mini-white.webp";
 import macMiniDetail from "../assets/homepage/homepage-mac-mini-m6-launch.webp";
 import airpodsPro3Catalogue from "../assets/catalogue-products/airpods-pro-3-premium.webp";
+import ipadAirBlueWhite from "../assets/catalogue-products/ipad-air-11-inch-m3-premium.webp";
+import ipadKeyboardWhite from "../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
 
 export type EditorialTone = "light" | "ink" | "blue" | "plum" | "sage";
 
@@ -70,6 +72,7 @@ export type EditorialStory = {
 };
 
 const campaign = "/products/campaigns";
+const ipadAirWhite = `${campaign}/ipad-air-editorial-pure-white.png`;
 const homepage = "/products/homepage";
 const suppliedIphone = "/products/story";
 const airpodsPro3Apple = "/products/story/airpods-pro-3-apple.jpg";
@@ -1037,13 +1040,13 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Fresh Air",
     tagline: "Light. Speed. Two sizes. Endless possibilities.",
     buyPath: "/shop/buy-ipad/ipad-air",
-    hero: { src: `${campaign}/ipad-air-cinematic.webp`, alt: "iPad Air in vibrant anodized finishes floating above studio reflective stage" },
+    hero: { src: ipadAirWhite, alt: "iPad Air front and rear views on a white background" },
     heroTone: "light",
     highlights: [
-      { label: "Two Sizes", title: "11-inch or all-new 13-inch. Infinite room for thought.", image: { src: `${campaign}/ipad-air-cinematic.webp`, alt: "iPad Air 11-inch and 13-inch displayed together" }, tone: "light" },
-      { label: "Apple Silicon", title: "M-Series power unleashed for Apple Intelligence.", image: { src: `${campaign}/ipad-air-11.webp`, alt: "iPad Air Liquid Retina display showing graphics workflow" }, tone: "light" },
+      { label: "Two Sizes", title: "11-inch or all-new 13-inch. Infinite room for thought.", image: { src: ipadAirWhite, alt: "iPad Air front and rear views on white" }, tone: "light" },
+      { label: "Apple Silicon", title: "M-Series power unleashed for Apple Intelligence.", image: { src: ipadAirBlueWhite, alt: "Blue iPad Air front and back on white" }, tone: "light" },
       { label: "Apple Pencil Pro", title: "Squeeze, barrel roll, and haptics for boundless artistry.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "iPad Air in Blue with edge-to-edge Liquid Retina canvas" }, tone: "blue" },
-      { label: "Magic Keyboard", title: "Floating cantilever design with function keys and trackpad.", image: { src: `${campaign}/ipad-keyboard-accessory.webp`, alt: "iPad Magic Keyboard accessory with trackpad and backlit keyboard" }, tone: "ink" },
+      { label: "Magic Keyboard", title: "Floating cantilever design with function keys and trackpad.", image: { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard with trackpad on white" }, tone: "ink" },
       { label: "Colour Palette", title: "Four exquisite anodized finishes in recycled aluminum.", image: { src: `${campaign}/ipad-air-colors.webp`, alt: "iPad Air color range showing full palette" }, tone: "light" },
     ],
     chapters: [
@@ -1052,7 +1055,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Canvas",
         title: "Two sizes. Brilliant Liquid Retina displays.",
         copy: "Choose between the ultraportable 11-inch model and the expansive all-new 13-inch display offering 30 percent more viewable area. Built with an anti-reflective coating, P3 wide color gamut, and True Tone technology, every document, sketch, and film looks razor-sharp in any indoor or outdoor Ghanaian light.",
-        image: { src: `${campaign}/ipad-air-cinematic.webp`, alt: "iPad Air Liquid Retina display in studio light" },
+        image: { src: ipadAirWhite, alt: "iPad Air front and rear views with Liquid Retina display on white" },
         tone: "light",
         layout: "stage",
         metric: { value: "11\" & 13\"", label: "Liquid Retina Options" },
@@ -1063,7 +1066,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Silicon",
         title: "M-Series power engineered for Apple Intelligence.",
         copy: "Driven by an 8-core CPU and 10-core GPU, iPad Air speeds through demanding tasks like 4K multi-stream video editing, architectural 3D rendering in SketchUp, and fluid gaming. The dedicated 16-core Neural Engine accelerates on-device AI workflows with instant responsiveness while maintaining true all-day battery endurance.",
-        image: { src: `${campaign}/ipad-air-11.webp`, alt: "iPad Air 11-inch displaying intensive app workflow" },
+        image: { src: ipadAirBlueWhite, alt: "Blue 11-inch iPad Air front and back on white" },
         tone: "sage",
         layout: "split",
         metric: { value: "M-Series", label: "Pro-Class Silicon" },
@@ -1085,7 +1088,7 @@ export const editorialStories: Record<string, EditorialStory> = {
         label: "Workstation",
         title: "Magic Keyboard. Complete laptop versatility.",
         copy: "Snap iPad Air onto the floating cantilever Magic Keyboard to instantly transition into a dedicated production workstation. Enjoy backlit scissor-switch keys with 1mm travel, a dedicated 14-key function row, pass-through USB-C charging, and a responsive glass trackpad that makes spreadsheet editing and typing effortless.",
-        image: { src: `${campaign}/ipad-keyboard-accessory.webp`, alt: "iPad Air mounted on Magic Keyboard floating cantilever" },
+        image: { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard and trackpad on white" },
         tone: "ink",
         layout: "stage",
         metric: { value: "Floating", label: "Cantilever Design" },

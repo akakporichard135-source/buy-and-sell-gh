@@ -1,84 +1,66 @@
-import { ClipboardCheck, MessageCircle } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
+import { ServiceBookingPage, ServicePhotoField } from "../components/ServiceBookingPage";
 import { SuccessForm } from "../components/SuccessForm";
-import { WhatsAppButton } from "../components/WhatsAppButton";
-import sellOldIphoneArtwork from "../assets/brand/sell-old-iphone-cash.webp";
-import upgradeSaveArtwork from "../assets/brand/upgrade-save-tall.webp";
 
 export function SellTradePage() {
   const [searchParams] = useSearchParams();
-  const mode = searchParams.get("mode");
-  const isUpgradeMode = mode === "upgrade";
-  const heroArtwork = isUpgradeMode ? upgradeSaveArtwork : sellOldIphoneArtwork;
-  const heroAlt = isUpgradeMode ? "Buy & Sell GH upgrade and save artwork" : "Buy & Sell GH sell your old phone artwork";
-  const heroTitle = isUpgradeMode ? "Upgrade for less with your current device" : "Sell your old phone for cash";
-  const heroDescription = isUpgradeMode
-    ? "Trade or swap your current device toward something newer. Final value is confirmed after physical inspection at Buy & Sell GH."
-    : "Send your device details for an estimate. Final cash value is confirmed only after physical inspection at Buy & Sell GH.";
+  const isUpgradeMode = searchParams.get("mode") === "upgrade";
+  const title = isUpgradeMode ? "Upgrade Your Device" : "Sell Your Device";
 
   return (
     <>
-      <SEO title="Sell or Trade In Your Phone" description="Submit your iPhone or gadget trade-in details to Buy & Sell GH. Final price is confirmed after inspection." />
-      <section className="page-hero sell-trade-hero">
-        <div>
-          <p className="eyebrow-dark">Sell or Trade In</p>
-          <h1>{heroTitle}</h1>
-          <p>{heroDescription}</p>
-        </div>
-        <img src={heroArtwork} alt={heroAlt} loading="eager" decoding="async" />
-      </section>
-      <section className="section sell-trade-layout">
-        <div className="sell-trade-main grid gap-4">
-          <div className="trade-inspection-note">
-            <ClipboardCheck size={22} />
-            <div>
-              <h2>Inspection required before final value</h2>
-              <p>Photos and form details help with an estimate. The final trade-in value is confirmed only after Buy & Sell GH physically checks the device, battery, Face ID, screen, body, repairs and accessories.</p>
+      <SEO
+        title={title}
+        description={isUpgradeMode
+          ? "Tell Buy & Sell GH what you use now and what you would like to upgrade to."
+          : "Share your device details and request an assessment from Buy & Sell GH."}
+      />
+      <ServiceBookingPage
+        category={isUpgradeMode ? "Upgrade & Save" : "Sell Your Device"}
+        title={title}
+        description={isUpgradeMode
+          ? "Tell us what you're currently using and what you'd like to upgrade to."
+          : "Share your device details and request an assessment from our team."}
+        guidance={isUpgradeMode
+          ? "Your trade-in value is subject to a physical inspection and assessment. Photos and device details help us prepare, but they are not an automatic valuation."
+          : "The final offer depends on the device's condition and a physical inspection. Details and photos help our team prepare an assessment; they do not guarantee a price."}
+        assistance="Want to discuss your device before preparing the form? Send its details and photos directly to our team."
+        intent="trade"
+      >
+        <SuccessForm buttonLabel={isUpgradeMode ? "Request Upgrade Assessment" : "Request Device Valuation"} successIntent="trade">
+          <FormField label="Customer name" name="name" required maxLength={120} placeholder="Your full name" />
+          <FormField label="Phone number" name="phone" required maxLength={32} placeholder="Your contact number" />
+          <FormField label="Device type" name="deviceType" options={["Mobile phone", "Tablet", "Laptop", "Game console", "Other"]} />
+          <FormField label="Device brand" name="brand" required maxLength={80} placeholder="Brand of your current device" />
+          <FormField label="Device model" name="model" required maxLength={160} placeholder="Model of your current device" />
+          <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
+          <FormField label="Condition" name="condition" options={["Excellent", "Very Good", "Good", "Faulty"]} />
+          <FormField label="Desired action" name="action" options={["Sell", "Swap"]} defaultValue={isUpgradeMode ? "Swap" : "Sell"} />
+          {isUpgradeMode && <FormField label="Preferred new device" name="replacement" maxLength={160} placeholder="What would you like to upgrade to?" />}
+          <div className="service-booking-wide"><FormField label="Known issues" name="issues" textarea maxLength={600} placeholder="Describe any faults or damage" /></div>
+          <ServicePhotoField />
+          <div className="service-booking-wide"><FormField label="Additional information" name="details" textarea maxLength={2000} placeholder="Anything else that would help our team assess your device?" /></div>
+          <details className="service-booking-more">
+            <summary>More device details <span>Optional</span></summary>
+            <div className="service-booking-more-grid">
+              <FormField label="Email" name="email" type="email" maxLength={254} placeholder="Optional email address" />
+              <FormField label="Colour" name="color" maxLength={80} />
+              <FormField label="Battery health" name="battery" placeholder="Example: 88%" maxLength={20} />
+              <FormField label="Face ID status" name="faceId" options={["Working", "Not working", "Not applicable"]} />
+              <FormField label="Screen condition" name="screen" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
+              <FormField label="Back-glass condition" name="back" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
+              <FormField label="Camera condition" name="camera" options={["Working", "Faulty"]} />
+              <FormField label="Repair history" name="repair" maxLength={500} />
+              <FormField label="Network status" name="network" options={["Unlocked", "Locked", "Not sure"]} />
+              <FormField label="Accessories included" name="accessories" maxLength={500} />
+              {!isUpgradeMode && <FormField label="Desired replacement phone" name="replacement" maxLength={160} />}
+              <FormField label="Expected price" name="expected" maxLength={80} />
             </div>
-          </div>
-          <SuccessForm buttonLabel="Prepare trade-in details" successIntent="trade">
-            <FormField label="Customer name" name="name" required maxLength={120} />
-            <FormField label="Phone number" name="phone" required maxLength={32} />
-            <FormField label="Email (optional)" name="email" type="email" maxLength={254} />
-            <FormField label="Device brand" name="brand" required maxLength={80} />
-            <FormField label="Device model" name="model" required maxLength={160} />
-            <FormField label="Storage" name="storage" options={["64GB", "128GB", "256GB", "512GB", "1TB"]} />
-            <FormField label="Colour" name="color" maxLength={80} />
-            <FormField label="Condition" name="condition" options={["Excellent", "Very Good", "Good", "Faulty"]} />
-            <FormField label="Battery health" name="battery" placeholder="Example: 88%" maxLength={20} />
-            <FormField label="Face ID status" name="faceId" options={["Working", "Not working", "Not applicable"]} />
-            <FormField label="Screen condition" name="screen" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
-            <FormField label="Back-glass condition" name="back" options={["Clean", "Scratched", "Cracked", "Replaced"]} />
-            <FormField label="Camera condition" name="camera" options={["Working", "Faulty"]} />
-            <FormField label="Repair history" name="repair" maxLength={500} />
-            <FormField label="Network status" name="network" options={["Unlocked", "Locked", "Not sure"]} />
-            <FormField label="Accessories included" name="accessories" maxLength={500} />
-            <FormField label="Desired action" name="action" options={["Sell", "Swap"]} />
-            <FormField label="Desired replacement phone" name="replacement" maxLength={160} />
-            <FormField label="Expected price" name="expected" maxLength={80} />
-            <label className="sell-trade-upload block text-sm font-black text-ink">
-              Upload device photos
-              <input
-                className="mt-2 w-full rounded-lg border border-black/10 bg-white px-4 py-3.5 text-base font-semibold text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15"
-                name="images"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                multiple
-              />
-              <span>Upload clear photos of the front, back, sides and screen. You can select multiple photos.</span>
-            </label>
-            <FormField label="Additional details" name="details" textarea maxLength={2000} />
-          </SuccessForm>
-        </div>
-        <aside className="sell-trade-whatsapp rounded-lg border border-black/7 bg-ink p-6 text-white shadow-card">
-          <MessageCircle className="text-gold" />
-          <h2 className="mt-4 text-2xl font-black">Prefer WhatsApp?</h2>
-          <p className="mt-3 text-sm leading-7 text-white/70">Send your device details and photos directly. The inspection note still applies.</p>
-          <WhatsAppButton intent="trade" className="mt-6 w-full">Trade-in WhatsApp</WhatsAppButton>
-        </aside>
-      </section>
+          </details>
+        </SuccessForm>
+      </ServiceBookingPage>
     </>
   );
 }

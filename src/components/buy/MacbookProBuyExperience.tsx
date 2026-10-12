@@ -63,16 +63,12 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     }
   }, [screenSize, chip, memory, storage]);
 
-  const proImage14 = "/products/campaigns/macbook-pro-cutout.webp";
-  const proImage16 = "/products/campaigns/macbook-pro-cinematic.webp";
+  const imageSlug = finish === "Silver"
+    ? screenSize === "14-inch" ? "macbook-pro-14-m4-pro-max" : undefined
+    : screenSize === "16-inch" ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4";
+  const currentDisplayImg = imageSlug ? localCatalogueImageBySlug[imageSlug] : undefined;
 
-  const currentDisplayImg = screenSize === "16-inch" ? proImage16 : proImage14;
-
-  const thumbnails = [
-    { src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` },
-    { src: "/products/campaigns/macbook-pro-cinematic.webp", alt: "MacBook Pro Liquid Retina XDR display on dark stage" },
-    { src: "/products/campaigns/macbook-pro-cutout.webp", alt: "MacBook Pro high-performance architecture profile" },
-  ];
+  const thumbnails = currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : [];
 
   const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
 
@@ -95,7 +91,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       specs: ["Apple M4 / M4 Pro / M4 Max", "Liquid Retina XDR display", "120Hz ProMotion", "1600 nits peak brightness", "MagSafe 3 & HDMI"],
       box: ["MacBook Pro", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
       imageTone: "dark",
-      images: [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }],
+      images: currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : [],
       variants: [
         { id: `mbp-${is16 ? "16" : "14"}-512`, productId: slug, title: `${screenSize} 512GB`, storage: "512GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
         { id: `mbp-${is16 ? "16" : "14"}-1tb`, productId: slug, title: `${screenSize} 1TB`, storage: "1TB", price: basePrice + 3500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },

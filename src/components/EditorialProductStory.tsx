@@ -9,13 +9,13 @@ import { CinematicVideo } from "./CinematicVideo";
 import { Iphone18ProEducation } from "./Iphone18ProEducation";
 import "../styles/editorial-product-story.css";
 
-function ProductImage({ image, eager = false, lazy = false, className = "" }: { image: EditorialImage; eager?: boolean; lazy?: boolean; className?: string }) {
+function ProductImage({ image, eager = false, className = "" }: { image: EditorialImage; eager?: boolean; className?: string }) {
   return (
     <img
       className={`${className} editorial-image-${image.fit ?? "contain"}`}
       src={image.src}
       alt={image.alt}
-      loading={lazy && !eager ? "lazy" : "eager"}
+      loading={eager ? "eager" : "lazy"}
       fetchPriority={eager ? "high" : "auto"}
       decoding="async"
       draggable={false}
@@ -114,7 +114,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
                 <p className="editorial-eyebrow">{highlight.label}</p>
                 <h3>{highlight.title}</h3>
               </div>
-              <div className="editorial-highlight-art"><ProductImage image={highlight.image} lazy={story.slug === "iphone-18-pro"} /></div>
+              <div className="editorial-highlight-art"><ProductImage image={highlight.image} /></div>
             </article>
           ))}
         </div>
@@ -139,7 +139,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               )}
             </div>
             <div className="editorial-hardware-anchor-art">
-              <ProductImage image={story.hero} lazy={story.slug === "iphone-18-pro"} />
+              <ProductImage image={story.hero} />
             </div>
           </div>
         </section>
@@ -165,7 +165,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
               </div>
             )}
           </div>
-          {chapter.image && <div className="editorial-chapter-art"><ProductImage image={chapter.image} lazy={story.slug === "iphone-18-pro"} /></div>}
+          {chapter.image && <div className="editorial-chapter-art"><ProductImage image={chapter.image} /></div>}
         </section>
       ))}
 
@@ -192,7 +192,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
 
       {story.finalImage && (
         <section className="editorial-final-beauty" aria-label={`${story.name} final product view`}>
-          <div className="editorial-final-beauty-art"><ProductImage image={story.finalImage} lazy /></div>
+          <div className="editorial-final-beauty-art"><ProductImage image={story.finalImage} /></div>
           <Link className="editorial-buy" to={story.buyPath}>View pricing</Link>
         </section>
       )}

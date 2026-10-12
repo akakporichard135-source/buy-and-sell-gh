@@ -22,7 +22,6 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
 
   const thumbnails = [
     { src: "/products/homepage/mac-mini-device.jpg", alt: "Mac mini front view with ports" },
-    { src: "/products/homepage/mac-mini.jpg", alt: "Mac mini held in hand" },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || "/products/homepage/mac-mini-device.jpg";

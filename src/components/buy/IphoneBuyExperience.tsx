@@ -26,9 +26,9 @@ const IPHONE_18_COLORS: ColorOption[] = [
 
 const FINISH_IMAGE_MAP: Record<string, string> = {
   "Deep Burgundy": "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-  "Space Black": "/products/campaigns/iphone-18-pro-coffee.webp",
+  "Space Black": "/products/buy/iphone-18-pro-colors-white.png",
   "Natural Titanium": "/products/campaigns/iphone-18-pro-silver.webp",
-  "Light Blue": "/products/campaigns/iphone-18-pro-colors.webp",
+  "Light Blue": "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
   Burgundy: "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
   Silver: "/products/campaigns/iphone-18-pro-silver.webp",
 };
@@ -49,9 +49,9 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const currentFinishImage = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Silver;
 
   const thumbnails = [
-    { src: currentFinishImage, alt: `${model} in ${finish}` },
-    { src: "/products/campaigns/iphone-18-pro-front.webp", alt: `${model} Super Retina display` },
-    { src: "/products/campaigns/iphone-18-pro-lineup.webp", alt: `${model} lineup` },
+    { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
+    { src: "/products/story/iphone-18-pro-supplied-silver-front.jpg", alt: `${model} Super Retina display` },
+    { src: "/products/buy/iphone-18-pro-colors-white.png", alt: `${model} color lineup on white` },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImage;

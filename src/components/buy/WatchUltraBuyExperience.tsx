@@ -45,15 +45,11 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = useMemo(() => [
-    { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra 4 in rugged titanium" },
-    { src: "/products/campaigns/watch-ultra-4-rugged.webp", alt: "Apple Watch Ultra 4 on rugged terrain" },
-    { src: "/products/campaigns/watch-ultra-4-interface.webp", alt: "Apple Watch Ultra 4 high-contrast interface" },
-    { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra 4 with orange Alpine Loop" },
-    { src: "/products/campaigns/watch-sensor-detail.webp", alt: "Apple Watch Ultra 4 biometric sensors" },
-  ], []);
+  const thumbnails = useMemo(() => finish === "Natural Titanium" ? [
+    { src: "/products/campaigns/watch-ultra-4-rugged.webp", alt: "Natural Titanium Apple Watch Ultra 4 with orange Alpine Loop on white" },
+  ] : [], [finish]);
 
-  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/watch-ultra-4-hero.webp";
+  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
 
   const fallbackProduct: Product = useMemo(() => {
     const slug = "apple-watch-ultra-4";

@@ -14,6 +14,9 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import ipadAirBlueWhite from "../../assets/catalogue-products/ipad-air-11-inch-m3-premium.webp";
+import ipadAirPurpleWhite from "../../assets/catalogue-products/ipad-air-13-inch-m3-premium.webp";
+import ipadKeyboardWhite from "../../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
 
 const IPAD_AIR_COLORS: ColorOption[] = [
   { name: "Blue", hex: "#7ca2be" },
@@ -25,8 +28,8 @@ const IPAD_AIR_COLORS: ColorOption[] = [
 const IPAD_FINISH_IMAGE_MAP: Record<string, string> = {
   Blue: "/products/campaigns/ipad-air-blue.webp",
   "Space Gray": "/products/campaigns/ipad-air-space-gray.webp",
-  Starlight: "/products/campaigns/ipad-air-cinematic.webp",
-  Purple: "/products/campaigns/ipad-air-colors.webp",
+  Starlight: "/products/campaigns/ipad-air-editorial-pure-white.png",
+  Purple: ipadAirPurpleWhite,
 };
 
 export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -42,14 +45,14 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const currentFinishImg = IPAD_FINISH_IMAGE_MAP[finish] || "/products/campaigns/ipad-air-cinematic.webp";
+  const currentFinishImg = IPAD_FINISH_IMAGE_MAP[finish] || ipadAirBlueWhite;
 
   const thumbnails = useMemo(() => [
     { src: currentFinishImg, alt: `iPad Air in ${finish}` },
-    { src: "/products/campaigns/ipad-air-11.webp", alt: "11-inch iPad Air Liquid Retina display" },
-    { src: "/products/campaigns/ipad-air-13.webp", alt: "13-inch iPad Air expansive canvas" },
+    { src: ipadAirBlueWhite, alt: "Blue 11-inch iPad Air Liquid Retina display" },
+    { src: ipadAirPurpleWhite, alt: "Purple 13-inch iPad Air expansive canvas" },
     { src: "/products/campaigns/ipad-air-colors.webp", alt: "iPad Air anodized aluminum color finishes" },
-    { src: "/products/campaigns/ipad-keyboard-accessory.webp", alt: "iPad Air with Magic Keyboard workstation" },
+    { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard on white" },
   ], [currentFinishImg, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;

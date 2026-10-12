@@ -15,6 +15,7 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 
 const MACBOOK_FINISHES: ColorOption[] = [
   { name: "Midnight", hex: "#1e2530" },
@@ -23,11 +24,19 @@ const MACBOOK_FINISHES: ColorOption[] = [
   { name: "Silver", hex: "#e3e4e5" },
 ];
 
-const FINISH_IMAGE_MAP: Record<string, string> = {
-  Midnight: "/products/campaigns/macbook-air-cinematic.webp",
-  Starlight: "/products/campaigns/macbook-air-starlight-studio.jpg",
-  "Space Gray": "/products/campaigns/macbook-air-cutout.webp",
-  Silver: "/products/campaigns/macbook-air-cutout.webp",
+const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | undefined>> = {
+  "13-inch": {
+    Midnight: "macbook-air-13-m5",
+    Starlight: "macbook-air-13-m2",
+    "Space Gray": "macbook-air-13-m3",
+    Silver: "macbook-air-13-m4",
+  },
+  "15-inch": {
+    Midnight: "macbook-air-15-m2",
+    Starlight: "macbook-air-15-m4",
+    "Space Gray": "macbook-air-15-m3",
+    Silver: undefined,
+  },
 };
 
 export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -43,13 +52,10 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const currentFinishImg = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Midnight;
+  const finishImageSlug = FINISH_IMAGE_SLUGS[screenSize][finish];
+  const currentFinishImg = finishImageSlug ? localCatalogueImageBySlug[finishImageSlug] : undefined;
 
-  const thumbnails = [
-    { src: currentFinishImg, alt: `MacBook Air in ${finish}` },
-    { src: "/products/campaigns/macbook-air-cutout.webp", alt: "MacBook Air open Liquid Retina display" },
-    { src: "/products/campaigns/macbook-air-starlight-studio.jpg", alt: "MacBook Air studio profile" },
-  ];
+  const thumbnails = currentFinishImg ? [{ src: currentFinishImg, alt: `MacBook Air in ${finish}` }] : [];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
@@ -74,7 +80,7 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       specs: ["Apple Silicon", "Liquid Retina display", "1080p FaceTime HD camera", "MagSafe 3"],
       box: ["MacBook Air", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
       imageTone: "light",
-      images: [{ src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` }],
+      images: currentFinishImg ? [{ src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` }] : [],
       variants: [
         { id: `mba-${is15 ? "15" : "13"}-256`, productId: slug, title: `${screenSize} 16GB / 256GB`, storage: "256GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
         { id: `mba-${is15 ? "15" : "13"}-512`, productId: slug, title: `${screenSize} 16GB / 512GB`, storage: "512GB", price: basePrice + 2500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },

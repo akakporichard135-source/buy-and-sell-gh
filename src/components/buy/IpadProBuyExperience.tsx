@@ -15,6 +15,8 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import ipadProBlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
+import ipadProSilverWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m4-premium.webp";
 
 const IPAD_PRO_FINISHES: ColorOption[] = [
   { name: "Space Black", hex: "#2b2b2d" },
@@ -51,15 +53,17 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     }
   }, [storage, glass]);
 
-  const thumbnails = useMemo(() => [
-    { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro in ${finish} on studio stage` },
-    { src: "/products/campaigns/ipad-pro-11.webp", alt: "11-inch iPad Pro Ultra Retina XDR display" },
-    { src: "/products/campaigns/ipad-pro-13.webp", alt: "13-inch iPad Pro Ultra Retina XDR expansive display" },
-    { src: "/products/campaigns/ipad-air-detail.webp", alt: "iPad Pro ultra-thin profile and camera system" },
-    { src: "/products/campaigns/ipad-keyboard-accessory.webp", alt: "iPad Pro with Magic Keyboard workstation" },
-  ], [finish]);
+  const thumbnails = useMemo(() => {
+    if (screenSize === "11-inch" && finish === "Space Black") {
+      return [{ src: ipadProBlackWhite, alt: "Space Black 11-inch iPad Pro on white" }];
+    }
+    if (screenSize === "13-inch" && finish === "Silver") {
+      return [{ src: ipadProSilverWhite, alt: "Silver 13-inch iPad Pro on white" }];
+    }
+    return [];
+  }, [screenSize, finish]);
 
-  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/ipad-pro-cinematic.webp";
+  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
 
   const fallbackProduct: Product = useMemo(() => {
     const is13 = screenSize === "13-inch";

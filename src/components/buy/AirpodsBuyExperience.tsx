@@ -36,8 +36,6 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
     { src: "/products/campaigns/airpods-5-earbuds.webp", alt: "AirPods 5 acoustic vents, microphone mesh, and transducer ports" },
     { src: "/products/campaigns/airpods-5-front.webp", alt: "AirPods 5 front-facing case with status LED and USB-C port" },
-    { src: "/products/campaigns/airpods-5-dark.webp", alt: "AirPods 5 high-contrast dark studio acoustic rendering" },
-    { src: "/products/campaigns/airpods-5-lifestyle.webp", alt: "AirPods 5 ergonomic in-ear comfort and listening" },
   ], []);
 
   const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/airpods-5-product.webp";

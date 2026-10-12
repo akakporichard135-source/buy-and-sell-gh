@@ -52,15 +52,13 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = useMemo(() => [
-    { src: "/products/campaigns/watch-series-12-cinematic.webp", alt: "Apple Watch Series 12 floating in precision studio light" },
-    { src: "/products/campaigns/watch-series-12-hero.webp", alt: "Apple Watch Series 12 with sport band" },
-    { src: "/products/campaigns/watch-series-12-angle.webp", alt: "Apple Watch Series 12 profile" },
+  const thumbnails = useMemo(() => finish === "Jet Black" ? [
+    { src: "/products/campaigns/watch-series-12-hero.webp", alt: "Apple Watch Series 12 with black sport band" },
+    { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 profile on white" },
     { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
-    { src: "/products/campaigns/watch-sensor-detail.webp", alt: "Apple Watch Series 12 biosensor array" },
-  ], []);
+  ] : [], [finish]);
 
-  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/watch-series-12-cinematic.webp";
+  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
 
   const fallbackProduct: Product = useMemo(() => {
     const is46 = caseSize === "46mm";

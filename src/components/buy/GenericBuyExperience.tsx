@@ -5,8 +5,8 @@ import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl, productWhatsAppUrl } from "../../utils/whatsapp";
 import { isProductPurchasable } from "../../catalog/productCatalog";
-import { resolveProductGallery } from "../../utils/productImages";
-import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
+import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -17,6 +17,10 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 import type { ProductFamilyKey } from "../../catalog/productExperience";
+
+const knownCatalogueImageFinishes: Record<string, string> = {
+  "iphone-16-pro-max": "Desert Titanium",
+};
 
 export function GenericBuyExperience({
   product,
@@ -49,9 +53,21 @@ export function GenericBuyExperience({
 
   const name = product?.name ?? slug.split("-").map((s) => s ? `${s[0].toUpperCase()}${s.slice(1)}` : s).join(" ");
   const rawGallery = product ? resolveProductGallery(product) : [];
-  const fallbackAsset = localCatalogueImageBySlug[product?.slug ?? slug];
-  const gallery = rawGallery.length > 0
-    ? rawGallery
+  const missingCleanImage = missingCleanAccessoryImageSlugs.has(product?.slug ?? slug);
+  const canUseCatalogueImage = (!product || !isUsedProductCondition(product.condition))
+    && !missingCleanImage;
+  const fallbackAsset = canUseCatalogueImage ? localCatalogueImageBySlug[product?.slug ?? slug] : undefined;
+  const hasOwnerImages = Boolean(product && hasOwnerUploadedProductImages(product));
+  const knownImageFinish = knownCatalogueImageFinishes[product?.slug ?? slug];
+  const finishImageMismatch = Boolean(!hasOwnerImages && knownImageFinish && color && color !== knownImageFinish);
+  const cleanCatalogueImage = product && !hasOwnerImages ? fallbackAsset : undefined;
+  const safeRawGallery = missingCleanImage && !hasOwnerImages ? [] : rawGallery;
+  const gallery = finishImageMismatch
+    ? []
+    : cleanCatalogueImage
+    ? [{ src: cleanCatalogueImage, alt: name }]
+    : safeRawGallery.length > 0
+    ? safeRawGallery
     : fallbackAsset
       ? [{ src: fallbackAsset, alt: name }]
       : [];
@@ -66,7 +82,7 @@ export function GenericBuyExperience({
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
-  const activeImage = gallery[activeThumb]?.src || gallery[0]?.src || fallbackAsset;
+  const activeImage = finishImageMismatch ? undefined : gallery[activeThumb]?.src || gallery[0]?.src || fallbackAsset;
 
   const whatsAppEnquiry = product
     ? productWhatsAppUrl(product, storage, color)

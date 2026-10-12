@@ -21,6 +21,10 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
   const editorialStory = editorialStories[slug];
   if (editorialStory) return <EditorialProductStory story={editorialStory} />;
+  return <CatalogProductStory family={family} slug={slug} />;
+}
+
+function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug: string }) {
   const { activeProducts, loading } = useProductCatalog();
   const configuredStory = getProductStory(family, slug);
   const product = activeProducts.find((item) => item.slug === slug && familyMatchesProduct(item, family));
@@ -122,7 +126,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
                   <span className="story-highlight-index">{String(index + 1).padStart(2, "0")}</span>
                 </div>
                 <h3>{highlight.title}</h3>
-                <strong>{highlight.description}</strong>
+                {highlight.description && <strong>{highlight.description}</strong>}
               </div>
               {highlight.media && (
                 <div className="story-highlight-visual">
@@ -470,12 +474,15 @@ function useCinematicPlayback(
 function storyFromProduct(product: Product, family: ProductFamilyKey): ProductStoryDefinition {
   const image = resolveProductImage(product);
   const specifications = product.specifications ?? product.specs ?? [];
-  const highlights = specifications.slice(0, 3).map((item, index) => ({
-    label: index === 0 ? "At a glance" : `Detail ${index + 1}`,
-    title: item,
-    description: "This information comes directly from the current Store listing.",
-    tone: (["light", "blue", "ink"] as const)[index % 3],
-  }));
+  const highlights = specifications.slice(0, 3).map((item, index) => {
+    const separator = item.indexOf(":");
+    return {
+      label: separator > 0 ? item.slice(0, separator) : index === 0 ? "At a glance" : `Detail ${index + 1}`,
+      title: separator > 0 ? item.slice(separator + 1).trim() : item,
+      description: "",
+      tone: (["light", "blue", "ink"] as const)[index % 3],
+    };
+  });
 
   if (!highlights.length) {
     highlights.push({ label: "Catalogue", title: "Clear product details.", description: product.description, tone: "light" });
@@ -486,8 +493,8 @@ function storyFromProduct(product: Product, family: ProductFamilyKey): ProductSt
     slug: product.slug,
     name: product.name,
     eyebrow: product.generation || product.subcategory || product.category,
-    tagline: product.shortDescription || product.description,
-    introduction: product.description,
+    tagline: specifications.slice(0, 2).join(" | ") || product.shortDescription || product.description,
+    introduction: `A closer look at ${product.name}.`,
     media: {
       type: "image",
       src: image?.src ?? productFamilies[family].heroMedia,
@@ -496,8 +503,9 @@ function storyFromProduct(product: Product, family: ProductFamilyKey): ProductSt
     theme: family === "mac" || family === "watch" ? "ink" : family === "ipad" ? "blue" : "light",
     buyPath: productBuyPath(family, product.slug),
     highlights,
-    designTitle: `${product.name}, clearly presented.`,
+    designTitle: `${product.name}, up close.`,
     designCopy: "Review the real listing photography and stored product information before choosing a configuration.",
+    finalCtaHeadline: product.name,
     detailGroups: [
       { title: "Configuration", items: [`Storage / option: ${product.storage.join(", ") || "Confirm with team"}`, `Colours: ${product.colors.join(", ") || "Confirm with team"}`, `Condition: ${product.condition}`] },
       { title: "Specifications", items: specifications.length ? specifications : ["Detailed specifications are confirmed before payment."] },

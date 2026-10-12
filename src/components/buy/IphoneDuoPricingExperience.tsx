@@ -9,10 +9,9 @@ export function IphoneDuoPricingExperience() {
   const [selectedAngle, setSelectedAngle] = useState(0);
 
   const gallery = [
-    { src: "/products/campaigns/iphone-duo-open.webp", alt: "iPhone Duo unfolded in expansive dual-display format", label: "Open Canvas" },
+    { src: "/products/buy/iphone-duo-open-white.png", alt: "iPhone Duo unfolded in expansive dual-display format", label: "Open Canvas" },
     { src: "/products/campaigns/iphone-duo-folded.webp", alt: "iPhone Duo folded compact profile", label: "Folded Pocket" },
-    { src: "/products/campaigns/iphone-duo-side.webp", alt: "iPhone Duo precision hinge engineering", label: "Hinge Profile" },
-    { src: "/products/campaigns/iphone-duo-pair.webp", alt: "iPhone Duo open and closed side by side", label: "Dual View" },
+    { src: "/products/buy/iphone-duo-side-white.png", alt: "iPhone Duo precision hinge engineering", label: "Hinge Profile" },
   ];
 
   const currentImage = gallery[selectedAngle];
