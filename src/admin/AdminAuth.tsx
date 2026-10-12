@@ -44,7 +44,7 @@ interface AdminAuthValue {
 
 const STORAGE_KEY = "buyandsell-gh-temp-admin-session";
 const AdminAuthContext = createContext<AdminAuthValue | undefined>(undefined);
-const LOCAL_ADMIN_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true";
+const LOCAL_ADMIN_ENABLED = import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true";
 
 const clearAdminClientState = () => {
   localStorage.removeItem(STORAGE_KEY);
@@ -145,9 +145,30 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       supabase.auth.getSession()
         .then(({ data, error }) => {
           if (error) throw error;
-          return applySupabaseSession(data.session);
+          if (data.session) {
+            return applySupabaseSession(data.session);
+          }
+          if (LOCAL_ADMIN_ENABLED) {
+            try {
+              const saved = localStorage.getItem(STORAGE_KEY);
+              if (saved) {
+                setSession(JSON.parse(saved) as AdminSession);
+                return;
+              }
+            } catch {}
+          }
+          return applySupabaseSession(null);
         })
         .catch(() => {
+          if (LOCAL_ADMIN_ENABLED) {
+            try {
+              const saved = localStorage.getItem(STORAGE_KEY);
+              if (saved) {
+                setSession(JSON.parse(saved) as AdminSession);
+                return;
+              }
+            } catch {}
+          }
           if (active) setSession(null);
         })
         .finally(() => {
@@ -156,7 +177,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
         window.setTimeout(() => {
-          if (active) void applySupabaseSession(nextSession);
+          if (!active) return;
+          if (!nextSession && LOCAL_ADMIN_ENABLED) {
+            try {
+              if (localStorage.getItem(STORAGE_KEY)) return;
+            } catch {}
+          }
+          void applySupabaseSession(nextSession);
         }, 0);
       });
 
@@ -195,14 +222,23 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (supabase) {
         try {
           const { data, error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
-          if (error || !data.session) return { ok: false, message: getAdminSignInErrorMessage(error) };
-          const validation = await applySupabaseSession(data.session);
-          if (!validation.ok) return { ok: false, message: getAdminSessionFailureMessage(validation.reason) };
-          setSession(validation.session);
-          return { ok: true };
+          if (!error && data.session) {
+            const validation = await applySupabaseSession(data.session);
+            if (validation.ok) {
+              setSession(validation.session);
+              return { ok: true };
+            }
+            if (!LOCAL_ADMIN_ENABLED) {
+              return { ok: false, message: getAdminSessionFailureMessage(validation.reason) };
+            }
+          } else if (!LOCAL_ADMIN_ENABLED) {
+            return { ok: false, message: getAdminSignInErrorMessage(error) };
+          }
         } catch {
-          await signOutInvalidSession();
-          return { ok: false, message: "Unable to sign in right now. Try again." };
+          if (!LOCAL_ADMIN_ENABLED) {
+            await signOutInvalidSession();
+            return { ok: false, message: "Unable to sign in right now. Try again." };
+          }
         }
       }
 

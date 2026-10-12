@@ -1,10 +1,35 @@
-import { Archive, ArrowLeft, ArrowRight, Edit3, ImagePlus, Plus, RefreshCw, RotateCcw, Save, Search, Tag, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Archive,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  Edit3,
+  ImagePlus,
+  Package,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Save,
+  Search,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
-import { categories, createProductSlug, getPrimaryImage, normalizeProduct, productConditions, stockStatuses } from "../../catalog/productCatalog";
+import {
+  categories,
+  createProductSlug,
+  getPrimaryImage,
+  normalizeProduct,
+  productConditions,
+  stockStatuses,
+} from "../../catalog/productCatalog";
 import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 import type { Product, ProductImage } from "../../types/product";
@@ -12,7 +37,11 @@ import { formatGhs } from "../../utils/format";
 import { hasOwnerUploadedProductImages, isUsedProductCondition } from "../../utils/productImages";
 
 const listToText = (items?: string[]) => (items ?? []).join("\n");
-const textToList = (value: string) => value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+const textToList = (value: string) =>
+  value
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 interface ProductFormState {
   id: string;
@@ -61,7 +90,10 @@ export const productToForm = (product: Product): ProductFormState => ({
   generation: product.generation ?? "",
   condition: product.condition,
   price: String(product.price),
-  previousPrice: product.previousPrice || product.oldPrice ? String(product.previousPrice ?? product.oldPrice) : "",
+  previousPrice:
+    product.previousPrice || product.oldPrice
+      ? String(product.previousPrice ?? product.oldPrice)
+      : "",
   priceOnRequest: product.priceOnRequest ?? false,
   stockQuantity: String(product.stockQuantity),
   stockStatus: product.stockStatus,
@@ -88,7 +120,20 @@ export const productToForm = (product: Product): ProductFormState => ({
 
 export function AdminProductManager() {
   const { session } = useAdminAuth();
-  const { products, saveProduct, archiveProduct, deleteProduct, markSold, markOutOfStock, resetToSeedCatalog, createDraftProduct, backendStatus, loading, error } = useProductCatalog();
+  const {
+    products,
+    saveProduct,
+    archiveProduct,
+    deleteProduct,
+    markSold,
+    markOutOfStock,
+    resetToSeedCatalog,
+    createDraftProduct,
+    backendStatus,
+    loading,
+    error,
+  } = useProductCatalog();
+
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("All");
   const [category, setCategory] = useState("All");
@@ -100,15 +145,49 @@ export function AdminProductManager() {
   const [message, setMessage] = useState("");
   const [actionError, setActionError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Confirmation dialog modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    actionLabel: string;
+    isDanger: boolean;
+    onConfirm: () => Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    actionLabel: "",
+    isDanger: false,
+    onConfirm: async () => {},
+  });
+
   const editorRef = useRef<HTMLElement>(null);
   const productNameRef = useRef<HTMLInputElement>(null);
-  const brandOptions = useMemo(() => getBrandOptions(products, editing?.brand), [editing?.brand, products]);
+  const brandOptions = useMemo(
+    () => getBrandOptions(products, editing?.brand),
+    [editing?.brand, products]
+  );
 
   const filtered = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return products.filter((product) => {
-      const searchable = [product.name, product.slug, product.model, product.brand, product.category, product.subcategory ?? "", product.condition, product.stockStatus, ...(product.tags ?? [])].join(" ").toLowerCase();
-      return terms.every((term) => searchable.includes(term)) &&
+      const searchable = [
+        product.name,
+        product.slug,
+        product.model,
+        product.brand,
+        product.category,
+        product.subcategory ?? "",
+        product.condition,
+        product.stockStatus,
+        ...(product.tags ?? []),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return (
+        terms.every((term) => searchable.includes(term)) &&
         (brand === "All" || product.brand === brand) &&
         (category === "All" || product.category === category) &&
         (condition === "All" || product.condition === condition) &&
@@ -116,7 +195,8 @@ export function AdminProductManager() {
         (availability === "All" ||
           (availability === "Published" && product.available !== false && !product.archived) ||
           (availability === "Hidden" && product.available === false && !product.archived) ||
-          (availability === "Archived" && product.archived === true));
+          (availability === "Archived" && product.archived === true))
+      );
     });
   }, [availability, brand, category, condition, products, query, stock]);
 
@@ -157,7 +237,11 @@ export function AdminProductManager() {
       await action();
       setMessage(success);
     } catch (actionFailure) {
-      setActionError(actionFailure instanceof Error ? actionFailure.message : "Action failed. Check Supabase permissions and try again.");
+      setActionError(
+        actionFailure instanceof Error
+          ? actionFailure.message
+          : "Action failed. Check Supabase permissions and try again."
+      );
     }
   };
 
@@ -170,11 +254,20 @@ export function AdminProductManager() {
     }
     const normalized = formToProduct(editing, products);
     if (!normalized.priceOnRequest && (!Number.isFinite(normalized.price) || normalized.price <= 0)) {
-      setActionError("Enter a confirmed Ghana cedi price greater than 0, or turn on Contact for Price before saving.");
+      setActionError(
+        "Enter a confirmed Ghana cedi price greater than 0, or turn on Contact for Price before saving."
+      );
       return;
     }
-    if (normalized.available && !normalized.archived && isUsedProductCondition(normalized.condition) && !hasOwnerUploadedProductImages(normalized)) {
-      setActionError("Upload real photos of this exact device to Supabase Storage before publishing it.");
+    if (
+      normalized.available &&
+      !normalized.archived &&
+      isUsedProductCondition(normalized.condition) &&
+      !hasOwnerUploadedProductImages(normalized)
+    ) {
+      setActionError(
+        "Upload real photos of this exact device to Supabase Storage before publishing it."
+      );
       return;
     }
     setSaving(true);
@@ -182,7 +275,7 @@ export function AdminProductManager() {
     try {
       const saved = await saveProduct(normalized);
       setEditing(productToForm(saved));
-      setMessage(`${normalized.name} saved. Changes now power the homepage, shop, search and product details.`);
+      setMessage(`${normalized.name} saved successfully.`);
     } catch (saveFailure) {
       setActionError(saveFailure instanceof Error ? saveFailure.message : "Product could not be saved.");
     } finally {
@@ -190,101 +283,457 @@ export function AdminProductManager() {
     }
   };
 
+  const promptConfirm = (
+    title: string,
+    description: string,
+    actionLabel: string,
+    isDanger: boolean,
+    action: () => Promise<void>,
+    successMessage: string
+  ) => {
+    setConfirmModal({
+      open: true,
+      title,
+      description,
+      actionLabel,
+      isDanger,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+        await runAction(action, successMessage);
+      },
+    });
+  };
+
   return (
-    <div className="admin-page-grid">
-      <section className="admin-panel admin-panel-hero">
+    <div className="space-y-6">
+      {/* 1. Header Card */}
+      <div className="admin-header-card">
         <div>
-          <p className="eyebrow-dark">Product Management</p>
-          <h2>Catalogue control</h2>
-          <p>Manage the product source used by homepage sections, shop filters, search, product details, cart and enquiries. Current persistence: {getBackendLabel(backendStatus)}.</p>
-        </div>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
-          <Link className="btn-secondary" to="/admin/pricing" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-            <Tag size={16} /> Pricing &amp; Stock
-          </Link>
-          <button className="btn-primary" type="button" onClick={startAdd}><Plus size={17} /> Add Product</button>
-        </div>
-      </section>
-
-      {message && <div className="admin-success" role="status" aria-live="polite">{message}</div>}
-      {(actionError || error) && <div className="admin-error" role="alert">{actionError || error}</div>}
-      {backendStatus !== "supabase" && <div className="admin-warning">Supabase is not connected for production catalogue writes. Configure `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, migrations, RLS and Storage before using this as live inventory.</div>}
-
-      <section className="admin-panel">
-        <div className="admin-product-toolbar">
-          <label className="admin-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search products..." /></label>
-          <label className="admin-toolbar-filter"><span>Brand</span><select value={brand} onChange={(event) => setBrand(event.target.value)}><option>All</option>{brandOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label className="admin-toolbar-filter"><span>Category</span><select value={category} onChange={(event) => setCategory(event.target.value)}><option>All</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label className="admin-toolbar-filter"><span>Condition</span><select value={condition} onChange={(event) => setCondition(event.target.value)}><option>All</option>{productConditions.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label className="admin-toolbar-filter"><span>Stock</span><select value={stock} onChange={(event) => setStock(event.target.value)}><option>All</option>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
-          <label className="admin-toolbar-filter"><span>Availability</span><select value={availability} onChange={(event) => setAvailability(event.target.value)}><option>All</option><option>Published</option><option>Hidden</option><option>Archived</option></select></label>
-          <button className="btn-secondary" type="button" onClick={() => window.confirm("Reset the local catalogue fallback to the approved seed catalogue?") && resetToSeedCatalog()} disabled={backendStatus === "supabase"}><RotateCcw size={17} /> Reset Local</button>
-        </div>
-
-        <div className="admin-product-list">
-          {loading && <div className="rounded-lg border border-black/7 bg-white p-5 text-sm font-black text-ink/65">Loading catalogue...</div>}
-          {!loading && filtered.map((product) => {
-            const image = getPrimaryImage(product);
-            return (
-              <article className={`admin-product-row ${product.archived ? "is-archived" : ""} ${editing?.id === product.id ? "is-selected" : ""}`} key={product.id}>
-                {image ? <img src={image.src} alt={image.alt} loading="lazy" /> : <div className="admin-product-image-empty">No image</div>}
-                <div>
-                  <strong>{product.name}</strong>
-                  <span>{product.category} | {product.condition} | {product.priceOnRequest || product.price <= 0 ? "Contact for Price" : formatGhs(product.price)}</span>
-                  <small>{product.stockStatus} | Qty {product.stockQuantity} | {product.available === false ? "Hidden" : "Published"} | {product.featured ? "Featured" : "Not featured"} | {product.newArrival ? "New arrival" : "Standard"}</small>
-                </div>
-                <div className="admin-product-actions">
-                  <button type="button" onClick={() => startEdit(product)}><Edit3 size={15} /> Edit</button>
-                  <button type="button" onClick={() => window.confirm(`Mark ${product.name} as sold?`) && void runAction(() => markSold(product.id), `${product.name} marked sold.`)}>Sold</button>
-                  <button type="button" onClick={() => window.confirm(`Mark ${product.name} out of stock?`) && void runAction(() => markOutOfStock(product.id), `${product.name} marked out of stock.`)}>Out</button>
-                  <button type="button" onClick={() => window.confirm(`Archive ${product.name}? It will disappear from public catalogue views.`) && void runAction(() => archiveProduct(product.id), `${product.name} archived.`)}><Archive size={15} /> Archive</button>
-                  {session?.role === "owner" && <button className="danger" type="button" onClick={() => window.confirm(`Permanently delete ${product.name}?`) && void runAction(() => deleteProduct(product.id), `${product.name} deleted.`)}><Trash2 size={15} /> Delete</button>}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      {editing && (
-        <section className="admin-panel admin-product-editor" ref={editorRef} tabIndex={-1} aria-labelledby="admin-product-editor-title">
-          <div className="admin-section-title">
-            <div>
-              <p className="eyebrow-dark">{editing.name ? "Edit product" : "Add product"}</p>
-              <h2 id="admin-product-editor-title">{editing.name || "New product"}</h2>
-            </div>
-            <button className="btn-secondary" type="button" onClick={() => setEditing(null)}>Cancel</button>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+              Product Catalogue
+            </span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
+            <span className="text-xs font-semibold text-slate-500">
+              {getBackendLabel(backendStatus)}
+            </span>
           </div>
-          <ProductForm form={editing} setForm={setEditing} onSubmit={handleSave} products={products} brandOptions={brandOptions} backendStatus={backendStatus} saving={saving} setActionError={setActionError} productNameRef={productNameRef} />
+          <h2>Catalogue &amp; Inventory Control</h2>
+          <p>
+            Manage device catalog specifications, images, conditions, categories, and storefront
+            visibility.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link to="/admin/pricing" className="admin-btn admin-btn-secondary">
+            <Tag size={16} className="text-[#d4af37]" />
+            <span>Pricing &amp; Stock</span>
+          </Link>
+          <button className="admin-btn admin-btn-primary" type="button" onClick={startAdd}>
+            <Plus size={16} />
+            <span>Add New Product</span>
+          </button>
+        </div>
+      </div>
+
+      {message && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 size={16} />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {(actionError || error) && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{actionError || error}</span>
+        </div>
+      )}
+
+      {/* 2. Filter & Search Toolbar */}
+      <div className="admin-toolbar">
+        <div className="admin-search-input">
+          <Search size={16} className="text-slate-400 shrink-0" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search devices by name, model, generation..."
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="admin-select"
+          >
+            <option value="All">All Categories</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+            className="admin-select"
+          >
+            <option value="All">All Conditions</option>
+            {productConditions.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            className="admin-select"
+          >
+            <option value="All">All Stock</option>
+            {stockStatuses.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={availability}
+            onChange={(e) => setAvailability(e.target.value)}
+            className="admin-select"
+          >
+            <option value="All">All Visibility</option>
+            <option value="Published">Published</option>
+            <option value="Hidden">Hidden</option>
+            <option value="Archived">Archived</option>
+          </select>
+
+          {backendStatus !== "supabase" && (
+            <button
+              className="admin-btn admin-btn-secondary admin-btn-sm"
+              type="button"
+              onClick={() => resetToSeedCatalog()}
+            >
+              <RotateCcw size={14} />
+              <span>Reset Local</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Products Data Table */}
+      <div className="admin-table-shell">
+        <div className="admin-table-scroll">
+          <table className="admin-data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Condition</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Visibility</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-slate-400 font-medium">
+                    Loading product catalog...
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-slate-400 font-medium">
+                    No products match the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((product) => {
+                  const image = getPrimaryImage(product);
+                  const isArchived = Boolean(product.archived);
+
+                  return (
+                    <tr
+                      key={product.id}
+                      className={`hover:bg-slate-50/70 ${isArchived ? "opacity-60" : ""}`}
+                    >
+                      <td>
+                        <div className="flex items-center gap-3">
+                          {image?.src ? (
+                            <img
+                              src={image.src}
+                              alt={image.alt || product.name}
+                              className="w-12 h-12 rounded-lg object-cover bg-slate-50 border border-slate-200 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-[0.65rem] text-slate-400 font-semibold shrink-0">
+                              No pic
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 block truncate">
+                              {product.name}
+                            </span>
+                            <span className="text-xs text-slate-400 block">
+                              {product.brand} &bull; {product.model}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="admin-badge admin-badge-slate">{product.category}</span>
+                      </td>
+                      <td>
+                        <span
+                          className={`admin-badge text-[0.7rem] ${
+                            product.condition.includes("Brand New")
+                              ? "admin-badge-emerald"
+                              : "admin-badge-amber"
+                          }`}
+                        >
+                          {product.condition}
+                        </span>
+                      </td>
+                      <td className="font-bold text-slate-900">
+                        {product.priceOnRequest || product.price <= 0
+                          ? "Contact for Price"
+                          : formatGhs(product.price)}
+                      </td>
+                      <td>
+                        <span
+                          className={`admin-badge text-[0.7rem] ${
+                            product.stockStatus === "In Stock"
+                              ? "admin-badge-emerald"
+                              : product.stockStatus === "Low Stock"
+                              ? "admin-badge-amber"
+                              : "admin-badge-rose"
+                          }`}
+                        >
+                          {product.stockStatus} ({product.stockQuantity})
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`admin-badge text-[0.7rem] ${
+                            isArchived
+                              ? "admin-badge-rose"
+                              : product.available !== false
+                              ? "admin-badge-emerald"
+                              : "admin-badge-slate"
+                          }`}
+                        >
+                          {isArchived ? "Archived" : product.available !== false ? "Published" : "Hidden"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(product)}
+                            className="admin-btn admin-btn-secondary admin-btn-sm"
+                          >
+                            <Edit3 size={13} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              promptConfirm(
+                                isArchived ? "Restore Product" : "Archive Product",
+                                `Are you sure you want to ${
+                                  isArchived ? "restore" : "archive"
+                                } "${product.name}"? ${
+                                  isArchived
+                                    ? "It will become visible in the catalog."
+                                    : "It will be hidden from customer storefront views."
+                                }`,
+                                isArchived ? "Restore" : "Archive",
+                                false,
+                                () => archiveProduct(product.id),
+                                `${product.name} ${isArchived ? "restored" : "archived"}.`
+                              )
+                            }
+                            className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                            title="Toggle Archive"
+                          >
+                            <Archive size={14} />
+                          </button>
+                          {session?.role === "owner" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                promptConfirm(
+                                  "Delete Product Permanently",
+                                  `Are you sure you want to permanently delete "${product.name}"? This action cannot be undone.`,
+                                  "Delete Permanently",
+                                  true,
+                                  () => deleteProduct(product.id),
+                                  `${product.name} deleted.`
+                                )
+                              }
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                              title="Delete Product"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 4. Product Editor Card */}
+      {editing && (
+        <section
+          className="admin-card space-y-6 scroll-mt-24"
+          ref={editorRef}
+          tabIndex={-1}
+          aria-labelledby="admin-product-editor-title"
+        >
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                Product Editor
+              </span>
+              <h2 id="admin-product-editor-title" className="text-xl font-bold text-slate-900 mt-0.5">
+                {editing.name || "New Device Listing"}
+              </h2>
+            </div>
+            <button
+              className="admin-btn admin-btn-secondary admin-btn-sm"
+              type="button"
+              onClick={() => setEditing(null)}
+            >
+              <X size={15} />
+              <span>Cancel</span>
+            </button>
+          </div>
+
+          <ProductForm
+            form={editing}
+            setForm={setEditing}
+            onSubmit={handleSave}
+            products={products}
+            brandOptions={brandOptions}
+            backendStatus={backendStatus}
+            saving={saving}
+            setActionError={setActionError}
+            productNameRef={productNameRef}
+          />
         </section>
+      )}
+
+      {/* Confirmation Dialog Modal */}
+      {confirmModal.open && (
+        <div className="admin-modal-overlay" onClick={() => setConfirmModal((p) => ({ ...p, open: false }))}>
+          <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3 className="text-base font-bold text-slate-900">{confirmModal.title}</h3>
+              <button
+                type="button"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                onClick={() => setConfirmModal((p) => ({ ...p, open: false }))}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="admin-modal-body">
+              <p className="text-sm text-slate-600">{confirmModal.description}</p>
+            </div>
+            <div className="admin-modal-footer">
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary admin-btn-sm"
+                onClick={() => setConfirmModal((p) => ({ ...p, open: false }))}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={`admin-btn admin-btn-sm ${
+                  confirmModal.isDanger ? "admin-btn-danger" : "admin-btn-primary"
+                }`}
+                onClick={() => void confirmModal.onConfirm()}
+              >
+                {confirmModal.actionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-function ProductForm({ form, setForm, onSubmit, products, brandOptions, backendStatus, saving, setActionError, productNameRef }: { form: ProductFormState; setForm: (form: ProductFormState) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; products: Product[]; brandOptions: string[]; backendStatus: string; saving: boolean; setActionError: (message: string) => void; productNameRef: React.RefObject<HTMLInputElement | null> }) {
+function ProductForm({
+  form,
+  setForm,
+  onSubmit,
+  products,
+  brandOptions,
+  backendStatus,
+  saving,
+  setActionError,
+  productNameRef,
+}: {
+  form: ProductFormState;
+  setForm: (form: ProductFormState) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  products: Product[];
+  brandOptions: string[];
+  backendStatus: string;
+  saving: boolean;
+  setActionError: (message: string) => void;
+  productNameRef: React.RefObject<HTMLInputElement | null>;
+}) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
-  const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) => setForm({ ...form, [key]: value });
-  const updateImage = (index: number, field: keyof ProductImage, value: string) => update("images", form.images.map((image, itemIndex) => (itemIndex === index ? { ...image, [field]: value } : image)));
+
+  const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) =>
+    setForm({ ...form, [key]: value });
+
+  const updateImage = (index: number, field: keyof ProductImage, value: string) =>
+    update(
+      "images",
+      form.images.map((image, itemIndex) =>
+        itemIndex === index ? { ...image, [field]: value } : image
+      )
+    );
+
   const removeImage = (index: number) => {
     const images = form.images.filter((_, itemIndex) => itemIndex !== index);
-    const primaryImageIndex = index < form.primaryImageIndex
-      ? form.primaryImageIndex - 1
-      : index === form.primaryImageIndex
+    const primaryImageIndex =
+      index < form.primaryImageIndex
+        ? form.primaryImageIndex - 1
+        : index === form.primaryImageIndex
         ? Math.min(index, Math.max(0, images.length - 1))
         : form.primaryImageIndex;
     setForm({ ...form, images, primaryImageIndex });
   };
+
   const moveImage = (index: number, direction: -1 | 1) => {
     const nextIndex = index + direction;
     if (nextIndex < 0 || nextIndex >= form.images.length) return;
     const next = [...form.images];
     [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-    const primaryImageIndex = form.primaryImageIndex === index
-      ? nextIndex
-      : form.primaryImageIndex === nextIndex
+    const primaryImageIndex =
+      form.primaryImageIndex === index
+        ? nextIndex
+        : form.primaryImageIndex === nextIndex
         ? index
         : form.primaryImageIndex;
     setForm({ ...form, images: next, primaryImageIndex });
@@ -308,157 +757,438 @@ function ProductForm({ form, setForm, onSubmit, products, brandOptions, backendS
       }
       update("images", nextImages);
     } catch (uploadFailure) {
-      setActionError(uploadFailure instanceof Error ? uploadFailure.message : "Image upload failed.");
+      setActionError(
+        uploadFailure instanceof Error ? uploadFailure.message : "Image upload failed."
+      );
     } finally {
       setUploading(false);
-      window.setTimeout(() => setUploadProgress(0), 900);
-    }
-  };
-
-  const replaceImage = async (index: number, file?: File) => {
-    if (!file) return;
-    if (backendStatus !== "supabase") {
-      setActionError("Connect Supabase Storage before replacing production product images.");
-      return;
-    }
-    setUploading(true);
-    setReplacingIndex(index);
-    setUploadProgress(0);
-    setActionError("");
-    try {
-      const uploaded = await uploadProductImage(file, form.id, setUploadProgress);
-      const images = form.images.map((image, imageIndex) => imageIndex === index
-        ? { ...uploaded, alt: image.alt || `${form.name || "Product"} image` }
-        : image);
-      setForm({ ...form, images });
-    } catch (uploadFailure) {
-      setActionError(uploadFailure instanceof Error ? uploadFailure.message : "Image replacement failed.");
-    } finally {
-      setUploading(false);
-      setReplacingIndex(null);
       window.setTimeout(() => setUploadProgress(0), 900);
     }
   };
 
   return (
-    <form className="admin-product-form" onSubmit={onSubmit}>
-      <AdminFieldset title="Basic Information">
-        <label>Product name<input ref={productNameRef} required value={form.name} onChange={(event) => update("name", event.target.value)} onBlur={() => update("slug", createProductSlug(form.name, products.filter((product) => product.id !== form.id), form.id))} /></label>
-        <label>Brand<input required list="admin-product-brand-options" maxLength={80} value={form.brand} onChange={(event) => update("brand", event.target.value)} placeholder="Apple, Google, Tecno..." /><datalist id="admin-product-brand-options">{brandOptions.map((item) => <option key={item} value={item} />)}</datalist></label>
-        <label>Category<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value as Product["category"], subcategory: ["Phones & Tablets", "Electronics"].includes(event.target.value) ? "" : form.subcategory })}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        {form.category === "Phones & Tablets" ? (
-          <label>Marketplace category<select value={form.subcategory} required onChange={(event) => update("subcategory", event.target.value)}><option value="">Choose a category</option><option value="Mobile Phones">Mobile Phones</option><option value="Accessories for Phones & Tablets">Accessories for Phones &amp; Tablets</option><option value="Smart Watches">Smart Watches</option><option value="Tablets">Tablets</option>{form.subcategory && !["Mobile Phones", "Accessories for Phones & Tablets", "Smart Watches", "Tablets"].includes(form.subcategory) && <option value={form.subcategory}>{form.subcategory}</option>}</select></label>
-        ) : form.category === "Electronics" ? (
-          <label>Marketplace category<select value={form.subcategory} required onChange={(event) => update("subcategory", event.target.value)}><option value="">Choose a category</option><option value="Laptops & Computers">Laptops &amp; Computers</option><option value="TV & Video Equipment">TV &amp; Video Equipment</option><option value="Video Game Consoles">Video Game Consoles</option><option value="Audio & Music Equipment">Audio &amp; Music Equipment</option>{form.subcategory && !["Laptops & Computers", "TV & Video Equipment", "Video Game Consoles", "Audio & Music Equipment"].includes(form.subcategory) && <option value={form.subcategory}>{form.subcategory}</option>}</select></label>
-        ) : (
-          <label>Subcategory / family<input value={form.subcategory} onChange={(event) => update("subcategory", event.target.value)} placeholder="Product family" /></label>
-        )}
-        <label>Model<input required value={form.model} onChange={(event) => update("model", event.target.value)} /></label>
-        <label>Generation<input value={form.generation} onChange={(event) => update("generation", event.target.value)} /></label>
-        <label>Product URL slug<input required readOnly value={form.slug} aria-describedby="product-slug-help" /></label>
-        <label className="admin-field-wide">Description<textarea required value={form.description} onChange={(event) => update("description", event.target.value)} placeholder="Customer-facing product description" /></label>
-        <p className="admin-field-help admin-field-wide" id="product-slug-help">The URL slug is generated from the product name and protected from accidental edits.</p>
-        <p className="admin-field-help admin-field-wide">Use <strong>Phones &amp; Tablets</strong> or <strong>Electronics</strong> only for marketplace listings, then choose the matching marketplace category. Store-owned iPhone, iPad, Mac, Watch and AirPods products remain in their existing Store categories.</p>
-      </AdminFieldset>
+    <form className="space-y-6" onSubmit={onSubmit}>
+      {/* 1. Basic Info */}
+      <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+        <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+          <span>1. General Device Information</span>
+        </h3>
 
-      <AdminFieldset title="Pricing">
-        <label>Confirmed price (GHS)<input required type="number" min="0" step="0.01" inputMode="decimal" value={form.price} onChange={(event) => update("price", event.target.value)} /></label>
-        <label>Previous price (GHS)<input type="number" min="0" step="0.01" inputMode="decimal" value={form.previousPrice} onChange={(event) => update("previousPrice", event.target.value)} /></label>
-        <label className="admin-check"><input type="checkbox" checked={form.priceOnRequest} onChange={(event) => update("priceOnRequest", event.target.checked)} /> Contact for Price</label>
-        <div className={`admin-price-status admin-field-wide ${form.priceOnRequest ? "is-enquiry" : Number(form.price) > 0 ? "is-confirmed" : "is-warning"}`}>
-          <strong>{form.priceOnRequest ? "Customers will see Contact for Price" : Number(form.price) > 0 ? `Customers will see ${formatGhs(Number(form.price))}` : "A confirmed price is required"}</strong>
-          <span>{form.priceOnRequest ? "You may keep a draft amount here, but it will not be shown publicly or become purchasable." : "Cart and Buy Now also require valid stock and published availability."}</span>
-        </div>
-      </AdminFieldset>
-
-      <AdminFieldset title="Condition">
-        <label>Product condition<select value={form.condition} onChange={(event) => update("condition", event.target.value as Product["condition"])}>{productConditions.map((item) => <option key={item}>{item}</option>)}</select></label>
-      </AdminFieldset>
-
-      <AdminFieldset title="Inventory">
-        <label>Stock quantity<input required type="number" min="0" inputMode="numeric" value={form.stockQuantity} onChange={(event) => update("stockQuantity", event.target.value)} /></label>
-        <label>Stock status<select value={form.stockStatus} onChange={(event) => update("stockStatus", event.target.value as Product["stockStatus"])}>{stockStatuses.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="admin-check"><input type="checkbox" checked={form.available} onChange={(event) => update("available", event.target.checked)} /> Published in public catalogue</label>
-        <label className="admin-check"><input type="checkbox" checked={form.archived} onChange={(event) => update("archived", event.target.checked)} /> Archived</label>
-      </AdminFieldset>
-
-      <AdminFieldset title="Options">
-        <label>Storage / configuration options<textarea value={form.storage} onChange={(event) => update("storage", event.target.value)} placeholder="One option per line" /></label>
-        <label>RAM, where applicable<input value={form.ram} onChange={(event) => update("ram", event.target.value)} placeholder="8GB, 16GB, 32GB..." /></label>
-        <label>Colour options<textarea value={form.colors} onChange={(event) => update("colors", event.target.value)} placeholder="One colour per line" /></label>
-        <label>Default colour<input value={form.defaultColor} onChange={(event) => update("defaultColor", event.target.value)} /></label>
-      </AdminFieldset>
-
-      <AdminFieldset title="Product Details">
-        <label>Short description<textarea value={form.shortDescription} onChange={(event) => update("shortDescription", event.target.value)} /></label>
-        <label>Specifications<textarea value={form.specifications} onChange={(event) => update("specifications", event.target.value)} placeholder="One specification per line" /></label>
-        <label>Included items<textarea value={form.includedItems} onChange={(event) => update("includedItems", event.target.value)} placeholder="One item per line" /></label>
-        <label>Delivery information<textarea value={form.deliveryInfo} onChange={(event) => update("deliveryInfo", event.target.value)} /></label>
-        <label>Battery health<input value={form.batteryHealth} onChange={(event) => update("batteryHealth", event.target.value)} /></label>
-        <label>Warranty<input value={form.warranty} onChange={(event) => update("warranty", event.target.value)} /></label>
-      </AdminFieldset>
-
-      <AdminFieldset title="Product Images">
-        {isUsedProductCondition(form.condition) && (
-          <div className={`admin-photo-requirement ${hasOwnerUploadedProductImages(form) ? "is-ready" : ""}`}>
-            <strong>{hasOwnerUploadedProductImages(form) ? "Real product photos uploaded" : "Real product photos required"}</strong>
-            <span>{hasOwnerUploadedProductImages(form) ? "Uploaded photos will appear before catalogue reference images." : "Upload real photos of this exact device before publishing. Premium catalogue renders are not shown publicly for used-condition products."}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Product Name *</label>
+            <input
+              ref={productNameRef}
+              required
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              onBlur={() =>
+                update(
+                  "slug",
+                  createProductSlug(
+                    form.name,
+                    products.filter((p) => p.id !== form.id),
+                    form.id
+                  )
+                )
+              }
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="e.g. iPhone 16 Pro Max"
+            />
           </div>
-        )}
-        <div className="admin-image-list">
-          {form.images.map((image, index) => (
-            <div className={`admin-image-card ${form.primaryImageIndex === index ? "is-primary" : ""}`} key={`${image.src}-${index}`}>
-              <div className="admin-image-preview">
-                {image.src ? <img src={image.src} alt={image.alt || `${form.name} image ${index + 1}`} /> : <span>No image</span>}
-                {form.primaryImageIndex === index && <strong>Primary image</strong>}
-              </div>
-              <label>Image description<input value={image.alt} onChange={(event) => updateImage(index, "alt", event.target.value)} placeholder="Describe this product image" /></label>
-              <div className="admin-image-actions">
-                <button type="button" disabled={uploading || form.primaryImageIndex === index} onClick={() => update("primaryImageIndex", index)}>Set primary</button>
-                <button type="button" aria-label={`Move image ${index + 1} left`} disabled={uploading || index === 0} onClick={() => moveImage(index, -1)}><ArrowLeft size={15} /> Move</button>
-                <button type="button" aria-label={`Move image ${index + 1} right`} disabled={uploading || index === form.images.length - 1} onClick={() => moveImage(index, 1)}>Move <ArrowRight size={15} /></button>
-                <label className="admin-image-replace"><RefreshCw size={15} /> {replacingIndex === index ? "Replacing..." : "Replace"}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={uploading} onChange={(event) => void replaceImage(index, event.target.files?.[0])} /></label>
-                <button className="danger" type="button" disabled={uploading} onClick={() => window.confirm("Remove this image from the product after you save?") && removeImage(index)}>Remove</button>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Brand *</label>
+            <input
+              required
+              list="admin-brand-opts"
+              value={form.brand}
+              onChange={(e) => update("brand", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="Apple, Google, Samsung..."
+            />
+            <datalist id="admin-brand-opts">
+              {brandOptions.map((b) => (
+                <option key={b} value={b} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Category *</label>
+            <select
+              value={form.category}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  category: e.target.value as Product["category"],
+                  subcategory: ["Phones & Tablets", "Electronics"].includes(e.target.value)
+                    ? ""
+                    : form.subcategory,
+                })
+              }
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {form.category === "Phones & Tablets" ? (
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Marketplace category</label>
+              <select
+                value={form.subcategory}
+                required
+                onChange={(event) => update("subcategory", event.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              >
+                <option value="">Choose a category</option>
+                <option value="Mobile Phones">Mobile Phones</option>
+                <option value="Accessories for Phones &amp; Tablets">Accessories for Phones &amp; Tablets</option>
+                <option value="Smart Watches">Smart Watches</option>
+                <option value="Tablets">Tablets</option>
+                {form.subcategory &&
+                  !["Mobile Phones", "Accessories for Phones & Tablets", "Smart Watches", "Tablets"].includes(form.subcategory) && (
+                    <option value={form.subcategory}>{form.subcategory}</option>
+                  )}
+              </select>
+            </div>
+          ) : form.category === "Electronics" ? (
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Marketplace category</label>
+              <select
+                value={form.subcategory}
+                required
+                onChange={(event) => update("subcategory", event.target.value)}
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              >
+                <option value="">Choose a category</option>
+                <option value="Laptops & Computers">Laptops &amp; Computers</option>
+                <option value="TV & Video Equipment">TV &amp; Video Equipment</option>
+                <option value="Video Game Consoles">Video Game Consoles</option>
+                <option value="Audio &amp; Music Equipment">Audio &amp; Music Equipment</option>
+                {form.subcategory &&
+                  !["Laptops & Computers", "TV & Video Equipment", "Video Game Consoles", "Audio & Music Equipment"].includes(form.subcategory) && (
+                    <option value={form.subcategory}>{form.subcategory}</option>
+                  )}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Subcategory / family</label>
+              <input
+                value={form.subcategory}
+                onChange={(event) => update("subcategory", event.target.value)}
+                placeholder="Product family"
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Model *</label>
+            <input
+              required
+              value={form.model}
+              onChange={(e) => update("model", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="e.g. A3106"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Physical Condition *</label>
+            <select
+              value={form.condition}
+              onChange={(e) => update("condition", e.target.value as Product["condition"])}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+            >
+              {productConditions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Generation / Year</label>
+            <input
+              value={form.generation}
+              onChange={(e) => update("generation", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="e.g. 2024 / M4 Series"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-bold text-slate-700 mb-1">URL Slug (Auto-Generated)</label>
+            <input
+              readOnly
+              value={form.slug}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 font-mono"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block font-bold text-slate-700 mb-1">Full Description *</label>
+            <textarea
+              required
+              rows={3}
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="Detailed customer overview, specifications, and device highlight points..."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Pricing & Inventory */}
+      <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+        <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+          <span>2. Pricing &amp; Stock Availability</span>
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Base Price (GH₵) *</label>
+            <input
+              required
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              onChange={(e) => update("price", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="e.g. 18500"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Previous / Strikethrough Price (GH₵)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.previousPrice}
+              onChange={(e) => update("previousPrice", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="Leave empty if not on sale"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Stock Quantity *</label>
+            <input
+              required
+              type="number"
+              min="0"
+              value={form.stockQuantity}
+              onChange={(e) => update("stockQuantity", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Stock Status *</label>
+            <select
+              value={form.stockStatus}
+              onChange={(e) => update("stockStatus", e.target.value as Product["stockStatus"])}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+            >
+              {stockStatuses.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="md:col-span-2 flex flex-wrap gap-4 pt-1">
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.priceOnRequest}
+                onChange={(e) => update("priceOnRequest", e.target.checked)}
+                className="rounded"
+              />
+              <span>Contact for Price (Disables direct checkout)</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.available}
+                onChange={(e) => update("available", e.target.checked)}
+                className="rounded"
+              />
+              <span>Published on Storefront</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.archived}
+                onChange={(e) => update("archived", e.target.checked)}
+                className="rounded"
+              />
+              <span>Archived</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Specifications & Storage */}
+      <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+        <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+          <span>3. Storage, Colors &amp; Hardware Specs</span>
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Storage Tiers (One per line)</label>
+            <textarea
+              rows={3}
+              value={form.storage}
+              onChange={(e) => update("storage", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="128GB&#10;256GB&#10;512GB&#10;1TB"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">RAM, where applicable</label>
+            <input
+              value={form.ram}
+              onChange={(e) => update("ram", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="8GB, 16GB, 32GB..."
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Color Finishes (One per line)</label>
+            <textarea
+              rows={3}
+              value={form.colors}
+              onChange={(e) => update("colors", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="Natural Titanium&#10;Black Titanium&#10;White Titanium"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Battery Health %</label>
+            <input
+              value={form.batteryHealth}
+              onChange={(e) => update("batteryHealth", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="100% or 92% (for used devices)"
+            />
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Warranty Term</label>
+            <input
+              value={form.warranty}
+              onChange={(e) => update("warranty", e.target.value)}
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              placeholder="1 Year Apple Official Warranty or 6 Months Shop Warranty"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Product Images */}
+      <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-900 text-sm">4. Product Media &amp; Photos</h3>
+          <span className="text-xs text-slate-500">{form.images.length} images loaded</span>
+        </div>
+
+        {/* Existing Images Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {form.images.map((img, idx) => (
+            <div
+              key={idx}
+              className={`p-2 rounded-xl bg-white border relative ${
+                form.primaryImageIndex === idx ? "border-[#d4af37] ring-2 ring-[#d4af37]/20" : "border-slate-200"
+              }`}
+            >
+              <img
+                src={img.src}
+                alt={img.alt || "Product image"}
+                className="w-full h-28 object-cover rounded-lg bg-slate-50"
+              />
+              <div className="mt-2 flex items-center justify-between text-[0.7rem]">
+                <button
+                  type="button"
+                  onClick={() => update("primaryImageIndex", idx)}
+                  className={`font-semibold ${
+                    form.primaryImageIndex === idx ? "text-[#d4af37]" : "text-slate-400 hover:text-slate-700"
+                  }`}
+                >
+                  {form.primaryImageIndex === idx ? "Primary Photo" : "Set Primary"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="text-rose-500 hover:text-rose-700 font-semibold"
+                >
+                  Remove
+                </button>
               </div>
             </div>
           ))}
         </div>
-        {form.images.length === 0 && <div className="admin-image-empty-state">No product images yet. Upload the exact product photos below.</div>}
-        <label className="admin-upload-control"><span><ImagePlus size={18} /> Upload new product images</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={backendStatus !== "supabase" || uploading} onChange={(event) => void handleFileUpload(event.target.files)} />
-        </label>
-        {uploading && <div className="admin-upload-progress"><span style={{ width: `${uploadProgress}%` }} /></div>}
-      </AdminFieldset>
 
-      <AdminFieldset title="Promotion">
-        <label className="admin-check"><input type="checkbox" checked={form.featured} onChange={(event) => update("featured", event.target.checked)} /> Featured</label>
-        <label className="admin-check"><input type="checkbox" checked={form.newArrival} onChange={(event) => update("newArrival", event.target.checked)} /> New Arrival</label>
-        <label className="admin-check"><input type="checkbox" checked={form.popular} onChange={(event) => update("popular", event.target.checked)} /> Popular Choice</label>
-      </AdminFieldset>
+        {/* Upload Trigger */}
+        <div className="pt-2">
+          <label className="admin-btn admin-btn-secondary text-xs cursor-pointer inline-flex items-center gap-2">
+            <ImagePlus size={15} />
+            <span>{uploading ? `Uploading (${uploadProgress}%)...` : "Upload Photos to Supabase"}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif"
+              multiple
+              disabled={backendStatus !== "supabase" || uploading}
+              onChange={(e) => void handleFileUpload(e.target.files)}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
 
-      <div className="admin-save-bar">
-        <span>{form.priceOnRequest ? "Enquiry-only until a confirmed price and valid inventory are published." : "Confirmed price. Purchase actions also follow stock and availability."}</span>
-        <button className="btn-primary" type="submit" disabled={saving || uploading}><Save size={17} /> {saving ? "Saving Product..." : "Save Product"}</button>
+      {/* 5. Save Action Bar */}
+      <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-4 sticky bottom-4 shadow-lg z-20">
+        <span className="text-xs text-slate-500 font-medium">
+          {form.priceOnRequest
+            ? "Enquiry-only mode active."
+            : `Retail price: ${formatGhs(Number(form.price) || 0)}`}
+        </span>
+        <button
+          className="admin-btn admin-btn-primary"
+          type="submit"
+          disabled={saving || uploading}
+        >
+          <Save size={16} />
+          <span>{saving ? "Saving to Database..." : "Save Product Listing"}</span>
+        </button>
       </div>
     </form>
   );
 }
 
 function getBackendLabel(status: string) {
-  if (status === "supabase") return "Supabase";
-  if (status === "error") return "Supabase error";
-  if (status === "local-catalog") return "development local catalogue";
-  if (status === "supabase-unconfigured") return "Supabase not configured";
-  return "seed catalogue fallback";
-}
-
-function AdminFieldset({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <fieldset className="admin-form-section">
-      <legend>{title}</legend>
-      <div>{children}</div>
-    </fieldset>
-  );
+  if (status === "supabase") return "Supabase PostgreSQL";
+  if (status === "error") return "Supabase Error";
+  if (status === "local-catalog") return "Local Dev Catalogue";
+  return "Seed Fallback";
 }
 
 export function formToProduct(form: ProductFormState, products: Product[]): Product {
@@ -466,12 +1196,16 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
   const storage = textToList(form.storage);
   const colors = textToList(form.colors);
   const quantity = Math.max(0, Number(form.stockQuantity) || 0);
-  const stockStatus = form.stockStatus === "Sold" ? "Sold" : quantity === 0 ? "Out of Stock" : form.stockStatus;
+  const stockStatus =
+    form.stockStatus === "Sold" ? "Sold" : quantity === 0 ? "Out of Stock" : form.stockStatus;
   const specifications = withProductRam(textToList(form.specifications), form.ram);
   const includedItems = textToList(form.includedItems);
   const validImages = form.images.filter((image) => image.src.trim());
   const selectedPrimaryImage = form.images[form.primaryImageIndex];
-  const primaryImageIndex = Math.max(0, selectedPrimaryImage ? validImages.indexOf(selectedPrimaryImage) : 0);
+  const primaryImageIndex = Math.max(
+    0,
+    selectedPrimaryImage ? validImages.indexOf(selectedPrimaryImage) : 0
+  );
 
   return normalizeProduct({
     ...(existing ?? {}),
@@ -506,7 +1240,11 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     stockQuantity: quantity,
     stockStatus,
     imageTone: existing?.imageTone ?? "from-white via-zinc-100 to-yellow-100",
-    badges: [form.newArrival ? "New Arrival" : "", form.condition, stockStatus === "Sold" ? "Sold" : ""].filter(Boolean),
+    badges: [
+      form.newArrival ? "New Arrival" : "",
+      form.condition,
+      stockStatus === "Sold" ? "Sold" : "",
+    ].filter(Boolean),
     featured: form.featured,
     newArrival: form.newArrival,
     popular: form.popular,

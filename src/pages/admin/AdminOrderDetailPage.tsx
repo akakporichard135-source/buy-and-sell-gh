@@ -1,4 +1,17 @@
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  MapPin,
+  MessageCircle,
+  Package,
+  Phone,
+  Save,
+  ShieldCheck,
+  Truck,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchAdminOrderById, updateAdminOrderStatus } from "../../orders/supabaseOrderRepository";
@@ -12,16 +25,29 @@ export function AdminOrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [staffNote, setStaffNote] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
     let active = true;
+    setLoading(true);
     fetchAdminOrderById(orderId)
       .then((data) => {
-        if (active) setOrder(data);
+        if (active) {
+          setOrder(data);
+          // Load staff notes from local storage if available
+          try {
+            const savedNote = localStorage.getItem(`order_note_${data.id}`);
+            if (savedNote) setStaffNote(savedNote);
+          } catch {
+            // ignore
+          }
+        }
       })
       .catch((failure) => {
-        if (active) setError(failure instanceof Error ? failure.message : "Order could not be loaded.");
+        if (active)
+          setError(failure instanceof Error ? failure.message : "Order could not be loaded.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -45,93 +71,339 @@ export function AdminOrderDetailPage() {
     }
   };
 
-  if (loading) return <div className="admin-loading">Loading order...</div>;
-  if (!order) {
+  const handleSaveStaffNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order) return;
+    try {
+      localStorage.setItem(`order_note_${order.id}`, staffNote);
+      setNoteSaved(true);
+      window.setTimeout(() => setNoteSaved(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="admin-page-grid">
-        <section className="admin-panel"><h2>Order not found</h2><Link className="btn-secondary mt-4" to="/admin/orders">Back to Orders</Link></section>
+      <div className="p-12 text-center text-slate-400 font-medium">
+        Loading order details from database...
       </div>
     );
   }
 
-  return (
-    <div className="admin-page-grid">
-      <section className="admin-panel admin-panel-hero">
-        <div>
-          <p className="eyebrow-dark">Order Detail</p>
-          <h2>{order.referenceNumber}</h2>
-          <p>{order.customer.fullName} | {order.customer.phone} | {formatGhs(order.total)}</p>
+  if (!order) {
+    return (
+      <div className="space-y-4">
+        <div className="admin-card text-center py-12">
+          <h2 className="text-xl font-bold text-slate-900">Order Not Found</h2>
+          <p className="text-sm text-slate-500 mt-1">
+            This order ID does not exist or was removed from the database.
+          </p>
+          <Link to="/admin/orders" className="admin-btn admin-btn-secondary mt-4">
+            <ArrowLeft size={16} />
+            <span>Return to Orders</span>
+          </Link>
         </div>
-        <Link className="btn-secondary" to="/admin/orders"><ArrowLeft size={17} /> Back</Link>
-      </section>
+      </div>
+    );
+  }
 
-      {error && <div className="admin-error">{error}</div>}
+  const isPending = order.status === "Pending";
+  const isCompleted = ["Delivered", "Completed"].includes(order.status);
+  const isCancelled = order.status === "Cancelled";
 
-      <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="admin-panel">
-          <div className="admin-section-title">
-            <div>
-              <p className="eyebrow-dark">Items</p>
-              <h2>Product snapshots</h2>
+  return (
+    <div className="space-y-6">
+      {/* 1. Header Card */}
+      <div className="admin-header-card">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Link
+              to="/admin/orders"
+              className="text-xs font-bold text-slate-500 hover:text-slate-900 flex items-center gap-1"
+            >
+              <ArrowLeft size={12} />
+              <span>Orders</span>
+            </Link>
+            <span className="text-slate-300">/</span>
+            <span className="text-xs font-mono font-bold text-[#d4af37]">
+              {order.referenceNumber}
+            </span>
+          </div>
+          <h2>Order {order.referenceNumber}</h2>
+          <p>
+            Placed on{" "}
+            {new Date(order.createdAt).toLocaleDateString("en-GH", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span
+            className={`admin-badge text-sm px-3 py-1 ${
+              isCompleted
+                ? "admin-badge-emerald"
+                : isPending
+                ? "admin-badge-amber"
+                : isCancelled
+                ? "admin-badge-rose"
+                : "admin-badge-blue"
+            }`}
+          >
+            {order.status}
+          </span>
+          <Link to="/admin/orders" className="admin-btn admin-btn-secondary admin-btn-sm">
+            <ArrowLeft size={14} />
+            <span>Back to Queue</span>
+          </Link>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+          {error}
+        </div>
+      )}
+
+      {/* 2. Order Grid: Items & Customer Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Purchased Items (2 cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="admin-card space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <Package size={17} className="text-[#d4af37]" />
+                <span>Purchased Product Snapshots ({order.items.length})</span>
+              </h3>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="py-3.5 flex items-start gap-4">
+                  {item.productImage ? (
+                    <img
+                      src={item.productImage}
+                      alt={item.productName}
+                      className="w-16 h-16 rounded-lg object-cover bg-slate-50 border border-slate-200 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-xs text-slate-400 font-semibold shrink-0">
+                      No photo
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-slate-900 text-sm">{item.productName}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {item.storage ? `${item.storage} | ` : ""}
+                      {item.colour ? `${item.colour} | ` : ""}
+                      {item.condition || "Standard"}
+                    </p>
+                    <div className="mt-1 flex items-center gap-3 text-xs">
+                      <span className="text-slate-600 font-semibold">
+                        Qty: {item.quantity} &times; {formatGhs(item.unitPrice)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="font-extrabold text-slate-900 text-sm">
+                    {formatGhs(item.lineTotal)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600">
+                <span>Items Subtotal</span>
+                <span className="font-semibold text-slate-900">{formatGhs(order.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>Delivery Charge</span>
+                <span className="font-semibold text-slate-900">
+                  {order.deliveryFee === null || order.deliveryFee === undefined
+                    ? "To confirm on dispatch"
+                    : formatGhs(order.deliveryFee)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm font-extrabold text-slate-900 pt-2 border-t border-slate-200">
+                <span>Total Amount</span>
+                <span className="text-base text-slate-900">{formatGhs(order.total)}</span>
+              </div>
             </div>
           </div>
-          <div className="grid gap-3">
-            {order.items.map((item) => (
-              <article className="order-summary-line rounded-lg border border-black/7 bg-page p-3" key={`${item.productId}-${item.storage}-${item.colour}`}>
-                {item.productImage ? <img src={item.productImage} alt={item.productName} loading="lazy" /> : <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>}
+
+          {/* Status Controls Card */}
+          <div className="admin-card space-y-3">
+            <h3 className="font-bold text-slate-900 text-sm">Update Order Processing Status</h3>
+            <p className="text-xs text-slate-500">
+              Select the new status to update database records and customer fulfillment timeline.
+            </p>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {ORDER_STATUSES.map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  disabled={saving || st === order.status}
+                  onClick={() => void changeStatus(st)}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    st === order.status
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                  }`}
+                >
+                  {st === order.status && <CheckCircle2 size={14} className="text-emerald-400" />}
+                  <span>{st}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Staff Internal Notes */}
+          <div className="admin-card space-y-3">
+            <h3 className="font-bold text-slate-900 text-sm">Internal Staff Notes</h3>
+            <form onSubmit={handleSaveStaffNote} className="space-y-2">
+              <textarea
+                rows={3}
+                value={staffNote}
+                onChange={(e) => setStaffNote(e.target.value)}
+                placeholder="Log internal comments, payment confirmation ref, dispatch rider name or IMEI..."
+                className="w-full p-2.5 rounded-lg border border-slate-200 text-xs text-slate-800 bg-slate-50 focus:bg-white focus:outline-none"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-[0.72rem] text-slate-400">
+                  {noteSaved ? "Saved locally for this order!" : "Private to administrative staff."}
+                </span>
+                <button type="submit" className="admin-btn admin-btn-secondary admin-btn-sm">
+                  <Save size={13} />
+                  <span>Save Note</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        {/* Right: Customer & Fulfilment Details (1 col) */}
+        <div className="space-y-6">
+          <div className="admin-card space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <User size={18} className="text-[#d4af37]" />
+              <h3 className="font-bold text-slate-900 text-sm">Customer Profile</h3>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div>
+                <span className="text-slate-400 block font-medium">Customer Full Name</span>
+                <span className="font-bold text-slate-900 text-sm">{order.customer.fullName}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Primary Phone</span>
+                <span className="font-bold text-slate-900">{order.customer.phone}</span>
+              </div>
+              {order.customer.whatsapp && (
                 <div>
-                  <strong>{item.quantity}x {item.productName}</strong>
-                  <span>{item.storage} | {item.colour} | {item.condition}</span>
-                  <small>{formatGhs(item.unitPrice)} each | {formatGhs(item.lineTotal)}</small>
+                  <span className="text-slate-400 block font-medium">WhatsApp Number</span>
+                  <span className="font-bold text-emerald-700">+{order.customer.whatsapp}</span>
                 </div>
-              </article>
-            ))}
+              )}
+              {order.customer.email && (
+                <div>
+                  <span className="text-slate-400 block font-medium">Email Address</span>
+                  <span className="font-medium text-slate-800">{order.customer.email}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Contact Triggers */}
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href={orderRequestWhatsAppUrl(order)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="admin-btn admin-btn-secondary w-full text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 text-xs"
+              >
+                <MessageCircle size={15} />
+                <span>Contact on WhatsApp</span>
+              </a>
+              <a
+                href={`tel:${order.customer.phone}`}
+                className="admin-btn admin-btn-secondary w-full text-xs"
+              >
+                <Phone size={14} />
+                <span>Call Customer Directly</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="admin-card space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+              <Truck size={18} className="text-[#d4af37]" />
+              <h3 className="font-bold text-slate-900 text-sm">Fulfilment &amp; Destination</h3>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div>
+                <span className="text-slate-400 block font-medium">Method</span>
+                <span className="admin-badge admin-badge-slate mt-0.5">
+                  {order.customer.fulfilmentType === "delivery" ? "Doorstep Delivery" : "Store Pickup"}
+                </span>
+              </div>
+
+              {order.customer.deliveryAddress && (
+                <div>
+                  <span className="text-slate-400 block font-medium">Delivery Address</span>
+                  <span className="font-semibold text-slate-900 block mt-0.5">
+                    {order.customer.deliveryAddress}
+                  </span>
+                </div>
+              )}
+
+              {order.customer.landmark && (
+                <div>
+                  <span className="text-slate-400 block font-medium">Landmark / Directions</span>
+                  <span className="font-medium text-slate-800 block mt-0.5">
+                    {order.customer.landmark}
+                  </span>
+                </div>
+              )}
+
+              {order.customer.city && (
+                <div>
+                  <span className="text-slate-400 block font-medium">City &amp; Region</span>
+                  <span className="font-medium text-slate-800">
+                    {order.customer.city}
+                    {order.customer.region ? `, ${order.customer.region}` : ""}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <span className="text-slate-400 block font-medium">Payment Preference</span>
+                <span className="font-semibold text-slate-900 block mt-0.5">
+                  {order.customer.preferredPaymentMethod}
+                </span>
+              </div>
+
+              {order.customer.additionalNote && (
+                <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-200/60 mt-2">
+                  <span className="text-amber-800 font-bold block text-[0.7rem] uppercase">
+                    Customer Special Note:
+                  </span>
+                  <p className="text-slate-700 mt-1">{order.customer.additionalNote}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        <aside className="admin-panel">
-          <p className="eyebrow-dark">Customer</p>
-          <h2>{order.customer.fullName}</h2>
-          <dl className="mt-4 grid gap-2 text-sm font-bold text-ink/65">
-            <Detail label="Phone" value={order.customer.phone} />
-            <Detail label="WhatsApp" value={order.customer.whatsapp} />
-            <Detail label="Email" value={order.customer.email ?? "Not provided"} />
-            <Detail label="Fulfilment" value={order.customer.fulfilmentType === "delivery" ? "Delivery" : "Pickup"} />
-            <Detail label="Region" value={order.customer.region ?? "Not provided"} />
-            <Detail label="City" value={order.customer.city ?? "Not provided"} />
-            <Detail label="Address" value={order.customer.deliveryAddress ?? "Not provided"} />
-            <Detail label="Landmark" value={order.customer.landmark ?? "Not provided"} />
-            <Detail label="Payment preference" value={order.customer.preferredPaymentMethod} />
-            <Detail label="Payment status" value={order.paymentStatus} />
-            <Detail label="Order status" value={order.status} />
-            <Detail label="Subtotal" value={formatGhs(order.subtotal)} />
-            <Detail label="Delivery fee" value={order.deliveryFee === null ? "To confirm" : formatGhs(order.deliveryFee)} />
-            <Detail label="Total" value={formatGhs(order.total)} />
-          </dl>
-          {order.customer.additionalNote && <p className="mt-4 rounded-lg bg-page p-3 text-sm font-bold leading-6 text-ink/65">{order.customer.additionalNote}</p>}
-          <a className="btn-primary mt-5 w-full" href={orderRequestWhatsAppUrl(order)} target="_blank" rel="noopener noreferrer">Contact on WhatsApp</a>
-        </aside>
-      </section>
-
-      <section className="admin-panel">
-        <div className="admin-section-title">
-          <div>
-            <p className="eyebrow-dark">Timeline</p>
-            <h2>Status controls</h2>
-          </div>
-        </div>
-        <div className="admin-status-grid">
-          {ORDER_STATUSES.map((status) => (
-            <button className={status === order.status ? "is-active" : ""} type="button" key={status} disabled={saving || status === order.status} onClick={() => void changeStatus(status)}>
-              {status === order.status && <CheckCircle2 size={15} />} {status}
-            </button>
-          ))}
-        </div>
-      </section>
+      </div>
     </div>
   );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-3 border-b border-black/7 pb-2"><dt>{label}</dt><dd className="text-right text-ink">{value}</dd></div>;
 }

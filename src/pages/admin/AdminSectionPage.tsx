@@ -1,11 +1,13 @@
-import { ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useAdminAuth } from "../../admin/AdminAuth";
+import { AdminAccountPage } from "./AdminAccountPage";
+import { AdminInquiriesPage } from "./AdminInquiriesPage";
 import { AdminOrdersPage } from "./AdminOrdersPage";
-import { AdminProductManager } from "./AdminProductManager";
 import { AdminPricingManager } from "./AdminPricingManager";
+import { AdminProductManager } from "./AdminProductManager";
+import { AdminPromotionsPage } from "./AdminPromotionsPage";
+import { AdminReviewsPage } from "./AdminReviewsPage";
+import { AdminSettingsPage } from "./AdminSettingsPage";
 
-type AdminSection =
+export type AdminSection =
   | "products"
   | "pricing"
   | "orders"
@@ -17,105 +19,29 @@ type AdminSection =
   | "settings"
   | "account";
 
-const sectionCopy: Record<AdminSection, { title: string; eyebrow: string; description: string; availability: string }> = {
-  products: {
-    eyebrow: "Product Management",
-    title: "Products",
-    description: "Manage the catalogue source that powers public products, homepage sections, search, filters, cart and product detail pages.",
-    availability: "Product management is active.",
-  },
-  pricing: {
-    eyebrow: "Pricing & Stock Management",
-    title: "Pricing & Stock",
-    description: "Authoritatively manage retail pricing, sale discounts (strikethroughs), variant tiers, and stock availability across all configurations.",
-    availability: "Pricing and inventory management is active.",
-  },
-  orders: {
-    eyebrow: "Order Requests",
-    title: "Order Requests",
-    description: "Review saved website order requests, customer details, product snapshots, fulfilment choices and status updates.",
-    availability: "Order management is active for authorized administrators.",
-  },
-  "trade-ins": {
-    eyebrow: "Trade-In Requests",
-    title: "Trade-In Requests",
-    description: "Trade-in requests are currently handled through WhatsApp after customers prepare their details on the public form.",
-    availability: "A saved trade-in inbox is not active yet.",
-  },
-  "device-requests": {
-    eyebrow: "Device Requests",
-    title: "Device Requests",
-    description: "Pre-order requests are currently prepared on the website and sent to Buy & Sell GH through WhatsApp.",
-    availability: "A saved pre-order inbox is not active yet.",
-  },
-  "contact-messages": {
-    eyebrow: "Contact Messages",
-    title: "Contact Messages",
-    description: "Contact-form details are currently prepared on the website and sent through WhatsApp.",
-    availability: "A saved contact-message inbox is not active yet.",
-  },
-  reviews: {
-    eyebrow: "Reviews",
-    title: "Reviews",
-    description: "Verified customer reviews can be managed here when review publishing is enabled.",
-    availability: "Review publishing is not active. No placeholder reviews are shown publicly.",
-  },
-  promotions: {
-    eyebrow: "Promotions",
-    title: "Promotions",
-    description: "Public promotions are currently maintained outside this dashboard.",
-    availability: "Promotion editing is not active in this dashboard.",
-  },
-  settings: {
-    eyebrow: "Business Settings",
-    title: "Business Settings",
-    description: "Business contact details, opening hours and public website information are currently maintained outside this dashboard.",
-    availability: "Business settings are not editable here yet.",
-  },
-  account: {
-    eyebrow: "Admin Account",
-    title: "Admin Account",
-    description: "Review the current protected session and authenticator status.",
-    availability: "Password recovery uses Supabase Auth. Privileged access requires an authorized profile and AAL2.",
-  },
-};
-
 export function AdminSectionPage({ section }: { section: AdminSection }) {
-  const copy = sectionCopy[section];
-  const { session } = useAdminAuth();
-
-  if (section === "products") return <AdminProductManager />;
-  if (section === "pricing") return <AdminPricingManager />;
-  if (section === "orders") return <AdminOrdersPage />;
-
-  return (
-    <div className="admin-page-grid">
-      <section className="admin-panel admin-panel-hero">
-        <div>
-          <p className="eyebrow-dark">{copy.eyebrow}</p>
-          <h2>{copy.title}</h2>
-          <p>{copy.description}</p>
-        </div>
-        <Link className="btn-secondary" to="/admin">
-          <ExternalLink size={17} />
-          Overview
-        </Link>
-      </section>
-
-      {section === "account" && (
-        <section className="admin-panel">
-          <p className="eyebrow-dark">Signed in as</p>
-          <h2>{session?.email}</h2>
-          <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Role: {session?.role}. Assurance level: {session?.assuranceLevel}. Verified authenticator factors: {session?.verifiedTotpFactors.length ?? 0}.</p>
-          <Link className="btn-secondary mt-5" to="/admin/mfa?manage=1">Manage Authenticator MFA</Link>
-        </section>
-      )}
-
-      <section className="admin-panel">
-        <p className="eyebrow-dark">Availability</p>
-        <h2>Current workflow</h2>
-        <p>{copy.availability}</p>
-      </section>
-    </div>
-  );
+  switch (section) {
+    case "products":
+      return <AdminProductManager />;
+    case "pricing":
+      return <AdminPricingManager />;
+    case "orders":
+      return <AdminOrdersPage />;
+    case "trade-ins":
+      return <AdminInquiriesPage mode="trade-ins" />;
+    case "device-requests":
+      return <AdminInquiriesPage mode="device-requests" />;
+    case "contact-messages":
+      return <AdminInquiriesPage mode="contact-messages" />;
+    case "reviews":
+      return <AdminReviewsPage />;
+    case "promotions":
+      return <AdminPromotionsPage />;
+    case "settings":
+      return <AdminSettingsPage />;
+    case "account":
+      return <AdminAccountPage />;
+    default:
+      return <AdminProductManager />;
+  }
 }
