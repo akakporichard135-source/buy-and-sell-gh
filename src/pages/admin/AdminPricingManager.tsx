@@ -22,6 +22,7 @@ import { useAdminAuth } from "../../admin/AdminAuth";
 import type { Product, ProductVariant, StockStatus } from "../../types/product";
 import { formatPrice } from "../../utils/productPricing";
 import { formatGhs } from "../../utils/format";
+import { resolveAdminProductImage } from "../../utils/productImages";
 
 interface VariantDraft {
   price: number;
@@ -574,30 +575,36 @@ export function AdminPricingManager() {
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: "1 1 300px" }}>
                       {/* Product Thumbnail */}
-                      <div
-                        style={{
-                          width: "48px",
-                          height: "48px",
-                          borderRadius: "8px",
-                          backgroundColor: "#f5f5f7",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden",
-                          flexShrink: 0,
-                          border: "1px solid #e8e8ed",
-                        }}
-                      >
-                        {product.images && product.images[0]?.src ? (
-                          <img
-                            src={product.images[0].src}
-                            alt={product.name}
-                            style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
-                          />
-                        ) : (
-                          <Package size={22} color="#999" />
-                        )}
-                      </div>
+                      {(() => {
+                        const adminImage = resolveAdminProductImage(product) || (product.images && product.images[0]?.src ? product.images[0] : null);
+                        return (
+                          <div
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              borderRadius: "8px",
+                              backgroundColor: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              overflow: "hidden",
+                              flexShrink: 0,
+                              border: "1px solid #e8e8ed",
+                              padding: "2px",
+                            }}
+                          >
+                            {adminImage?.src ? (
+                              <img
+                                src={adminImage.src}
+                                alt={product.name}
+                                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                              />
+                            ) : (
+                              <Package size={22} color="#999" />
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Product Info */}
                       <div>
@@ -796,21 +803,18 @@ export function AdminPricingManager() {
                         borderTop: "1px solid #f0f0f2",
                       }}
                     >
-                      <div style={{ overflowX: "auto" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                      {/* Desktop Table View: Compact and fits 100% without horizontal scrollbar */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                           <thead>
                             <tr style={{ borderBottom: "1px solid #e5e5e7", textAlign: "left", color: "#666" }}>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>Configuration Title</th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>Selling Price (GH₵)</th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                  Strikethrough / Sale (GH₵)
-                                </span>
-                              </th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>Stock Status</th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>Qty</th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600 }}>Status</th>
-                              <th style={{ padding: "10px 12px", fontWeight: 600, textAlign: "right" }}>Actions</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Configuration Title</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Selling Price (GH₵)</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Sale / Strike (GH₵)</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Stock Status</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Qty</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600 }}>Status</th>
+                              <th style={{ padding: "8px 8px", fontWeight: 600, textAlign: "right" }}>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -831,9 +835,9 @@ export function AdminPricingManager() {
                                   }}
                                 >
                                   {/* Title / Specs */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
-                                    <div style={{ fontWeight: 600, color: "#111" }}>{v.title}</div>
-                                    <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
+                                    <div style={{ fontWeight: 600, color: "#111", fontSize: "12px" }}>{v.title}</div>
+                                    <div style={{ fontSize: "10px", color: "#888", marginTop: "1px" }}>
                                       {[v.storage, v.chip, v.memory, v.screenSize, v.connectivity]
                                         .filter(Boolean)
                                         .join(" • ")}
@@ -841,9 +845,9 @@ export function AdminPricingManager() {
                                   </td>
 
                                   {/* Selling Price */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#555" }}>GH₵</span>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#555" }}>GH₵</span>
                                       <input
                                         type="number"
                                         min="0"
@@ -853,12 +857,12 @@ export function AdminPricingManager() {
                                           updateDraft(v.id, { price: Number(e.target.value) || 0 }, v)
                                         }
                                         style={{
-                                          width: "110px",
-                                          padding: "6px 8px",
+                                          width: "88px",
+                                          padding: "4px 6px",
                                           borderRadius: "6px",
                                           border: dirty ? "1.5px solid #d48800" : "1px solid #d2d2d7",
                                           fontWeight: 700,
-                                          fontSize: "14px",
+                                          fontSize: "13px",
                                           backgroundColor: "#fff",
                                         }}
                                       />
@@ -866,9 +870,9 @@ export function AdminPricingManager() {
                                   </td>
 
                                   {/* Strikethrough / Sale Price */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ fontSize: "12px", fontWeight: 500, color: "#888" }}>GH₵</span>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                      <span style={{ fontSize: "11px", fontWeight: 500, color: "#888" }}>GH₵</span>
                                       <input
                                         type="number"
                                         min="0"
@@ -880,11 +884,11 @@ export function AdminPricingManager() {
                                           updateDraft(v.id, { previousPrice: val }, v);
                                         }}
                                         style={{
-                                          width: "110px",
-                                          padding: "6px 8px",
+                                          width: "84px",
+                                          padding: "4px 6px",
                                           borderRadius: "6px",
                                           border: isOnSale ? "1px solid #ff4d4f" : "1px solid #d2d2d7",
-                                          fontSize: "13px",
+                                          fontSize: "12px",
                                           color: isOnSale ? "#cf1322" : "#555",
                                           backgroundColor: isOnSale ? "#fff1f0" : "#fff",
                                         }}
@@ -892,10 +896,10 @@ export function AdminPricingManager() {
                                       {isOnSale && (
                                         <span
                                           style={{
-                                            fontSize: "11px",
+                                            fontSize: "9px",
                                             fontWeight: 700,
-                                            padding: "2px 6px",
-                                            borderRadius: "4px",
+                                            padding: "1px 4px",
+                                            borderRadius: "3px",
                                             backgroundColor: "#ff4d4f",
                                             color: "#fff",
                                           }}
@@ -907,17 +911,17 @@ export function AdminPricingManager() {
                                   </td>
 
                                   {/* Stock Status */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
                                     <select
                                       value={draft.stockStatus}
                                       onChange={(e) =>
                                         updateDraft(v.id, { stockStatus: e.target.value as StockStatus }, v)
                                       }
                                       style={{
-                                        padding: "6px 8px",
+                                        padding: "4px 6px",
                                         borderRadius: "6px",
                                         border: "1px solid #d2d2d7",
-                                        fontSize: "13px",
+                                        fontSize: "12px",
                                         fontWeight: 600,
                                         backgroundColor:
                                           draft.stockStatus === "In Stock"
@@ -942,7 +946,7 @@ export function AdminPricingManager() {
                                   </td>
 
                                   {/* Qty */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
                                     <input
                                       type="number"
                                       min="0"
@@ -955,25 +959,25 @@ export function AdminPricingManager() {
                                         )
                                       }
                                       style={{
-                                        width: "65px",
-                                        padding: "6px 8px",
+                                        width: "50px",
+                                        padding: "4px 6px",
                                         borderRadius: "6px",
                                         border: "1px solid #d2d2d7",
-                                        fontSize: "13px",
+                                        fontSize: "12px",
                                         textAlign: "center",
                                       }}
                                     />
                                   </td>
 
                                   {/* Available Toggle */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle" }}>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle" }}>
                                     <label
                                       style={{
                                         display: "inline-flex",
                                         alignItems: "center",
-                                        gap: "6px",
+                                        gap: "4px",
                                         cursor: "pointer",
-                                        fontSize: "12px",
+                                        fontSize: "11px",
                                         fontWeight: 600,
                                         color: draft.available ? "#1e7e34" : "#888",
                                       }}
@@ -984,15 +988,15 @@ export function AdminPricingManager() {
                                         onChange={(e) =>
                                           updateDraft(v.id, { available: e.target.checked }, v)
                                         }
-                                        style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                                        style={{ width: "14px", height: "14px", cursor: "pointer" }}
                                       />
                                       {draft.available ? "Active" : "Hidden"}
                                     </label>
                                   </td>
 
                                   {/* Actions */}
-                                  <td style={{ padding: "12px", verticalAlign: "middle", textAlign: "right" }}>
-                                    <div style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}>
+                                  <td style={{ padding: "8px 8px", verticalAlign: "middle", textAlign: "right" }}>
+                                    <div style={{ display: "inline-flex", gap: "4px", alignItems: "center" }}>
                                       {dirty && (
                                         <button
                                           type="button"
@@ -1003,11 +1007,11 @@ export function AdminPricingManager() {
                                             background: "none",
                                             color: "#888",
                                             cursor: "pointer",
-                                            padding: "6px",
+                                            padding: "4px",
                                             borderRadius: "4px",
                                           }}
                                         >
-                                          <RotateCcw size={15} />
+                                          <RotateCcw size={14} />
                                         </button>
                                       )}
 
@@ -1017,8 +1021,8 @@ export function AdminPricingManager() {
                                         onClick={() => saveVariant(v)}
                                         className={dirty ? "btn-primary" : "btn-secondary"}
                                         style={{
-                                          padding: "6px 12px",
-                                          fontSize: "12px",
+                                          padding: "4px 10px",
+                                          fontSize: "11px",
                                           display: "inline-flex",
                                           alignItems: "center",
                                           gap: "4px",
@@ -1030,7 +1034,7 @@ export function AdminPricingManager() {
                                           "Saving..."
                                         ) : isSaved ? (
                                           <>
-                                            <Check size={14} color="#34c759" /> Saved
+                                            <Check size={13} color="#34c759" /> Saved
                                           </>
                                         ) : (
                                           <>
@@ -1045,6 +1049,119 @@ export function AdminPricingManager() {
                             })}
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Mobile Card Stack View (No horizontal scrolling on phones/tablets) */}
+                      <div className="md:hidden space-y-3 pt-3">
+                        {variants.map((v) => {
+                          const draft = getDraft(v);
+                          const dirty = isVariantDirty(v);
+                          const isSaving = savingVariantIds[v.id] ?? false;
+                          const isSaved = savedVariantIds[v.id] ?? false;
+
+                          return (
+                            <div
+                              key={v.id}
+                              className={`p-3.5 rounded-xl border ${dirty ? "bg-amber-50/50 border-amber-300" : "bg-white border-slate-200"} space-y-3 shadow-sm`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h5 className="font-bold text-slate-900 text-sm">{v.title}</h5>
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {[v.storage, v.chip, v.memory, v.screenSize, v.connectivity].filter(Boolean).join(" • ")}
+                                  </p>
+                                </div>
+                                <label className="flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={draft.available}
+                                    onChange={(e) => updateDraft(v.id, { available: e.target.checked }, v)}
+                                    className="rounded"
+                                  />
+                                  <span className={draft.available ? "text-emerald-700" : "text-slate-400"}>
+                                    {draft.available ? "Active" : "Hidden"}
+                                  </span>
+                                </label>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-slate-500 font-medium block mb-1">Selling (GH₵)</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    value={draft.price}
+                                    onChange={(e) => updateDraft(v.id, { price: Number(e.target.value) || 0 }, v)}
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 font-bold text-sm bg-white"
+                                  />
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 font-medium block mb-1">Sale / Strike (GH₵)</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="50"
+                                    placeholder="Optional"
+                                    value={draft.previousPrice ?? ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value.trim() ? Number(e.target.value) : null;
+                                      updateDraft(v.id, { previousPrice: val }, v);
+                                    }}
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs bg-white"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-slate-500 font-medium block mb-1">Stock Status</span>
+                                  <select
+                                    value={draft.stockStatus}
+                                    onChange={(e) => updateDraft(v.id, { stockStatus: e.target.value as StockStatus }, v)}
+                                    className="w-full px-2 py-1.5 rounded-lg border border-slate-300 font-semibold text-xs bg-white"
+                                  >
+                                    <option value="In Stock">In Stock</option>
+                                    <option value="Low Stock">Low Stock</option>
+                                    <option value="Out of Stock">Out of Stock</option>
+                                    <option value="Pre-order">Pre-order</option>
+                                    <option value="Sold">Sold</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <span className="text-slate-500 font-medium block mb-1">Qty</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={draft.stockQuantity}
+                                    onChange={(e) => updateDraft(v.id, { stockQuantity: Math.max(0, parseInt(e.target.value, 10) || 0) }, v)}
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs text-center bg-white"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+                                {dirty && (
+                                  <button
+                                    type="button"
+                                    onClick={() => revertVariant(v.id)}
+                                    className="px-2.5 py-1 text-xs text-slate-500 hover:text-slate-800"
+                                  >
+                                    Discard
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  disabled={!dirty || isSaving}
+                                  onClick={() => saveVariant(v)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 ${dirty ? "bg-[#d4af37] text-white hover:bg-[#b89726]" : "bg-slate-100 text-slate-400"}`}
+                                >
+                                  {isSaving ? "Saving..." : isSaved ? <><Check size={13} /> Saved</> : <><Save size={13} /> Save</>}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -191,11 +191,8 @@ export function requiresRealProductPhotos(product: Pick<Product, "condition" | "
 }
 
 export function getLocalPremiumImage(product: Pick<Product, "slug" | "name" | "category">): ProductImage | undefined {
-  const usesCleanCatalogueImage = product.category === "Accessories" || product.category === "AirPods";
-  if (usesCleanCatalogueImage && missingCleanAccessoryImageSlugs.has(product.slug)) return undefined;
-  const src = usesCleanCatalogueImage
-    ? localCatalogueImageBySlug[product.slug]
-    : localPremiumImageBySlug[product.slug];
+  if (missingCleanAccessoryImageSlugs.has(product.slug)) return undefined;
+  const src = localCatalogueImageBySlug[product.slug] || localPremiumImageBySlug[product.slug];
   if (!src) return undefined;
   return {
     src,

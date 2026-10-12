@@ -2900,26 +2900,9 @@ input[type="file"]::file-selector-button {
   flex: 1 1 150px;
 }
 
-.admin-shell {
-  display: grid;
-  min-height: 100dvh;
-  grid-template-columns: 280px minmax(0, 1fr);
-  background: var(--color-page);
-}
+/* .admin-shell handled by admin.css */
 
-.admin-sidebar {
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  display: flex;
-  height: 100dvh;
-  min-width: 0;
-  flex-direction: column;
-  border-right: 1px solid rgba(12, 12, 15, 0.08);
-  background: #fff;
-  padding: 1rem;
-  box-shadow: 10px 0 40px rgba(12, 12, 15, 0.04);
-}
+/* .admin-sidebar handled by admin.css */
 
 .admin-sidebar-header,
 .admin-topbar,
@@ -2969,15 +2952,7 @@ input[type="file"]::file-selector-button {
   min-width: 0;
 }
 
-.admin-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 45;
-  border-bottom: 1px solid rgba(12, 12, 15, 0.08);
-  background: rgba(247, 246, 242, 0.94);
-  padding: 1rem clamp(1rem, 3vw, 2rem);
-  backdrop-filter: blur(14px);
-}
+/* .admin-topbar handled by admin.css */
 
 .admin-topbar h1 {
   margin-top: 0.2rem;
@@ -4210,21 +4185,7 @@ input[type="file"]::file-selector-button {
 }
 
 @media (max-width: 900px) {
-  .admin-shell {
-    display: block;
-  }
-
-  .admin-sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: min(86vw, 320px);
-    transform: translateX(-105%);
-    transition: transform 180ms ease;
-  }
-
-  .admin-sidebar.is-open {
-    transform: translateX(0);
-  }
+  /* mobile admin-sidebar handled by admin.css */
 
   .admin-account-pill {
     max-width: 42vw;
@@ -5403,15 +5364,9 @@ footer a:hover {
   background: var(--brand-surface-raised);
 }
 
-.admin-shell {
-  background: var(--brand-cream);
-}
+/* .admin-shell handled by admin.css */
 
-.admin-sidebar {
-  border-right-color: rgba(216, 167, 45, 0.2);
-  background: var(--brand-charcoal);
-  box-shadow: 12px 0 38px rgba(10, 10, 12, 0.12);
-}
+/* .admin-sidebar handled by admin.css */
 
 .admin-sidebar .site-logo-text span:first-child {
   color: var(--brand-surface-raised);
@@ -5449,11 +5404,7 @@ footer a:hover {
   background: rgba(166, 44, 44, 0.17);
 }
 
-.admin-topbar {
-  border-bottom-color: var(--brand-border);
-  background: rgba(243, 239, 229, 0.94);
-  box-shadow: 0 7px 22px rgba(10, 10, 12, 0.06);
-}
+/* .admin-topbar handled by admin.css */
 
 .admin-account-pill,
 .admin-status-pill,
@@ -6144,11 +6095,7 @@ footer a:hover {
   color: var(--brand-gold-soft);
 }
 
-.admin-topbar {
-  border-bottom-color: rgba(216, 167, 45, 0.22);
-  background: rgba(25, 25, 29, 0.97);
-  box-shadow: 0 8px 24px rgba(10, 10, 12, 0.16);
-}
+/* .admin-topbar handled by admin.css */
 
 .admin-topbar h1,
 .admin-topbar .admin-role {
@@ -6692,32 +6639,17 @@ body {
   color: var(--brand-gold-soft);
 }
 
-.admin-shell {
-  background:
-    radial-gradient(circle at 20% 0%, rgba(216, 167, 45, 0.12), transparent 26rem),
-    #f6f2e9;
-}
+/* .admin-shell handled by admin.css */
 
-.admin-sidebar {
-  background: linear-gradient(180deg, #09090a, #151515) !important;
-  color: #fffdf8;
-}
+/* .admin-sidebar handled by admin.css */
 
 .admin-sidebar .site-logo-text span:first-child {
   color: #fffdf8;
 }
 
-.admin-topbar {
-  border-bottom-color: rgba(10, 10, 12, 0.08);
-  background: rgba(255, 253, 248, 0.9) !important;
-  backdrop-filter: blur(20px);
-}
+/* .admin-topbar handled by admin.css */
 
-.admin-stat-card,
-.admin-panel,
-.admin-request-card {
-  background: rgba(255, 253, 248, 0.94) !important;
-}
+/* admin cards handled by admin.css */
 
 @media (max-width: 1180px) {
   .home-story-grid {

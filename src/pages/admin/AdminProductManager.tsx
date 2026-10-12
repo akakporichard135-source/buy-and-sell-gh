@@ -17,7 +17,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { type FormEvent, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
@@ -167,7 +167,7 @@ export function AdminProductManager() {
     onConfirm: async () => {},
   });
 
-  const editorRef = useRef<HTMLElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const productNameRef = useRef<HTMLInputElement>(null);
   const brandOptions = useMemo(
     () => getBrandOptions(products, editing?.brand),
@@ -205,20 +205,33 @@ export function AdminProductManager() {
   }, [availability, brand, category, condition, products, query, stock]);
 
   useLayoutEffect(() => {
-    if (!editing || pendingEditorTarget !== editing.id || !editorRef.current) return;
-    let focusTimer = 0;
-    const animationFrame = window.requestAnimationFrame(() => {
-      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      focusTimer = window.setTimeout(() => {
-        productNameRef.current?.focus({ preventScroll: true });
-        setPendingEditorTarget(null);
-      }, 400);
-    });
+    if (!pendingEditorTarget) return;
+    editorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setPendingEditorTarget(null);
+  }, [pendingEditorTarget]);
+
+  // Focus product name and lock body scroll when drawer opens; handle Escape key
+  useEffect(() => {
+    if (!editing) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setEditing(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const focusTimer = window.setTimeout(() => {
+      productNameRef.current?.focus();
+    }, 60);
+
     return () => {
-      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = originalOverflow;
       window.clearTimeout(focusTimer);
     };
-  }, [editing, pendingEditorTarget]);
+  }, [editing?.id]);
 
   const startAdd = () => {
     setMessage("");
@@ -474,7 +487,7 @@ export function AdminProductManager() {
                             <img
                               src={image.src}
                               alt={image.alt || product.name}
-                              className="w-12 h-12 rounded-lg object-cover bg-slate-50 border border-slate-200 shrink-0"
+                              className="w-12 h-12 rounded-lg object-contain bg-white border border-slate-200 shrink-0 p-1"
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-[0.65rem] text-slate-400 font-semibold shrink-0">
@@ -599,45 +612,66 @@ export function AdminProductManager() {
         </div>
       </div>
 
-      {/* 4. Product Editor Card */}
+      {/* 4. Product Editor Drawer Modal */}
       {editing && (
-        <section
-          className="admin-card space-y-6 scroll-mt-24"
-          ref={editorRef}
-          tabIndex={-1}
+        <div
+          className="admin-drawer-overlay"
+          role="dialog"
+          aria-modal="true"
           aria-labelledby="admin-product-editor-title"
         >
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
-                Product Editor
-              </span>
-              <h2 id="admin-product-editor-title" className="text-xl font-bold text-slate-900 mt-0.5">
-                {editing.name || "New Device Listing"}
-              </h2>
-            </div>
-            <button
-              className="admin-btn admin-btn-secondary admin-btn-sm"
-              type="button"
-              onClick={() => setEditing(null)}
-            >
-              <X size={15} />
-              <span>Cancel</span>
-            </button>
-          </div>
-
-          <ProductForm
-            form={editing}
-            setForm={setEditing}
-            onSubmit={handleSave}
-            products={products}
-            brandOptions={brandOptions}
-            backendStatus={backendStatus}
-            saving={saving}
-            setActionError={setActionError}
-            productNameRef={productNameRef}
+          <div
+            className="admin-drawer-backdrop"
+            onClick={() => setEditing(null)}
+            aria-hidden="true"
           />
-        </section>
+          <div className="admin-drawer-panel" ref={editorRef} tabIndex={-1}>
+            <div className="admin-drawer-header">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[0.68rem] font-bold uppercase tracking-wider text-[#d4af37]">
+                    Product Editor
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-semibold">
+                    {editing.category || "Listing"}
+                  </span>
+                  {editing.condition && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+                      {editing.condition}
+                    </span>
+                  )}
+                </div>
+                <h2 id="admin-product-editor-title" className="text-lg font-bold text-slate-900 truncate">
+                  {editing.name || "New Device Listing"}
+                </h2>
+              </div>
+              <button
+                className="admin-btn admin-btn-secondary admin-btn-sm"
+                type="button"
+                onClick={() => setEditing(null)}
+                aria-label="Close product editor"
+              >
+                <X size={16} />
+                <span>Cancel</span>
+              </button>
+            </div>
+
+            <div className="admin-drawer-body">
+              <ProductForm
+                form={editing}
+                setForm={setEditing}
+                onSubmit={handleSave}
+                products={products}
+                brandOptions={brandOptions}
+                backendStatus={backendStatus}
+                saving={saving}
+                setActionError={setActionError}
+                productNameRef={productNameRef}
+                onCancel={() => setEditing(null)}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Confirmation Dialog Modal */}
@@ -692,6 +726,7 @@ function ProductForm({
   saving,
   setActionError,
   productNameRef,
+  onCancel,
 }: {
   form: ProductFormState;
   setForm: (form: ProductFormState) => void;
@@ -702,6 +737,7 @@ function ProductForm({
   saving: boolean;
   setActionError: (message: string) => void;
   productNameRef: React.RefObject<HTMLInputElement | null>;
+  onCancel: () => void;
 }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -1225,21 +1261,36 @@ function ProductForm({
         </div>
       </div>
 
-      {/* 5. Save Action Bar */}
-      <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-4 sticky bottom-4 shadow-lg z-20">
-        <span className="text-xs text-slate-500 font-medium">
-          {form.priceOnRequest
-            ? "Enquiry-only mode active."
-            : `Retail price: ${formatGhs(Number(form.price) || 0)}`}
-        </span>
-        <button
-          className="admin-btn admin-btn-primary"
-          type="submit"
-          disabled={saving || uploading}
-        >
-          <Save size={16} />
-          <span>{saving ? "Saving to Database..." : "Save Product Listing"}</span>
-        </button>
+      {/* 5. Sticky Action Bar */}
+      <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-4 sticky bottom-0 shadow-lg z-20">
+        <div className="min-w-0">
+          <span className="text-xs text-slate-800 font-bold block truncate">
+            {form.priceOnRequest
+              ? "Enquiry-only mode active"
+              : `Ghana Cedi Price: ${formatGhs(Number(form.price) || 0)}`}
+          </span>
+          <span className="text-[0.68rem] text-slate-400">
+            {form.stockQuantity} units • {form.stockStatus}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            className="admin-btn admin-btn-secondary admin-btn-sm"
+            type="button"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="admin-btn admin-btn-primary admin-btn-sm"
+            type="submit"
+            disabled={saving || uploading}
+          >
+            <Save size={15} />
+            <span>{saving ? "Saving..." : "Save Listing"}</span>
+          </button>
+        </div>
       </div>
     </form>
   );
