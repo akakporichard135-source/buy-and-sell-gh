@@ -2,20 +2,33 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock,
+  CreditCard,
   ExternalLink,
   MapPin,
   MessageCircle,
   Package,
   Phone,
   Save,
+  ShieldAlert,
   ShieldCheck,
   Truck,
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchAdminOrderById, updateAdminOrderStatus } from "../../orders/supabaseOrderRepository";
-import { ORDER_STATUSES, type OrderStatus, type StoredOrderRequest } from "../../types/order";
+import {
+  fetchAdminOrderById,
+  updateAdminOrder,
+  updateAdminOrderStatus,
+} from "../../orders/supabaseOrderRepository";
+import {
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  isTestOrder,
+  type OrderStatus,
+  type PaymentStatus,
+  type StoredOrderRequest,
+} from "../../types/order";
 import { formatGhs } from "../../utils/format";
 import { orderRequestWhatsAppUrl } from "../../utils/whatsapp";
 
@@ -36,13 +49,7 @@ export function AdminOrderDetailPage() {
       .then((data) => {
         if (active) {
           setOrder(data);
-          // Load staff notes from local storage if available
-          try {
-            const savedNote = localStorage.getItem(`order_note_${data.id}`);
-            if (savedNote) setStaffNote(savedNote);
-          } catch {
-            // ignore
-          }
+          setStaffNote(data.adminNote || "");
         }
       })
       .catch((failure) => {
@@ -58,11 +65,11 @@ export function AdminOrderDetailPage() {
   }, [orderId]);
 
   const changeStatus = async (status: OrderStatus) => {
-    if (!order) return;
+    if (!order || saving) return;
     setSaving(true);
     setError("");
     try {
-      const saved = await updateAdminOrderStatus(order.id, status);
+      const saved = await updateAdminOrder(order.id, { status });
       setOrder(saved);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Order status could not be updated.");
@@ -71,15 +78,34 @@ export function AdminOrderDetailPage() {
     }
   };
 
-  const handleSaveStaffNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!order) return;
+  const changePaymentStatus = async (paymentStatus: PaymentStatus) => {
+    if (!order || saving) return;
+    setSaving(true);
+    setError("");
     try {
-      localStorage.setItem(`order_note_${order.id}`, staffNote);
+      const saved = await updateAdminOrder(order.id, { paymentStatus });
+      setOrder(saved);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Payment status could not be updated.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveStaffNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!order || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      const saved = await updateAdminOrder(order.id, { adminNote: staffNote });
+      setOrder(saved);
       setNoteSaved(true);
-      window.setTimeout(() => setNoteSaved(false), 2000);
-    } catch {
-      // ignore
+      window.setTimeout(() => setNoteSaved(false), 2500);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Failed to persist staff note to Supabase.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -165,6 +191,20 @@ export function AdminOrderDetailPage() {
         </div>
       </div>
 
+      {isTestOrder(order) && (
+        <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <ShieldAlert size={18} className="text-purple-600 shrink-0" />
+            <span>
+              <strong>Automated / Dev Test Record:</strong> This order matches known test markers (e.g. Verification Bot, test token, or local test suite). It is excluded from genuine business operational metrics.
+            </span>
+          </div>
+          <span className="px-2.5 py-1 rounded bg-purple-200 text-purple-900 font-bold text-[0.68rem] uppercase tracking-wider shrink-0">
+            Test Record
+          </span>
+        </div>
+      )}
+
       {error && (
         <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
           {error}
@@ -240,12 +280,69 @@ export function AdminOrderDetailPage() {
             </div>
           </div>
 
+          {/* Payment Status Controls Card */}
+          <div className="admin-card space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                  <CreditCard size={16} className="text-[#d4af37]" />
+                  <span>Payment &amp; Revenue Status</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Confirm receipt of funds before marking orders as paid. Unpaid requests are not counted as revenue.
+                </p>
+              </div>
+              <span
+                className={`admin-badge text-xs px-2.5 py-1 ${
+                  order.paymentStatus === "Paid"
+                    ? "admin-badge-emerald"
+                    : order.paymentStatus === "Pending"
+                    ? "admin-badge-amber"
+                    : order.paymentStatus === "Refunded"
+                    ? "admin-badge-purple"
+                    : "admin-badge-rose"
+                }`}
+              >
+                Payment: {order.paymentStatus}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {PAYMENT_STATUSES.map((pst) => (
+                <button
+                  key={pst}
+                  type="button"
+                  disabled={saving || pst === order.paymentStatus}
+                  onClick={() => void changePaymentStatus(pst)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    pst === order.paymentStatus
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                  }`}
+                >
+                  {pst === order.paymentStatus && <CheckCircle2 size={13} className="text-emerald-400" />}
+                  <span>{pst}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Status Controls Card */}
           <div className="admin-card space-y-3">
-            <h3 className="font-bold text-slate-900 text-sm">Update Order Processing Status</h3>
-            <p className="text-xs text-slate-500">
-              Select the new status to update database records and customer fulfillment timeline.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                  <Truck size={16} className="text-[#d4af37]" />
+                  <span>Update Fulfilment Status</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Manage delivery or store pickup progression in the customer queue.
+                </p>
+              </div>
+              <span className="admin-badge admin-badge-blue text-xs px-2.5 py-1">
+                Fulfilment: {order.status}
+              </span>
+            </div>
 
             <div className="flex flex-wrap gap-2 pt-1">
               {ORDER_STATUSES.map((st) => (
@@ -270,6 +367,9 @@ export function AdminOrderDetailPage() {
           {/* Staff Internal Notes */}
           <div className="admin-card space-y-3">
             <h3 className="font-bold text-slate-900 text-sm">Internal Staff Notes</h3>
+            <p className="text-xs text-slate-500">
+              Private comments saved directly to database. Visible to authorized staff on all devices.
+            </p>
             <form onSubmit={handleSaveStaffNote} className="space-y-2">
               <textarea
                 rows={3}
@@ -280,11 +380,15 @@ export function AdminOrderDetailPage() {
               />
               <div className="flex items-center justify-between">
                 <span className="text-[0.72rem] text-slate-400">
-                  {noteSaved ? "Saved locally for this order!" : "Private to administrative staff."}
+                  {noteSaved ? (
+                    <span className="text-emerald-600 font-bold">Saved to database!</span>
+                  ) : (
+                    "Persisted to Supabase orders.admin_note"
+                  )}
                 </span>
-                <button type="submit" className="admin-btn admin-btn-secondary admin-btn-sm">
+                <button type="submit" disabled={saving} className="admin-btn admin-btn-secondary admin-btn-sm">
                   <Save size={13} />
-                  <span>Save Note</span>
+                  <span>{saving ? "Saving..." : "Save Note"}</span>
                 </button>
               </div>
             </form>

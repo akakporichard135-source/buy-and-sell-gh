@@ -203,26 +203,33 @@ export function getLocalPremiumImage(product: Pick<Product, "slug" | "name" | "c
   };
 }
 
-export function resolveProductGallery(product: Product): ProductImage[] {
+export function resolveProductGallery(
+  product: Product,
+  options?: { allowRepresentativeForUsed?: boolean }
+): ProductImage[] {
   const images = product.images ?? [];
   const primaryIndex = Math.max(0, product.primaryImageIndex ?? 0);
   const primaryImage = images[primaryIndex];
   const validImages = images.filter(isValidProductImage);
   const ownerImages = images.filter(isOwnerUploadedProductImage);
 
+  // 1. Explicit owner/admin uploaded images take highest priority
   if (isOwnerUploadedProductImage(primaryImage)) {
     return [primaryImage, ...ownerImages.filter((image) => image.src !== primaryImage.src)];
   }
 
   if (ownerImages.length > 0) return ownerImages;
 
-  if (isUsedProductCondition(product.condition)) return [];
+  // 2. For used devices on public storefront without owner photos, enforce real photo requirement
+  if (isUsedProductCondition(product.condition) && !options?.allowRepresentativeForUsed) return [];
 
   if (product.category === "Accessories" && missingCleanAccessoryImageSlugs.has(product.slug)) return [];
 
+  // 3. Clean local premium white-background render
   const localImage = getLocalPremiumImage(product);
   if (localImage) return [localImage];
 
+  // 4. Other valid custom images
   if (isValidProductImage(primaryImage)) {
     return [primaryImage, ...validImages.filter((image) => image.src !== primaryImage.src)];
   }
@@ -231,8 +238,18 @@ export function resolveProductGallery(product: Product): ProductImage[] {
   return [];
 }
 
-export function resolveProductImage(product: Product): ProductImage | undefined {
-  return resolveProductGallery(product)[0];
+export function resolveProductImage(
+  product: Product,
+  options?: { allowRepresentativeForUsed?: boolean }
+): ProductImage | undefined {
+  return resolveProductGallery(product, options)[0];
+}
+
+export function resolveAdminProductImage(product: Product): ProductImage | undefined {
+  return (
+    resolveProductGallery(product, { allowRepresentativeForUsed: true })[0] ??
+    getLocalPremiumImage(product)
+  );
 }
 
 export function resolveCatalogueProductImage(product: Product): ProductImage | undefined {

@@ -34,7 +34,11 @@ import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 import type { Product, ProductImage } from "../../types/product";
 import { formatGhs } from "../../utils/format";
-import { hasOwnerUploadedProductImages, isUsedProductCondition } from "../../utils/productImages";
+import {
+  hasOwnerUploadedProductImages,
+  isUsedProductCondition,
+  resolveAdminProductImage,
+} from "../../utils/productImages";
 
 const listToText = (items?: string[]) => (items ?? []).join("\n");
 const textToList = (value: string) =>
@@ -745,12 +749,24 @@ function ProductForm({
       setActionError("Connect Supabase Storage before uploading production product images.");
       return;
     }
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+    const fileArray = Array.from(files);
+    for (const file of fileArray) {
+      if (file.size > MAX_SIZE_BYTES) {
+        setActionError(`"${file.name}" exceeds the 5MB size limit. Please upload images under 5MB.`);
+        return;
+      }
+      if (!file.type.match(/^image\/(jpeg|png|webp|avif)$/)) {
+        setActionError(`"${file.name}" is not a supported format. Please upload JPG, PNG, WebP, or AVIF.`);
+        return;
+      }
+    }
     setUploading(true);
     setUploadProgress(0);
     setActionError("");
     try {
       const nextImages = [...form.images];
-      for (const file of Array.from(files)) {
+      for (const file of fileArray) {
         if (nextImages.some((image) => image.alt === file.name.replace(/\.[^.]+$/, ""))) continue;
         const image = await uploadProductImage(file, form.id, setUploadProgress);
         nextImages.push({ ...image, alt: `${form.name || "Product"} image` });
@@ -1108,44 +1124,89 @@ function ProductForm({
       <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-slate-900 text-sm">4. Product Media &amp; Photos</h3>
-          <span className="text-xs text-slate-500">{form.images.length} images loaded</span>
+          <span className="text-xs text-slate-500">{form.images.length} custom images loaded</span>
         </div>
 
-        {/* Existing Images Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {form.images.map((img, idx) => (
-            <div
-              key={idx}
-              className={`p-2 rounded-xl bg-white border relative ${
-                form.primaryImageIndex === idx ? "border-[#d4af37] ring-2 ring-[#d4af37]/20" : "border-slate-200"
-              }`}
-            >
+        {/* If no custom images exist, show the active storefront baseline presentation */}
+        {form.images.length === 0 ? (
+          <div className="p-4 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-24 h-24 rounded-lg bg-white border border-slate-100 flex items-center justify-center p-2 shrink-0">
               <img
-                src={img.src}
-                alt={img.alt || "Product image"}
-                className="w-full h-28 object-cover rounded-lg bg-slate-50"
+                src={resolveAdminProductImage(formToProduct(form, products))?.src}
+                alt={form.name}
+                className="max-h-full max-w-full object-contain"
               />
-              <div className="mt-2 flex items-center justify-between text-[0.7rem]">
-                <button
-                  type="button"
-                  onClick={() => update("primaryImageIndex", idx)}
-                  className={`font-semibold ${
-                    form.primaryImageIndex === idx ? "text-[#d4af37]" : "text-slate-400 hover:text-slate-700"
-                  }`}
-                >
-                  {form.primaryImageIndex === idx ? "Primary Photo" : "Set Primary"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeImage(idx)}
-                  className="text-rose-500 hover:text-rose-700 font-semibold"
-                >
-                  Remove
-                </button>
-              </div>
             </div>
-          ))}
-        </div>
+            <div className="space-y-1 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900">Active Storefront Baseline</span>
+                <span className="text-[0.65rem] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                  Clean Pure White (#FFFFFF)
+                </span>
+              </div>
+              <p className="text-slate-500">
+                Customers currently see this verified high-resolution presentation render on buyandsellgh.com. Uploading custom photos below will take precedence over this baseline.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {form.images.map((img, idx) => (
+              <div
+                key={idx}
+                className={`p-2 rounded-xl bg-white border relative ${
+                  form.primaryImageIndex === idx ? "border-[#d4af37] ring-2 ring-[#d4af37]/20" : "border-slate-200"
+                }`}
+              >
+                <img
+                  src={img.src}
+                  alt={img.alt || "Product image"}
+                  className="w-full h-28 object-contain rounded-lg bg-white"
+                />
+                <div className="mt-2 flex items-center justify-between text-[0.7rem]">
+                  <button
+                    type="button"
+                    onClick={() => update("primaryImageIndex", idx)}
+                    className={`font-semibold ${
+                      form.primaryImageIndex === idx ? "text-[#d4af37]" : "text-slate-400 hover:text-slate-700"
+                    }`}
+                  >
+                    {form.primaryImageIndex === idx ? "Primary" : "Set Primary"}
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {idx > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => moveImage(idx, -1)}
+                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                        title="Move Left"
+                      >
+                        <ArrowLeft size={12} />
+                      </button>
+                    )}
+                    {idx < form.images.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => moveImage(idx, 1)}
+                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded"
+                        title="Move Right"
+                      >
+                        <ArrowRight size={12} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="text-rose-500 hover:text-rose-700 font-semibold ml-1"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Upload Trigger */}
         <div className="pt-2">

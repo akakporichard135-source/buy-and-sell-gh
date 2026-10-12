@@ -27,60 +27,40 @@ export interface CustomerReview {
   moderationNotes?: string;
 }
 
-const STORAGE_KEY = "buyandsell_gh_admin_reviews_v1";
-
-const initialReviews: CustomerReview[] = [
-  {
-    id: "rev-001",
-    customerName: "Kwame Asante",
-    verifiedOrderRef: "BS-2026-94812",
-    productName: "iPhone 16 Pro Max 256GB Natural Titanium",
-    rating: 5,
-    title: "100% genuine Apple device and fast delivery in Accra",
-    content:
-      "Ordered in the morning and received it before 3 PM at East Legon. Checked the Apple serial number on checkcoverage.apple.com — brand new with full 1-year Apple warranty. Buy & Sell GH is reliable.",
-    status: "Approved",
-    createdAt: new Date(Date.now() - 3600000 * 24 * 3).toISOString(),
-  },
-  {
-    id: "rev-002",
-    customerName: "Jessica Addo",
-    verifiedOrderRef: "BS-2026-10492",
-    productName: "AirPods Pro 2 with USB-C",
-    rating: 5,
-    title: "Active Noise Cancellation is authentic",
-    content:
-      "Original sealed box with genuine MagSafe case. Pairs seamlessly with iOS 18. Great customer service on WhatsApp as well.",
-    status: "Approved",
-    createdAt: new Date(Date.now() - 3600000 * 24 * 7).toISOString(),
-  },
-  {
-    id: "rev-003",
-    customerName: "Michael Mensah",
-    productName: "MacBook Air 15-inch M3",
-    rating: 4,
-    title: "Great machine, delivery took a bit longer due to traffic",
-    content:
-      "Laptop is in perfect condition and battery cycle count was 0 out of the box. Delivery took about 2 hours longer than expected due to Circle traffic, but rider communicated properly.",
-    status: "Pending",
-    createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-  },
-];
+const STORAGE_KEY = "buyandsell_gh_admin_reviews_v2";
 
 export function AdminReviewsPage() {
   const [reviews, setReviews] = useState<CustomerReview[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // Exclude any legacy mock items with fake order references
+          return parsed.filter(
+            (r) => !r.verifiedOrderRef?.includes("94812") && !r.verifiedOrderRef?.includes("10492")
+          );
+        }
+      }
     } catch {
       // fallback
     }
-    return initialReviews;
+    return [];
   });
 
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [search, setSearch] = useState("");
   const [selectedReview, setSelectedReview] = useState<CustomerReview | null>(null);
+  const [showLogModal, setShowLogModal] = useState(false);
+
+  // New review form
+  const [customerName, setCustomerName] = useState("");
+  const [orderRef, setOrderRef] = useState("");
+  const [productName, setProductName] = useState("");
+  const [rating, setRating] = useState(5);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [initialStatus, setInitialStatus] = useState<CustomerReview["status"]>("Approved");
 
   const saveReviews = (updated: CustomerReview[]) => {
     setReviews(updated);
@@ -91,12 +71,38 @@ export function AdminReviewsPage() {
     }
   };
 
+  const handleCreateReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName.trim() || !productName.trim() || !content.trim()) return;
+
+    const newRev: CustomerReview = {
+      id: `rev-${Date.now()}`,
+      customerName: customerName.trim(),
+      verifiedOrderRef: orderRef.trim() || undefined,
+      productName: productName.trim(),
+      rating,
+      title: title.trim() || `${rating}-Star Verified Review`,
+      content: content.trim(),
+      status: initialStatus,
+      createdAt: new Date().toISOString(),
+    };
+
+    saveReviews([newRev, ...reviews]);
+    setCustomerName("");
+    setOrderRef("");
+    setProductName("");
+    setRating(5);
+    setTitle("");
+    setContent("");
+    setShowLogModal(false);
+  };
+
   const filtered = useMemo(() => {
     return reviews.filter((r) => {
       if (statusFilter !== "All" && r.status !== statusFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
-        const str = `${r.customerName} ${r.productName} ${r.title} ${r.content}`.toLowerCase();
+        const str = `${r.customerName} ${r.productName} ${r.title} ${r.content} ${r.verifiedOrderRef || ""}`.toLowerCase();
         if (!str.includes(q)) return false;
       }
       return true;
@@ -141,10 +147,18 @@ export function AdminReviewsPage() {
           </div>
           <h2>Customer Reviews &amp; Testimonials</h2>
           <p>
-            Review genuine customer feedback before publishing. Strict moderation prevents fake,
-            unverified, or fraudulent testimonials.
+            Record and moderate verified customer feedback from WhatsApp confirmations, deliveries,
+            and in-store purchases before publication.
           </p>
         </div>
+
+        <button
+          className="admin-btn admin-btn-primary admin-btn-sm"
+          type="button"
+          onClick={() => setShowLogModal(true)}
+        >
+          <span>+ Log Verified Review</span>
+        </button>
       </div>
 
       {/* 2. Review KPI Summary */}
@@ -236,8 +250,31 @@ export function AdminReviewsPage() {
       {/* 4. Reviews List */}
       <div className="grid gap-3.5">
         {filtered.length === 0 ? (
-          <div className="admin-card text-center py-12 text-slate-400 font-medium">
-            No reviews match the current filter.
+          <div className="admin-card text-center py-12 px-4 space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 grid place-items-center mx-auto">
+              <MessageSquare size={22} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                {reviews.length === 0
+                  ? "No Customer Reviews Recorded Yet"
+                  : "No Reviews Match Current Filter"}
+              </h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                {reviews.length === 0
+                  ? "Buy & Sell GH relies exclusively on verified reviews from customers after successful delivery or in-store purchase. Click below to record verified feedback."
+                  : "Try clearing your search query or selecting a different status filter."}
+              </p>
+            </div>
+            {reviews.length === 0 && (
+              <button
+                type="button"
+                className="admin-btn admin-btn-primary admin-btn-sm inline-flex items-center gap-1.5 mx-auto"
+                onClick={() => setShowLogModal(true)}
+              >
+                <span>+ Log Verified Review</span>
+              </button>
+            )}
           </div>
         ) : (
           filtered.map((review) => (
@@ -330,6 +367,132 @@ export function AdminReviewsPage() {
           ))
         )}
       </div>
+
+      {/* Log Verified Review Modal */}
+      {showLogModal && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setShowLogModal(false)}
+        >
+          <div
+            className="admin-modal-box max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <h3 className="text-base font-bold text-slate-900">
+                Log Verified Customer Feedback
+              </h3>
+              <button
+                type="button"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                onClick={() => setShowLogModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateReview} className="space-y-4 admin-modal-body">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Customer Name *</label>
+                  <input
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="e.g. Kwame Mensah"
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Verified Order Ref (Optional)
+                  </label>
+                  <input
+                    value={orderRef}
+                    onChange={(e) => setOrderRef(e.target.value)}
+                    placeholder="e.g. BSG-..."
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Product Name *</label>
+                  <input
+                    required
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="e.g. iPhone 16 Pro Max 256GB"
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Rating *</label>
+                  <select
+                    value={rating}
+                    onChange={(e) => setRating(Number(e.target.value))}
+                    className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  >
+                    <option value={5}>5 Stars (Exceptional)</option>
+                    <option value={4}>4 Stars (Very Good)</option>
+                    <option value={3}>3 Stars (Good / Average)</option>
+                    <option value={2}>2 Stars (Below Expectations)</option>
+                    <option value={1}>1 Star (Poor)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="text-xs">
+                <label className="block font-bold text-slate-700 mb-1">Review Headline</label>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Fast delivery in Accra and genuine sealed box"
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                />
+              </div>
+
+              <div className="text-xs">
+                <label className="block font-bold text-slate-700 mb-1">Customer Comments *</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Paste verified message or delivery review..."
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                />
+              </div>
+
+              <div className="text-xs">
+                <label className="block font-bold text-slate-700 mb-1">Initial Status</label>
+                <select
+                  value={initialStatus}
+                  onChange={(e) => setInitialStatus(e.target.value as any)}
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                >
+                  <option value="Approved">Approved (Ready for public presentation)</option>
+                  <option value="Pending">Pending (Staff verification needed)</option>
+                </select>
+              </div>
+
+              <div className="admin-modal-footer pt-3">
+                <button
+                  type="button"
+                  className="admin-btn admin-btn-secondary admin-btn-sm"
+                  onClick={() => setShowLogModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn admin-btn-primary admin-btn-sm">
+                  Save Verified Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

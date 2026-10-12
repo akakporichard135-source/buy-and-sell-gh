@@ -41,75 +41,7 @@ export interface InquiryItem {
   source: "WhatsApp Form" | "In-Store / Direct" | "Website Form";
 }
 
-const STORAGE_KEY = "buyandsell_gh_admin_inquiries_v1";
-
-const initialSampleInquiries: InquiryItem[] = [
-  {
-    id: "inq-101",
-    type: "trade-in",
-    customerName: "Kofi Mensah",
-    phone: "024 123 4567",
-    whatsapp: "024 123 4567",
-    deviceType: "Mobile phone",
-    brand: "Apple",
-    model: "iPhone 14 Pro",
-    storage: "128GB",
-    condition: "Very Good",
-    desiredAction: "Swap",
-    replacementDevice: "iPhone 16 Pro Max",
-    message: "Battery health 87%. Minor scratches on stainless steel frame. Clean screen with screen protector.",
-    adminNotes: "Contacted customer on WhatsApp. Quoted estimated trade-in value of GH₵ 8,500 pending physical inspection.",
-    status: "Contacted",
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-    source: "WhatsApp Form",
-  },
-  {
-    id: "inq-102",
-    type: "trade-in",
-    customerName: "Abena Osei",
-    phone: "055 987 6543",
-    whatsapp: "055 987 6543",
-    deviceType: "Laptop",
-    brand: "Apple",
-    model: "MacBook Pro 13-inch M1",
-    storage: "256GB / 8GB RAM",
-    condition: "Excellent",
-    desiredAction: "Sell",
-    message: "Space Grey. Complete with original Apple 61W USB-C charger and box.",
-    status: "New",
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    source: "WhatsApp Form",
-  },
-  {
-    id: "inq-201",
-    type: "device-request",
-    customerName: "Emmanuel Boateng",
-    phone: "020 555 7890",
-    whatsapp: "020 555 7890",
-    brand: "Apple",
-    model: "MacBook Pro 16-inch M4 Pro",
-    storage: "512GB / 24GB RAM",
-    budget: "GH₵ 35,000",
-    message: "Space Black preferred. Looking for brand new sealed unit with 1-year warranty.",
-    adminNotes: "Checking with UK supplier for availability.",
-    status: "Under Review",
-    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
-    source: "WhatsApp Form",
-  },
-  {
-    id: "inq-301",
-    type: "contact-message",
-    customerName: "David Quarshie",
-    phone: "050 333 4444",
-    whatsapp: "050 333 4444",
-    email: "david.q@example.com",
-    message: "Do you offer doorstep delivery to Tema Community 25? Also want to confirm payment on delivery terms for iPhone 15.",
-    adminNotes: "Confirmed same-day courier dispatch to Tema Community 25.",
-    status: "Completed",
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    source: "WhatsApp Form",
-  },
-];
+const STORAGE_KEY = "buyandsell_gh_admin_inquiries_v2";
 
 export function AdminInquiriesPage({ mode }: { mode: "trade-ins" | "device-requests" | "contact-messages" }) {
   const targetType: InquiryType =
@@ -122,11 +54,19 @@ export function AdminInquiriesPage({ mode }: { mode: "trade-ins" | "device-reque
   const [inquiries, setInquiries] = useState<InquiryItem[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // Purge legacy mock entries
+          return parsed.filter(
+            (i) => !["inq-101", "inq-102", "inq-201", "inq-301"].includes(i.id)
+          );
+        }
+      }
     } catch {
       // fallback
     }
-    return initialSampleInquiries;
+    return [];
   });
 
   const [search, setSearch] = useState("");
@@ -326,8 +266,12 @@ export function AdminInquiriesPage({ mode }: { mode: "trade-ins" | "device-reque
             <tbody>
               {currentItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-slate-400 font-medium">
-                    No inquiries found matching the current filter.
+                  <td colSpan={7} className="text-center py-12 px-4 text-slate-500">
+                    <p className="font-bold text-slate-800 text-sm">No Customer Inquiries Recorded Yet</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                      Customer submissions on buyandsellgh.com open verified WhatsApp chats directly with staff.
+                      Use <strong>+ Log Direct Inquiry</strong> above to track inbound WhatsApp valuations or in-store customer requests.
+                    </p>
                   </td>
                 </tr>
               ) : (

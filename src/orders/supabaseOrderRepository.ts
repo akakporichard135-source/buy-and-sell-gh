@@ -36,6 +36,7 @@ interface OrderRpcResponse {
   payment_method: string;
   payment_status: StoredOrderRequest["paymentStatus"];
   order_status: StoredOrderRequest["status"];
+  admin_note?: string | null;
   created_at: string;
   updated_at: string;
   items: OrderRpcItem[];
@@ -60,6 +61,7 @@ interface OrderRow {
   payment_method: string;
   payment_status: StoredOrderRequest["paymentStatus"];
   order_status: StoredOrderRequest["status"];
+  admin_note?: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderRpcItem[];
@@ -98,6 +100,7 @@ const orderSelect = `
   payment_method,
   payment_status,
   order_status,
+  admin_note,
   created_at,
   updated_at,
   order_items (
@@ -145,7 +148,7 @@ const itemFromResponse = (item: OrderRpcItem): OrderRequestItem => ({
   lineTotal: Number(item.line_total),
 });
 
-const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrderRequest => {
+export const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrderRequest => {
   const items = "items" in row ? row.items : row.order_items ?? [];
   return {
     id: row.id,
@@ -157,7 +160,7 @@ const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrderRequest
     total: Number(row.total_amount),
     paymentStatus: row.payment_status,
     status: row.order_status,
-    adminNote: "",
+    adminNote: (row.admin_note ?? "").trim(),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -267,11 +270,29 @@ export const fetchAdminOrderById = async (orderId: string) => {
 };
 
 export const updateAdminOrderStatus = async (orderId: string, status: StoredOrderRequest["status"]) => {
+  return updateAdminOrder(orderId, { status });
+};
+
+export const updateAdminOrder = async (
+  orderId: string,
+  fields: {
+    status?: StoredOrderRequest["status"];
+    paymentStatus?: StoredOrderRequest["paymentStatus"];
+    adminNote?: string;
+  }
+) => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (fields.status !== undefined) payload.order_status = fields.status;
+  if (fields.paymentStatus !== undefined) payload.payment_status = fields.paymentStatus;
+  if (fields.adminNote !== undefined) payload.admin_note = fields.adminNote;
+
   const { data, error } = await client
     .from("orders")
-    .update({ order_status: status })
+    .update(payload)
     .eq("id", orderId)
     .select(orderSelect)
     .single();

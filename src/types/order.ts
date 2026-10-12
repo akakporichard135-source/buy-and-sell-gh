@@ -100,3 +100,26 @@ export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
       lineTotal: unitPrice * item.quantity,
     };
   });
+
+export function isTestOrder(order: StoredOrderRequest | OrderRequestPayload): boolean {
+  const name = (order.customer.fullName || "").toLowerCase();
+  const email = (order.customer.email || "").toLowerCase();
+  const phone = (order.customer.phone || "").replace(/[^0-9]/g, "");
+  const note = (order.customer.additionalNote || "").toLowerCase();
+
+  return (
+    name.includes("verification bot") ||
+    name.includes("tamper test") ||
+    name.includes("security test") ||
+    name.includes("bsg test") ||
+    name.includes("test customer") ||
+    name.includes("do not process") ||
+    email.includes("@test.local") ||
+    email.includes("verify@") ||
+    email.includes("tamper@") ||
+    phone === "233240000000" ||
+    phone === "233240001122" ||
+    note.includes("test order") ||
+    note.includes("do not process")
+  );
+}

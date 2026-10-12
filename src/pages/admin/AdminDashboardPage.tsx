@@ -22,6 +22,7 @@ import { isProductUnavailable, normalizeStockStatus } from "../../catalog/produc
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { fetchAdminOrders } from "../../orders/supabaseOrderRepository";
 import type { StoredOrderRequest } from "../../types/order";
+import { isTestOrder } from "../../types/order";
 import { formatGhs } from "../../utils/format";
 import { requiresRealProductPhotos } from "../../utils/productImages";
 
@@ -50,7 +51,7 @@ export function AdminDashboardPage() {
     loadOrders();
   }, []);
 
-  // Compute live metrics from verified data
+  // Compute live metrics from verified data (excluding test/bot orders)
   const metrics = useMemo(() => {
     let totalVariants = 0;
     let activeVariants = 0;
@@ -86,11 +87,15 @@ export function AdminDashboardPage() {
     ).length;
     const photosNeeded = activeProducts.filter(requiresRealProductPhotos).length;
 
-    const pendingOrders = orders.filter((o) => o.status === "Pending").length;
-    const confirmedOrders = orders.filter((o) =>
+    // Isolate test/bot verification orders from live metrics
+    const genuineOrders = orders.filter((o) => !isTestOrder(o));
+    const testOrdersCount = orders.length - genuineOrders.length;
+
+    const pendingOrders = genuineOrders.filter((o) => o.status === "Pending").length;
+    const confirmedOrders = genuineOrders.filter((o) =>
       ["Confirmed", "Processing", "Delivered", "Completed"].includes(o.status)
     ).length;
-    const totalOrderRequestValue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalOrderRequestValue = genuineOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
     return {
       publishedProducts: activeProducts.length,
@@ -104,13 +109,18 @@ export function AdminDashboardPage() {
       photosNeeded,
       pendingOrders,
       confirmedOrders,
-      totalOrders: orders.length,
+      totalOrders: genuineOrders.length,
+      totalLifetimeOrders: orders.length,
+      testOrdersCount,
       totalOrderRequestValue,
       onSaleCount,
     };
   }, [products, activeProducts, orders]);
 
-  const recentOrders = useMemo(() => orders.slice(0, 6), [orders]);
+  const recentOrders = useMemo(() => {
+    const genuine = orders.filter((o) => !isTestOrder(o));
+    return genuine.slice(0, 6);
+  }, [orders]);
 
   return (
     <div className="space-y-6">
@@ -190,7 +200,7 @@ export function AdminDashboardPage() {
           </div>
           <div className="admin-metric-value">{metrics.activeVariants}</div>
           <div className="admin-metric-hint">
-            Across {metrics.totalVariants} total storage/finish tiers
+            Across {metrics.totalVariants} configuration tiers (Storage, Chip, Finish)
           </div>
         </Link>
 
@@ -208,7 +218,9 @@ export function AdminDashboardPage() {
           <div className="admin-metric-hint">
             {ordersLoading
               ? "Checking inbox..."
-              : `${metrics.totalOrders} total lifetime requests`}
+              : `${metrics.totalOrders} genuine customer requests ${
+                  metrics.testOrdersCount > 0 ? `(${metrics.testOrdersCount} dev test isolated)` : ""
+                }`}
           </div>
         </Link>
 
@@ -224,7 +236,7 @@ export function AdminDashboardPage() {
             {ordersLoading ? "..." : formatGhs(metrics.totalOrderRequestValue)}
           </div>
           <div className="admin-metric-hint">
-            Customer order requests (payment confirmed manually)
+            Pipeline order requests (offline MoMo/COD payment confirmation)
           </div>
         </Link>
 
@@ -280,6 +292,30 @@ export function AdminDashboardPage() {
           <div className="admin-metric-hint">Used items requiring real unit photos</div>
         </Link>
       </section>
+
+      {/* Catalog Architecture Explainer */}
+      <div className="p-4 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[0.68rem] font-bold uppercase tracking-wider text-[#d4af37]">
+              Catalogue Architecture
+            </span>
+            <span className="text-slate-400 text-xs">&bull;</span>
+            <span className="text-xs font-semibold text-slate-300">
+              {metrics.publishedProducts} Base Devices &bull; {metrics.totalVariants} Hardware Configurations
+            </span>
+          </div>
+          <p className="text-xs text-slate-300">
+            Base products define device models and public storefront catalogue presence. The 273 configuration variants define tier-specific authoritative pricing (storage, memory, finish, condition) and inventory in Supabase.
+          </p>
+        </div>
+        <Link
+          to="/admin/pricing"
+          className="admin-btn admin-btn-secondary admin-btn-sm whitespace-nowrap text-slate-900 bg-white hover:bg-slate-100 shrink-0"
+        >
+          View Variant Pricing
+        </Link>
+      </div>
 
       {/* 3. Operational Quick Actions */}
       <section className="admin-card">
