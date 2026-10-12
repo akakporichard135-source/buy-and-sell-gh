@@ -75,6 +75,26 @@
   "rewrites": [
     {
       "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "admin.buyandsellgh.com"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<adminHost>admin\\..*)"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml|admin(?:/|$)).*)",
       "destination": "/index.html"
     }
   ]

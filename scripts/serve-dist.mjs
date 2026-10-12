@@ -21,6 +21,22 @@ const MIME = {
 
 const server = http.createServer((req, res) => {
   const urlPath = req.url.split("?")[0];
+  const rawHost = (req.headers.host || "").toLowerCase();
+  const hostname = rawHost.split(":")[0];
+  const isAdminHost = hostname.startsWith("admin.") || hostname === "admin.localhost";
+  const isAdminRoute = urlPath === "/admin" || urlPath.startsWith("/admin/");
+
+  if (!isAdminHost && isAdminRoute) {
+    const notFoundFile = path.join(DIST, "404.html");
+    if (fs.existsSync(notFoundFile)) {
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      fs.createReadStream(notFoundFile).pipe(res);
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+    return res.end("<!DOCTYPE html><html><body><h1>404 Not Found</h1></body></html>");
+  }
+
   let filePath = path.join(DIST, urlPath);
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     if (path.extname(urlPath)) {

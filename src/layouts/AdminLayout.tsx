@@ -58,7 +58,7 @@ export function AdminLayout() {
     <div className="admin-shell" ref={shellRef}>
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="admin-sidebar-header">
-          <Logo />
+          <Logo to="/admin" />
           <button className="icon-button lg:hidden" type="button" aria-label="Close admin menu" onClick={() => setMenuOpen(false)}>
             <X size={20} />
           </button>

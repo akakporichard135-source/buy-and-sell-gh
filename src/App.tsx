@@ -6,6 +6,7 @@ import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 import { AdminLayout } from "./layouts/AdminLayout";
+import { isAdminHostname } from "./config/adminHost";
 
 const AboutPage = lazy(() => import("./pages/AboutPage").then((module) => ({ default: module.AboutPage })));
 const AccountPage = lazy(() => import("./pages/AccountPage").then((module) => ({ default: module.AccountPage })));
@@ -40,33 +41,46 @@ const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPa
 const MacLaunchPage = lazy(() => import("./pages/MacLaunchPage").then((module) => ({ default: module.MacLaunchPage })));
 
 export default function App() {
-  return (
-    <AdminAuthProvider>
-      <Suspense fallback={<RouteLoading />}>
-        <Routes>
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/mfa" element={<AdminMfaPage />} />
-          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
-          <Route element={<ProtectedAdminRoute />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboardPage />} />
-              <Route path="products" element={<AdminSectionPage section="products" />} />
-              <Route path="pricing" element={<AdminSectionPage section="pricing" />} />
-              <Route path="orders" element={<AdminSectionPage section="orders" />} />
-              <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
-              <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />
-              <Route path="device-requests" element={<AdminSectionPage section="device-requests" />} />
-              <Route path="contact-messages" element={<AdminSectionPage section="contact-messages" />} />
-              <Route path="reviews" element={<AdminSectionPage section="reviews" />} />
-              <Route path="promotions" element={<AdminSectionPage section="promotions" />} />
-              <Route path="settings" element={<AdminSectionPage section="settings" />} />
-              <Route path="account" element={<AdminSectionPage section="account" />} />
+  const isAdminHost = isAdminHostname();
+
+  if (isAdminHost) {
+    return (
+      <AdminAuthProvider>
+        <Suspense fallback={<RouteLoading />}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/mfa" element={<AdminMfaPage />} />
+            <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
+            <Route element={<ProtectedAdminRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboardPage />} />
+                <Route path="products" element={<AdminSectionPage section="products" />} />
+                <Route path="pricing" element={<AdminSectionPage section="pricing" />} />
+                <Route path="orders" element={<AdminSectionPage section="orders" />} />
+                <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
+                <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />
+                <Route path="device-requests" element={<AdminSectionPage section="device-requests" />} />
+                <Route path="contact-messages" element={<AdminSectionPage section="contact-messages" />} />
+                <Route path="reviews" element={<AdminSectionPage section="reviews" />} />
+                <Route path="promotions" element={<AdminSectionPage section="promotions" />} />
+                <Route path="settings" element={<AdminSectionPage section="settings" />} />
+                <Route path="account" element={<AdminSectionPage section="account" />} />
+              </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<PublicShell />} />
-        </Routes>
-      </Suspense>
-    </AdminAuthProvider>
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
+        </Suspense>
+      </AdminAuthProvider>
+    );
+  }
+
+  return (
+    <Suspense fallback={<RouteLoading />}>
+      <Routes>
+        <Route path="*" element={<PublicShell />} />
+      </Routes>
+    </Suspense>
   );
 }
 

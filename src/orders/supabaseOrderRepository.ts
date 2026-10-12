@@ -197,6 +197,7 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
 };
 
 export const fetchAdminOrders = async () => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const { data, error } = await client.from("orders").select(orderSelect).order("created_at", { ascending: false });
   if (error) throw error;
@@ -258,6 +259,7 @@ export const subscribeToNewAdminOrders = (
 };
 
 export const fetchAdminOrderById = async (orderId: string) => {
+  await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const { data, error } = await client.from("orders").select(orderSelect).eq("id", orderId).single();
   if (error) throw error;
