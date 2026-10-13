@@ -128,6 +128,14 @@ try {
   await page.goto(`http://admin.localhost:${PORT}/admin/pricing`, { waitUntil: "networkidle2", timeout: 20000 });
   await new Promise((r) => setTimeout(r, 1200));
 
+  // Expand all products to check desktop table overflow
+  await page.evaluate(() => {
+    const buttons = Array.from(document.querySelectorAll("button"));
+    const expandAll = buttons.find((b) => b.textContent?.includes("Expand All"));
+    if (expandAll) expandAll.click();
+  });
+  await new Promise((r) => setTimeout(r, 600));
+
   // Check desktop table horizontal scroll
   const tableOverflows = await page.evaluate(() => {
     const tables = document.querySelectorAll("table");
@@ -142,7 +150,7 @@ try {
     }
     return results;
   });
-  console.log("Desktop table overflow checks:", tableOverflows);
+  console.log(`Desktop table overflow checks (${tableOverflows.length} tables evaluated)`);
   const desktopHasUnwantedScroll = tableOverflows.some((t) => t.hasScrollbar);
   if (desktopHasUnwantedScroll) {
     console.warn("Warning: One of the table containers has horizontal scroll on desktop:", tableOverflows);
@@ -154,6 +162,14 @@ try {
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.goto(`http://admin.localhost:${PORT}/admin/pricing`, { waitUntil: "networkidle2", timeout: 20000 });
   await new Promise((r) => setTimeout(r, 1200));
+
+  // Expand all on mobile
+  await page.evaluate(() => {
+    const buttons = Array.from(document.querySelectorAll("button"));
+    const expandAll = buttons.find((b) => b.textContent?.includes("Expand All"));
+    if (expandAll) expandAll.click();
+  });
+  await new Promise((r) => setTimeout(r, 600));
 
   const mobileCardsVisible = await page.evaluate(() => {
     const mobileStack = document.querySelector(".md\\:hidden");
@@ -178,35 +194,33 @@ try {
     await page.goto(`http://admin.localhost:${PORT}${route}`, { waitUntil: "networkidle2", timeout: 20000 });
     await new Promise((r) => setTimeout(r, 800));
 
-    // Scroll down 400px and verify topbar does not occlude the top visible card
-    await page.evaluate(() => window.scrollBy(0, 400));
-    await new Promise((r) => setTimeout(r, 400));
-
-    const overlapCheck = await page.evaluate(() => {
+    const headerCheck = await page.evaluate(() => {
       const topbar = document.querySelector(".admin-topbar");
-      if (!topbar) return { hasTopbar: false };
-      const topbarRect = topbar.getBoundingClientRect();
+      const content = document.querySelector(".admin-content");
+      if (!topbar || !content) return { valid: false };
 
-      // Find cards or headings
-      const elements = Array.from(document.querySelectorAll(".admin-header-card, .admin-stat-card, h1, h2"));
-      let occluded = false;
-      for (const el of elements) {
-        const rect = el.getBoundingClientRect();
-        // If an element starts below 0 but above topbar bottom, check if it's partially behind
-        if (rect.top > 0 && rect.top < topbarRect.bottom - 5 && rect.bottom > topbarRect.bottom) {
-          occluded = true;
-          break;
-        }
-      }
+      const topbarRect = topbar.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
+
+      // Scroll content down 400px
+      content.scrollTop = 400;
+      const topbarScrolledRect = topbar.getBoundingClientRect();
+
       return {
+        valid: true,
+        topbarTop: topbarRect.top,
         topbarHeight: topbarRect.height,
-        topbarBottom: topbarRect.bottom,
-        occluded,
+        contentTop: contentRect.top,
+        contentBeginsBelowTopbar: contentRect.top >= topbarRect.bottom - 1,
+        topbarPinnedDuringScroll: topbarScrolledRect.top === 0,
       };
     });
-    console.log(`Page ${route} topbar check:`, overlapCheck);
+    console.log(`Page ${route} header check:`, headerCheck);
+    if (!headerCheck.valid || headerCheck.topbarTop !== 0 || !headerCheck.contentBeginsBelowTopbar || !headerCheck.topbarPinnedDuringScroll) {
+      throw new Error(`Page ${route} failed header check: ${JSON.stringify(headerCheck)}`);
+    }
   }
-  console.log("✓ Header overlap checks completed across all admin routes");
+  console.log("✓ Header docking and layout checks completed across all admin routes");
 
   console.log("ALL PREFLIGHT CHECKS PASSED SUCCESSFULLY!");
 } catch (err) {

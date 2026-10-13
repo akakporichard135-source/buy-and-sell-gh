@@ -6099,7 +6099,7 @@ footer a:hover {
 
 .admin-topbar h1,
 .admin-topbar .admin-role {
-  color: var(--brand-surface-raised);
+  color: #0f172a !important;
 }
 
 .public-shell > footer {

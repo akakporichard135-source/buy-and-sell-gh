@@ -13,6 +13,8 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Percent,
   CheckCircle2,
   ExternalLink,
@@ -47,6 +49,12 @@ export function AdminPricingManager() {
   const [selectedStockStatus, setSelectedStockStatus] = useState("All");
   const [selectedPromo, setSelectedPromo] = useState<"All" | "Sale" | "Regular">("All");
   const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [query, selectedCategory, selectedStockStatus, selectedPromo]);
 
   // Local draft changes: variantId -> draft values
   const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft>>({});
@@ -146,6 +154,12 @@ export function AdminPricingManager() {
       return true;
     });
   }, [products, query, selectedCategory, selectedStockStatus, selectedPromo]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
 
   // Toggle expand
   const toggleExpand = (productId: string) => {
@@ -545,9 +559,9 @@ export function AdminPricingManager() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {filteredProducts.map((product) => {
+            {paginatedProducts.map((product) => {
               const variants = product.variants ?? [];
-              const isExpanded = expandedProductIds[product.id] ?? (variants.length > 0 && variants.length <= 4);
+              const isExpanded = Boolean(expandedProductIds[product.id]);
               const baseDraft = basePriceDrafts[product.id];
               const isEditingBase = Boolean(baseDraft);
 
@@ -1177,6 +1191,75 @@ export function AdminPricingManager() {
             })}
           </div>
         )}
+
+        {/* Pagination Bar */}
+        {filteredProducts.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-slate-200 bg-slate-50/50">
+            <div className="text-xs text-slate-500 font-medium">
+              Showing <span className="font-bold text-slate-800">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+              <span className="font-bold text-slate-800">{Math.min(currentPage * pageSize, filteredProducts.length)}</span> of{" "}
+              <span className="font-bold text-slate-800">{filteredProducts.length}</span> products
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                className="admin-btn admin-btn-secondary admin-btn-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={15} />
+                <span className="hidden sm:inline">Prev</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${
+                          currentPage === page
+                            ? "bg-slate-900 text-white shadow-sm"
+                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  }
+                  if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <span key={page} className="text-xs text-slate-400 px-0.5">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                className="admin-btn admin-btn-secondary admin-btn-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Next page"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+
       </section>
     </div>
   );
