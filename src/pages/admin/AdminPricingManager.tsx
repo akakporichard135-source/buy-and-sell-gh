@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
   Tag,
@@ -48,10 +48,32 @@ export function AdminPricingManager() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStockStatus, setSelectedStockStatus] = useState("All");
   const [selectedPromo, setSelectedPromo] = useState<"All" | "Sale" | "Regular">("All");
-  const [selectedVisibility, setSelectedVisibility] = useState<"valid" | "missing" | "all">("valid");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialVisibility = (searchParams.get("visibility") as "valid" | "missing" | "all") || "valid";
+  const [selectedVisibility, setSelectedVisibility] = useState<"valid" | "missing" | "all">(initialVisibility);
   const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
+
+  React.useEffect(() => {
+    const param = searchParams.get("visibility") as "valid" | "missing" | "all";
+    if (param && (param === "valid" || param === "missing" || param === "all") && param !== selectedVisibility) {
+      setSelectedVisibility(param);
+    }
+  }, [searchParams]);
+
+  const handleVisibilityChange = (newVal: "valid" | "missing" | "all") => {
+    setSelectedVisibility(newVal);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newVal === "valid") {
+        next.delete("visibility");
+      } else {
+        next.set("visibility", newVal);
+      }
+      return next;
+    });
+  };
 
   React.useEffect(() => {
     setCurrentPage(1);
@@ -559,7 +581,7 @@ export function AdminPricingManager() {
             {/* Visibility / Image Filter */}
             <select
               value={selectedVisibility}
-              onChange={(e) => setSelectedVisibility(e.target.value as any)}
+              onChange={(e) => handleVisibilityChange(e.target.value as any)}
               style={{
                 padding: "8px 12px",
                 borderRadius: "8px",
@@ -628,7 +650,7 @@ export function AdminPricingManager() {
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => setSelectedVisibility("valid")}
+            onClick={() => handleVisibilityChange("valid")}
             style={{ fontSize: "13px", padding: "6px 14px", backgroundColor: "#fff", borderColor: "#fcd34d" }}
           >
             Back to Visible Products
