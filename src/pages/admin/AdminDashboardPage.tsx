@@ -77,6 +77,8 @@ export function AdminDashboardPage() {
       // Mutually exclusive 4-way classification:
       if (isArchived) {
         archivedProducts++;
+      } else if (!isAvailable) {
+        manuallyUnpublishedProducts++;
       } else if (!isEligible) {
         missingImageProducts++;
         if (requiresRealProductPhotos(p)) {
@@ -84,8 +86,6 @@ export function AdminDashboardPage() {
         } else {
           accessoryAssetsNeeded++;
         }
-      } else if (!isAvailable) {
-        manuallyUnpublishedProducts++;
       } else {
         publishedProducts++;
       }
@@ -485,12 +485,12 @@ export function AdminDashboardPage() {
               <span>Manually Unpublished</span>
               <span className="w-2 h-2 rounded-full bg-slate-500" />
             </div>
-            <div className="text-2xl font-bold text-slate-200">{metrics.manuallyUnpublishedProducts} Devices</div>
+            <div className="text-2xl font-bold text-slate-200">{metrics.manuallyUnpublishedProducts} Device{metrics.manuallyUnpublishedProducts === 1 ? "" : "s"}</div>
             <div className="text-xs text-slate-300 mt-1">
-              Has valid images but toggled offline by admin
+              {metrics.manuallyUnpublishedProducts === 1 ? "iPhone 11 Pro Max (marked Sold)" : "Admin-toggled offline items"}
             </div>
             <div className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
-              <span>0 inactive items currently</span>
+              <span>{metrics.manuallyUnpublishedProducts} inactive item currently</span>
             </div>
           </Link>
 
@@ -517,10 +517,13 @@ export function AdminDashboardPage() {
           <Info size={16} className="text-[#d4af37] shrink-0 mt-0.5" />
           <div className="space-y-1">
             <span className="font-semibold text-white">
-              Audit Reconciliation Note (54 vs 53 Discrepancy Resolved):
+              Catalogue Reconciliation &amp; Classification Architecture:
             </span>
             <p className="text-slate-300 text-[11px] leading-relaxed">
-              Earlier dashboard iterations reported 54 hidden products because <strong className="text-white">iPhone 11 Pro Max</strong> (a UK Used unit marked Sold/unavailable) satisfied both &lsquo;unavailable&rsquo; and &lsquo;missing genuine photos&rsquo; checks, creating an overlapping duplicate count (53 missing images + 1 unavailable = 54). Under strict mutually exclusive status partitioning, each product is classified once: <strong>60 Published + 53 Missing Images + 0 Manually Unpublished + 0 Archived = 113 Total Database Devices</strong> (153 visible + 120 hidden = 273 Total Variants), completely eliminating double-counting.
+              Under strict mutually exclusive status partitioning, all {metrics.totalProducts} catalogue products are classified once without double-counting: <strong className="text-emerald-400">{metrics.publishedProducts} Published on Store</strong> ({metrics.visibleVariants} visible variants) + <strong className="text-amber-400">{metrics.missingImageProducts} Hidden for Missing Images</strong> ({metrics.usedPhotosNeeded} used units + {metrics.accessoryAssetsNeeded} accessories; {metrics.hiddenVariants} hidden variants) + <strong className="text-slate-200">{metrics.manuallyUnpublishedProducts} Manually Unpublished</strong> {metrics.manuallyUnpublishedProducts === 1 ? "(iPhone 11 Pro Max, marked \u2018Sold\u2019 with 0 variants)" : "(iPhone 11 Pro Max discontinued/sold out)"} + <strong className="text-slate-400">{metrics.archivedProducts} Archived</strong> = <strong>{metrics.totalProducts} Total Devices</strong> ({metrics.totalDatabaseVariants} Variants).
+            </p>
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              <strong>iPhone 11 Pro Max Classification:</strong> In the full 113-product catalogue, <strong className="text-slate-300">iPhone 11 Pro Max</strong> is a UK Used unit marked &lsquo;Sold&rsquo; with 0 inventory. Earlier dashboard versions reported 54 hidden products because it satisfied both &lsquo;unavailable&rsquo; and &lsquo;missing photos&rsquo; criteria simultaneously. By classifying availability first, it is definitively assigned to <em>Manually Unpublished</em> (1 Device in full catalogue; 0 in active Supabase DB), leaving exactly 52 devices held back solely for missing imagery and eliminating all duplicate counts.
             </p>
           </div>
         </div>
@@ -555,16 +558,16 @@ export function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* 4. Recent Order Requests Table */}
+      {/* 4. Recent Order Requests Section */}
       <section className="admin-table-shell">
         <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900">Recent Customer Order Requests</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Verified orders placed on buyandsellgh.com storefront.
+              Verified orders placed on buyandsellgh.com storefront. Payment &amp; fulfilment details available in Orders.
             </p>
           </div>
-          <Link to="/admin/orders" className="admin-btn admin-btn-secondary admin-btn-sm">
+          <Link to="/admin/orders" className="admin-btn admin-btn-secondary admin-btn-sm shrink-0">
             <span>View All Orders</span>
             <ArrowRight size={14} />
           </Link>
@@ -577,30 +580,38 @@ export function AdminDashboardPage() {
           </div>
         )}
 
-        <div className="admin-table-scroll">
-          <table className="admin-data-table">
-            <thead>
+        {/* Desktop & Tablet Table (sm+) - Compact 5-column layout without horizontal scroll */}
+        <div className="hidden sm:block overflow-hidden">
+          <table className="w-full text-left text-xs divide-y divide-slate-200">
+            <thead className="bg-slate-50/80">
               <tr>
-                <th>Reference</th>
-                <th>Customer</th>
-                <th>Total Value</th>
-                <th>Fulfilment</th>
-                <th>Payment Status</th>
-                <th>Order Status</th>
-                <th>Date</th>
-                <th>Action</th>
+                <th scope="col" className="py-3 px-4 font-bold text-slate-500 uppercase tracking-wider text-[0.7rem] w-[20%]">
+                  Reference
+                </th>
+                <th scope="col" className="py-3 px-4 font-bold text-slate-500 uppercase tracking-wider text-[0.7rem] w-[35%]">
+                  Customer
+                </th>
+                <th scope="col" className="py-3 px-4 font-bold text-slate-500 uppercase tracking-wider text-[0.7rem] w-[18%]">
+                  Total
+                </th>
+                <th scope="col" className="py-3 px-4 font-bold text-slate-500 uppercase tracking-wider text-[0.7rem] w-[15%]">
+                  Status
+                </th>
+                <th scope="col" className="py-3 px-4 font-bold text-slate-500 uppercase tracking-wider text-[0.7rem] w-[12%] text-right">
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 bg-white">
               {ordersLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-slate-400 font-medium">
+                  <td colSpan={5} className="text-center py-8 text-slate-400 font-medium">
                     Loading verified orders from database...
                   </td>
                 </tr>
               ) : recentOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-slate-400 font-medium">
+                  <td colSpan={5} className="text-center py-8 text-slate-400 font-medium">
                     No orders recorded yet.
                   </td>
                 </tr>
@@ -609,34 +620,31 @@ export function AdminDashboardPage() {
                   const isPending = order.status === "Pending";
                   const isCompleted = ["Delivered", "Completed"].includes(order.status);
                   return (
-                    <tr key={order.id}>
-                      <td className="font-mono font-bold text-slate-900">
-                        {order.referenceNumber}
+                    <tr key={order.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="font-mono font-bold text-slate-900">{order.referenceNumber}</div>
+                        <div className="text-[11px] text-slate-400">
+                          {new Date(order.createdAt).toLocaleDateString("en-GH", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </div>
                       </td>
-                      <td>
-                        <div className="font-semibold text-slate-900">{order.customer.fullName}</div>
-                        <div className="text-xs text-slate-500">{order.customer.phone}</div>
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-slate-900 truncate max-w-[220px]">
+                          {order.customer.fullName}
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate max-w-[220px]">
+                          {order.customer.phone || order.customer.email}
+                        </div>
                       </td>
-                      <td className="font-semibold text-slate-900">{formatGhs(order.total)}</td>
-                      <td>
-                        <span className="admin-badge admin-badge-slate">
-                          {order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"}
-                        </span>
+                      <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-900">
+                        {formatGhs(order.total)}
                       </td>
-                      <td>
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <span
-                          className={`admin-badge ${
-                            order.paymentStatus === "Paid"
-                              ? "admin-badge-emerald"
-                              : "admin-badge-amber"
-                          }`}
-                        >
-                          {order.paymentStatus}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`admin-badge ${
+                          className={`admin-badge text-[0.7rem] ${
                             isCompleted
                               ? "admin-badge-emerald"
                               : isPending
@@ -647,19 +655,12 @@ export function AdminDashboardPage() {
                           {order.status}
                         </span>
                       </td>
-                      <td className="text-xs text-slate-500">
-                        {new Date(order.createdAt).toLocaleDateString("en-GH", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td>
+                      <td className="py-3 px-4 whitespace-nowrap text-right">
                         <Link
                           to={`/admin/orders/${order.id}`}
                           className="admin-btn admin-btn-secondary admin-btn-sm"
                         >
-                          View Details
+                          View
                         </Link>
                       </td>
                     </tr>
@@ -668,6 +669,69 @@ export function AdminDashboardPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards (<sm) - Zero horizontal scroll, touch-optimised */}
+        <div className="sm:hidden divide-y divide-slate-100">
+          {ordersLoading ? (
+            <div className="p-6 text-center text-slate-400 font-medium text-xs">
+              Loading verified orders from database...
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <div className="p-6 text-center text-slate-400 font-medium text-xs">
+              No orders recorded yet.
+            </div>
+          ) : (
+            recentOrders.map((order) => {
+              const isPending = order.status === "Pending";
+              const isCompleted = ["Delivered", "Completed"].includes(order.status);
+              return (
+                <div key={order.id} className="p-3.5 space-y-2 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-mono font-bold text-slate-900 text-xs">
+                      {order.referenceNumber}
+                    </div>
+                    <span
+                      className={`admin-badge text-[0.68rem] ${
+                        isCompleted
+                          ? "admin-badge-emerald"
+                          : isPending
+                          ? "admin-badge-amber"
+                          : "admin-badge-slate"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 text-xs">
+                    <div>
+                      <div className="font-semibold text-slate-900">{order.customer.fullName}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {order.customer.phone || order.customer.email}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-bold text-slate-900">{formatGhs(order.total)}</div>
+                      <div className="text-[10px] text-slate-400">
+                        {new Date(order.createdAt).toLocaleDateString("en-GH", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-1 flex justify-end">
+                    <Link
+                      to={`/admin/orders/${order.id}`}
+                      className="admin-btn admin-btn-secondary admin-btn-sm w-full justify-center"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
     </div>

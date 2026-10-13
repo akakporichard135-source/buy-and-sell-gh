@@ -213,10 +213,10 @@ export function AdminProductManager() {
     for (const p of products) {
       if (p.archived) {
         archived++;
-      } else if (!isProductImageEligible(p)) {
-        missingImages++;
       } else if (p.available === false) {
         manuallyHidden++;
+      } else if (!isProductImageEligible(p)) {
+        missingImages++;
       } else {
         published++;
       }
@@ -240,10 +240,10 @@ export function AdminProductManager() {
         matchesAvailability = !isArchived && isAvailable && isEligible;
       } else if (availability === "MissingImages") {
         // Dedicated admin-only recovery view for products without images
-        matchesAvailability = !isArchived && !isEligible;
+        matchesAvailability = !isArchived && isAvailable && !isEligible;
       } else if (availability === "Hidden") {
-        // Manually hidden (has valid image)
-        matchesAvailability = !isArchived && !isAvailable && isEligible;
+        // Manually unpublished (e.g. sold out or toggled offline)
+        matchesAvailability = !isArchived && !isAvailable;
       } else if (availability === "Archived") {
         matchesAvailability = isArchived;
       } else if (availability === "AllWithMissing") {
@@ -505,7 +505,7 @@ export function AdminProductManager() {
             <option value="All">All Valid Images ({visibilityCounts.allValid})</option>
             <option value="Published">Published ({visibilityCounts.published})</option>
             <option value="MissingImages">Hidden — Missing Images ({visibilityCounts.missingImages})</option>
-            <option value="Hidden">Manually Hidden ({visibilityCounts.manuallyHidden})</option>
+            <option value="Hidden">Manually Unpublished ({visibilityCounts.manuallyHidden})</option>
             <option value="Archived">Archived ({visibilityCounts.archived})</option>
             <option value="AllWithMissing">All Records ({visibilityCounts.total})</option>
           </select>
@@ -567,7 +567,7 @@ export function AdminProductManager() {
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
-            Manually Hidden ({visibilityCounts.manuallyHidden})
+            Manually Unpublished ({visibilityCounts.manuallyHidden})
           </button>
           <button
             type="button"
@@ -702,19 +702,19 @@ export function AdminProductManager() {
                       <td>
                         {isArchived ? (
                           <span className="admin-badge admin-badge-rose text-[0.7rem]">Archived</span>
+                        ) : product.available === false ? (
+                          <span className="admin-badge admin-badge-slate text-[0.7rem] flex items-center gap-1 w-fit">
+                            Unpublished
+                          </span>
                         ) : !isEligible ? (
                           <span className="admin-badge admin-badge-amber text-[0.7rem] font-semibold flex items-center gap-1 w-fit">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             Missing Image
                           </span>
-                        ) : product.available !== false ? (
+                        ) : (
                           <span className="admin-badge admin-badge-emerald text-[0.7rem] flex items-center gap-1 w-fit">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Published
-                          </span>
-                        ) : (
-                          <span className="admin-badge admin-badge-slate text-[0.7rem] flex items-center gap-1 w-fit">
-                            Hidden
                           </span>
                         )}
                       </td>
@@ -847,19 +847,19 @@ export function AdminProductManager() {
                   </span>
                   {isArchived ? (
                     <span className="admin-badge admin-badge-rose text-[0.68rem]">Archived</span>
+                  ) : product.available === false ? (
+                    <span className="admin-badge admin-badge-slate text-[0.68rem] flex items-center gap-1">
+                      Unpublished
+                    </span>
                   ) : !isEligible ? (
                     <span className="admin-badge admin-badge-amber text-[0.68rem] font-semibold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                       Missing Image
                     </span>
-                  ) : product.available !== false ? (
+                  ) : (
                     <span className="admin-badge admin-badge-emerald text-[0.68rem] flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                       Published
-                    </span>
-                  ) : (
-                    <span className="admin-badge admin-badge-slate text-[0.68rem] flex items-center gap-1">
-                      Hidden
                     </span>
                   )}
                 </div>
