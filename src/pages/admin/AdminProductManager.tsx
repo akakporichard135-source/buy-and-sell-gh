@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
@@ -28,6 +28,7 @@ import {
   categories,
   createProductSlug,
   getPrimaryImage,
+  isProductImageEligible,
   normalizeProduct,
   productConditions,
   stockStatuses,
@@ -140,14 +141,36 @@ export function AdminProductManager() {
     error,
   } = useProductCatalog();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialAvailability = searchParams.get("availability") || "All";
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");
   const [stock, setStock] = useState("All");
-  const [availability, setAvailability] = useState("All");
+  const [availability, setAvailability] = useState(initialAvailability);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
+
+  useEffect(() => {
+    const param = searchParams.get("availability");
+    if (param && param !== availability) {
+      setAvailability(param);
+    }
+  }, [searchParams]);
+
+  const handleAvailabilityChange = (newVal: string) => {
+    setAvailability(newVal);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newVal === "All") {
+        next.delete("availability");
+      } else {
+        next.set("availability", newVal);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -182,9 +205,53 @@ export function AdminProductManager() {
     [editing?.brand, products]
   );
 
+  const visibilityCounts = useMemo(() => {
+    let published = 0;
+    let missingImages = 0;
+    let manuallyHidden = 0;
+    let archived = 0;
+    for (const p of products) {
+      if (p.archived) {
+        archived++;
+      } else if (!isProductImageEligible(p)) {
+        missingImages++;
+      } else if (p.available === false) {
+        manuallyHidden++;
+      } else {
+        published++;
+      }
+    }
+    const allValid = published + manuallyHidden;
+    return { published, missingImages, manuallyHidden, archived, allValid, total: products.length };
+  }, [products]);
+
   const filtered = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return products.filter((product) => {
+      const isEligible = isProductImageEligible(product);
+      const isArchived = Boolean(product.archived);
+      const isAvailable = product.available !== false;
+
+      let matchesAvailability = false;
+      if (availability === "All") {
+        // Default visible view: only devices with valid, approved images
+        matchesAvailability = !isArchived && isEligible;
+      } else if (availability === "Published") {
+        matchesAvailability = !isArchived && isAvailable && isEligible;
+      } else if (availability === "MissingImages") {
+        // Dedicated admin-only recovery view for products without images
+        matchesAvailability = !isArchived && !isEligible;
+      } else if (availability === "Hidden") {
+        // Manually hidden (has valid image)
+        matchesAvailability = !isArchived && !isAvailable && isEligible;
+      } else if (availability === "Archived") {
+        matchesAvailability = isArchived;
+      } else if (availability === "AllWithMissing") {
+        matchesAvailability = true;
+      }
+
+      if (!matchesAvailability) return false;
+
       const searchable = [
         product.name,
         product.slug,
@@ -204,11 +271,7 @@ export function AdminProductManager() {
         (brand === "All" || product.brand === brand) &&
         (category === "All" || product.category === category) &&
         (condition === "All" || product.condition === condition) &&
-        (stock === "All" || product.stockStatus === stock) &&
-        (availability === "All" ||
-          (availability === "Published" && product.available !== false && !product.archived) ||
-          (availability === "Hidden" && product.available === false && !product.archived) ||
-          (availability === "Archived" && product.archived === true))
+        (stock === "All" || product.stockStatus === stock)
       );
     });
   }, [availability, brand, category, condition, products, query, stock]);
@@ -436,13 +499,15 @@ export function AdminProductManager() {
 
           <select
             value={availability}
-            onChange={(e) => setAvailability(e.target.value)}
+            onChange={(e) => handleAvailabilityChange(e.target.value)}
             className="admin-select"
           >
-            <option value="All">All Visibility</option>
-            <option value="Published">Published</option>
-            <option value="Hidden">Hidden</option>
-            <option value="Archived">Archived</option>
+            <option value="All">All Valid Images ({visibilityCounts.allValid})</option>
+            <option value="Published">Published ({visibilityCounts.published})</option>
+            <option value="MissingImages">Hidden — Missing Images ({visibilityCounts.missingImages})</option>
+            <option value="Hidden">Manually Hidden ({visibilityCounts.manuallyHidden})</option>
+            <option value="Archived">Archived ({visibilityCounts.archived})</option>
+            <option value="AllWithMissing">All Records ({visibilityCounts.total})</option>
           </select>
 
           {backendStatus !== "supabase" && (
@@ -456,7 +521,89 @@ export function AdminProductManager() {
             </button>
           )}
         </div>
+
+        {/* Quick Filter Pill Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 w-full">
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("All")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              availability === "All"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            All Valid ({visibilityCounts.allValid})
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("Published")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              availability === "Published"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+            }`}
+          >
+            Published ({visibilityCounts.published})
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("MissingImages")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 ${
+              availability === "MissingImages"
+                ? "bg-amber-600 text-white shadow-sm"
+                : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/80"
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${availability === "MissingImages" ? "bg-white" : "bg-amber-500"}`} />
+            Hidden — Missing Images ({visibilityCounts.missingImages})
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("Hidden")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              availability === "Hidden"
+                ? "bg-slate-700 text-white shadow-sm"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            Manually Hidden ({visibilityCounts.manuallyHidden})
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("Archived")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              availability === "Archived"
+                ? "bg-rose-700 text-white shadow-sm"
+                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+            }`}
+          >
+            Archived ({visibilityCounts.archived})
+          </button>
+        </div>
       </div>
+
+      {/* Recovery View Explainer Banner for Missing Images */}
+      {availability === "MissingImages" && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <span className="font-bold text-amber-900">Recovery View: Missing Images ({visibilityCounts.missingImages} Items)</span>
+              <p className="text-amber-800 mt-0.5">
+                These products are hidden from the public store and default catalogue because they require genuine device photos or clean studio assets. Click <strong>Edit</strong> on any item to upload photos to Supabase Storage and publish it.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleAvailabilityChange("All")}
+            className="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 shrink-0 text-xs shadow-xs"
+          >
+            Back to Valid Products
+          </button>
+        </div>
+      )}
 
       {/* 3. Products Data Table */}
       <div className="admin-table-shell hidden md:block">
@@ -488,6 +635,7 @@ export function AdminProductManager() {
                 </tr>
               ) : (
                 paginatedProducts.map((product) => {
+                  const isEligible = isProductImageEligible(product);
                   const image = getPrimaryImage(product);
                   const isArchived = Boolean(product.archived);
 
@@ -505,8 +653,8 @@ export function AdminProductManager() {
                               className="w-12 h-12 rounded-lg object-contain bg-white border border-slate-200 shrink-0 p-1"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-[0.65rem] text-slate-400 font-semibold shrink-0">
-                              No pic
+                            <div className="w-12 h-12 rounded-lg bg-amber-50 border border-amber-200 grid place-items-center text-[0.62rem] text-amber-800 font-bold shrink-0 text-center leading-tight p-1">
+                              {product.condition.includes("Brand New") ? "Studio Asset" : "Photo Needed"}
                             </div>
                           )}
                           <div className="min-w-0">
@@ -552,17 +700,23 @@ export function AdminProductManager() {
                         </span>
                       </td>
                       <td>
-                        <span
-                          className={`admin-badge text-[0.7rem] ${
-                            isArchived
-                              ? "admin-badge-rose"
-                              : product.available !== false
-                              ? "admin-badge-emerald"
-                              : "admin-badge-slate"
-                          }`}
-                        >
-                          {isArchived ? "Archived" : product.available !== false ? "Published" : "Hidden"}
-                        </span>
+                        {isArchived ? (
+                          <span className="admin-badge admin-badge-rose text-[0.7rem]">Archived</span>
+                        ) : !isEligible ? (
+                          <span className="admin-badge admin-badge-amber text-[0.7rem] font-semibold flex items-center gap-1 w-fit">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            Missing Image
+                          </span>
+                        ) : product.available !== false ? (
+                          <span className="admin-badge admin-badge-emerald text-[0.7rem] flex items-center gap-1 w-fit">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Published
+                          </span>
+                        ) : (
+                          <span className="admin-badge admin-badge-slate text-[0.7rem] flex items-center gap-1 w-fit">
+                            Hidden
+                          </span>
+                        )}
                       </td>
                       <td>
                         <div className="flex items-center gap-1.5">
@@ -638,6 +792,7 @@ export function AdminProductManager() {
           </div>
         ) : (
           paginatedProducts.map((product) => {
+            const isEligible = isProductImageEligible(product);
             const image = getPrimaryImage(product);
             const isArchived = Boolean(product.archived);
 
@@ -654,8 +809,8 @@ export function AdminProductManager() {
                       className="w-12 h-12 rounded-lg object-contain bg-white border border-slate-200 shrink-0 p-1"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 grid place-items-center text-[0.65rem] text-slate-400 font-semibold shrink-0">
-                      No pic
+                    <div className="w-12 h-12 rounded-lg bg-amber-50 border border-amber-200 grid place-items-center text-[0.62rem] text-amber-800 font-bold shrink-0 text-center leading-tight p-1">
+                      {product.condition.includes("Brand New") ? "Studio Asset" : "Photo Needed"}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
@@ -690,17 +845,23 @@ export function AdminProductManager() {
                   >
                     {product.stockStatus} ({product.stockQuantity})
                   </span>
-                  <span
-                    className={`admin-badge text-[0.68rem] ${
-                      isArchived
-                        ? "admin-badge-rose"
-                        : product.available !== false
-                        ? "admin-badge-emerald"
-                        : "admin-badge-slate"
-                    }`}
-                  >
-                    {isArchived ? "Archived" : product.available !== false ? "Published" : "Hidden"}
-                  </span>
+                  {isArchived ? (
+                    <span className="admin-badge admin-badge-rose text-[0.68rem]">Archived</span>
+                  ) : !isEligible ? (
+                    <span className="admin-badge admin-badge-amber text-[0.68rem] font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      Missing Image
+                    </span>
+                  ) : product.available !== false ? (
+                    <span className="admin-badge admin-badge-emerald text-[0.68rem] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Published
+                    </span>
+                  ) : (
+                    <span className="admin-badge admin-badge-slate text-[0.68rem] flex items-center gap-1">
+                      Hidden
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100">

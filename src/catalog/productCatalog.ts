@@ -1,7 +1,9 @@
 import { categories as seedCategories, products as seedProducts } from "../data/products";
 import { initialProductPricingSeed } from "../data/productPricingSeed";
 import type { Product, ProductCategory, ProductCondition, StockStatus } from "../types/product";
-import { isValidProductImage, resolveAdminProductImage, resolveProductImage } from "../utils/productImages";
+import { isProductImageEligible, isValidProductImage, resolveAdminProductImage, resolveProductImage } from "../utils/productImages";
+
+export { isProductImageEligible } from "../utils/productImages";
 
 export const PRODUCT_CATALOG_STORAGE_KEY = "buyandsell-gh-product-catalog";
 
@@ -36,7 +38,8 @@ export const isProductPurchasable = (product: Product) => {
     product.stockQuantity > 0 &&
     (status === "In Stock" || status === "Low Stock") &&
     product.archived !== true &&
-    product.available !== false;
+    product.available !== false &&
+    isProductImageEligible(product);
 };
 
 export const isProductUnavailable = (product: Product) => !isProductPurchasable(product);

@@ -69,7 +69,7 @@ try {
     description: "",
     specs: [],
     box: [],
-    images: [],
+    images: [{ src: "https://catalogue.example/storage/v1/object/public/product-images/store/real-phone.webp", alt: "Owner photo" }],
   };
   const soldOut = { ...product, id: "sold-out", stockStatus: "Sold Out", stockQuantity: 0 };
 

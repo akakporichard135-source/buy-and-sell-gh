@@ -1,9 +1,11 @@
 import type { Product } from "../types/product";
 import { Link } from "react-router-dom";
+import { isProductImageEligible } from "../catalog/productCatalog";
 import { ProductCard } from "./ProductCard";
 
 export function ProductGrid({ products, variant = "default", className = "", imageVariant = "default" }: { products: Product[]; variant?: "default" | "compact"; className?: string; imageVariant?: "default" | "catalogue" }) {
-  if (!products.length) {
+  const eligibleProducts = products.filter(isProductImageEligible);
+  if (!eligibleProducts.length) {
     return (
       <div className="rounded-lg border border-black/7 bg-white p-8 text-center text-ink/70">
         <strong className="block text-xl font-black text-ink">No matching products are listed right now.</strong>
@@ -18,7 +20,7 @@ export function ProductGrid({ products, variant = "default", className = "", ima
 
   return (
     <div className={`product-grid ${className}`}>
-      {products.map((product) => (
+      {eligibleProducts.map((product) => (
         <ProductCard key={product.id} product={product} variant={variant} imageVariant={imageVariant} />
       ))}
     </div>

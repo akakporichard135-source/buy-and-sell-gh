@@ -24,7 +24,7 @@ import { useAdminAuth } from "../../admin/AdminAuth";
 import type { Product, ProductVariant, StockStatus } from "../../types/product";
 import { formatPrice } from "../../utils/productPricing";
 import { formatGhs } from "../../utils/format";
-import { resolveAdminProductImage } from "../../utils/productImages";
+import { isProductImageEligible, resolveAdminProductImage } from "../../utils/productImages";
 
 interface VariantDraft {
   price: number;
@@ -48,13 +48,14 @@ export function AdminPricingManager() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedStockStatus, setSelectedStockStatus] = useState("All");
   const [selectedPromo, setSelectedPromo] = useState<"All" | "Sale" | "Regular">("All");
+  const [selectedVisibility, setSelectedVisibility] = useState<"valid" | "missing" | "all">("valid");
   const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [query, selectedCategory, selectedStockStatus, selectedPromo]);
+  }, [query, selectedCategory, selectedStockStatus, selectedPromo, selectedVisibility]);
 
   // Local draft changes: variantId -> draft values
   const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft>>({});
@@ -80,40 +81,74 @@ export function AdminPricingManager() {
 
   // Overall Statistics
   const stats = useMemo(() => {
+    let totalEligibleProducts = 0;
+    let totalMissingProducts = 0;
     let totalVariants = 0;
     let onSaleVariants = 0;
     let inStockVariants = 0;
     let outOfStockVariants = 0;
 
     products.forEach((p) => {
-      const vars = p.variants ?? [];
-      totalVariants += vars.length;
-      vars.forEach((v) => {
-        if (v.isSale || (v.previousPrice && v.previousPrice > v.price)) {
-          onSaleVariants++;
-        }
-        if (v.stockStatus === "In Stock") {
-          inStockVariants++;
-        } else if (v.stockStatus === "Out of Stock") {
-          outOfStockVariants++;
-        }
-      });
+      const isEligible = isProductImageEligible(p);
+      if (isEligible) {
+        totalEligibleProducts++;
+      } else {
+        totalMissingProducts++;
+      }
+
+      const isIncluded =
+        selectedVisibility === "valid"
+          ? isEligible
+          : selectedVisibility === "missing"
+          ? !isEligible
+          : true;
+
+      if (isIncluded) {
+        const vars = p.variants ?? [];
+        totalVariants += vars.length;
+        vars.forEach((v) => {
+          if (v.isSale || (v.previousPrice && v.previousPrice > v.price)) {
+            onSaleVariants++;
+          }
+          if (v.stockStatus === "In Stock") {
+            inStockVariants++;
+          } else if (v.stockStatus === "Out of Stock") {
+            outOfStockVariants++;
+          }
+        });
+      }
     });
 
     return {
-      totalProducts: products.length,
+      totalProducts:
+        selectedVisibility === "valid"
+          ? totalEligibleProducts
+          : selectedVisibility === "missing"
+          ? totalMissingProducts
+          : products.length,
+      totalEligibleProducts,
+      totalMissingProducts,
       totalVariants,
       onSaleVariants,
       inStockVariants,
       outOfStockVariants,
     };
-  }, [products]);
+  }, [products, selectedVisibility]);
 
   // Filter products
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return products.filter((product) => {
+      // 0. Image / Visibility Filter
+      const isEligible = isProductImageEligible(product);
+      if (selectedVisibility === "valid" && !isEligible) {
+        return false;
+      }
+      if (selectedVisibility === "missing" && isEligible) {
+        return false;
+      }
+
       // 1. Category Filter
       if (selectedCategory !== "All" && product.category !== selectedCategory) {
         return false;
@@ -153,7 +188,7 @@ export function AdminPricingManager() {
 
       return true;
     });
-  }, [products, query, selectedCategory, selectedStockStatus, selectedPromo]);
+  }, [products, query, selectedCategory, selectedStockStatus, selectedPromo, selectedVisibility]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
   const paginatedProducts = useMemo(() => {
@@ -520,6 +555,25 @@ export function AdminPricingManager() {
               <option value="Sale">Sale / Promo Only</option>
               <option value="Regular">Regular Price Only</option>
             </select>
+
+            {/* Visibility / Image Filter */}
+            <select
+              value={selectedVisibility}
+              onChange={(e) => setSelectedVisibility(e.target.value as any)}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: selectedVisibility === "missing" ? "1px solid #d4af37" : "1px solid #e5e5e7",
+                backgroundColor: selectedVisibility === "missing" ? "#fffbf0" : "#fff",
+                fontSize: "14px",
+                fontWeight: 600,
+                color: selectedVisibility === "missing" ? "#b25e00" : "#111",
+              }}
+            >
+              <option value="valid">Visible Products ({stats.totalEligibleProducts})</option>
+              <option value="missing">Hidden — Missing Images ({stats.totalMissingProducts})</option>
+              <option value="all">All Catalog Records ({products.length})</option>
+            </select>
           </div>
 
           {/* Quick expand/collapse controls */}
@@ -543,6 +597,44 @@ export function AdminPricingManager() {
           </div>
         </div>
       </section>
+
+      {/* Recovery View Banner for Missing Images */}
+      {selectedVisibility === "missing" && (
+        <div
+          style={{
+            margin: "0 0 20px 0",
+            padding: "16px 20px",
+            borderRadius: "12px",
+            backgroundColor: "#fffbf0",
+            border: "1px solid #fed7aa",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ width: "10px", height: "10px", borderRadius: "999px", backgroundColor: "#f59e0b", flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#92400e" }}>
+                Recovery View: Missing Images ({stats.totalMissingProducts} Products, {stats.totalVariants} Variants)
+              </div>
+              <div style={{ fontSize: "13px", color: "#b45309", marginTop: "2px" }}>
+                These products are hidden from the live store because they require unit photos or studio assets. You can adjust their prices and stock levels here; they will remain hidden until genuine photos are uploaded.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setSelectedVisibility("valid")}
+            style={{ fontSize: "13px", padding: "6px 14px", backgroundColor: "#fff", borderColor: "#fcd34d" }}
+          >
+            Back to Visible Products
+          </button>
+        </div>
+      )}
 
       {/* Pricing Matrix Listing */}
       <section className="admin-panel" style={{ padding: "0", overflow: "hidden" }}>
@@ -650,6 +742,21 @@ export function AdminPricingManager() {
                               }}
                             >
                               {product.condition}
+                            </span>
+                          )}
+                          {!isProductImageEligible(product) && (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                padding: "2px 8px",
+                                backgroundColor: "#fff3dc",
+                                color: "#b25e00",
+                                borderRadius: "4px",
+                                fontWeight: 700,
+                                border: "1px solid #fed7aa",
+                              }}
+                            >
+                              Hidden — Missing Image
                             </span>
                           )}
                         </div>

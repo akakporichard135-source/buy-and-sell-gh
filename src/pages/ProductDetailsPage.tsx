@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProductGrid } from "../components/ProductGrid";
 import { SEO } from "../components/SEO";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { isProductUnavailable } from "../catalog/productCatalog";
+import { isProductImageEligible, isProductUnavailable } from "../catalog/productCatalog";
 import { productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { business } from "../config/business";
 import { useCart } from "../context/CartContext";
@@ -37,7 +37,7 @@ export function ProductDetailsPage() {
   const recentlyViewed = useMemo(() => {
     const viewedProducts = recentSlugs
       .map((item) => getProductBySlug(item))
-      .filter((item): item is Product => Boolean(item));
+      .filter((item): item is Product => Boolean(item && isProductImageEligible(item)));
     return viewedProducts.filter((item) => item.id !== product?.id).slice(0, 3);
   }, [getProductBySlug, product?.id, recentSlugs]);
 
@@ -78,11 +78,11 @@ export function ProductDetailsPage() {
     );
   }
 
-  if (!product) {
+  if (!product || !isProductImageEligible(product)) {
     return (
       <section className="page-hero">
-        <h1>Product not found</h1>
-        <p>This device may have moved or is no longer listed.</p>
+        <h1>Product not listed</h1>
+        <p>This item is currently not available in our visible catalogue.</p>
         <Link className="btn-primary mt-6" to="/shop">Back to shop</Link>
       </section>
     );

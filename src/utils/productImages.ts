@@ -243,10 +243,7 @@ export function resolveProductImage(
 }
 
 export function resolveAdminProductImage(product: Product): ProductImage | undefined {
-  return (
-    resolveProductGallery(product, { allowRepresentativeForUsed: true })[0] ??
-    getLocalPremiumImage(product)
-  );
+  return resolveProductImage(product, { allowRepresentativeForUsed: false });
 }
 
 export function resolveCatalogueProductImage(product: Product): ProductImage | undefined {
@@ -256,4 +253,17 @@ export function resolveCatalogueProductImage(product: Product): ProductImage | u
   if (!localPremiumSource || image.src !== localPremiumSource) return image;
   const catalogueSource = localCatalogueImageBySlug[product.slug];
   return catalogueSource ? { ...image, src: catalogueSource } : image;
+}
+
+/**
+ * Authoritative image eligibility check for Buy & Sell GH:
+ * A product is eligible for public display and default admin management if and only if
+ * it has an approved, genuine product image:
+ * - For Used devices (UK Used, Excellent, Very Good): requires genuine photographs of the actual unit.
+ * - For Brand New products: requires an approved, clean product-specific asset (not in missingCleanAccessoryImageSlugs).
+ * - Products with missing, broken, placeholder, or baked-in gold imagery return false.
+ */
+export function isProductImageEligible(product: Product): boolean {
+  const image = resolveProductImage(product, { allowRepresentativeForUsed: false });
+  return Boolean(image?.src && isValidProductImage(image));
 }

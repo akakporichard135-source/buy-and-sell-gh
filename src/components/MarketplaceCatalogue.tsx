@@ -1,7 +1,7 @@
 import { Eye, MapPin, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { isProductPurchasable } from "../catalog/productCatalog";
+import { isProductImageEligible, isProductPurchasable } from "../catalog/productCatalog";
 import { filterMarketplaceProducts, marketplaceOptions } from "../catalog/marketplaceCatalogue";
 import { business } from "../config/business";
 import type { Product } from "../types/product";
@@ -34,12 +34,13 @@ export function MarketplaceCatalogue({ products, categoryLabels, getCategory, lo
   const maxPrice = params.get("maxPrice") ?? "";
   const sort = params.get("sort") ?? "newest";
 
-  const brands = useMemo(() => marketplaceOptions(products.map((product) => product.brand)), [products]);
-  const conditions = useMemo(() => marketplaceOptions(products.map((product) => product.condition)), [products]);
-  const storageOptions = useMemo(() => marketplaceOptions(products.flatMap((product) => product.storage)), [products]);
+  const eligibleProducts = useMemo(() => products.filter(isProductImageEligible), [products]);
+  const brands = useMemo(() => marketplaceOptions(eligibleProducts.map((product) => product.brand)), [eligibleProducts]);
+  const conditions = useMemo(() => marketplaceOptions(eligibleProducts.map((product) => product.condition)), [eligibleProducts]);
+  const storageOptions = useMemo(() => marketplaceOptions(eligibleProducts.flatMap((product) => product.storage)), [eligibleProducts]);
   const availableCategories = useMemo(() => Object.entries(categoryLabels), [categoryLabels]);
 
-  const filteredProducts = useMemo(() => filterMarketplaceProducts(products, params, getCategory), [getCategory, params, products]);
+  const filteredProducts = useMemo(() => filterMarketplaceProducts(eligibleProducts, params, getCategory), [getCategory, params, eligibleProducts]);
 
   const updateParam = (key: string, value: string) => {
     const next = new URLSearchParams(pendingParams.current);

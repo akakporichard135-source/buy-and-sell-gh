@@ -15,6 +15,7 @@ import {
   PRODUCT_CATALOG_STORAGE_KEY,
   createEmptyProduct,
   getProductBySlugFrom,
+  isProductImageEligible,
   normalizeProduct,
   readStoredProducts,
   seedCatalog,
@@ -110,7 +111,9 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
   };
 
   const value = useMemo<ProductCatalogValue>(() => {
-    const activeProducts = products.filter((product) => !product.archived && product.available !== false);
+    const activeProducts = products.filter(
+      (product) => !product.archived && product.available !== false && isProductImageEligible(product)
+    );
 
     return {
       products,

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { isProductUnavailable, normalizeStockStatus } from "../../catalog/productCatalog";
+import { isProductImageEligible, isProductUnavailable, normalizeStockStatus } from "../../catalog/productCatalog";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { fetchAdminOrders } from "../../orders/supabaseOrderRepository";
 import type { StoredOrderRequest } from "../../types/order";
@@ -85,7 +85,8 @@ export function AdminDashboardPage() {
     const outOfStockProducts = activeProducts.filter((p) =>
       ["Out of Stock", "Sold"].includes(normalizeStockStatus(p))
     ).length;
-    const photosNeeded = activeProducts.filter(requiresRealProductPhotos).length;
+    const photosNeeded = products.filter(requiresRealProductPhotos).length;
+    const missingImageProducts = products.filter((p) => !isProductImageEligible(p)).length;
 
     // Isolate test/bot verification orders from live metrics
     const genuineOrders = orders.filter((o) => !isTestOrder(o));
@@ -107,6 +108,7 @@ export function AdminDashboardPage() {
       outOfStockProducts,
       outOfStockVariants,
       photosNeeded,
+      missingImageProducts,
       pendingOrders,
       confirmedOrders,
       totalOrders: genuineOrders.length,
@@ -280,16 +282,16 @@ export function AdminDashboardPage() {
           <div className="admin-metric-hint">Sale discounts currently published</div>
         </Link>
 
-        {/* Real Photos Needed */}
-        <Link to="/admin/products" className="admin-metric-card">
+        {/* Missing Images (Hidden from Catalogue) */}
+        <Link to="/admin/products?availability=MissingImages" className="admin-metric-card">
           <div className="admin-metric-header">
-            <span className="admin-metric-label">Used Photos Needed</span>
+            <span className="admin-metric-label">Missing Images</span>
             <div className="admin-metric-icon">
-              <ImageIcon size={17} className="text-slate-600" />
+              <ImageIcon size={17} className="text-amber-600" />
             </div>
           </div>
-          <div className="admin-metric-value text-slate-900">{metrics.photosNeeded}</div>
-          <div className="admin-metric-hint">Used items requiring real unit photos</div>
+          <div className="admin-metric-value text-amber-600">{metrics.missingImageProducts}</div>
+          <div className="admin-metric-hint">Hidden from catalogue until photos uploaded</div>
         </Link>
       </section>
 

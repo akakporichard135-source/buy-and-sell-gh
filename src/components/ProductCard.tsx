@@ -1,7 +1,7 @@
 import { Eye, MessageCircle, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { isProductUnavailable } from "../catalog/productCatalog";
+import { isProductUnavailable, isProductImageEligible } from "../catalog/productCatalog";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getCardPriceDisplay } from "../utils/productPricing";
@@ -10,6 +10,9 @@ import { productWhatsAppUrl } from "../utils/whatsapp";
 import { ProductVisual } from "./ProductVisual";
 
 export function ProductCard({ product, variant = "default", imageVariant = "default" }: { product: Product; variant?: "default" | "compact"; imageVariant?: "default" | "catalogue" }) {
+  if (!isProductImageEligible(product)) {
+    return null;
+  }
   const { addItem } = useCart();
   const priceDisplay = getCardPriceDisplay(product);
   const storage = product.storage[0];
