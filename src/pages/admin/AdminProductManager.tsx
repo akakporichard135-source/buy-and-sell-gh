@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Save,
   Search,
+  ShieldCheck,
   Tag,
   Trash2,
   X,
@@ -142,39 +143,32 @@ export function AdminProductManager() {
   } = useProductCatalog();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialAvailability = searchParams.get("availability") || "All";
+  const isMaintenance = searchParams.get("view") === "maintenance";
+  const [maintenanceTab, setMaintenanceTab] = useState<"all" | "missing" | "unpublished" | "archived">("all");
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");
   const [stock, setStock] = useState("All");
-  const [availability, setAvailability] = useState(initialAvailability);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
+  // Auto-open Add Product drawer if triggered from quick actions (?action=new)
   useEffect(() => {
-    const param = searchParams.get("availability");
-    if (param && param !== availability) {
-      setAvailability(param);
+    if (searchParams.get("action") === "new") {
+      startAdd();
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("action");
+        return next;
+      });
     }
   }, [searchParams]);
 
-  const handleAvailabilityChange = (newVal: string) => {
-    setAvailability(newVal);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (newVal === "All") {
-        next.delete("availability");
-      } else {
-        next.set("availability", newVal);
-      }
-      return next;
-    });
-  };
-
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, brand, category, condition, stock, availability]);
+  }, [query, brand, category, condition, stock, isMaintenance, maintenanceTab]);
+
   const [editing, setEditing] = useState<ProductFormState | null>(null);
   const [pendingEditorTarget, setPendingEditorTarget] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -205,24 +199,45 @@ export function AdminProductManager() {
     [editing?.brand, products]
   );
 
-  const visibilityCounts = useMemo(() => {
-    let published = 0;
+  // Authoritative catalogue metrics (storefront vs safely preserved archive)
+  const storeCounts = useMemo(() => {
+    const published = products.filter(
+      (p) => !p.archived && p.available !== false && isProductImageEligible(p)
+    );
+    const inStock = published.filter(
+      (p) => p.stockStatus === "In Stock" && p.stockQuantity > 0
+    ).length;
+    const lowStock = published.filter(
+      (p) => p.stockStatus === "Low Stock" || (p.stockQuantity > 0 && p.stockQuantity <= 3)
+    ).length;
+    const outOfStock = published.filter(
+      (p) => ["Out of Stock", "Sold"].includes(p.stockStatus) || p.stockQuantity <= 0
+    ).length;
+
     let missingImages = 0;
     let manuallyHidden = 0;
     let archived = 0;
-    for (const p of products) {
+    products.forEach((p) => {
       if (p.archived) {
         archived++;
       } else if (p.available === false) {
         manuallyHidden++;
       } else if (!isProductImageEligible(p)) {
         missingImages++;
-      } else {
-        published++;
       }
-    }
-    const allValid = published + manuallyHidden;
-    return { published, missingImages, manuallyHidden, archived, allValid, total: products.length };
+    });
+
+    return {
+      publishedTotal: published.length,
+      inStock,
+      lowStock,
+      outOfStock,
+      missingImages,
+      manuallyHidden,
+      archived,
+      maintenanceTotal: missingImages + manuallyHidden + archived,
+      total: products.length,
+    };
   }, [products]);
 
   const filtered = useMemo(() => {
@@ -232,25 +247,19 @@ export function AdminProductManager() {
       const isArchived = Boolean(product.archived);
       const isAvailable = product.available !== false;
 
-      let matchesAvailability = false;
-      if (availability === "All") {
-        // Default visible view: only devices with valid, approved images
-        matchesAvailability = !isArchived && isEligible;
-      } else if (availability === "Published") {
-        matchesAvailability = !isArchived && isAvailable && isEligible;
-      } else if (availability === "MissingImages") {
-        // Dedicated admin-only recovery view for products without images
-        matchesAvailability = !isArchived && isAvailable && !isEligible;
-      } else if (availability === "Hidden") {
-        // Manually unpublished (e.g. sold out or toggled offline)
-        matchesAvailability = !isArchived && !isAvailable;
-      } else if (availability === "Archived") {
-        matchesAvailability = isArchived;
-      } else if (availability === "AllWithMissing") {
-        matchesAvailability = true;
-      }
+      if (!isMaintenance) {
+        // Everyday admin view: ONLY products currently published and visible on the public storefront
+        const isStorefrontProduct = !isArchived && isAvailable && isEligible;
+        if (!isStorefrontProduct) return false;
+      } else {
+        // Restricted maintenance view: safely stored hidden or inactive records
+        const isHiddenOrInactive = isArchived || !isAvailable || !isEligible;
+        if (!isHiddenOrInactive) return false;
 
-      if (!matchesAvailability) return false;
+        if (maintenanceTab === "missing" && (isArchived || !isAvailable || isEligible)) return false;
+        if (maintenanceTab === "unpublished" && (isArchived || isAvailable)) return false;
+        if (maintenanceTab === "archived" && !isArchived) return false;
+      }
 
       const searchable = [
         product.name,
@@ -274,7 +283,7 @@ export function AdminProductManager() {
         (stock === "All" || product.stockStatus === stock)
       );
     });
-  }, [availability, brand, category, condition, products, query, stock]);
+  }, [brand, category, condition, isMaintenance, maintenanceTab, products, query, stock]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginatedProducts = useMemo(() => {
@@ -354,23 +363,36 @@ export function AdminProductManager() {
       );
       return;
     }
-    if (
-      normalized.available &&
-      !normalized.archived &&
-      isUsedProductCondition(normalized.condition) &&
-      !hasOwnerUploadedProductImages(normalized)
-    ) {
-      setActionError(
-        "Upload real photos of this exact device to Supabase Storage before publishing it."
-      );
-      return;
+
+    // Strict Publishing Validation: Never publish a product without an approved image
+    if (normalized.available && !normalized.archived) {
+      if (isUsedProductCondition(normalized.condition)) {
+        if (!hasOwnerUploadedProductImages(normalized)) {
+          setActionError(
+            "Used devices require genuine photographs of the actual unit uploaded to Supabase Storage before they can be published on the storefront. Uncheck 'Published on Storefront' to save as draft."
+          );
+          return;
+        }
+      } else {
+        if (!isProductImageEligible(normalized)) {
+          setActionError(
+            "This product requires an approved, clean product image before it can be published on the storefront. Uncheck 'Published on Storefront' to save as draft."
+          );
+          return;
+        }
+      }
     }
+
     setSaving(true);
     setActionError("");
     try {
       const saved = await saveProduct(normalized);
       setEditing(productToForm(saved));
-      setMessage(`${normalized.name} saved successfully.`);
+      setMessage(
+        normalized.available
+          ? `${normalized.name} published successfully to storefront.`
+          : `${normalized.name} saved as draft (hidden until published with approved photos).`
+      );
     } catch (saveFailure) {
       setActionError(saveFailure instanceof Error ? saveFailure.message : "Product could not be saved.");
     } finally {
@@ -406,17 +428,20 @@ export function AdminProductManager() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
-              Product Catalogue
+              {isMaintenance ? "Restricted Maintenance" : "Storefront Products"}
             </span>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
             <span className="text-xs font-semibold text-slate-500">
               {getBackendLabel(backendStatus)}
             </span>
           </div>
-          <h2>Catalogue &amp; Inventory Control</h2>
+          <h2>
+            {isMaintenance ? "Catalogue Maintenance Archive" : "Product Management"}
+          </h2>
           <p>
-            Manage device catalog specifications, images, conditions, categories, and storefront
-            visibility.
+            {isMaintenance
+              ? "Safely stored inactive items, missing-image records, and archived products preserved in Supabase."
+              : "Manage active devices, pricing, stock levels, and verified product imagery displayed to customers."}
           </p>
         </div>
 
@@ -446,6 +471,39 @@ export function AdminProductManager() {
         </div>
       )}
 
+      {/* Restricted Maintenance Banner (Only visible when deliberately accessing maintenance view) */}
+      {isMaintenance && (
+        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0 mt-1" />
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                Restricted Maintenance Mode
+              </div>
+              <h3 className="text-sm font-bold text-white mt-0.5">
+                {storeCounts.maintenanceTotal} Safely Preserved Inactive / Missing-Image Records
+              </h3>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                These {storeCounts.maintenanceTotal} records remain securely stored in Supabase and the catalogue archive. They are hidden from everyday storefront and admin views until approved photographs are uploaded.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete("view");
+                return next;
+              });
+            }}
+            className="admin-btn admin-btn-sm whitespace-nowrap bg-white text-slate-900 hover:bg-slate-100 font-semibold shrink-0"
+          >
+            ← Exit to Storefront Products
+          </button>
+        </div>
+      )}
+
       {/* 2. Filter & Search Toolbar */}
       <div className="admin-toolbar">
         <div className="admin-search-input">
@@ -453,7 +511,11 @@ export function AdminProductManager() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search devices by name, model, generation..."
+            placeholder={
+              isMaintenance
+                ? "Search preserved inactive records..."
+                : "Search store products by name, model, generation..."
+            }
           />
         </div>
 
@@ -497,19 +559,6 @@ export function AdminProductManager() {
             ))}
           </select>
 
-          <select
-            value={availability}
-            onChange={(e) => handleAvailabilityChange(e.target.value)}
-            className="admin-select"
-          >
-            <option value="All">All Valid Images ({visibilityCounts.allValid})</option>
-            <option value="Published">Published ({visibilityCounts.published})</option>
-            <option value="MissingImages">Hidden — Missing Images ({visibilityCounts.missingImages})</option>
-            <option value="Hidden">Manually Unpublished ({visibilityCounts.manuallyHidden})</option>
-            <option value="Archived">Archived ({visibilityCounts.archived})</option>
-            <option value="AllWithMissing">All Records ({visibilityCounts.total})</option>
-          </select>
-
           {backendStatus !== "supabase" && (
             <button
               className="admin-btn admin-btn-secondary admin-btn-sm"
@@ -523,87 +572,103 @@ export function AdminProductManager() {
         </div>
 
         {/* Quick Filter Pill Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 w-full">
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("All")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-              availability === "All"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            All Valid ({visibilityCounts.allValid})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("Published")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-              availability === "Published"
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            }`}
-          >
-            Published ({visibilityCounts.published})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("MissingImages")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 ${
-              availability === "MissingImages"
-                ? "bg-amber-600 text-white shadow-sm"
-                : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/80"
-            }`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${availability === "MissingImages" ? "bg-white" : "bg-amber-500"}`} />
-            Hidden — Missing Images ({visibilityCounts.missingImages})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("Hidden")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-              availability === "Hidden"
-                ? "bg-slate-700 text-white shadow-sm"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            Manually Unpublished ({visibilityCounts.manuallyHidden})
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("Archived")}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-              availability === "Archived"
-                ? "bg-rose-700 text-white shadow-sm"
-                : "bg-rose-50 text-rose-700 hover:bg-rose-100"
-            }`}
-          >
-            Archived ({visibilityCounts.archived})
-          </button>
-        </div>
-      </div>
-
-      {/* Recovery View Explainer Banner for Missing Images */}
-      {availability === "MissingImages" && (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-start sm:items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0 mt-0.5 sm:mt-0" />
-            <div>
-              <span className="font-bold text-amber-900">Recovery View: Missing Images ({visibilityCounts.missingImages} Items)</span>
-              <p className="text-amber-800 mt-0.5">
-                These products are hidden from the public store and default catalogue because they require genuine device photos or clean studio assets. Click <strong>Edit</strong> on any item to upload photos to Supabase Storage and publish it.
-              </p>
-            </div>
+        {!isMaintenance ? (
+          <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 w-full">
+            <button
+              type="button"
+              onClick={() => setStock("All")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                stock === "All"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              All Store Products ({storeCounts.publishedTotal})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStock("In Stock")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                stock === "In Stock"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              In Stock ({storeCounts.inStock})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStock("Low Stock")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                stock === "Low Stock"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "bg-amber-50 text-amber-800 hover:bg-amber-100"
+              }`}
+            >
+              Low Stock ({storeCounts.lowStock})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStock("Out of Stock")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                stock === "Out of Stock"
+                  ? "bg-rose-700 text-white shadow-sm"
+                  : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+              }`}
+            >
+              Out of Stock ({storeCounts.outOfStock})
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => handleAvailabilityChange("All")}
-            className="px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 shrink-0 text-xs shadow-xs"
-          >
-            Back to Valid Products
-          </button>
-        </div>
-      )}
+        ) : (
+          <div className="flex flex-wrap items-center gap-1.5 pt-3 border-t border-slate-100 w-full">
+            <button
+              type="button"
+              onClick={() => setMaintenanceTab("all")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                maintenanceTab === "all"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              All Inactive ({storeCounts.maintenanceTotal})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMaintenanceTab("missing")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition flex items-center gap-1.5 ${
+                maintenanceTab === "missing"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/80"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${maintenanceTab === "missing" ? "bg-white" : "bg-amber-500"}`} />
+              Missing Images ({storeCounts.missingImages})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMaintenanceTab("unpublished")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                maintenanceTab === "unpublished"
+                  ? "bg-slate-700 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              Manually Unpublished ({storeCounts.manuallyHidden})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMaintenanceTab("archived")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+                maintenanceTab === "archived"
+                  ? "bg-rose-700 text-white shadow-sm"
+                  : "bg-rose-50 text-rose-700 hover:bg-rose-100"
+              }`}
+            >
+              Archived ({storeCounts.archived})
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* 3. Products Data Table */}
       <div className="admin-table-shell hidden md:block">
@@ -972,8 +1037,38 @@ export function AdminProductManager() {
         </div>
       )}
 
+      {/* 5. Restricted Maintenance Access Link (Isolated from everyday operations) */}
+      <div className="pt-2 flex items-center justify-between text-xs text-slate-400 px-1">
+        {!isMaintenance ? (
+          <Link
+            to="/admin/products?view=maintenance"
+            className="text-slate-400 hover:text-slate-600 transition inline-flex items-center gap-1.5 font-medium"
+            title="Restricted Catalogue Maintenance Archive for Hidden/Archived Records"
+          >
+            <ShieldCheck size={13} />
+            <span>Catalogue Maintenance Archive ({storeCounts.maintenanceTotal} safely preserved records)</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete("view");
+                return next;
+              });
+            }}
+            className="text-amber-600 hover:text-amber-800 transition inline-flex items-center gap-1 font-semibold"
+          >
+            <span>← Return to Everyday Store Products ({storeCounts.publishedTotal})</span>
+          </button>
+        )}
+        <span className="text-[11px] text-slate-400">
+          {isMaintenance ? "Restricted Maintenance Mode" : "Everyday E-Commerce Mode"}
+        </span>
+      </div>
 
-      {/* 5. Product Editor Drawer Modal */}
+      {/* 6. Product Editor Drawer Modal */}
       {editing && (
         <div
           className="admin-drawer-overlay"

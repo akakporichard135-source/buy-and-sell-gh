@@ -18,6 +18,7 @@ import {
   Percent,
   CheckCircle2,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { useAdminAuth } from "../../admin/AdminAuth";
@@ -49,35 +50,14 @@ export function AdminPricingManager() {
   const [selectedStockStatus, setSelectedStockStatus] = useState("All");
   const [selectedPromo, setSelectedPromo] = useState<"All" | "Sale" | "Regular">("All");
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialVisibility = (searchParams.get("visibility") as "valid" | "missing" | "all") || "valid";
-  const [selectedVisibility, setSelectedVisibility] = useState<"valid" | "missing" | "all">(initialVisibility);
+  const isMaintenance = searchParams.get("view") === "maintenance";
   const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
   React.useEffect(() => {
-    const param = searchParams.get("visibility") as "valid" | "missing" | "all";
-    if (param && (param === "valid" || param === "missing" || param === "all") && param !== selectedVisibility) {
-      setSelectedVisibility(param);
-    }
-  }, [searchParams]);
-
-  const handleVisibilityChange = (newVal: "valid" | "missing" | "all") => {
-    setSelectedVisibility(newVal);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (newVal === "valid") {
-        next.delete("visibility");
-      } else {
-        next.set("visibility", newVal);
-      }
-      return next;
-    });
-  };
-
-  React.useEffect(() => {
     setCurrentPage(1);
-  }, [query, selectedCategory, selectedStockStatus, selectedPromo, selectedVisibility]);
+  }, [query, selectedCategory, selectedStockStatus, selectedPromo, isMaintenance]);
 
   // Local draft changes: variantId -> draft values
   const [variantDrafts, setVariantDrafts] = useState<Record<string, VariantDraft>>({});
@@ -101,33 +81,32 @@ export function AdminPricingManager() {
     return Array.from(set).sort();
   }, [products]);
 
-  // Overall Statistics
+  // Overall Statistics for active storefront catalogue (vs safely preserved maintenance records)
   const stats = useMemo(() => {
-    let totalEligibleProducts = 0;
-    let totalMissingProducts = 0;
-    let totalVariants = 0;
+    let storeProducts = 0;
+    let storeVariants = 0;
+    let maintenanceProducts = 0;
     let onSaleVariants = 0;
     let inStockVariants = 0;
     let outOfStockVariants = 0;
 
     products.forEach((p) => {
       const isEligible = isProductImageEligible(p);
-      if (isEligible) {
-        totalEligibleProducts++;
+      const isAvailable = p.available !== false;
+      const isArchived = Boolean(p.archived);
+      const isStorefront = !isArchived && isAvailable && isEligible;
+
+      if (isStorefront) {
+        storeProducts++;
       } else {
-        totalMissingProducts++;
+        maintenanceProducts++;
       }
 
-      const isIncluded =
-        selectedVisibility === "valid"
-          ? isEligible
-          : selectedVisibility === "missing"
-          ? !isEligible
-          : true;
+      const isIncluded = isMaintenance ? !isStorefront : isStorefront;
 
       if (isIncluded) {
         const vars = p.variants ?? [];
-        totalVariants += vars.length;
+        storeVariants += vars.length;
         vars.forEach((v) => {
           if (v.isSale || (v.previousPrice && v.previousPrice > v.price)) {
             onSaleVariants++;
@@ -142,32 +121,32 @@ export function AdminPricingManager() {
     });
 
     return {
-      totalProducts:
-        selectedVisibility === "valid"
-          ? totalEligibleProducts
-          : selectedVisibility === "missing"
-          ? totalMissingProducts
-          : products.length,
-      totalEligibleProducts,
-      totalMissingProducts,
-      totalVariants,
+      storeProducts: isMaintenance ? maintenanceProducts : storeProducts,
+      storeVariants,
       onSaleVariants,
       inStockVariants,
       outOfStockVariants,
+      maintenanceProducts,
+      publishedStoreTotal: storeProducts,
     };
-  }, [products, selectedVisibility]);
+  }, [products, isMaintenance]);
 
-  // Filter products
+  // Filter products: by default, show ONLY active storefront catalogue products
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return products.filter((product) => {
-      // 0. Image / Visibility Filter
       const isEligible = isProductImageEligible(product);
-      if (selectedVisibility === "valid" && !isEligible) {
+      const isArchived = Boolean(product.archived);
+      const isAvailable = product.available !== false;
+      const isStorefront = !isArchived && isAvailable && isEligible;
+
+      // Everyday mode: ONLY active storefront catalogue products
+      if (!isMaintenance && !isStorefront) {
         return false;
       }
-      if (selectedVisibility === "missing" && isEligible) {
+      // Maintenance mode: safely stored inactive / missing image records
+      if (isMaintenance && isStorefront) {
         return false;
       }
 
@@ -210,7 +189,7 @@ export function AdminPricingManager() {
 
       return true;
     });
-  }, [products, query, selectedCategory, selectedStockStatus, selectedPromo, selectedVisibility]);
+  }, [products, query, selectedCategory, selectedStockStatus, selectedPromo, isMaintenance]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
   const paginatedProducts = useMemo(() => {
@@ -452,15 +431,17 @@ export function AdminPricingManager() {
           }}
         >
           <div style={{ padding: "12px 16px", backgroundColor: "#fff", borderRadius: "10px", border: "1px solid #ebebeb" }}>
-            <span style={{ fontSize: "12px", color: "#666", fontWeight: 500 }}>Active Catalog</span>
+            <span style={{ fontSize: "12px", color: "#666", fontWeight: 500 }}>
+              {isMaintenance ? "Preserved Records" : "Storefront Products"}
+            </span>
             <div style={{ fontSize: "20px", fontWeight: 700, color: "#111", marginTop: "2px" }}>
-              {stats.totalProducts} Products
+              {stats.storeProducts} Products
             </div>
           </div>
           <div style={{ padding: "12px 16px", backgroundColor: "#fff", borderRadius: "10px", border: "1px solid #ebebeb" }}>
-            <span style={{ fontSize: "12px", color: "#666", fontWeight: 500 }}>Priced Variants</span>
+            <span style={{ fontSize: "12px", color: "#666", fontWeight: 500 }}>Active Configurations</span>
             <div style={{ fontSize: "20px", fontWeight: 700, color: "#0071e3", marginTop: "2px" }}>
-              {stats.totalVariants} Configurations
+              {stats.storeVariants} Configurations
             </div>
           </div>
           <div style={{ padding: "12px 16px", backgroundColor: "#fff", borderRadius: "10px", border: "1px solid #ebebeb" }}>
@@ -508,7 +489,11 @@ export function AdminPricingManager() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search product, model, or configuration..."
+                placeholder={
+                  isMaintenance
+                    ? "Search preserved inactive records..."
+                    : "Search active storefront product, model, or variant..."
+                }
                 style={{
                   border: "none",
                   backgroundColor: "transparent",
@@ -577,25 +562,6 @@ export function AdminPricingManager() {
               <option value="Sale">Sale / Promo Only</option>
               <option value="Regular">Regular Price Only</option>
             </select>
-
-            {/* Visibility / Image Filter */}
-            <select
-              value={selectedVisibility}
-              onChange={(e) => handleVisibilityChange(e.target.value as any)}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "8px",
-                border: selectedVisibility === "missing" ? "1px solid #d4af37" : "1px solid #e5e5e7",
-                backgroundColor: selectedVisibility === "missing" ? "#fffbf0" : "#fff",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: selectedVisibility === "missing" ? "#b25e00" : "#111",
-              }}
-            >
-              <option value="valid">Visible Products ({stats.totalEligibleProducts})</option>
-              <option value="missing">Hidden — Missing Images ({stats.totalMissingProducts})</option>
-              <option value="all">All Catalog Records ({products.length})</option>
-            </select>
           </div>
 
           {/* Quick expand/collapse controls */}
@@ -620,15 +586,16 @@ export function AdminPricingManager() {
         </div>
       </section>
 
-      {/* Recovery View Banner for Missing Images */}
-      {selectedVisibility === "missing" && (
+      {/* Restricted Maintenance Banner (Only visible when deliberately accessing maintenance view) */}
+      {isMaintenance && (
         <div
           style={{
             margin: "0 0 20px 0",
             padding: "16px 20px",
             borderRadius: "12px",
-            backgroundColor: "#fffbf0",
-            border: "1px solid #fed7aa",
+            backgroundColor: "#1e293b",
+            border: "1px solid #334155",
+            color: "#fff",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -639,22 +606,21 @@ export function AdminPricingManager() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ width: "10px", height: "10px", borderRadius: "999px", backgroundColor: "#f59e0b", flexShrink: 0 }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: "14px", color: "#92400e" }}>
-                Recovery View: Missing Images ({stats.totalMissingProducts} Products, {stats.totalVariants} Variants)
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc" }}>
+                Restricted Maintenance Archive: Preserved Inactive Records ({stats.storeProducts} Products, {stats.storeVariants} Variants)
               </div>
-              <div style={{ fontSize: "13px", color: "#b45309", marginTop: "2px" }}>
-                These products are hidden from the live store because they require unit photos or studio assets. You can adjust their prices and stock levels here; they will remain hidden until genuine photos are uploaded.
+              <div style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>
+                These products are preserved safely in Supabase. Adjusting prices or stock quantities here updates the database records while keeping the items hidden from the storefront until approved photographs are uploaded.
               </div>
             </div>
           </div>
-          <button
-            type="button"
+          <Link
+            to="/admin/pricing"
             className="btn-secondary"
-            onClick={() => handleVisibilityChange("valid")}
-            style={{ fontSize: "13px", padding: "6px 14px", backgroundColor: "#fff", borderColor: "#fcd34d" }}
+            style={{ fontSize: "13px", padding: "6px 14px", backgroundColor: "#fff", color: "#0f172a", fontWeight: 600 }}
           >
-            Back to Visible Products
-          </button>
+            ← Exit to Storefront Products
+          </Link>
         </div>
       )}
 
@@ -1388,6 +1354,30 @@ export function AdminPricingManager() {
             </div>
           </div>
         )}
+
+      {/* Restricted Maintenance Pricing Link (Isolated from everyday operations) */}
+      <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", color: "#64748b", padding: "0 4px" }}>
+        {!isMaintenance ? (
+          <Link
+            to="/admin/pricing?view=maintenance"
+            style={{ color: "#64748b", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 500 }}
+            title="Restricted Catalogue Maintenance for Preserved Inactive Records"
+          >
+            <ShieldCheck size={14} />
+            <span>Catalogue Maintenance Archive ({stats.maintenanceProducts} safely preserved records)</span>
+          </Link>
+        ) : (
+          <Link
+            to="/admin/pricing"
+            style={{ color: "#d97706", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 600 }}
+          >
+            <span>← Return to Active Storefront Catalogue ({stats.publishedStoreTotal} products)</span>
+          </Link>
+        )}
+        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+          {isMaintenance ? "Restricted Maintenance Mode" : "Everyday Pricing & Stock"}
+        </span>
+      </div>
 
       </section>
     </div>
