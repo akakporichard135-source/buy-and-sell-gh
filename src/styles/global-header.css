@@ -214,19 +214,15 @@
   height: calc(100dvh - var(--global-header-height));
   background: #ffffff !important;
   z-index: 999;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
-  flex-direction: column;
-  padding: 20px 24px 48px;
+  overflow: hidden;
   box-sizing: border-box;
-  animation: globalMobileDrawerSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: globalMobileDrawerFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes globalMobileDrawerSlide {
+@keyframes globalMobileDrawerFade {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
@@ -234,35 +230,193 @@
   }
 }
 
-.global-mobile-links {
+/* Sliding Panels Track */
+.global-mobile-panels {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.global-mobile-panels.is-submenu-active {
+  transform: translate3d(-50%, 0, 0);
+}
+
+.global-mobile-panel {
+  width: 50%;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px 60px;
+  box-sizing: border-box;
+  transition: opacity 0.22s ease;
+}
+
+.global-mobile-main-panel {
+  opacity: 1;
+}
+
+.global-mobile-panels.is-submenu-active .global-mobile-main-panel {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.global-mobile-submenu-panel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.global-mobile-panels.is-submenu-active .global-mobile-submenu-panel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Main Category Buttons */
+.global-mobile-nav {
   display: flex;
   flex-direction: column;
-  list-style: none;
-  padding: 0;
-  margin: 0;
   width: 100%;
 }
 
-.global-mobile-link {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  color: #1d1d1f;
-  text-decoration: none;
-  padding: 14px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+.global-mobile-section-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  padding: 15px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  text-align: left;
+  cursor: pointer;
   transition: color 0.15s ease;
 }
 
-.global-mobile-link:hover,
-.global-mobile-link:active {
-  color: var(--color-gold-dark);
+.global-mobile-section-btn:hover,
+.global-mobile-section-btn:active {
+  color: #c59f27;
 }
 
-.global-mobile-link.is-active {
-  color: var(--color-gold-dark);
+.global-mobile-chevron {
+  color: #86868b;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.global-mobile-section-btn:hover .global-mobile-chevron,
+.global-mobile-section-btn:active .global-mobile-chevron {
+  color: #c59f27;
+  transform: translateX(2px);
+}
+
+/* Quick Links at Bottom of Main Panel */
+.global-mobile-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.global-mobile-quick-link {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6e6e73;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.global-mobile-quick-link:hover,
+.global-mobile-quick-link:active {
+  color: #1d1d1f;
+}
+
+/* Submenu Panel Styles */
+.global-mobile-submenu-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.global-mobile-submenu-header {
+  margin-bottom: 12px;
+}
+
+.global-mobile-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  background: transparent;
+  border: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6e6e73;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.global-mobile-back-btn:hover,
+.global-mobile-back-btn:active {
+  color: #1d1d1f;
+}
+
+.global-mobile-submenu-title {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Helvetica, Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.global-mobile-subitems-nav {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.global-mobile-subitem-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 4px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #1d1d1f;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: color 0.15s ease;
+}
+
+.global-mobile-subitem-link.is-explore-link {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.global-mobile-subitem-link:hover,
+.global-mobile-subitem-link:active {
+  color: #c59f27;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .global-mobile-panels {
+    transition: none !important;
+  }
+  .global-mobile-drawer {
+    animation: none !important;
+  }
 }

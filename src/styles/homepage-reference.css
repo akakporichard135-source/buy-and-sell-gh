@@ -496,7 +496,7 @@ body:has(.home-reference) .store-footer {
 
   /* Dedicated Mobile Hero with Portrait Artwork */
   .home-ref-hero.has-mobile-hero {
-    height: clamp(520px, 82svh, 620px);
+    height: clamp(480px, 72svh, 550px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -509,7 +509,7 @@ body:has(.home-reference) .store-footer {
   .home-ref-hero.has-mobile-hero .home-ref-copy {
     position: relative;
     z-index: 2;
-    padding: 34px 16px 0;
+    padding: 24px 16px 0;
     max-width: 440px;
     width: 100%;
   }
@@ -522,13 +522,13 @@ body:has(.home-reference) .store-footer {
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-copy p {
-    font-size: clamp(0.95rem, 4vw, 1.15rem);
-    margin-top: 6px;
+    font-size: clamp(0.95rem, 4vw, 1.12rem);
+    margin-top: 4px;
     line-height: 1.35;
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-actions {
-    margin-top: 14px;
+    margin-top: 10px;
     gap: 10px;
   }
 
@@ -543,13 +543,14 @@ body:has(.home-reference) .store-footer {
     flex: 1;
     width: 100%;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
     overflow: hidden;
     z-index: 1;
     padding-bottom: 0;
     position: relative;
     inset: auto;
+    margin-top: 2px;
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-hero-image,
@@ -560,11 +561,11 @@ body:has(.home-reference) .store-footer {
     transform: none !important;
     display: block !important;
     width: auto !important;
-    max-width: min(88vw, 350px) !important;
+    max-width: min(86vw, 340px) !important;
     height: 100% !important;
-    max-height: min(390px, 58svh) !important;
+    max-height: min(390px, 54svh) !important;
     object-fit: contain !important;
-    object-position: center bottom !important;
+    object-position: center center !important;
     margin: 0 auto !important;
   }
 
@@ -572,9 +573,9 @@ body:has(.home-reference) .store-footer {
   .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro picture img {
     width: auto !important;
     max-width: min(86vw, 340px) !important;
-    max-height: min(390px, 58svh) !important;
+    max-height: min(390px, 54svh) !important;
     object-fit: contain !important;
-    object-position: center bottom !important;
+    object-position: center center !important;
   }
 
   .home-ref-iphone-18-pro:not(.has-mobile-hero) .home-ref-hero-image {
@@ -582,9 +583,44 @@ body:has(.home-reference) .store-footer {
     bottom: 45px;
   }
 
+  /* iPhone Duo Mobile: Move image higher and reduce excessive white space */
+  .home-ref-hero.home-ref-iphone-duo {
+    height: clamp(480px, 72svh, 540px);
+  }
+
+  .home-ref-iphone-duo .home-ref-copy {
+    padding-top: 26px;
+  }
+
   .home-ref-iphone-duo .home-ref-hero-image {
-    width: 120vw;
-    height: 66%;
+    width: min(96vw, 420px);
+    height: auto;
+    max-height: min(350px, 54svh);
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
+    object-position: center bottom;
+  }
+
+  /* Watch Ultra 4 Mobile: Move watch artwork higher and reduce top whitespace */
+  .home-ref-tile.home-ref-watch-ultra-4 {
+    height: clamp(480px, 70svh, 520px);
+  }
+
+  .home-ref-watch-ultra-4 .home-ref-copy {
+    padding-top: 28px;
+  }
+
+  .home-ref-watch-ultra-4 .home-ref-tile-image {
+    width: min(92vw, 380px);
+    height: auto;
+    max-height: min(320px, 52svh);
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
+    object-position: center center;
   }
 
   .home-ref-watch-series-12 .home-ref-hero-image {
@@ -636,10 +672,19 @@ body:has(.home-reference) .store-footer {
   .home-ref-service-track {
     gap: 12px;
     padding-inline: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
   }
 
   .home-ref-service-card {
     flex-basis: min(88vw, 360px);
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
   }
 
   body:has(.home-reference) .store-footer {
