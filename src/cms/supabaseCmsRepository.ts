@@ -170,8 +170,47 @@ export const saveHomepageContent = async (
 };
 
 // 3. MEDIA LIBRARY
+export const mergeMediaItems = (primary: MediaItem[], defaults: MediaItem[]): MediaItem[] => {
+  const map = new Map<string, MediaItem>();
+  // 1. Seed defaults first
+  for (const item of defaults) {
+    map.set(item.id, item);
+  }
+  // 2. Overlay primary (database records or user edits take priority)
+  for (const item of primary) {
+    map.set(item.id, item);
+  }
+  return Array.from(map.values());
+};
+
+export const syncMissingMediaToSupabase = async (missingItems: MediaItem[]): Promise<void> => {
+  if (!supabase || missingItems.length === 0) return;
+  try {
+    const rows = missingItems.map((item) => ({
+      id: item.id,
+      title: item.title,
+      filename: item.filename,
+      url: item.url,
+      storage_path: item.storagePath || null,
+      file_size: item.fileSize || null,
+      mime_type: item.mimeType || "image/webp",
+      category: item.category,
+      alt: item.alt || "",
+      fit: item.fit || "contain",
+      position: item.position || "center",
+      created_at: item.createdAt || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+
+    await supabase.from("media_library").upsert(rows, { onConflict: "id", ignoreDuplicates: true });
+  } catch {
+    // Non-blocking fallback if unauthenticated
+  }
+};
+
 export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
-  const local = readLocal<MediaItem[]>(CMS_STORAGE_KEY_MEDIA, defaultMediaItems);
+  const rawLocal = readLocal<MediaItem[]>(CMS_STORAGE_KEY_MEDIA, defaultMediaItems);
+  const local = mergeMediaItems(rawLocal, defaultMediaItems);
   if (!supabase) return local;
 
   try {
@@ -180,7 +219,7 @@ export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const mapped: MediaItem[] = data.map((row) => ({
         id: row.id,
         title: row.title || row.filename,
@@ -196,13 +235,27 @@ export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
         createdAt: row.created_at || new Date().toISOString(),
         updatedAt: row.updated_at || new Date().toISOString(),
       }));
-      writeLocal(CMS_STORAGE_KEY_MEDIA, mapped);
-      return mapped;
+
+      // Merge database records with default assets so newly registered assets (iPad Air, etc.)
+      // are NEVER omitted even if the database table has not yet been seeded with them
+      const completeList = mergeMediaItems(mapped, defaultMediaItems);
+      writeLocal(CMS_STORAGE_KEY_MEDIA, completeList);
+
+      // Check if any default items are missing from Supabase
+      const dbIds = new Set(mapped.map((m) => m.id));
+      const missingFromDb = defaultMediaItems.filter((d) => !dbIds.has(d.id));
+
+      if (missingFromDb.length > 0) {
+        syncMissingMediaToSupabase(missingFromDb).catch(() => {});
+      }
+
+      return completeList;
     }
   } catch {
     // Non-blocking fallback
   }
 
+  writeLocal(CMS_STORAGE_KEY_MEDIA, local);
   return local;
 };
 
