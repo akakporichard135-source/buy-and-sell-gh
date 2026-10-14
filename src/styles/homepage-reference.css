@@ -623,6 +623,86 @@ body:has(.home-reference) .store-footer {
     object-position: center center;
   }
 
+  /* AirPods Pro 3 Mobile: Heading, subtitle, & buttons at top; large image centered underneath */
+  .home-ref-tile.home-ref-airpods-pro-3 {
+    height: clamp(500px, 75svh, 560px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    padding-bottom: 16px;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3::after {
+    display: none !important;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3.home-ref-copy-bottom .home-ref-copy,
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-copy {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    z-index: 2;
+    padding: 28px 16px 0;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-copy h2 {
+    font-size: clamp(2.1rem, 9.5vw, 2.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin: 0;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-copy p {
+    font-size: clamp(0.95rem, 4.2vw, 1.12rem);
+    line-height: 1.35;
+    color: #1d1d1f;
+    margin: 6px 0 0;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-actions {
+    margin-top: 12px;
+    gap: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-button {
+    min-height: 36px;
+    padding: 7px 18px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .home-ref-tile.home-ref-airpods-pro-3 .home-ref-tile-image {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block;
+    width: auto;
+    max-width: min(86vw, 340px);
+    height: 100%;
+    max-height: min(340px, 48svh);
+    margin: 10px auto 0;
+    object-fit: contain;
+    object-position: center top;
+    z-index: 1;
+  }
+
   .home-ref-watch-series-12 .home-ref-hero-image {
     height: 59%;
     bottom: 20px;
