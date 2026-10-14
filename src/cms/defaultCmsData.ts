@@ -47,6 +47,7 @@ export const defaultHomepageContent: HomepageContent = {
       title: "iPhone 18 Pro",
       subtitle: "Pro further.",
       image: "/products/homepage/iphone-18-pro-hero-2x.webp",
+      mobileImage: "https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/product-images/media/storefront/1792004900948-iphone-18-promax-1.jpg",
       alt: "Burgundy iPhone 18 Pro in front of a metallic PRO composition",
       tone: "dark",
       primary: { label: "Learn more", to: "/iphone/iphone-18-pro" },
@@ -203,6 +204,20 @@ export const defaultHomepageContent: HomepageContent = {
 };
 
 export const defaultMediaItems: MediaItem[] = [
+  {
+    id: "media-hero-iphone18-mobile",
+    title: "iPhone 18 Pro Mobile Hero",
+    filename: "1792004900948-iphone-18-promax-1.jpg",
+    url: "https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/product-images/media/storefront/1792004900948-iphone-18-promax-1.jpg",
+    storagePath: "media/storefront/1792004900948-iphone-18-promax-1.jpg",
+    mimeType: "image/jpeg",
+    category: "hero",
+    alt: "Burgundy iPhone 18 Pro in portrait orientation in front of metallic vertical PRO lettering",
+    fit: "contain",
+    position: "center",
+    createdAt: "2026-10-14T19:08:22Z",
+    updatedAt: "2026-10-14T19:08:22Z",
+  },
   {
     id: "media-hero-iphone18",
     title: "iPhone 18 Pro Hero Campaign",

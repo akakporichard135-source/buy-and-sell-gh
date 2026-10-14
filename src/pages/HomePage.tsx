@@ -213,17 +213,33 @@ function CampaignActions({ primary, secondary }: { primary: Action; secondary?: 
   );
 }
 
+const defaultMobileHeroes: Record<string, string> = {
+  "iphone-18-pro": "/products/homepage/iphone-18-pro-hero-mobile.jpg",
+};
+
 function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boolean }) {
+  const mobileImg =
+    campaign.mobileImage ||
+    defaultMobileHeroes[campaign.id] ||
+    undefined;
+
+  const hasMobileArt = Boolean(mobileImg && mobileImg !== campaign.image);
+
   return (
-    <section className={`home-ref-hero home-ref-${campaign.id} home-ref-${campaign.tone}`} aria-labelledby={`home-ref-${campaign.id}-title`}>
+    <section
+      className={`home-ref-hero home-ref-${campaign.id} home-ref-${campaign.tone} ${
+        hasMobileArt ? "has-mobile-hero" : ""
+      }`}
+      aria-labelledby={`home-ref-${campaign.id}-title`}
+    >
       <div className="home-ref-copy">
         <h1 id={`home-ref-${campaign.id}-title`}>{campaign.title}</h1>
         <p>{campaign.subtitle}</p>
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      {campaign.mobileImage ? (
-        <picture>
-          <source media="(max-width: 768px)" srcSet={campaign.mobileImage} />
+      {mobileImg ? (
+        <picture className="home-ref-hero-picture">
+          <source media="(max-width: 768px)" srcSet={mobileImg} />
           <img
             className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
             src={campaign.image}

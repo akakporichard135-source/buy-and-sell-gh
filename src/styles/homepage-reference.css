@@ -417,7 +417,7 @@ body:has(.home-reference) .store-footer {
     font-size: 3rem;
   }
 
-  .home-ref-iphone-18-pro .home-ref-hero-image {
+  .home-ref-iphone-18-pro:not(.has-mobile-hero) .home-ref-hero-image {
     width: 104vw;
     bottom: 90px;
   }
@@ -447,9 +447,15 @@ body:has(.home-reference) .store-footer {
 
 @media (max-width: 620px) {
   .home-ref-announcement {
-    display: block;
-    min-height: 48px;
-    font-size: 0.72rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem 0.35rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    font-size: 0.76rem;
+    line-height: 1.35;
   }
 
   .home-ref-hero,
@@ -463,11 +469,12 @@ body:has(.home-reference) .store-footer {
 
   .home-ref-copy,
   .home-ref-tile .home-ref-copy {
-    padding: 43px 18px 0;
+    padding: 40px 16px 0;
   }
 
   .home-ref-hero .home-ref-copy h1 {
-    font-size: clamp(2.15rem, 11vw, 2.9rem);
+    font-size: clamp(2.15rem, 10vw, 2.85rem);
+    letter-spacing: -0.02em;
   }
 
   .home-ref-copy p,
@@ -476,17 +483,101 @@ body:has(.home-reference) .store-footer {
   }
 
   .home-ref-actions {
-    margin-top: 16px;
-    gap: 8px;
+    margin-top: 14px;
+    gap: 10px;
   }
 
   .home-ref-button {
-    min-height: 32px;
-    padding: 6px 13px;
-    font-size: 0.74rem;
+    min-height: 34px;
+    padding: 6px 16px;
+    font-size: 0.76rem;
+    font-weight: 600;
   }
 
-  .home-ref-iphone-18-pro .home-ref-hero-image {
+  /* Dedicated Mobile Hero with Portrait Artwork */
+  .home-ref-hero.has-mobile-hero {
+    height: clamp(520px, 82svh, 620px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy {
+    position: relative;
+    z-index: 2;
+    padding: 34px 16px 0;
+    max-width: 440px;
+    width: 100%;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy h1 {
+    font-size: clamp(2.15rem, 9.5vw, 2.85rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy p {
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+    margin-top: 6px;
+    line-height: 1.35;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-actions {
+    margin-top: 14px;
+    gap: 10px;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-button {
+    min-height: 36px;
+    padding: 7px 18px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-hero-picture {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+    padding-bottom: 0;
+    position: relative;
+    inset: auto;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-hero-image,
+  .home-ref-hero.has-mobile-hero picture img {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    max-width: min(88vw, 350px) !important;
+    height: 100% !important;
+    max-height: min(390px, 58svh) !important;
+    object-fit: contain !important;
+    object-position: center bottom !important;
+    margin: 0 auto !important;
+  }
+
+  .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro .home-ref-hero-image,
+  .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro picture img {
+    width: auto !important;
+    max-width: min(86vw, 340px) !important;
+    max-height: min(390px, 58svh) !important;
+    object-fit: contain !important;
+    object-position: center bottom !important;
+  }
+
+  .home-ref-iphone-18-pro:not(.has-mobile-hero) .home-ref-hero-image {
     width: 128vw;
     bottom: 45px;
   }

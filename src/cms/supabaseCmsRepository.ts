@@ -134,7 +134,20 @@ export const fetchHomepageContent = async (): Promise<HomepageContent> => {
       .maybeSingle();
 
     if (!error && data?.content) {
-      const merged = { ...defaultHomepageContent, ...(data.content as Partial<HomepageContent>) };
+      const savedContent = data.content as Partial<HomepageContent>;
+      const mergedHeroes = (savedContent.heroes || defaultHomepageContent.heroes).map((h) => {
+        const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
+        return {
+          ...def,
+          ...h,
+          mobileImage: h.mobileImage || def?.mobileImage,
+        };
+      });
+      const merged: HomepageContent = {
+        ...defaultHomepageContent,
+        ...savedContent,
+        heroes: mergedHeroes,
+      };
       writeLocal(CMS_STORAGE_KEY_HOMEPAGE, merged);
       return merged;
     }
@@ -225,15 +238,28 @@ export const getMediaAssetUsages = (
   // 1. Homepage Heroes
   if (homepage?.heroes) {
     for (const hero of homepage.heroes) {
-      const matches =
+      const desktopMatch =
         urlMatches(hero.image) ||
+        (item.id === "media-hero-iphone18" && hero.id === "iphone-18-pro") ||
+        (item.id.startsWith("media-hero-") && !item.id.endsWith("-mobile") && hero.id === item.id.replace("media-hero-", ""));
+
+      const mobileMatch =
         urlMatches(hero.mobileImage) ||
-        (item.id.startsWith("media-hero-") && hero.id === item.id.replace("media-hero-", ""));
-      if (matches) {
+        (item.id === "media-hero-iphone18-mobile" && hero.id === "iphone-18-pro") ||
+        (item.id.startsWith("media-hero-") && item.id.endsWith("-mobile") && hero.id === item.id.replace("media-hero-", "").replace("-mobile", ""));
+
+      if (desktopMatch) {
         usages.push({
-          location: `Homepage Hero Banner: "${hero.title || hero.id}"`,
+          location: `Homepage Hero Banner (Desktop): "${hero.title || hero.id}"`,
           type: "hero",
-          identifier: hero.id,
+          identifier: `${hero.id}-desktop`,
+        });
+      }
+      if (mobileMatch) {
+        usages.push({
+          location: `Homepage Hero Banner (Mobile): "${hero.title || hero.id}"`,
+          type: "hero",
+          identifier: `${hero.id}-mobile`,
         });
       }
     }
@@ -958,14 +984,21 @@ async function cascadeMediaUrlUpdate(
       let newImage = hero.image;
       let newMobile = hero.mobileImage;
 
-      if (
+      const isDesktopMatch =
         hero.image === oldItem.url ||
-        (oldItem.id.startsWith("media-hero-") && hero.id === oldItem.id.replace("media-hero-", ""))
-      ) {
+        (oldItem.id === "media-hero-iphone18" && hero.id === "iphone-18-pro") ||
+        (oldItem.id.startsWith("media-hero-") && !oldItem.id.endsWith("-mobile") && hero.id === oldItem.id.replace("media-hero-", ""));
+
+      const isMobileMatch =
+        hero.mobileImage === oldItem.url ||
+        (oldItem.id === "media-hero-iphone18-mobile" && hero.id === "iphone-18-pro") ||
+        (oldItem.id.startsWith("media-hero-") && oldItem.id.endsWith("-mobile") && hero.id === oldItem.id.replace("media-hero-", "").replace("-mobile", ""));
+
+      if (isDesktopMatch) {
         newImage = newItem.url;
         heroUpdated = true;
       }
-      if (hero.mobileImage && hero.mobileImage === oldItem.url) {
+      if (isMobileMatch) {
         newMobile = newItem.url;
         heroUpdated = true;
       }

@@ -18,7 +18,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
 import type { HeroCampaign, HomepageContent, MediaItem, PromoTile, ServiceFlyer, Tone } from "../../cms/types";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
@@ -30,6 +30,13 @@ export function AdminHomepageManager() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
+
+  // Sync state when homepage updates from Supabase
+  useEffect(() => {
+    if (homepage) {
+      setContent(homepage);
+    }
+  }, [homepage]);
 
   // Media picker modal state
   const [mediaPickerTarget, setMediaPickerTarget] = useState<{
@@ -367,16 +374,16 @@ export function AdminHomepageManager() {
                           <span>Change Image</span>
                         </button>
                       </div>
-                      <div className="aspect-[21/9] bg-slate-200 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/60 max-h-24">
-                        <img src={hero.image} alt={hero.alt} className="w-full h-full object-cover" />
+                      <div className="h-24 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/80 p-1">
+                        <img src={hero.image} alt={hero.alt} className="max-h-full max-w-full object-contain" />
                       </div>
                     </div>
 
-                    {/* Mobile Hero Image (Optional) */}
+                    {/* Mobile Hero Image */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="block font-bold text-slate-800 text-xs">Mobile Hero Image (Optional)</label>
-                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 780×900</span>
+                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 680×880 or vertical portrait</span>
                       </div>
                       <div className="flex gap-2">
                         <input
@@ -388,12 +395,12 @@ export function AdminHomepageManager() {
                             setContent({ ...content, heroes });
                           }}
                           className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
-                          placeholder="Leave empty to use desktop image"
+                          placeholder="Select from Media Library or leave empty to use desktop image"
                         />
                         <button
                           type="button"
                           onClick={() => setMediaPickerTarget({ section: "hero", index, field: "mobileImage" })}
-                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center gap-1.5 shrink-0 transition text-xs"
+                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-[#d4af37] text-white hover:text-slate-950 font-bold flex items-center gap-1.5 shrink-0 transition text-xs shadow-sm"
                         >
                           <ImageIcon size={13} />
                           <span>Pick Mobile</span>
@@ -406,16 +413,25 @@ export function AdminHomepageManager() {
                               heroes[index] = { ...heroes[index], mobileImage: undefined };
                               setContent({ ...content, heroes });
                             }}
-                            className="px-2 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-bold"
+                            className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-bold transition whitespace-nowrap shrink-0"
                             title="Clear mobile image"
                           >
                             Clear
                           </button>
                         )}
                       </div>
-                      <div className="aspect-[21/9] bg-slate-200 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/60 max-h-24">
+                      <div className="h-24 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/80 p-1">
                         {hero.mobileImage ? (
-                          <img src={hero.mobileImage} alt="Mobile preview" className="w-full h-full object-cover" />
+                          <img
+                            src={hero.mobileImage}
+                            alt="Mobile preview"
+                            className="max-h-full max-w-full object-contain"
+                            onError={(e) => {
+                              if (hero.id === "iphone-18-pro" && !e.currentTarget.src.includes("iphone-18-pro-hero-mobile.jpg")) {
+                                e.currentTarget.src = "/products/homepage/iphone-18-pro-hero-mobile.jpg";
+                              }
+                            }}
+                          />
                         ) : (
                           <span className="text-[0.65rem] text-slate-400 font-medium">
                             Inheriting Desktop Image on Mobile
