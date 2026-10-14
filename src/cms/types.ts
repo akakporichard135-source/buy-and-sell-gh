@@ -81,6 +81,7 @@ export interface SiteSettings {
   deliveryNotice: string;
   paymentGuidance: string;
   warrantyNotice: string;
+  deletedMediaIds?: string[];
 }
 
 export interface MediaItem {

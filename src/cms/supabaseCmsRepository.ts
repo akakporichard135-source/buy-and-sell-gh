@@ -170,15 +170,169 @@ export const saveHomepageContent = async (
 };
 
 // 3. MEDIA LIBRARY
-export const mergeMediaItems = (primary: MediaItem[], defaults: MediaItem[]): MediaItem[] => {
-  const map = new Map<string, MediaItem>();
-  // 1. Seed defaults first
-  for (const item of defaults) {
-    map.set(item.id, item);
+const CMS_STORAGE_KEY_DELETED_MEDIA = "buyandsellgh_cms_deleted_media_ids_v1";
+
+export const getDeletedMediaIds = (): Set<string> => {
+  const local = readLocal<string[]>(CMS_STORAGE_KEY_DELETED_MEDIA, []);
+  return new Set(local);
+};
+
+export const recordDeletedMediaId = async (id: string): Promise<void> => {
+  const current = getDeletedMediaIds();
+  current.add(id);
+  const arr = Array.from(current);
+  writeLocal(CMS_STORAGE_KEY_DELETED_MEDIA, arr);
+
+  // Best-effort sync to site_settings so deletion persists across devices
+  try {
+    const settings = await fetchSiteSettings();
+    const updated = Array.from(new Set([...(settings.deletedMediaIds || []), id]));
+    await saveSiteSettings({ ...settings, deletedMediaIds: updated });
+  } catch {
+    // Non-blocking fallback
   }
-  // 2. Overlay primary (database records or user edits take priority)
+};
+
+export interface MediaAssetUsage {
+  location: string;
+  type: "hero" | "tile" | "flyer" | "storefront" | "brand" | "settings";
+  identifier: string;
+}
+
+export const getMediaAssetUsages = (
+  item: MediaItem,
+  homepage?: HomepageContent | null,
+  storefront?: Record<string, CategoryDepartmentConfig> | null,
+  settings?: SiteSettings | null
+): MediaAssetUsage[] => {
+  const usages: MediaAssetUsage[] = [];
+  if (!item) return usages;
+
+  const cleanUrl = (u?: string) => (u || "").trim().toLowerCase();
+  const itemUrl = cleanUrl(item.url);
+  const itemFilename = (item.filename || "").toLowerCase();
+
+  const urlMatches = (candidate?: string) => {
+    if (!candidate) return false;
+    const c = cleanUrl(candidate);
+    if (c === itemUrl) return true;
+    if (itemUrl.length > 5 && c.endsWith(itemUrl)) return true;
+    if (c.length > 5 && itemUrl.endsWith(c)) return true;
+    if (itemFilename && itemFilename.length > 5 && c.includes(itemFilename)) return true;
+    return false;
+  };
+
+  // 1. Homepage Heroes
+  if (homepage?.heroes) {
+    for (const hero of homepage.heroes) {
+      const matches =
+        urlMatches(hero.image) ||
+        urlMatches(hero.mobileImage) ||
+        (item.id.startsWith("media-hero-") && hero.id === item.id.replace("media-hero-", ""));
+      if (matches) {
+        usages.push({
+          location: `Homepage Hero Banner: "${hero.title || hero.id}"`,
+          type: "hero",
+          identifier: hero.id,
+        });
+      }
+    }
+  }
+
+  // 2. Promotional Tiles
+  if (homepage?.tiles) {
+    for (const tile of homepage.tiles) {
+      const matches =
+        urlMatches(tile.image) ||
+        (item.id.startsWith("media-tile-") && tile.id === item.id.replace("media-tile-", "")) ||
+        (item.id === "media-tile-ipad-air" && tile.id === "ipad-air") ||
+        (item.id === "media-product-ipad-air-white" && tile.id === "ipad-air");
+      if (matches) {
+        usages.push({
+          location: `Promotional Tile: "${tile.title || tile.id}"`,
+          type: "tile",
+          identifier: tile.id,
+        });
+      }
+    }
+  }
+
+  // 3. Service Flyers
+  if (homepage?.serviceFlyers) {
+    for (const flyer of homepage.serviceFlyers) {
+      const matches =
+        urlMatches(flyer.image) ||
+        (item.id.startsWith("media-flyer-") && flyer.id === item.id.replace("media-flyer-", "")) ||
+        (item.id === "media-flyer-repairs" && flyer.id === "flyer-repairs") ||
+        (item.id === "media-flyer-installment" && flyer.id === "flyer-installment") ||
+        (item.id === "media-flyer-tradein" && flyer.id === "flyer-tradein") ||
+        (item.id === "media-flyer-sell" && flyer.id === "flyer-sell") ||
+        (item.id === "media-flyer-refer" && flyer.id === "flyer-refer");
+      if (matches) {
+        usages.push({
+          location: `Service Flyer: "${flyer.title || flyer.id}"`,
+          type: "flyer",
+          identifier: flyer.id,
+        });
+      }
+    }
+  }
+
+  // 4. Storefront Featured Cards
+  if (storefront) {
+    for (const [deptKey, dept] of Object.entries(storefront)) {
+      if (dept?.featuredCards) {
+        for (const card of dept.featuredCards) {
+          const matches =
+            urlMatches(card.image) ||
+            (item.id === "media-tile-ipad-air" && card.id?.includes("ipad-air")) ||
+            (item.id === "media-product-ipad-air-colors" && (urlMatches(card.image) || card.id?.includes("ipad-air")));
+          if (matches) {
+            usages.push({
+              location: `Storefront [${dept.label || deptKey}] Featured Card: "${card.title || card.id}"`,
+              type: "storefront",
+              identifier: card.id || deptKey,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // 5. Brand Identity Assets
+  if (
+    item.category === "brand" ||
+    item.id === "media-brand-logo" ||
+    item.id === "media-brand-owner" ||
+    item.id === "media-brand-rollup"
+  ) {
+    usages.push({
+      location: `Brand Identity Asset (${item.title || "Primary Brand Logo / Seal"})`,
+      type: "brand",
+      identifier: item.id,
+    });
+  }
+
+  return usages;
+};
+
+export const mergeMediaItems = (
+  primary: MediaItem[],
+  defaults: MediaItem[],
+  deletedIds?: Set<string>
+): MediaItem[] => {
+  const map = new Map<string, MediaItem>();
+  // 1. Seed defaults first (skipping deleted)
+  for (const item of defaults) {
+    if (!deletedIds || !deletedIds.has(item.id)) {
+      map.set(item.id, item);
+    }
+  }
+  // 2. Overlay primary (skipping deleted)
   for (const item of primary) {
-    map.set(item.id, item);
+    if (!deletedIds || !deletedIds.has(item.id)) {
+      map.set(item.id, item);
+    }
   }
   return Array.from(map.values());
 };
@@ -186,7 +340,11 @@ export const mergeMediaItems = (primary: MediaItem[], defaults: MediaItem[]): Me
 export const syncMissingMediaToSupabase = async (missingItems: MediaItem[]): Promise<void> => {
   if (!supabase || missingItems.length === 0) return;
   try {
-    const rows = missingItems.map((item) => ({
+    const deletedIds = getDeletedMediaIds();
+    const toInsert = missingItems.filter((item) => !deletedIds.has(item.id));
+    if (toInsert.length === 0) return;
+
+    const rows = toInsert.map((item) => ({
       id: item.id,
       title: item.title,
       filename: item.filename,
@@ -209,8 +367,14 @@ export const syncMissingMediaToSupabase = async (missingItems: MediaItem[]): Pro
 };
 
 export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
+  const deletedIds = getDeletedMediaIds();
+  const localSettings = readLocal<SiteSettings>(CMS_STORAGE_KEY_SETTINGS, defaultSiteSettings);
+  if (localSettings?.deletedMediaIds) {
+    localSettings.deletedMediaIds.forEach((id) => deletedIds.add(id));
+  }
+
   const rawLocal = readLocal<MediaItem[]>(CMS_STORAGE_KEY_MEDIA, defaultMediaItems);
-  const local = mergeMediaItems(rawLocal, defaultMediaItems);
+  const local = mergeMediaItems(rawLocal, defaultMediaItems, deletedIds);
   if (!supabase) return local;
 
   try {
@@ -236,14 +400,16 @@ export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
         updatedAt: row.updated_at || new Date().toISOString(),
       }));
 
-      // Merge database records with default assets so newly registered assets (iPad Air, etc.)
-      // are NEVER omitted even if the database table has not yet been seeded with them
-      const completeList = mergeMediaItems(mapped, defaultMediaItems);
+      // Filter out deleted IDs from database records as well
+      const activeMapped = mapped.filter((m) => !deletedIds.has(m.id));
+      const completeList = mergeMediaItems(activeMapped, defaultMediaItems, deletedIds);
       writeLocal(CMS_STORAGE_KEY_MEDIA, completeList);
 
-      // Check if any default items are missing from Supabase
+      // Check if any default items are missing from Supabase (excluding deleted items)
       const dbIds = new Set(mapped.map((m) => m.id));
-      const missingFromDb = defaultMediaItems.filter((d) => !dbIds.has(d.id));
+      const missingFromDb = defaultMediaItems.filter(
+        (d) => !dbIds.has(d.id) && !deletedIds.has(d.id)
+      );
 
       if (missingFromDb.length > 0) {
         syncMissingMediaToSupabase(missingFromDb).catch(() => {});
@@ -302,21 +468,65 @@ export const deleteMediaItemById = async (id: string): Promise<void> => {
   const current = await fetchMediaLibrary();
   const target = current.find((m) => m.id === id);
 
-  if (target?.storagePath) {
-    const { error: removeErr } = await client.storage
-      .from(productImagesBucket)
-      .remove([target.storagePath]);
-    if (removeErr) {
-      console.warn("Storage removal warning:", removeErr.message);
+  if (!target) {
+    throw new Error(`Media asset with ID "${id}" was not found.`);
+  }
+
+  // Safety Check: In-Use Protection
+  const [homepage, storefront, settings] = await Promise.all([
+    fetchHomepageContent(),
+    fetchStorefrontContent(),
+    fetchSiteSettings(),
+  ]);
+
+  const usages = getMediaAssetUsages(target, homepage, storefront, settings);
+  if (usages.length > 0) {
+    const locationsSummary = usages.map((u) => u.location).join(", ");
+    throw new Error(
+      `Cannot delete "${target.title}": this asset is actively used on the live website in ${locationsSummary}. Please replace or unlink it before deleting.`
+    );
+  }
+
+  // Safe Storage Deletion: Only remove managed uploads from storage, and only if not shared
+  if (target.storagePath && target.storagePath.startsWith("media/")) {
+    const isShared = current.some((m) => m.id !== id && m.storagePath === target.storagePath);
+    if (!isShared) {
+      const { error: removeErr } = await client.storage
+        .from(productImagesBucket)
+        .remove([target.storagePath]);
+      if (removeErr) {
+        console.warn("Storage removal warning:", removeErr.message);
+      }
     }
   }
 
-  const { error } = await client.from("media_library").delete().eq("id", id);
-  if (error) {
-    throw new Error(
-      `Failed to delete media asset from Supabase (${error.message}, code: ${error.code || "ERR"}).`
-    );
+  // Delete from Supabase media_library table with verification
+  const { data: existingRow } = await client
+    .from("media_library")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingRow) {
+    const { data: deletedRows, error: deleteErr } = await client
+      .from("media_library")
+      .delete()
+      .eq("id", id)
+      .select();
+
+    if (deleteErr) {
+      throw new Error(`Failed to delete media asset from Supabase: ${deleteErr.message}`);
+    }
+
+    if (!deletedRows || deletedRows.length === 0) {
+      throw new Error(
+        "Supabase security policy prevented deleting this media asset. Ensure you are signed in with an active AAL2 administrator session."
+      );
+    }
   }
+
+  // Record deleted ID to prevent resurrection from defaultMediaItems
+  await recordDeletedMediaId(id);
 
   const updatedList = current.filter((m) => m.id !== id);
   writeLocal(CMS_STORAGE_KEY_MEDIA, updatedList);

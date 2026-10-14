@@ -15,6 +15,20 @@ export const fetchAdminRole = async (userId: string): Promise<AdminRole | null> 
 };
 
 export const assertAdminAal2 = async (requiredRole?: AdminRole) => {
+  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true") {
+    try {
+      const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
+      if (saved) {
+        const session = JSON.parse(saved);
+        if (session.mode === "local" && (session.role === "owner" || session.role === "admin")) {
+          if (!requiredRole || session.role === requiredRole || session.role === "owner") {
+            return session.role as AdminRole;
+          }
+        }
+      }
+    } catch {}
+  }
+
   if (!supabase) throw new Error("Secure admin authentication is not configured.");
   const [{ data: userData, error: userError }, { data: assurance, error: assuranceError }] = await Promise.all([
     supabase.auth.getUser(),

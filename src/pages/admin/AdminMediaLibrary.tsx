@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  AlertTriangle,
   Check,
   CheckCircle2,
   Copy,
@@ -12,6 +13,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
   Sparkles,
   Trash2,
   Upload,
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
+import { getMediaAssetUsages } from "../../cms/supabaseCmsRepository";
 import type { MediaItem } from "../../cms/types";
 
 interface AdminMediaLibraryProps {
@@ -27,7 +30,7 @@ interface AdminMediaLibraryProps {
 }
 
 export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibraryProps) {
-  const { media, uploadMedia, updateMedia, deleteMedia } = useCms();
+  const { media, homepage, departments, settings, uploadMedia, updateMedia, deleteMedia } = useCms();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -57,6 +60,8 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
 
   // Delete confirmation modal state
   const [deleteConfirm, setDeleteConfirm] = useState<MediaItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   const categories = [
@@ -85,6 +90,11 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
       return matchesCategory && matchesSearch;
     });
   }, [media, activeCategory, searchQuery]);
+
+  const deleteUsages = useMemo(() => {
+    if (!deleteConfirm) return [];
+    return getMediaAssetUsages(deleteConfirm, homepage, departments, settings);
+  }, [deleteConfirm, homepage, departments, settings]);
 
   const handleFileChange = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -180,21 +190,28 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
   };
 
   const handleCopyUrl = (item: MediaItem) => {
-    navigator.clipboard.writeText(item.url);
+    const fullUrl = item.url.startsWith("http")
+      ? item.url
+      : `${window.location.origin}${item.url.startsWith("/") ? "" : "/"}${item.url}`;
+    navigator.clipboard.writeText(fullUrl);
     setCopiedId(item.id);
     setTimeout(() => setCopiedId(null), 2500);
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
+    setIsDeleting(true);
+    setDeleteError("");
     try {
       await deleteMedia(deleteConfirm.id);
-      setSuccessMessage(`Removed "${deleteConfirm.title}" safely.`);
+      setSuccessMessage(`Successfully deleted "${deleteConfirm.title}" from Supabase.`);
       setDeleteConfirm(null);
       if (selectedAsset?.id === deleteConfirm.id) setSelectedAsset(null);
-      setTimeout(() => setSuccessMessage(""), 3500);
+      setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Failed to delete asset.");
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete media asset from Supabase.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -385,140 +402,166 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
 
       {/* Asset Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {filteredMedia.map((item) => (
-          <div
-            key={item.id}
-            className="group relative rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
-          >
-            {/* Image Preview Container */}
-            <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center p-1">
-              {!imgErrors[item.id] ? (
-                <img
-                  src={item.url}
-                  alt={item.alt || item.title}
-                  loading="lazy"
-                  onError={() => setImgErrors((prev) => ({ ...prev, [item.id]: true }))}
-                  style={{
-                    objectFit:
-                      (item.fit as any) ||
-                      (item.category === "brand" || item.category === "flyer"
-                        ? "contain"
-                        : "cover"),
-                    objectPosition: item.position || "center",
-                  }}
-                  className="w-full h-full max-h-full max-w-full"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
-                  <ImageIcon size={24} className="mb-1 opacity-50" />
-                  <span className="text-[0.65rem] font-semibold text-slate-500 truncate max-w-full">
-                    Preview unavailable
-                  </span>
-                </div>
-              )}
-              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/75 backdrop-blur-sm text-[0.65rem] font-bold text-white uppercase tracking-wider">
-                {item.category}
-              </span>
-
-              {/* Hover Overlay Actions */}
-              <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
-                {isPicker && onSelect ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelect(item)}
-                    className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-white hover:bg-white hover:text-slate-900 text-xs font-bold transition shadow flex items-center gap-1"
-                    title="Select this image"
-                  >
-                    <Check size={14} />
-                    <span>Select</span>
-                  </button>
+        {filteredMedia.map((item) => {
+          const cardUsages = getMediaAssetUsages(item, homepage, departments, settings);
+          const isCardInUse = cardUsages.length > 0;
+          return (
+            <div
+              key={item.id}
+              className="group relative rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
+            >
+              {/* Image Preview Container */}
+              <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden flex items-center justify-center p-1">
+                {!imgErrors[item.id] ? (
+                  <img
+                    src={item.url}
+                    alt={item.alt || item.title}
+                    loading="lazy"
+                    onError={() => setImgErrors((prev) => ({ ...prev, [item.id]: true }))}
+                    style={{
+                      objectFit:
+                        (item.fit as any) ||
+                        (item.category === "brand" || item.category === "flyer"
+                          ? "contain"
+                          : "cover"),
+                      objectPosition: item.position || "center",
+                    }}
+                    className="w-full h-full max-h-full max-w-full"
+                  />
                 ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEdit(item)}
-                      aria-label="Edit or replace asset"
-                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
-                      title="Edit / Replace Image"
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAsset(item)}
-                      aria-label="Inspect asset"
-                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
-                      title="Inspect details"
-                    >
-                      <Eye size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyUrl(item)}
-                      aria-label="Copy public URL"
-                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
-                      title="Copy URL"
-                    >
-                      {copiedId === item.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
-                    </button>
-                  </>
+                  <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                    <ImageIcon size={24} className="mb-1 opacity-50" />
+                    <span className="text-[0.65rem] font-semibold text-slate-500 truncate max-w-full">
+                      Preview unavailable
+                    </span>
+                  </div>
                 )}
-              </div>
-            </div>
+                <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-900/75 backdrop-blur-sm text-[0.65rem] font-bold text-white uppercase tracking-wider">
+                    {item.category}
+                  </span>
+                  {isCardInUse && (
+                    <span
+                      className="px-1.5 py-0.5 rounded-full bg-emerald-600/90 backdrop-blur-sm text-[0.6rem] font-bold text-white flex items-center gap-0.5 shadow-sm"
+                      title={`Active in ${cardUsages.length} website locations`}
+                    >
+                      <ShieldCheck size={10} />
+                      <span>In Use</span>
+                    </span>
+                  )}
+                </div>
 
-            {/* Asset Metadata */}
-            <div className="p-3 border-t border-slate-100 space-y-1">
-              <h4 className="text-xs font-bold text-slate-900 truncate" title={item.title}>
-                {item.title}
-              </h4>
-              <p className="text-[0.68rem] text-slate-400 truncate" title={item.filename}>
-                {item.filename}
-              </p>
-
-              <div className="pt-2 flex items-center justify-between">
-                {isPicker && onSelect ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelect(item)}
-                    className="w-full py-1.5 rounded bg-[#d4af37] hover:bg-slate-900 text-white text-[0.7rem] font-bold transition flex items-center justify-center gap-1"
-                  >
-                    <Check size={12} />
-                    <span>Select for Slot</span>
-                  </button>
-                ) : (
-                  <>
+                {/* Hover Overlay Actions */}
+                <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
+                  {isPicker && onSelect ? (
                     <button
                       type="button"
-                      onClick={() => handleOpenEdit(item)}
-                      className="text-[0.7rem] font-bold text-[#d4af37] hover:text-slate-900 flex items-center gap-1 transition"
+                      onClick={() => onSelect(item)}
+                      className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-white hover:bg-white hover:text-slate-900 text-xs font-bold transition shadow flex items-center gap-1"
+                      title="Select this image"
                     >
-                      <Edit3 size={12} />
-                      <span>Edit / Replace</span>
+                      <Check size={14} />
+                      <span>Select</span>
                     </button>
-                    <div className="flex items-center gap-1.5">
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEdit(item)}
+                        aria-label="Edit or replace asset"
+                        className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
+                        title="Edit / Replace Image"
+                      >
+                        <Edit3 size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedAsset(item)}
+                        aria-label="Inspect asset"
+                        className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
+                        title="Inspect details"
+                      >
+                        <Eye size={15} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleCopyUrl(item)}
-                        className="text-[0.7rem] font-semibold text-slate-400 hover:text-slate-700 transition"
+                        aria-label="Copy public URL"
+                        className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
                         title="Copy URL"
                       >
-                        {copiedId === item.id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                        {copiedId === item.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
                       </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Asset Metadata */}
+              <div className="p-3 border-t border-slate-100 space-y-1">
+                <h4 className="text-xs font-bold text-slate-900 truncate" title={item.title}>
+                  {item.title}
+                </h4>
+                <p className="text-[0.68rem] text-slate-400 truncate" title={item.filename}>
+                  {item.filename}
+                </p>
+
+                <div className="pt-2 flex items-center justify-between">
+                  {isPicker && onSelect ? (
+                    <button
+                      type="button"
+                      onClick={() => onSelect(item)}
+                      className="w-full py-1.5 rounded bg-[#d4af37] hover:bg-slate-900 text-white text-[0.7rem] font-bold transition flex items-center justify-center gap-1"
+                    >
+                      <Check size={12} />
+                      <span>Select for Slot</span>
+                    </button>
+                  ) : (
+                    <>
                       <button
                         type="button"
-                        onClick={() => setDeleteConfirm(item)}
-                        className="text-[0.7rem] font-semibold text-rose-500 hover:text-rose-700 transition"
-                        title="Delete asset"
+                        onClick={() => handleOpenEdit(item)}
+                        className="text-[0.7rem] font-bold text-[#d4af37] hover:text-slate-900 flex items-center gap-1 transition"
                       >
-                        <Trash2 size={13} />
+                        <Edit3 size={12} />
+                        <span>Edit / Replace</span>
                       </button>
-                    </div>
-                  </>
-                )}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyUrl(item)}
+                          className="text-[0.7rem] font-semibold text-slate-400 hover:text-slate-700 transition"
+                          title="Copy URL"
+                        >
+                          {copiedId === item.id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteError("");
+                            setDeleteConfirm(item);
+                          }}
+                          className={`text-[0.7rem] font-semibold transition ${
+                            isCardInUse
+                              ? "text-amber-500 hover:text-amber-700"
+                              : "text-rose-500 hover:text-rose-700"
+                          }`}
+                          title={
+                            isCardInUse
+                              ? `In use on live website (${cardUsages.length} locations) - Click for details`
+                              : "Delete unused asset"
+                          }
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredMedia.length === 0 && (
@@ -835,42 +878,115 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
       {deleteConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={() => setDeleteConfirm(null)}
+          onClick={() => {
+            if (!isDeleting) {
+              setDeleteConfirm(null);
+              setDeleteError("");
+            }
+          }}
         >
           <div
             className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
-                <Trash2 size={20} />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Delete Media Asset?</h3>
-                <p className="text-xs text-slate-500">This action will remove the asset from Supabase Storage.</p>
-              </div>
-            </div>
+            {deleteUsages.length > 0 ? (
+              <>
+                <div className="flex items-center gap-3 text-amber-600">
+                  <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                    <AlertTriangle size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Protected Live Asset — Cannot Delete</h3>
+                    <p className="text-xs text-slate-500">This image is actively used on the live website.</p>
+                  </div>
+                </div>
 
-            <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              Are you sure you want to delete <strong>{deleteConfirm.title}</strong> ({deleteConfirm.filename})? If this image is currently in use on the homepage or storefront, it will no longer display.
-            </p>
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5">
+                  <div className="flex items-center gap-2 text-amber-950 font-bold text-xs">
+                    <span>Active in {deleteUsages.length} live website {deleteUsages.length === 1 ? "location" : "locations"}:</span>
+                  </div>
+                  <ul className="text-xs text-amber-800 space-y-1.5 pl-1 max-h-40 overflow-y-auto">
+                    {deleteUsages.map((usage, idx) => (
+                      <li key={idx} className="flex items-start gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                        <span className="font-semibold">{usage.location}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[0.7rem] text-amber-700 pt-1.5 border-t border-amber-200/60 leading-relaxed">
+                    Deleting this image would break display on the public storefront. To remove this image, first replace or unlink it in the Homepage Content or Storefront sections.
+                  </p>
+                </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(null)}
-                className="admin-btn admin-btn-secondary text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-sm"
-              >
-                Confirm Delete
-              </button>
-            </div>
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteConfirm(null);
+                      setDeleteError("");
+                    }}
+                    className="admin-btn admin-btn-secondary text-xs"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 text-rose-600">
+                  <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                    <Trash2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Delete Media Asset?</h3>
+                    <p className="text-xs text-slate-500">This action will remove the asset from Supabase Storage.</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  Are you sure you want to delete <strong>{deleteConfirm.title}</strong> ({deleteConfirm.filename})? This image is not in use on the website and will be safely removed.
+                </p>
+
+                {deleteError && (
+                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                    <AlertCircle size={15} className="shrink-0" />
+                    <span>{deleteError}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={() => {
+                      setDeleteConfirm(null);
+                      setDeleteError("");
+                    }}
+                    className="admin-btn admin-btn-secondary text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={confirmDelete}
+                    className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <RefreshCw size={13} className="animate-spin" />
+                        <span>Deleting from Supabase...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={13} />
+                        <span>Confirm Delete</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
