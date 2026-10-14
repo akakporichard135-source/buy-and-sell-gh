@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Eye,
   Filter,
+  FolderMinus,
   Image as ImageIcon,
   Maximize2,
   Plus,
@@ -30,7 +31,17 @@ interface AdminMediaLibraryProps {
 }
 
 export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibraryProps) {
-  const { media, homepage, departments, settings, uploadMedia, updateMedia, deleteMedia } = useCms();
+  const {
+    media,
+    homepage,
+    departments,
+    settings,
+    uploadMedia,
+    updateMedia,
+    deleteMedia,
+    removeFromLibrary,
+    deletePermanently,
+  } = useCms();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -61,6 +72,7 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
   // Delete confirmation modal state
   const [deleteConfirm, setDeleteConfirm] = useState<MediaItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingAction, setIsDeletingAction] = useState<"remove" | "delete" | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
@@ -198,20 +210,45 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const confirmDelete = async () => {
+  const handleRemoveFromLibraryClick = async () => {
     if (!deleteConfirm) return;
     setIsDeleting(true);
+    setIsDeletingAction("remove");
     setDeleteError("");
     try {
-      await deleteMedia(deleteConfirm.id);
-      setSuccessMessage(`Successfully deleted "${deleteConfirm.title}" from Supabase.`);
+      await removeFromLibrary(deleteConfirm.id);
+      setSuccessMessage(
+        `Removed "${deleteConfirm.title}" from Media Library. Public website references remain safe.`
+      );
       setDeleteConfirm(null);
       if (selectedAsset?.id === deleteConfirm.id) setSelectedAsset(null);
-      setTimeout(() => setSuccessMessage(""), 4000);
+      setTimeout(() => setSuccessMessage(""), 4500);
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Failed to delete media asset from Supabase.");
+      setDeleteError(err instanceof Error ? err.message : "Failed to remove asset from library.");
     } finally {
       setIsDeleting(false);
+      setIsDeletingAction(null);
+    }
+  };
+
+  const handleDeletePermanentlyClick = async () => {
+    if (!deleteConfirm) return;
+    setIsDeleting(true);
+    setIsDeletingAction("delete");
+    setDeleteError("");
+    try {
+      await deletePermanently(deleteConfirm.id);
+      setSuccessMessage(
+        `Permanently deleted "${deleteConfirm.title}" from Supabase and removed managed storage files.`
+      );
+      setDeleteConfirm(null);
+      if (selectedAsset?.id === deleteConfirm.id) setSelectedAsset(null);
+      setTimeout(() => setSuccessMessage(""), 4500);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Failed to permanently delete media asset.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeletingAction(null);
     }
   };
 
@@ -874,7 +911,7 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Remove Confirmation Modal */}
       {deleteConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -886,107 +923,223 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
           }}
         >
           <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4"
+            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {deleteUsages.length > 0 ? (
-              <>
-                <div className="flex items-center gap-3 text-amber-600">
-                  <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-                    <AlertTriangle size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">Protected Live Asset — Cannot Delete</h3>
-                    <p className="text-xs text-slate-500">This image is actively used on the live website.</p>
-                  </div>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    deleteUsages.length > 0
+                      ? "bg-amber-50 text-amber-600"
+                      : "bg-rose-50 text-rose-600"
+                  }`}
+                >
+                  <Trash2 size={20} />
                 </div>
-
-                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2.5">
-                  <div className="flex items-center gap-2 text-amber-950 font-bold text-xs">
-                    <span>Active in {deleteUsages.length} live website {deleteUsages.length === 1 ? "location" : "locations"}:</span>
-                  </div>
-                  <ul className="text-xs text-amber-800 space-y-1.5 pl-1 max-h-40 overflow-y-auto">
-                    {deleteUsages.map((usage, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
-                        <span className="font-semibold">{usage.location}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="text-[0.7rem] text-amber-700 pt-1.5 border-t border-amber-200/60 leading-relaxed">
-                    Deleting this image would break display on the public storefront. To remove this image, first replace or unlink it in the Homepage Content or Storefront sections.
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    {deleteUsages.length > 0 ? "Manage Active Media Asset" : "Delete Media Asset"}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {deleteUsages.length > 0
+                      ? "This asset is currently active on your website"
+                      : "Choose whether to remove from library or permanently delete"}
                   </p>
                 </div>
+              </div>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteConfirm(null);
+                  setDeleteError("");
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDeleteConfirm(null);
-                      setDeleteError("");
-                    }}
-                    className="admin-btn admin-btn-secondary text-xs"
-                  >
-                    Close
-                  </button>
+            {/* Asset Preview & Metadata (Requirement 2) */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex gap-3 items-center">
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-200 shrink-0 border border-slate-200 relative">
+                <img
+                  src={deleteConfirm.url}
+                  alt={deleteConfirm.alt || deleteConfirm.title}
+                  style={{
+                    objectFit:
+                      (deleteConfirm.fit as any) ||
+                      (deleteConfirm.category === "brand" || deleteConfirm.category === "flyer"
+                        ? "contain"
+                        : "cover"),
+                    objectPosition: deleteConfirm.position || "center",
+                  }}
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[0.62rem] font-bold uppercase tracking-wider">
+                    {deleteConfirm.category}
+                  </span>
+                  {deleteUsages.length > 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[0.62rem] font-bold flex items-center gap-1">
+                      <ShieldCheck size={11} />
+                      <span>In Active Use ({deleteUsages.length})</span>
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[0.62rem] font-bold flex items-center gap-1">
+                      <Check size={11} />
+                      <span>Unused / No References</span>
+                    </span>
+                  )}
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 text-rose-600">
-                  <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
-                    <Trash2 size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-sm">Delete Media Asset?</h3>
-                    <p className="text-xs text-slate-500">This action will remove the asset from Supabase Storage.</p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  Are you sure you want to delete <strong>{deleteConfirm.title}</strong> ({deleteConfirm.filename})? This image is not in use on the website and will be safely removed.
+                <h4 className="text-xs font-bold text-slate-900 truncate" title={deleteConfirm.title}>
+                  {deleteConfirm.title}
+                </h4>
+                <p className="text-[0.68rem] text-slate-400 truncate" title={deleteConfirm.filename}>
+                  {deleteConfirm.filename}
                 </p>
+              </div>
+            </div>
 
-                {deleteError && (
-                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                    <AlertCircle size={15} className="shrink-0" />
-                    <span>{deleteError}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    onClick={() => {
-                      setDeleteConfirm(null);
-                      setDeleteError("");
-                    }}
-                    className="admin-btn admin-btn-secondary text-xs"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    onClick={confirmDelete}
-                    className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <RefreshCw size={13} className="animate-spin" />
-                        <span>Deleting from Supabase...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 size={13} />
-                        <span>Confirm Delete</span>
-                      </>
-                    )}
-                  </button>
+            {/* In-Use Usage Warning Details (Requirement 3) */}
+            {deleteUsages.length > 0 && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
+                  <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                  <span>Referenced in {deleteUsages.length} live website {deleteUsages.length === 1 ? "location" : "locations"}:</span>
                 </div>
-              </>
+                <ul className="text-xs text-amber-900 space-y-1.5 pl-1 max-h-36 overflow-y-auto">
+                  {deleteUsages.map((usage, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                      <span className="font-semibold">{usage.location}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[0.7rem] text-amber-800 pt-1 border-t border-amber-200/60 leading-relaxed">
+                  <strong>Permanent deletion is disabled</strong> while this image is in use so your customer storefront never displays broken images. You can safely <strong>Remove from Library</strong> below, or replace/unlink this image first in the CMS.
+                </p>
+              </div>
             )}
+
+            {/* Error Message if any */}
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            {/* Action Options (Requirements 4, 5, 6) */}
+            <div className="space-y-3 pt-2">
+              {/* Option 1: Remove from Library */}
+              <div className="p-3 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-slate-900 block flex items-center gap-1.5">
+                    <FolderMinus size={14} className="text-slate-600" />
+                    <span>Remove from Library</span>
+                    <span className="text-[0.65rem] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-medium">Safe</span>
+                  </span>
+                  <p className="text-[0.7rem] text-slate-500 leading-normal">
+                    Hides this asset from the Media Library view. Does <strong>not</strong> delete the file or break any public website images.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleRemoveFromLibraryClick}
+                  className="px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+                >
+                  {isDeletingAction === "remove" ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Removing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FolderMinus size={14} />
+                      <span>Remove from Library</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Option 2: Delete Permanently */}
+              <div
+                className={`p-3 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  deleteUsages.length > 0
+                    ? "border-slate-200 bg-slate-50/70 opacity-70"
+                    : "border-rose-200 bg-rose-50/40 hover:border-rose-300"
+                }`}
+              >
+                <div className="space-y-0.5">
+                  <span className="text-xs font-bold text-slate-900 block flex items-center gap-1.5">
+                    <Trash2 size={14} className={deleteUsages.length > 0 ? "text-slate-400" : "text-rose-600"} />
+                    <span>Delete Permanently</span>
+                    {deleteUsages.length > 0 ? (
+                      <span className="text-[0.65rem] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 font-bold">
+                        Blocked (In Use)
+                      </span>
+                    ) : (
+                      <span className="text-[0.65rem] px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold">
+                        Destructive
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-[0.7rem] text-slate-500 leading-normal">
+                    {deleteUsages.length > 0
+                      ? "Cannot delete permanently while referenced in live website sections. Unlink or replace it first."
+                      : "Permanently deletes this record from Supabase and removes managed storage files."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isDeleting || deleteUsages.length > 0}
+                  onClick={handleDeletePermanentlyClick}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shrink-0 ${
+                    deleteUsages.length > 0
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
+                  } disabled:opacity-50`}
+                  title={
+                    deleteUsages.length > 0
+                      ? "Permanent deletion blocked: Unlink from website first, or choose 'Remove from Library'."
+                      : "Permanently delete this unused asset"
+                  }
+                >
+                  {isDeletingAction === "delete" ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={14} />
+                      <span>Delete Permanently</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteConfirm(null);
+                  setDeleteError("");
+                }}
+                className="admin-btn admin-btn-secondary text-xs"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

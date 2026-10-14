@@ -462,7 +462,51 @@ export const saveMediaItem = async (item: MediaItem): Promise<MediaItem> => {
   return item;
 };
 
-export const deleteMediaItemById = async (id: string): Promise<void> => {
+export const removeMediaItemFromLibrary = async (id: string): Promise<void> => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const current = await fetchMediaLibrary();
+  const target = current.find((m) => m.id === id);
+
+  if (!target) {
+    throw new Error(`Media asset with ID "${id}" was not found.`);
+  }
+
+  // Remove metadata row from Supabase media_library table (verified)
+  const { data: existingRow } = await client
+    .from("media_library")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingRow) {
+    const { data: deletedRows, error: deleteErr } = await client
+      .from("media_library")
+      .delete()
+      .eq("id", id)
+      .select();
+
+    if (deleteErr) {
+      throw new Error(`Failed to remove media asset from Supabase: ${deleteErr.message}`);
+    }
+
+    if (!deletedRows || deletedRows.length === 0) {
+      throw new Error(
+        "Supabase security policy prevented removing this media asset. Ensure you are signed in with an active AAL2 administrator session."
+      );
+    }
+  }
+
+  // Record deleted ID to prevent resurrection from defaultMediaItems or database sync
+  await recordDeletedMediaId(id);
+
+  // Update local cache and notify listeners without touching storage files or public references
+  const updatedList = current.filter((m) => m.id !== id);
+  writeLocal(CMS_STORAGE_KEY_MEDIA, updatedList);
+  notifyListeners();
+};
+
+export const deleteMediaItemPermanently = async (id: string): Promise<void> => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const current = await fetchMediaLibrary();
@@ -483,7 +527,7 @@ export const deleteMediaItemById = async (id: string): Promise<void> => {
   if (usages.length > 0) {
     const locationsSummary = usages.map((u) => u.location).join(", ");
     throw new Error(
-      `Cannot delete "${target.title}": this asset is actively used on the live website in ${locationsSummary}. Please replace or unlink it before deleting.`
+      `Cannot delete "${target.title}" permanently: this asset is actively used on the live website in ${locationsSummary}. To delete permanently, replace or unlink it first, or use "Remove from Library" to safely hide it from this view.`
     );
   }
 
@@ -532,6 +576,8 @@ export const deleteMediaItemById = async (id: string): Promise<void> => {
   writeLocal(CMS_STORAGE_KEY_MEDIA, updatedList);
   notifyListeners();
 };
+
+export const deleteMediaItemById = deleteMediaItemPermanently;
 
 const imageExtensions: Record<string, string> = {
   "image/jpeg": "jpg",

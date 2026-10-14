@@ -9,12 +9,14 @@ import {
 } from "./defaultCmsData";
 import {
   deleteMediaItemById,
+  deleteMediaItemPermanently,
   fetchFaqs,
   fetchHomepageContent,
   fetchMediaLibrary,
   fetchPageContent,
   fetchSiteSettings,
   fetchStorefrontContent,
+  removeMediaItemFromLibrary,
   saveFaqs,
   saveHomepageContent,
   savePageContent,
@@ -61,6 +63,8 @@ interface CmsContextValue {
     replacementFile?: File
   ) => Promise<MediaItem>;
   deleteMedia: (id: string) => Promise<void>;
+  removeFromLibrary: (id: string) => Promise<void>;
+  deletePermanently: (id: string) => Promise<void>;
   updateFaqs: (faqs: FaqItem[]) => Promise<FaqItem[]>;
   updatePage: <K extends keyof PageContentRegistry>(
     key: K,
@@ -161,8 +165,18 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     return updated;
   };
 
+  const handleRemoveFromLibrary = async (id: string) => {
+    await removeMediaItemFromLibrary(id);
+    setMedia((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const handleDeletePermanently = async (id: string) => {
+    await deleteMediaItemPermanently(id);
+    setMedia((prev) => prev.filter((m) => m.id !== id));
+  };
+
   const handleDeleteMedia = async (id: string) => {
-    await deleteMediaItemById(id);
+    await deleteMediaItemPermanently(id);
     setMedia((prev) => prev.filter((m) => m.id !== id));
   };
 
@@ -205,6 +219,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,
+        removeFromLibrary: handleRemoveFromLibrary,
+        deletePermanently: handleDeletePermanently,
         updateFaqs: handleUpdateFaqs,
         updatePage: handleUpdatePage,
         updateStorefront: handleUpdateStorefront,

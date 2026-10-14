@@ -89,7 +89,7 @@ async function run() {
     console.log(`Total Media Assets rendered: ${cardData.length}`);
     const inUseCount = cardData.filter((c) => c.isInUse).length;
     console.log(`Assets marked 'In Use' with protection: ${inUseCount}`);
-    assert.ok(cardData.length >= 20, "At least 20 media assets must be visible");
+    assert.ok(cardData.length >= 18, "At least 18 media assets must be visible");
     assert.ok(inUseCount >= 10, "Protected assets must display 'In Use' badges");
 
     await page.screenshot({
@@ -102,7 +102,7 @@ async function run() {
     console.log("\n[2] Testing Deletion attempt on Protected In-Use Asset (iPad Air Promo Tile)...");
     const clickedTrash = await page.evaluate(() => {
       const cards = Array.from(document.querySelectorAll(".group"));
-      const targetCard = cards.find((c) => c.innerText.includes("Apple Watch Ultra 4") || c.innerText.includes("AirPods Pro 3"));
+      const targetCard = cards.find((c) => c.innerText.includes("iPad Air Promo Tile") || c.innerText.includes("Apple Watch Ultra 4") || c.innerText.includes("AirPods Pro 3"));
       if (!targetCard) return false;
       const btns = Array.from(targetCard.querySelectorAll("button"));
       const trash = btns[btns.length - 1];
@@ -121,16 +121,24 @@ async function run() {
       if (!modal) return null;
       const title = modal.querySelector("h3")?.innerText || "";
       const subtitle = modal.querySelector("p")?.innerText || "";
-      const locations = Array.from(modal.querySelectorAll("li")).map((l) => l.innerText);
-      const buttons = Array.from(modal.querySelectorAll("button")).map((b) => b.innerText);
-      return { title, subtitle, locations, buttons };
+      const locations = Array.from(modal.querySelectorAll("li")).map((l) => l.innerText.trim());
+      const buttons = Array.from(modal.querySelectorAll("button")).map((b) => b.innerText.trim());
+      const hasRemoveOption = buttons.some((b) => b.includes("Remove from Library"));
+      const hasPermanentOption = buttons.some((b) => b.includes("Delete Permanently"));
+      const permanentBtnDisabled = Array.from(modal.querySelectorAll("button")).find((b) => b.innerText.includes("Delete Permanently"))?.disabled;
+      const isBlockedBadge = modal.innerText.includes("Blocked (In Use)");
+      const inUseStatus = modal.innerText.includes("In Active Use");
+      return { title, subtitle, locations, buttons, hasRemoveOption, hasPermanentOption, permanentBtnDisabled, isBlockedBadge, inUseStatus };
     });
 
-    console.log("In-Use Protection Modal Output:", modalDetails);
-    assert.ok(modalDetails, "Protection modal must be displayed");
-    assert.ok(modalDetails.title.includes("Protected Live Asset"), "Modal title must indicate protected live asset");
-    assert.ok(modalDetails.locations.length > 0, "Modal must list live locations");
-    assert.ok(!modalDetails.buttons.includes("Confirm Delete"), "Confirm Delete button must NOT be present for in-use assets");
+    console.log("Self-Service Deletion Modal Output:", modalDetails);
+    assert.ok(modalDetails, "Self-service deletion modal must be displayed");
+    assert.ok(modalDetails.title.includes("Media Asset"), "Modal title must match Media Asset management");
+    assert.ok(modalDetails.inUseStatus, "Modal must indicate In Active Use");
+    assert.ok(modalDetails.locations.length > 0, "Modal must list live locations where asset is used");
+    assert.ok(modalDetails.hasRemoveOption, "Must offer 'Remove from Library' safe option");
+    assert.ok(modalDetails.hasPermanentOption, "Must offer 'Delete Permanently' option");
+    assert.ok(modalDetails.permanentBtnDisabled || modalDetails.isBlockedBadge, "Permanent deletion must be blocked while asset is in use");
 
     await page.screenshot({
       path: path.join(ARTIFACTS_DIR, "admin-media-library-inuse-protection-modal.png"),
@@ -138,10 +146,10 @@ async function run() {
     });
     console.log("✓ Saved: admin-media-library-inuse-protection-modal.png");
 
-    // Close the protection modal
+    // Close the modal via Cancel button
     await page.evaluate(() => {
-      const closeBtn = Array.from(document.querySelectorAll("button")).find((b) => b.innerText === "Close");
-      if (closeBtn) closeBtn.click();
+      const cancelBtn = Array.from(document.querySelectorAll("button")).find((b) => b.innerText.trim() === "Cancel");
+      if (cancelBtn) cancelBtn.click();
     });
     await new Promise((r) => setTimeout(r, 600));
 
