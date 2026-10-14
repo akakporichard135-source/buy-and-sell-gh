@@ -72,7 +72,9 @@ async function main() {
   const brandAssets = [
     '/brand/buy-sell-gh-logo-scene.webp',
     '/brand/buy-sell-gh-logo-owner.jpeg',
-    '/brand/shop-rollup-banner.webp'
+    '/brand/shop-rollup-banner.webp',
+    '/products/homepage/homepage-ipad-air-white.webp',
+    '/products/homepage/homepage-visa-card-white.webp'
   ];
 
   for (const asset of brandAssets) {

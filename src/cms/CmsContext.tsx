@@ -154,6 +154,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   ) => {
     const updated = await updateMediaAsset(id, updates, replacementFile);
     setMedia((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    const freshHomepage = await fetchHomepageContent();
+    setHomepage(freshHomepage);
+    const freshDepts = await fetchStorefrontContent();
+    setDepartments(freshDepts);
     return updated;
   };
 

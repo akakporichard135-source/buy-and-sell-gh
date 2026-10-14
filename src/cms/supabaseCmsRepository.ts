@@ -486,6 +486,10 @@ export const updateMediaAsset = async (
   writeLocal(CMS_STORAGE_KEY_MEDIA, updatedList);
   notifyListeners();
 
+  if (finalUrl !== existing.url) {
+    await cascadeMediaUrlUpdate(existing, updatedItem, updates);
+  }
+
   return updatedItem;
 };
 
@@ -626,3 +630,118 @@ export const saveStorefrontContent = async (
   notifyListeners();
   return departments;
 };
+
+// Cascades replaced media URLs to homepage content and storefront departments
+async function cascadeMediaUrlUpdate(
+  oldItem: MediaItem,
+  newItem: MediaItem,
+  updates: { alt?: string }
+): Promise<void> {
+  if (newItem.url === oldItem.url) return;
+
+  try {
+    // 1. Homepage content cascade (heroes, tiles, service flyers)
+    const currentHomepage = await fetchHomepageContent();
+    let homepageChanged = false;
+
+    const updatedHeroes = currentHomepage.heroes.map((hero) => {
+      let heroUpdated = false;
+      let newImage = hero.image;
+      let newMobile = hero.mobileImage;
+
+      if (
+        hero.image === oldItem.url ||
+        (oldItem.id.startsWith("media-hero-") && hero.id === oldItem.id.replace("media-hero-", ""))
+      ) {
+        newImage = newItem.url;
+        heroUpdated = true;
+      }
+      if (hero.mobileImage && hero.mobileImage === oldItem.url) {
+        newMobile = newItem.url;
+        heroUpdated = true;
+      }
+      if (heroUpdated) {
+        homepageChanged = true;
+        return {
+          ...hero,
+          image: newImage,
+          mobileImage: newMobile,
+          alt: updates.alt !== undefined ? updates.alt.trim() : hero.alt,
+        };
+      }
+      return hero;
+    });
+
+    const updatedTiles = currentHomepage.tiles.map((tile) => {
+      if (
+        tile.image === oldItem.url ||
+        (oldItem.id === "media-tile-ipad-air" && tile.id === "ipad-air") ||
+        (oldItem.id === "media-product-ipad-air-white" && tile.id === "ipad-air") ||
+        (oldItem.id.startsWith("media-tile-") && tile.id === oldItem.id.replace("media-tile-", ""))
+      ) {
+        homepageChanged = true;
+        return {
+          ...tile,
+          image: newItem.url,
+          alt: updates.alt !== undefined ? updates.alt.trim() : tile.alt,
+        };
+      }
+      return tile;
+    });
+
+    const updatedFlyers = (currentHomepage.serviceFlyers || []).map((flyer) => {
+      if (
+        flyer.image === oldItem.url ||
+        (oldItem.id.startsWith("media-flyer-") && flyer.id === oldItem.id.replace("media-flyer-", ""))
+      ) {
+        homepageChanged = true;
+        return {
+          ...flyer,
+          image: newItem.url,
+          alt: updates.alt !== undefined ? updates.alt.trim() : flyer.alt,
+        };
+      }
+      return flyer;
+    });
+
+    if (homepageChanged) {
+      await saveHomepageContent({
+        ...currentHomepage,
+        heroes: updatedHeroes,
+        tiles: updatedTiles,
+        serviceFlyers: updatedFlyers,
+      });
+    }
+
+    // 2. Storefront content cascade (department featured cards)
+    const currentStorefront = await fetchStorefrontContent();
+    let storefrontChanged = false;
+    const updatedStorefront: Record<string, CategoryDepartmentConfig> = {};
+
+    for (const [deptKey, dept] of Object.entries(currentStorefront)) {
+      const updatedCards = dept.featuredCards.map((card) => {
+        if (
+          card.image === oldItem.url ||
+          (oldItem.id === "media-tile-ipad-air" && card.id.includes("ipad-air")) ||
+          (oldItem.id === "media-product-ipad-air-colors" && (card.image.includes("ipad-air-colors") || card.id.includes("ipad-air")))
+        ) {
+          storefrontChanged = true;
+          return {
+            ...card,
+            image: newItem.url,
+            alt: updates.alt !== undefined ? updates.alt.trim() : card.alt,
+          };
+        }
+        return card;
+      });
+      updatedStorefront[deptKey] = { ...dept, featuredCards: updatedCards };
+    }
+
+    if (storefrontChanged) {
+      await saveStorefrontContent(updatedStorefront);
+    }
+  } catch (cascadeErr) {
+    console.warn("Cascade URL update to content failed:", cascadeErr);
+  }
+}
+
