@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { useCms } from "../cms/CmsContext";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { ServiceBookingPage, ServicePhotoField } from "../components/ServiceBookingPage";
@@ -7,26 +8,39 @@ import { SuccessForm } from "../components/SuccessForm";
 export function SellTradePage() {
   const [searchParams] = useSearchParams();
   const isUpgradeMode = searchParams.get("mode") === "upgrade";
-  const title = isUpgradeMode ? "Upgrade Your Device" : "Sell Your Device";
+  const { pages } = useCms();
+  const tradeIn = pages?.tradeIn;
+
+  const title = isUpgradeMode
+    ? tradeIn?.upgradeTitle || "Upgrade Your Device"
+    : tradeIn?.title || "Sell Your Device";
+
+  const description = isUpgradeMode
+    ? tradeIn?.upgradeDescription || "Tell us what you're currently using and what you'd like to upgrade to."
+    : tradeIn?.description || "Share your device details and request an assessment from our team.";
+
+  const guidance = isUpgradeMode
+    ? tradeIn?.upgradeGuidance ||
+      "Your trade-in value is subject to a physical inspection and assessment. Photos and device details help us prepare, but they are not an automatic valuation."
+    : tradeIn?.guidance ||
+      "The final offer depends on the device's condition and a physical inspection. Details and photos help our team prepare an assessment; they do not guarantee a price.";
+
+  const assistance =
+    tradeIn?.assistance ||
+    "Want to discuss your device before preparing the form? Send its details and photos directly to our team.";
 
   return (
     <>
       <SEO
         title={title}
-        description={isUpgradeMode
-          ? "Tell Buy & Sell GH what you use now and what you would like to upgrade to."
-          : "Share your device details and request an assessment from Buy & Sell GH."}
+        description={description}
       />
       <ServiceBookingPage
         category={isUpgradeMode ? "Upgrade & Save" : "Sell Your Device"}
         title={title}
-        description={isUpgradeMode
-          ? "Tell us what you're currently using and what you'd like to upgrade to."
-          : "Share your device details and request an assessment from our team."}
-        guidance={isUpgradeMode
-          ? "Your trade-in value is subject to a physical inspection and assessment. Photos and device details help us prepare, but they are not an automatic valuation."
-          : "The final offer depends on the device's condition and a physical inspection. Details and photos help our team prepare an assessment; they do not guarantee a price."}
-        assistance="Want to discuss your device before preparing the form? Send its details and photos directly to our team."
+        description={description}
+        guidance={guidance}
+        assistance={assistance}
         intent="trade"
       >
         <SuccessForm buttonLabel={isUpgradeMode ? "Request Upgrade Assessment" : "Request Device Valuation"} successIntent="trade">

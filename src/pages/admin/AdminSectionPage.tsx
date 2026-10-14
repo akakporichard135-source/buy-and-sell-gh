@@ -1,16 +1,26 @@
 import { AdminAccountPage } from "./AdminAccountPage";
+import { AdminHomepageManager } from "./AdminHomepageManager";
 import { AdminInquiriesPage } from "./AdminInquiriesPage";
+import { AdminMediaLibrary } from "./AdminMediaLibrary";
 import { AdminOrdersPage } from "./AdminOrdersPage";
+import { AdminPagesManager } from "./AdminPagesManager";
 import { AdminPricingManager } from "./AdminPricingManager";
 import { AdminProductManager } from "./AdminProductManager";
 import { AdminPromotionsPage } from "./AdminPromotionsPage";
 import { AdminReviewsPage } from "./AdminReviewsPage";
+import { AdminServicesManager } from "./AdminServicesManager";
 import { AdminSettingsPage } from "./AdminSettingsPage";
+import { AdminStorefrontManager } from "./AdminStorefrontManager";
 
 export type AdminSection =
   | "products"
   | "pricing"
   | "orders"
+  | "media"
+  | "homepage"
+  | "storefront"
+  | "services"
+  | "pages"
   | "trade-ins"
   | "device-requests"
   | "contact-messages"
@@ -27,6 +37,16 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
       return <AdminPricingManager />;
     case "orders":
       return <AdminOrdersPage />;
+    case "media":
+      return <AdminMediaLibrary />;
+    case "homepage":
+      return <AdminHomepageManager />;
+    case "storefront":
+      return <AdminStorefrontManager />;
+    case "services":
+      return <AdminServicesManager />;
+    case "pages":
+      return <AdminPagesManager />;
     case "trade-ins":
       return <AdminInquiriesPage mode="trade-ins" />;
     case "device-requests":
@@ -45,3 +65,4 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
       return <AdminProductManager />;
   }
 }
+

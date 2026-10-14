@@ -117,8 +117,35 @@ const productSelect = "*";
 
 export const isProductDatabaseConfigured = () => Boolean(supabase);
 
-export const rowToProduct = (row: ProductRow): Product =>
-  normalizeProduct({
+export const rowToProduct = (row: ProductRow): Product => {
+  let variants =
+    row.product_variants && row.product_variants.length > 0
+      ? row.product_variants.map(rowToVariant)
+      : undefined;
+
+  // Harmonization guard: if row.price > 0 and variants exist,
+  // ensure the base variant's price matches row.price if row.price !== baseVariant.price
+  if (variants && variants.length > 0 && row.price > 0) {
+    const sorted = [...variants].sort((a, b) => a.position - b.position);
+    const baseVar = sorted[0];
+    if (baseVar && baseVar.price !== row.price) {
+      variants = variants.map((v) =>
+        v.id === baseVar.id
+          ? {
+              ...v,
+              price: row.price,
+              previousPrice: row.previous_price ?? v.previousPrice,
+              isSale: Boolean(
+                (row.previous_price ?? v.previousPrice) &&
+                  (row.previous_price ?? v.previousPrice)! > row.price
+              ),
+            }
+          : v
+      );
+    }
+  }
+
+  return normalizeProduct({
     id: row.id,
     slug: row.slug,
     name: row.name,
@@ -164,8 +191,9 @@ export const rowToProduct = (row: ProductRow): Product =>
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archived: row.archived,
-    variants: row.product_variants && row.product_variants.length > 0 ? row.product_variants.map(rowToVariant) : undefined,
+    variants,
   });
+};
 
 export const productToRow = (product: Product): Partial<ProductRow> => {
   const normalized = normalizeProduct(product);
@@ -251,8 +279,9 @@ export const updateVariantPriceAndStock = async (
 ) => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
+  const now = new Date().toISOString();
   const updateData: Partial<VariantRow> = {
-    updated_at: new Date().toISOString(),
+    updated_at: now,
   };
   if (fields.price !== undefined) updateData.price = fields.price;
   if (fields.previousPrice !== undefined) updateData.previous_price = fields.previousPrice;
@@ -268,22 +297,156 @@ export const updateVariantPriceAndStock = async (
     .select("*")
     .single();
   if (error) throw error;
-  return rowToVariant(data as VariantRow);
+
+  const variantRow = data as VariantRow;
+
+  // Bidirectional sync: if variant price changed, recompute minimum variant price and update base product
+  if (fields.price !== undefined && variantRow.product_id) {
+    const { data: allVars } = await client
+      .from("product_variants")
+      .select("price, previous_price, available")
+      .eq("product_id", variantRow.product_id);
+
+    if (allVars && allVars.length > 0) {
+      const activeVars = allVars.filter((v) => v.available !== false && v.price > 0);
+      if (activeVars.length > 0) {
+        const minPrice = Math.min(...activeVars.map((v) => v.price));
+        const lowestVar = activeVars.find((v) => v.price === minPrice);
+        await client
+          .from("products")
+          .update({
+            price: minPrice,
+            previous_price: lowestVar?.previous_price ?? null,
+            updated_at: now,
+          })
+          .eq("id", variantRow.product_id);
+      }
+    }
+  }
+
+  return rowToVariant(variantRow);
 };
 
 export const upsertProduct = async (product: Product) => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const row = productToRow(product);
-  const { data, error } = await client.from("products").upsert(row, { onConflict: "id" }).select(productSelect).single();
+  const now = new Date().toISOString();
+
+  const { data, error } = await client
+    .from("products")
+    .upsert(row, { onConflict: "id" })
+    .select(productSelectWithVariants)
+    .single();
   if (error) throw error;
-  return rowToProduct(data as ProductRow);
+
+  // Bidirectional sync: If product base price is set, ensure the base variant in product_variants is synchronized!
+  if (product.price > 0) {
+    const { data: variants } = await client
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", product.id)
+      .order("position", { ascending: true });
+
+    if (variants && variants.length > 0) {
+      const baseVariant = variants[0];
+      if (
+        baseVariant &&
+        (baseVariant.price !== product.price ||
+          baseVariant.previous_price !== (product.previousPrice ?? null))
+      ) {
+        await client
+          .from("product_variants")
+          .update({
+            price: product.price,
+            previous_price: product.previousPrice ?? null,
+            is_sale: Boolean(product.previousPrice && product.previousPrice > product.price),
+            updated_at: now,
+          })
+          .eq("id", baseVariant.id);
+      }
+    }
+  }
+
+  // Refetch with variants to return the updated record
+  const { data: refreshed } = await client
+    .from("products")
+    .select(productSelectWithVariants)
+    .eq("id", product.id)
+    .single();
+
+  return rowToProduct((refreshed || data) as ProductRow);
+};
+
+export const updateProductBasePrice = async (
+  productId: string,
+  price: number,
+  previousPrice?: number | null
+) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const now = new Date().toISOString();
+
+  // 1. Update product row
+  const { data: prodData, error: prodError } = await client
+    .from("products")
+    .update({
+      price,
+      previous_price: previousPrice ?? null,
+      price_on_request: price <= 0,
+      updated_at: now,
+    })
+    .eq("id", productId)
+    .select(productSelectWithVariants)
+    .single();
+  if (prodError) throw prodError;
+
+  // 2. Synchronize base variant in product_variants table
+  if (price > 0) {
+    const { data: variants, error: varError } = await client
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", productId)
+      .order("position", { ascending: true });
+
+    if (!varError && variants && variants.length > 0) {
+      const baseVariant = variants[0];
+      if (
+        baseVariant &&
+        (baseVariant.price !== price || baseVariant.previous_price !== (previousPrice ?? null))
+      ) {
+        await client
+          .from("product_variants")
+          .update({
+            price,
+            previous_price: previousPrice ?? null,
+            is_sale: Boolean(previousPrice && previousPrice > price),
+            updated_at: now,
+          })
+          .eq("id", baseVariant.id);
+      }
+    }
+  }
+
+  // Refetch with variants to return refreshed product
+  const { data: refreshed } = await client
+    .from("products")
+    .select(productSelectWithVariants)
+    .eq("id", productId)
+    .single();
+
+  return rowToProduct((refreshed || prodData) as ProductRow);
 };
 
 export const updateProductFields = async (productId: string, fields: Partial<ProductRow>) => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
-  const { data, error } = await client.from("products").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", productId).select(productSelect).single();
+  const { data, error } = await client
+    .from("products")
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq("id", productId)
+    .select(productSelectWithVariants)
+    .single();
   if (error) throw error;
   return rowToProduct(data as ProductRow);
 };

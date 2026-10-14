@@ -1,5 +1,6 @@
 import { Instagram, MapPin, MessageCircle, Phone, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCms } from "../cms/CmsContext";
 import { business } from "../config/business";
 
 const footerColumns = [
@@ -26,6 +27,14 @@ const footerColumns = [
 ];
 
 export function Footer() {
+  const { settings } = useCms();
+
+  const primaryPhone = settings?.phones?.[0] || business.phones[0];
+  const primaryWhatsApp = settings?.whatsapp?.primary || business.whatsapp.primary;
+  const storeLocation = settings?.location || business.location;
+  const instagram = settings?.social?.instagram || business.social.instagram;
+  const username = settings?.username || business.username;
+
   return (
     <footer className="store-footer">
       <div className="store-footer-brand">
@@ -49,10 +58,10 @@ export function Footer() {
         ))}
       </div>
       <div className="store-footer-contact">
-        <a href={`tel:${business.whatsapp.primary}`}><Phone size={15} /> {business.phones[0]}</a>
-        <a href={`https://wa.me/${business.whatsapp.primary}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
-        <span><MapPin size={15} /> {business.location}</span>
-        <a href={business.social.instagram} target="_blank" rel="noopener noreferrer"><Instagram size={15} /> {business.username}</a>
+        <a href={`tel:${primaryWhatsApp}`}><Phone size={15} /> {primaryPhone}</a>
+        <a href={`https://wa.me/${primaryWhatsApp}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
+        <span><MapPin size={15} /> {storeLocation}</span>
+        <a href={instagram} target="_blank" rel="noopener noreferrer"><Instagram size={15} /> {username}</a>
       </div>
       <div className="store-footer-legal">
         <p>Copyright 2026 Buy & Sell GH. All rights reserved.</p>
@@ -61,3 +70,4 @@ export function Footer() {
     </footer>
   );
 }
+

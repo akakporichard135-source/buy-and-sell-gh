@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useCms } from "../cms/CmsContext";
 import { SEO } from "../components/SEO";
 import ipadAirArt from "../assets/homepage/homepage-ipad-air-white.webp";
 import visaCardArt from "../assets/homepage/homepage-visa-card-white.webp";
@@ -130,6 +131,30 @@ const serviceFlyers = [
 ];
 
 export function HomePage() {
+  const { homepage } = useCms();
+
+  const activeHeroes: Campaign[] =
+    homepage?.heroes?.filter((h) => h.enabled) && homepage.heroes.filter((h) => h.enabled).length > 0
+      ? (homepage.heroes.filter((h) => h.enabled) as Campaign[])
+      : heroes;
+
+  const activeTiles: Campaign[] =
+    homepage?.tiles?.filter((t) => t.enabled) && homepage.tiles.filter((t) => t.enabled).length > 0
+      ? (homepage.tiles.filter((t) => t.enabled) as Campaign[])
+      : tileRows.flat();
+
+  const tileGridRows: Campaign[][] = [];
+  for (let i = 0; i < activeTiles.length; i += 2) {
+    tileGridRows.push(activeTiles.slice(i, i + 2));
+  }
+
+  const activeFlyers =
+    homepage?.serviceFlyers?.filter((f) => f.enabled) && homepage.serviceFlyers.filter((f) => f.enabled).length > 0
+      ? homepage.serviceFlyers.filter((f) => f.enabled)
+      : serviceFlyers;
+
+  const announcement = homepage?.announcement;
+
   return (
     <>
       <SEO
@@ -137,14 +162,40 @@ export function HomePage() {
         description="Shop original devices and get trusted trade-in, repair, installment and customer support from Buy & Sell GH in Accra."
       />
       <main className="storefront-home home-reference">
-        <div className="home-ref-announcement">
-          Trade in your current device toward your next one. <Link to="/sell-or-trade?mode=upgrade">Explore trade-in <span aria-hidden="true">›</span></Link>
-        </div>
-        {heroes.map((campaign, index) => <ProductHero campaign={campaign} key={campaign.id} priority={index === 0} />)}
+        {announcement?.enabled !== false && (
+          <div className="home-ref-announcement">
+            {announcement?.text || "Trade in your current device toward your next one."}{" "}
+            <Link to={announcement?.linkTo || "/sell-or-trade?mode=upgrade"}>
+              {announcement?.linkText || "Explore trade-in"}{" "}
+              <span aria-hidden="true">›</span>
+            </Link>
+          </div>
+        )}
+        {heroes.map((fallbackCampaign, index) => {
+          if (index >= activeHeroes.length) return null;
+          const campaign = activeHeroes[index] || fallbackCampaign;
+          return <ProductHero campaign={campaign} key={campaign.id} priority={index === 0} />;
+        })}
+        {activeHeroes.slice(heroes.length).map((campaign) => (
+          <ProductHero campaign={campaign} key={campaign.id} priority={false} />
+        ))}
         <div className="home-ref-grid">
-          {tileRows.map((row) => (
+          {tileRows.map((fallbackRow, rowIndex) => {
+            if (rowIndex >= tileGridRows.length) return null;
+            const row = tileGridRows[rowIndex] || fallbackRow;
+            return (
+              <div className="home-ref-row" key={row[0].id}>
+                {row.map((campaign) => (
+                  <ProductTile campaign={campaign} key={campaign.id} />
+                ))}
+              </div>
+            );
+          })}
+          {tileGridRows.slice(tileRows.length).map((row) => (
             <div className="home-ref-row" key={row[0].id}>
-              {row.map((campaign) => <ProductTile campaign={campaign} key={campaign.id} />)}
+              {row.map((campaign) => (
+                <ProductTile campaign={campaign} key={campaign.id} />
+              ))}
             </div>
           ))}
         </div>
@@ -200,6 +251,12 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
 }
 
 function ServiceFlyerCarousel() {
+  const { homepage } = useCms();
+  const activeFlyers =
+    homepage?.serviceFlyers?.filter((f) => f.enabled) && homepage.serviceFlyers.filter((f) => f.enabled).length > 0
+      ? homepage.serviceFlyers.filter((f) => f.enabled)
+      : serviceFlyers;
+
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -245,7 +302,7 @@ function ServiceFlyerCarousel() {
         </div>
       </div>
       <div className="home-ref-service-track" ref={trackRef} role="region" aria-label="Buy & Sell GH service flyers" tabIndex={0}>
-        {serviceFlyers.map((flyer) => (
+        {activeFlyers.map((flyer) => (
           <Link className="home-ref-service-card" to={flyer.to} key={flyer.title} aria-label={flyer.title}>
             <img src={flyer.image} alt={flyer.alt} width={1024} height={1536} loading="lazy" decoding="async" />
           </Link>

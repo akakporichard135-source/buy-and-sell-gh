@@ -1198,6 +1198,8 @@ function ProductForm({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
+  const existingProduct = products.find((p) => p.id === form.id);
+  const existingVariants = existingProduct?.variants ?? [];
 
   const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) =>
     setForm({ ...form, [key]: value });
@@ -1464,7 +1466,12 @@ function ProductForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Base Price (GH₵) *</label>
+            <label className="block font-bold text-slate-700 mb-1">
+              Base Price (GH₵) *
+              <span className="block text-[11px] font-normal text-slate-500">
+                Applies to the base tier &amp; sets the starting storefront card price
+              </span>
+            </label>
             <input
               required
               type="number"
@@ -1478,7 +1485,12 @@ function ProductForm({
           </div>
 
           <div>
-            <label className="block font-bold text-slate-700 mb-1">Previous / Strikethrough Price (GH₵)</label>
+            <label className="block font-bold text-slate-700 mb-1">
+              Previous / Strikethrough Price (GH₵)
+              <span className="block text-[11px] font-normal text-slate-500">
+                Leave empty if device is not discounted
+              </span>
+            </label>
             <input
               type="number"
               min="0"
@@ -1489,6 +1501,40 @@ function ProductForm({
               placeholder="Leave empty if not on sale"
             />
           </div>
+
+          {existingVariants.length > 0 && (
+            <div className="md:col-span-2 p-3 rounded-lg bg-amber-50/60 border border-amber-200/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <Tag size={13} className="text-amber-600" />
+                  <span>Configured Storage Tiers ({existingVariants.length})</span>
+                </span>
+                <Link
+                  to={`/admin/pricing?search=${encodeURIComponent(form.name)}`}
+                  className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Manage individual variant prices in Pricing &amp; Stock →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {existingVariants.map((v, idx) => (
+                  <div key={v.id} className="p-2 rounded bg-white border border-amber-100 text-[11px]">
+                    <div className="flex items-center justify-between font-semibold text-slate-700">
+                      <span>{v.storage || v.title}</span>
+                      {idx === 0 && (
+                        <span className="text-[9px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-bold">
+                          Base
+                        </span>
+                      )}
+                    </div>
+                    <div className="font-bold text-slate-900 mt-0.5">{formatGhs(v.price)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block font-bold text-slate-700 mb-1">Stock Quantity *</label>

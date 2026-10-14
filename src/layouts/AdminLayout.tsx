@@ -1,7 +1,11 @@
 import {
   BarChart3,
   DollarSign,
+  FileText,
+  Grid,
+  Image as ImageIcon,
   Inbox,
+  Layout,
   LogOut,
   Menu,
   MessageSquare,
@@ -13,6 +17,7 @@ import {
   Star,
   Tag,
   UserCheck,
+  Wrench,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -47,17 +52,22 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
+    title: "Content & Media",
+    items: [
+      { label: "Media Library", to: "/admin/media", icon: ImageIcon },
+      { label: "Homepage", to: "/admin/homepage", icon: Layout },
+      { label: "Storefront", to: "/admin/storefront", icon: Grid },
+      { label: "Services", to: "/admin/services", icon: Wrench },
+      { label: "Pages & Content", to: "/admin/pages", icon: FileText },
+      { label: "Promotions", to: "/admin/promotions", icon: Sparkles },
+    ],
+  },
+  {
     title: "Customer Inboxes",
     items: [
       { label: "Trade-In Requests", to: "/admin/trade-ins", icon: Tag },
       { label: "Device Requests", to: "/admin/device-requests", icon: Inbox },
       { label: "Contact Messages", to: "/admin/contact-messages", icon: MessageSquare },
-    ],
-  },
-  {
-    title: "Marketing & Growth",
-    items: [
-      { label: "Promotions", to: "/admin/promotions", icon: Sparkles },
       { label: "Customer Reviews", to: "/admin/reviews", icon: Star },
     ],
   },
@@ -65,7 +75,7 @@ const navGroups: NavGroup[] = [
     title: "Configuration",
     items: [
       { label: "Business Settings", to: "/admin/settings", icon: Settings },
-      { label: "Admin Account", to: "/admin/account", icon: UserCheck },
+      { label: "Security & Account", to: "/admin/account", icon: ShieldCheck },
     ],
   },
 ];
@@ -75,6 +85,11 @@ const pageTitles: Record<string, string> = {
   "/admin/products": "Product Management",
   "/admin/pricing": "Authoritative Pricing & Stock",
   "/admin/orders": "Order Requests",
+  "/admin/media": "Media Library & Digital Assets",
+  "/admin/homepage": "Homepage Content & Campaigns",
+  "/admin/storefront": "Storefront & Categories",
+  "/admin/services": "Services & Trade-In",
+  "/admin/pages": "Pages, Contact & Policy Management",
   "/admin/trade-ins": "Trade-In Inquiries",
   "/admin/device-requests": "Device Pre-Orders",
   "/admin/contact-messages": "Customer Contact Messages",

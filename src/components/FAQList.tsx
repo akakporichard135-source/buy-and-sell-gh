@@ -1,3 +1,5 @@
+import { useCms } from "../cms/CmsContext";
+
 export const faqs = [
   {
     q: "Are your devices original?",
@@ -30,9 +32,18 @@ export const faqs = [
 ];
 
 export function FAQList({ limit }: { limit?: number }) {
+  const { faqs: cmsFaqs } = useCms();
+
+  const activeFaqs =
+    cmsFaqs?.filter((f) => f.enabled) && cmsFaqs.filter((f) => f.enabled).length > 0
+      ? cmsFaqs.filter((f) => f.enabled)
+      : faqs;
+
+  const displayList = limit ? activeFaqs.slice(0, limit) : activeFaqs;
+
   return (
     <div className="grid gap-3">
-      {(limit ? faqs.slice(0, limit) : faqs).map((faq) => (
+      {displayList.map((faq) => (
         <details key={faq.q} className="faq-item rounded-lg border border-black/7 bg-white p-5 shadow-card">
           <summary className="cursor-pointer text-base font-black text-ink">{faq.q}</summary>
           <p className="mt-3 text-base leading-7 text-ink/70">{faq.a}</p>

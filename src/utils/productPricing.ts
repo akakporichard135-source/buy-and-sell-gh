@@ -138,19 +138,28 @@ export function resolveConfiguredPrice(
     }
 
     if (bestVariant && highestScore > 0) {
+      const isBaseVariant = variants.length > 0 && variants[0]?.id === bestVariant.id;
+      const effectivePrice =
+        isBaseVariant && product.price > 0 && product.price < bestVariant.price
+          ? product.price
+          : bestVariant.price;
+      const effectivePrevPrice =
+        isBaseVariant && product.price > 0 && product.price < bestVariant.price
+          ? (product.previousPrice ?? product.oldPrice ?? bestVariant.previousPrice ?? null)
+          : (bestVariant.previousPrice ?? null);
       const isSale = Boolean(
         bestVariant.isSale ||
-          (bestVariant.previousPrice && bestVariant.previousPrice > bestVariant.price)
+          (effectivePrevPrice && effectivePrevPrice > effectivePrice)
       );
 
       return {
-        variant: bestVariant,
-        price: bestVariant.price,
-        previousPrice: bestVariant.previousPrice ?? null,
+        variant: { ...bestVariant, price: effectivePrice, previousPrice: effectivePrevPrice },
+        price: effectivePrice,
+        previousPrice: effectivePrevPrice,
         isSale,
-        formattedPrice: formatPrice(bestVariant.price),
+        formattedPrice: formatPrice(effectivePrice),
         formattedPreviousPrice:
-          isSale && bestVariant.previousPrice ? formatPrice(bestVariant.previousPrice) : undefined,
+          isSale && effectivePrevPrice ? formatPrice(effectivePrevPrice) : undefined,
         isEnquiry: false,
       };
     }
@@ -158,19 +167,28 @@ export function resolveConfiguredPrice(
     // Default to the first available variant if options did not match explicitly
     const firstActive = variants.find((v) => v.available !== false) ?? variants[0];
     if (firstActive) {
+      const isBaseVariant = variants.length > 0 && variants[0]?.id === firstActive.id;
+      const effectivePrice =
+        isBaseVariant && product.price > 0 && product.price < firstActive.price
+          ? product.price
+          : firstActive.price;
+      const effectivePrevPrice =
+        isBaseVariant && product.price > 0 && product.price < firstActive.price
+          ? (product.previousPrice ?? product.oldPrice ?? firstActive.previousPrice ?? null)
+          : (firstActive.previousPrice ?? null);
       const isSale = Boolean(
         firstActive.isSale ||
-          (firstActive.previousPrice && firstActive.previousPrice > firstActive.price)
+          (effectivePrevPrice && effectivePrevPrice > effectivePrice)
       );
 
       return {
-        variant: firstActive,
-        price: firstActive.price,
-        previousPrice: firstActive.previousPrice ?? null,
+        variant: { ...firstActive, price: effectivePrice, previousPrice: effectivePrevPrice },
+        price: effectivePrice,
+        previousPrice: effectivePrevPrice,
         isSale,
-        formattedPrice: formatPrice(firstActive.price),
+        formattedPrice: formatPrice(effectivePrice),
         formattedPreviousPrice:
-          isSale && firstActive.previousPrice ? formatPrice(firstActive.previousPrice) : undefined,
+          isSale && effectivePrevPrice ? formatPrice(effectivePrevPrice) : undefined,
         isEnquiry: false,
       };
     }
@@ -216,10 +234,14 @@ export function getCardPriceDisplay(product: Product): CardPriceDisplay {
   if (hasMultipleVariants) {
     const prices = variants.map((v) => v.price).filter((p) => p > 0);
     if (prices.length > 0) {
-      minPrice = Math.min(...prices);
+      const variantMin = Math.min(...prices);
+      // Harmonize: if product base price is defined and positive, never hide a lower base price
+      minPrice = product.price > 0 ? Math.min(product.price, variantMin) : variantMin;
       const lowestVariant = variants.find((v) => v.price === minPrice);
       if (lowestVariant?.previousPrice) {
         previousPrice = lowestVariant.previousPrice;
+      } else if (minPrice === product.price && (product.previousPrice ?? product.oldPrice)) {
+        previousPrice = product.previousPrice ?? product.oldPrice;
       }
     }
   }

@@ -240,29 +240,65 @@ export function AdminSettingsPage() {
             </div>
 
             {/* Status explanation */}
-            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
-              <Info size={15} className="shrink-0 text-amber-600" />
-              <span>
-                <strong>Operational Status:</strong> Storefront banners, headlines, and contact lines below are <strong>code-governed</strong> via <code className="font-mono bg-white px-1 py-0.5 rounded border border-amber-200">src/config/business.ts</code>. Modifying them requires updating code and deploying. Direct database-driven text fields are not yet active for these elements.
-              </span>
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+                <span>
+                  <strong>Full Admin CMS Active:</strong> Storefront heroes, announcements, promotional tiles, service flyers, media assets, FAQs, and contact lines are now fully editable through the admin dashboard without code changes or developer intervention.
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            {/* Quick CMS Action Links */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-1">
+              <a
+                href="/admin/homepage"
+                className="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#d4af37] text-slate-800 hover:text-[#d4af37] text-center font-bold text-xs transition shadow-sm"
+              >
+                Homepage Editor &rarr;
+              </a>
+              <a
+                href="/admin/media"
+                className="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#d4af37] text-slate-800 hover:text-[#d4af37] text-center font-bold text-xs transition shadow-sm"
+              >
+                Media Library &rarr;
+              </a>
+              <a
+                href="/admin/storefront"
+                className="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#d4af37] text-slate-800 hover:text-[#d4af37] text-center font-bold text-xs transition shadow-sm"
+              >
+                Storefront &rarr;
+              </a>
+              <a
+                href="/admin/services"
+                className="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#d4af37] text-slate-800 hover:text-[#d4af37] text-center font-bold text-xs transition shadow-sm"
+              >
+                Services &rarr;
+              </a>
+              <a
+                href="/admin/pages"
+                className="p-3 rounded-xl border border-slate-200 bg-white hover:border-[#d4af37] text-slate-800 hover:text-[#d4af37] text-center font-bold text-xs transition shadow-sm"
+              >
+                Pages &amp; FAQs &rarr;
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Sparkles size={14} className="text-[#d4af37]" />
-                    Hero Headline
+                    Hero Campaigns
                   </span>
-                  <span className="text-[0.65rem] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">
-                    Code-Governed
+                  <span className="text-[0.65rem] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                    CMS Controlled
                   </span>
                 </div>
                 <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-slate-800 font-medium">
-                  "Premium Apple Devices, Authentic Tech &amp; Guaranteed Service"
+                  iPhone 18 Pro, iPhone Duo, Apple Watch Series 12
                 </div>
                 <p className="text-[0.7rem] text-slate-500">
-                  Controls the primary landing banner headline rendered on the customer homepage. Edit in <code className="font-mono">src/config/business.ts</code>.
+                  Manage headline titles, subtitles, tones, button links, and upload custom photography via the <strong>Homepage</strong> editor.
                 </p>
               </div>
 
@@ -270,17 +306,17 @@ export function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-slate-900 flex items-center gap-1.5">
                     <Bell size={14} className="text-amber-500" />
-                    Delivery Announcement
+                    Top Announcement Bar
                   </span>
-                  <span className="text-[0.65rem] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-bold">
-                    Code-Governed
+                  <span className="text-[0.65rem] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                    CMS Controlled
                   </span>
                 </div>
                 <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-slate-800 font-medium">
-                  "Same-Day Delivery in Greater Accra &bull; Official Apple Warranty &bull; Nationwide Bus Parcels"
+                  "Trade in your current device toward your next one."
                 </div>
                 <p className="text-[0.7rem] text-slate-500">
-                  Displayed on the header notification bar across all public storefront pages. Edit in <code className="font-mono">src/components/Header.tsx</code>.
+                  Toggle on/off, change announcement message, and set promotional destination links instantly.
                 </p>
               </div>
 
@@ -298,7 +334,7 @@ export function AdminSettingsPage() {
                   Direct deep-link for instant customer order review, trade-in valuations, and payment details.
                 </div>
                 <p className="text-[0.7rem] text-slate-500">
-                  All website form completions automatically pre-populate this number from <code className="font-mono">src/config/business.ts</code>.
+                  Edit primary and secondary WhatsApp phone numbers anytime in <strong>Pages &amp; Content</strong> &rarr; Store &amp; Contact Details.
                 </p>
               </div>
 

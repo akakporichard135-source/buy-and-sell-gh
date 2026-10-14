@@ -23,8 +23,14 @@ import {
   compareWatchesNewest,
 } from "../utils/productPresentation";
 
+import { useCms } from "../cms/CmsContext";
+
 export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
-  const config: CategoryDepartmentConfig = CATEGORY_DEPARTMENTS[family] || CATEGORY_DEPARTMENTS.iphone;
+  const { departments } = useCms();
+  const config: CategoryDepartmentConfig = useMemo(() => {
+    return departments[family] || CATEGORY_DEPARTMENTS[family] || CATEGORY_DEPARTMENTS.iphone;
+  }, [departments, family]);
+
   const { activeProducts, loading } = useProductCatalog();
   const [activeSubnavId, setActiveSubnavId] = useState("all");
 

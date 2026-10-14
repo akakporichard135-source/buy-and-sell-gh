@@ -40,47 +40,58 @@ const ShopPage = lazy(() => import("./pages/ShopPage").then((module) => ({ defau
 const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPage").then((module) => ({ default: module.ShoppingInformationPage })));
 const MacLaunchPage = lazy(() => import("./pages/MacLaunchPage").then((module) => ({ default: module.MacLaunchPage })));
 
+import { CmsProvider } from "./cms/CmsContext";
+
 export default function App() {
   const isAdminHost = isAdminHostname();
 
   if (isAdminHost) {
     return (
-      <AdminAuthProvider>
-        <Suspense fallback={<RouteLoading />}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/admin" replace />} />
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route path="/admin/mfa" element={<AdminMfaPage />} />
-            <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
-            <Route element={<ProtectedAdminRoute />}>
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboardPage />} />
-                <Route path="products" element={<AdminSectionPage section="products" />} />
-                <Route path="pricing" element={<AdminSectionPage section="pricing" />} />
-                <Route path="orders" element={<AdminSectionPage section="orders" />} />
-                <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
-                <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />
-                <Route path="device-requests" element={<AdminSectionPage section="device-requests" />} />
-                <Route path="contact-messages" element={<AdminSectionPage section="contact-messages" />} />
-                <Route path="reviews" element={<AdminSectionPage section="reviews" />} />
-                <Route path="promotions" element={<AdminSectionPage section="promotions" />} />
-                <Route path="settings" element={<AdminSectionPage section="settings" />} />
-                <Route path="account" element={<AdminSectionPage section="account" />} />
+      <CmsProvider>
+        <AdminAuthProvider>
+          <Suspense fallback={<RouteLoading />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/admin" replace />} />
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="/admin/mfa" element={<AdminMfaPage />} />
+              <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
+              <Route element={<ProtectedAdminRoute />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboardPage />} />
+                  <Route path="products" element={<AdminSectionPage section="products" />} />
+                  <Route path="pricing" element={<AdminSectionPage section="pricing" />} />
+                  <Route path="orders" element={<AdminSectionPage section="orders" />} />
+                  <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
+                  <Route path="media" element={<AdminSectionPage section="media" />} />
+                  <Route path="homepage" element={<AdminSectionPage section="homepage" />} />
+                  <Route path="storefront" element={<AdminSectionPage section="storefront" />} />
+                  <Route path="services" element={<AdminSectionPage section="services" />} />
+                  <Route path="pages" element={<AdminSectionPage section="pages" />} />
+                  <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />
+                  <Route path="device-requests" element={<AdminSectionPage section="device-requests" />} />
+                  <Route path="contact-messages" element={<AdminSectionPage section="contact-messages" />} />
+                  <Route path="reviews" element={<AdminSectionPage section="reviews" />} />
+                  <Route path="promotions" element={<AdminSectionPage section="promotions" />} />
+                  <Route path="settings" element={<AdminSectionPage section="settings" />} />
+                  <Route path="account" element={<AdminSectionPage section="account" />} />
+                </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Routes>
-        </Suspense>
-      </AdminAuthProvider>
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </Routes>
+          </Suspense>
+        </AdminAuthProvider>
+      </CmsProvider>
     );
   }
 
   return (
-    <Suspense fallback={<RouteLoading />}>
-      <Routes>
-        <Route path="*" element={<PublicShell />} />
-      </Routes>
-    </Suspense>
+    <CmsProvider>
+      <Suspense fallback={<RouteLoading />}>
+        <Routes>
+          <Route path="*" element={<PublicShell />} />
+        </Routes>
+      </Suspense>
+    </CmsProvider>
   );
 }
 

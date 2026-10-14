@@ -1,18 +1,33 @@
+import { useCms } from "../cms/CmsContext";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { ServiceBookingPage, ServicePhotoField } from "../components/ServiceBookingPage";
 import { SuccessForm } from "../components/SuccessForm";
 
 export function RepairsPage() {
+  const { pages } = useCms();
+  const repairs = pages?.repairs;
+
+  const title = repairs?.title || "Book a Device Repair";
+  const description =
+    repairs?.description ||
+    "Tell us about your device and the issue you're experiencing. Our team will help you with the next steps.";
+  const guidance =
+    repairs?.guidance ||
+    "Repair pricing and completion timing depend on inspecting the device and identifying the issue. Our team will confirm the next steps with you.";
+  const assistance =
+    repairs?.assistance ||
+    "Have a question before preparing your repair enquiry? Speak with the Buy & Sell GH team directly.";
+
   return (
     <>
-      <SEO title="Book a Device Repair" description="Tell Buy & Sell GH about your device and repair issue. Our team will help you with the next steps." />
+      <SEO title={title} description={description} />
       <ServiceBookingPage
         category="Repairs"
-        title="Book a Device Repair"
-        description="Tell us about your device and the issue you're experiencing. Our team will help you with the next steps."
-        guidance="Repair pricing and completion timing depend on inspecting the device and identifying the issue. Our team will confirm the next steps with you."
-        assistance="Have a question before preparing your repair enquiry? Speak with the Buy & Sell GH team directly."
+        title={title}
+        description={description}
+        guidance={guidance}
+        assistance={assistance}
       >
         <SuccessForm buttonLabel="Prepare Repair Enquiry" successIntent="general">
           <FormField label="Customer name" name="name" required maxLength={120} placeholder="Your full name" />
@@ -29,3 +44,4 @@ export function RepairsPage() {
     </>
   );
 }
+

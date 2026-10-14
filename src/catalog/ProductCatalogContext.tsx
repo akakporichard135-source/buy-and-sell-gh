@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import type { Product } from "../types/product";
 import {
   archiveProductById,
@@ -7,6 +7,7 @@ import {
   fetchProducts,
   markProductOutOfStockById,
   markProductSoldById,
+  updateProductBasePrice as updateProductBasePriceRepo,
   updateProductFields,
   updateVariantPriceAndStock as updateVariantPriceAndStockRepo,
   upsertProduct,
@@ -60,6 +61,25 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     void loadProducts();
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) return;
+    const client = supabase;
+
+    const channel = client
+      .channel("catalog-realtime-channel")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
+        void loadProducts();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "product_variants" }, () => {
+        void loadProducts();
+      })
+      .subscribe();
+
+    return () => {
+      void client.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -153,7 +173,18 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
             const updatedVariants = product.variants!.map((v) =>
               v.id === variantId ? { ...v, ...fields } : v
             );
-            return normalizeProduct({ ...product, variants: updatedVariants });
+            // Recompute product base price if variant price changed
+            const activePrices = updatedVariants
+              .filter((v) => v.available !== false && v.price > 0)
+              .map((v) => v.price);
+            const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : product.price;
+            const lowestVar = updatedVariants.find((v) => v.price === minPrice);
+            return normalizeProduct({
+              ...product,
+              price: minPrice,
+              previousPrice: lowestVar?.previousPrice ?? product.previousPrice,
+              variants: updatedVariants,
+            });
           });
           if (backendStatus !== "supabase") persistLocal(next);
           return next;
@@ -161,14 +192,34 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       },
       updateProductBasePrice: async (productId, price, previousPrice) => {
         if (backendStatus === "supabase") {
-          await updateProductFields(productId, { price, previous_price: previousPrice ?? null, price_on_request: price <= 0 });
+          await updateProductBasePriceRepo(productId, price, previousPrice);
         }
         setProducts((current) => {
-          const next = current.map((product) =>
-            product.id === productId
-              ? normalizeProduct({ ...product, price, previousPrice: previousPrice ?? undefined, priceOnRequest: price <= 0 })
-              : product
-          );
+          const next = current.map((product) => {
+            if (product.id !== productId) return product;
+            let updatedVariants = product.variants ? [...product.variants] : undefined;
+            if (updatedVariants && updatedVariants.length > 0 && price > 0) {
+              const sorted = [...updatedVariants].sort((a, b) => a.position - b.position);
+              const baseVar = sorted[0];
+              updatedVariants = updatedVariants.map((v) =>
+                v.id === baseVar.id
+                  ? {
+                      ...v,
+                      price,
+                      previousPrice: previousPrice ?? null,
+                      isSale: Boolean(previousPrice && previousPrice > price),
+                    }
+                  : v
+              );
+            }
+            return normalizeProduct({
+              ...product,
+              price,
+              previousPrice: previousPrice ?? undefined,
+              priceOnRequest: price <= 0,
+              variants: updatedVariants,
+            });
+          });
           if (backendStatus !== "supabase") persistLocal(next);
           return next;
         });
