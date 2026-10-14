@@ -339,28 +339,89 @@ export function AdminHomepageManager() {
                     </select>
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block font-bold text-slate-700 mb-1">Hero Image URL</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={hero.image}
-                        onChange={(e) => {
-                          const heroes = [...content.heroes];
-                          heroes[index] = { ...heroes[index], image: e.target.value };
-                          setContent({ ...content, heroes });
-                        }}
-                        className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
-                        placeholder="/products/homepage/iphone-18-pro-hero-2x.webp"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setMediaPickerTarget({ section: "hero", index, field: "image" })}
-                        className="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center gap-1.5 shrink-0"
-                      >
-                        <ImageIcon size={14} />
-                        <span>Pick from Library</span>
-                      </button>
+                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                    {/* Desktop Hero Image */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block font-bold text-slate-800 text-xs">Desktop Hero Image *</label>
+                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 2880×1200 or 1440×600</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={hero.image}
+                          onChange={(e) => {
+                            const heroes = [...content.heroes];
+                            heroes[index] = { ...heroes[index], image: e.target.value };
+                            setContent({ ...content, heroes });
+                          }}
+                          className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
+                          placeholder="/products/homepage/iphone-18-pro-hero-2x.webp"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget({ section: "hero", index, field: "image" })}
+                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-[#d4af37] text-white font-bold flex items-center gap-1.5 shrink-0 transition text-xs"
+                        >
+                          <ImageIcon size={13} />
+                          <span>Change Image</span>
+                        </button>
+                      </div>
+                      <div className="aspect-[21/9] bg-slate-200 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/60 max-h-24">
+                        <img src={hero.image} alt={hero.alt} className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+
+                    {/* Mobile Hero Image (Optional) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block font-bold text-slate-800 text-xs">Mobile Hero Image (Optional)</label>
+                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 780×900</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={hero.mobileImage || ""}
+                          onChange={(e) => {
+                            const heroes = [...content.heroes];
+                            heroes[index] = { ...heroes[index], mobileImage: e.target.value || undefined };
+                            setContent({ ...content, heroes });
+                          }}
+                          className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
+                          placeholder="Leave empty to use desktop image"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget({ section: "hero", index, field: "mobileImage" })}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center gap-1.5 shrink-0 transition text-xs"
+                        >
+                          <ImageIcon size={13} />
+                          <span>Pick Mobile</span>
+                        </button>
+                        {hero.mobileImage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const heroes = [...content.heroes];
+                              heroes[index] = { ...heroes[index], mobileImage: undefined };
+                              setContent({ ...content, heroes });
+                            }}
+                            className="px-2 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-bold"
+                            title="Clear mobile image"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="aspect-[21/9] bg-slate-200 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/60 max-h-24">
+                        {hero.mobileImage ? (
+                          <img src={hero.mobileImage} alt="Mobile preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[0.65rem] text-slate-400 font-medium">
+                            Inheriting Desktop Image on Mobile
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -437,11 +498,6 @@ export function AdminHomepageManager() {
                       placeholder="Destination URL (e.g. /shop/buy-iphone/...)"
                       className="w-full p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
                     />
-                  </div>
-
-                  {/* Thumbnail Preview */}
-                  <div className="p-2 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden max-h-24">
-                    <img src={hero.image} alt={hero.alt} className="max-h-20 object-contain" />
                   </div>
                 </div>
               </div>
@@ -570,8 +626,8 @@ export function AdminHomepageManager() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Image URL</label>
+                  <div className="space-y-1.5">
+                    <label className="block font-bold text-slate-700 text-xs">Tile Image Artwork *</label>
                     <div className="flex gap-1.5">
                       <input
                         type="text"
@@ -586,10 +642,18 @@ export function AdminHomepageManager() {
                       <button
                         type="button"
                         onClick={() => setMediaPickerTarget({ section: "tile", index, field: "image" })}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold shrink-0 text-[0.7rem]"
+                        className="px-3 py-1.5 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white font-bold shrink-0 text-xs flex items-center gap-1 transition"
                       >
-                        Pick
+                        <ImageIcon size={13} />
+                        <span>Change Image</span>
                       </button>
+                    </div>
+                    <div className="aspect-[16/9] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 max-h-28 mt-2 p-1">
+                      <img
+                        src={tile.image}
+                        alt={tile.alt || tile.title}
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                   </div>
 
@@ -731,8 +795,8 @@ export function AdminHomepageManager() {
                   </div>
                 </div>
 
-                <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200">
-                  <img src={flyer.image} alt={flyer.alt} className="w-full h-full object-cover" />
+                <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 p-1">
+                  <img src={flyer.image} alt={flyer.alt} className="w-full h-full object-contain" />
                 </div>
 
                 <div className="space-y-2 text-xs">
@@ -767,7 +831,7 @@ export function AdminHomepageManager() {
                   <button
                     type="button"
                     onClick={() => setMediaPickerTarget({ section: "flyer", index, field: "image" })}
-                    className="w-full py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-xs"
+                    className="w-full py-2 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white font-bold flex items-center justify-center gap-1.5 transition text-xs shadow-sm"
                   >
                     <ImageIcon size={13} />
                     <span>Change Flyer Artwork</span>

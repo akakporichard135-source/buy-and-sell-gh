@@ -3,8 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
 import { SEO } from "../components/SEO";
-import ipadAirArt from "../assets/homepage/homepage-ipad-air-white.webp";
-import visaCardArt from "../assets/homepage/homepage-visa-card-white.webp";
 import "../styles/homepage-reference.css";
 
 type Action = { label: string; to: string };
@@ -13,6 +11,7 @@ type Campaign = {
   title: string;
   subtitle: string;
   image: string;
+  mobileImage?: string;
   alt: string;
   tone: "dark" | "light" | "mist";
   primary: Action;
@@ -82,7 +81,7 @@ const tileRows: Campaign[][] = [
       id: "ipad-air",
       title: "iPad Air",
       subtitle: "Room for every idea.",
-      image: ipadAirArt,
+      image: "/products/homepage/homepage-ipad-air-white.webp",
       alt: "iPad Air front and back in light finishes",
       tone: "light",
       primary: { label: "Learn more", to: "/ipad/ipad-air" },
@@ -104,7 +103,7 @@ const tileRows: Campaign[][] = [
       id: "visa-card-trading",
       title: "Visa Card Trading",
       subtitle: "Check supported cards with our team.",
-      image: visaCardArt,
+      image: "/products/homepage/homepage-visa-card-white.webp",
       alt: "Original unbranded black and gold card for Visa card trading enquiries",
       tone: "light",
       primary: { label: "Enquire", to: "/gift-cards" },
@@ -222,14 +221,28 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         <p>{campaign.subtitle}</p>
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      <img
-        className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
-        src={campaign.image}
-        alt={campaign.alt}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : undefined}
-        decoding="async"
-      />
+      {campaign.mobileImage ? (
+        <picture>
+          <source media="(max-width: 768px)" srcSet={campaign.mobileImage} />
+          <img
+            className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
+            src={campaign.image}
+            alt={campaign.alt}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            decoding="async"
+          />
+        </picture>
+      ) : (
+        <img
+          className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
+          src={campaign.image}
+          alt={campaign.alt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
+          decoding="async"
+        />
+      )}
     </section>
   );
 }

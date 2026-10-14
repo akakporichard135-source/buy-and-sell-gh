@@ -369,6 +369,126 @@ export const uploadMediaAsset = async (
   return newMediaItem;
 };
 
+export const updateMediaAsset = async (
+  id: string,
+  updates: {
+    title?: string;
+    alt?: string;
+    category?: MediaItem["category"];
+    fit?: "cover" | "contain";
+    position?: "center" | "top" | "bottom";
+  },
+  replacementFile?: File
+): Promise<MediaItem> => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+
+  const currentList = await fetchMediaLibrary();
+  const existing = currentList.find((m) => m.id === id);
+  if (!existing) {
+    throw new Error(`Media asset with ID "${id}" was not found.`);
+  }
+
+  let finalUrl = existing.url;
+  let finalStoragePath = existing.storagePath;
+  let finalFileSize = existing.fileSize;
+  let finalMimeType = existing.mimeType;
+  let finalFilename = existing.filename;
+
+  if (replacementFile) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    const maxBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (!allowedTypes.includes(replacementFile.type)) {
+      throw new Error("Only JPEG, PNG, WebP and AVIF formats are allowed.");
+    }
+    if (replacementFile.size > maxBytes) {
+      throw new Error("Replacement image exceeds the 5MB upload limit.");
+    }
+    if (!(await hasValidImageSignature(replacementFile))) {
+      throw new Error("Invalid image header signature. Please choose an authentic image file.");
+    }
+
+    const cat = updates.category || existing.category || "other";
+    const ext = imageExtensions[replacementFile.type] || "jpg";
+    const cleanBase = replacementFile.name
+      .toLowerCase()
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60) || "asset";
+    const safeFilename = `${cleanBase}.${ext}`;
+    const storagePath = `media/${cat}/${Date.now()}-${safeFilename}`;
+
+    const { error: uploadErr } = await client.storage
+      .from(productImagesBucket)
+      .upload(storagePath, replacementFile, {
+        cacheControl: "31536000",
+        upsert: false,
+        contentType: replacementFile.type,
+      });
+
+    if (uploadErr) {
+      throw new Error(`Failed to upload replacement asset to Supabase Storage: ${uploadErr.message}`);
+    }
+
+    const { data: urlData } = client.storage
+      .from(productImagesBucket)
+      .getPublicUrl(storagePath);
+
+    // If there was an old Supabase storage object, remove it
+    if (existing.storagePath && existing.storagePath.startsWith("media/")) {
+      await client.storage.from(productImagesBucket).remove([existing.storagePath]).catch(() => {});
+    }
+
+    finalUrl = urlData.publicUrl;
+    finalStoragePath = storagePath;
+    finalFileSize = replacementFile.size;
+    finalMimeType = replacementFile.type;
+    finalFilename = replacementFile.name;
+  }
+
+  const updatedItem: MediaItem = {
+    ...existing,
+    title: updates.title !== undefined ? updates.title.trim() : existing.title,
+    alt: updates.alt !== undefined ? updates.alt.trim() : existing.alt,
+    category: updates.category || existing.category,
+    fit: updates.fit || existing.fit || "cover",
+    position: updates.position || existing.position || "center",
+    url: finalUrl,
+    filename: finalFilename,
+    storagePath: finalStoragePath,
+    fileSize: finalFileSize,
+    mimeType: finalMimeType,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const { error: dbErr } = await client.from("media_library").upsert({
+    id: updatedItem.id,
+    title: updatedItem.title,
+    filename: updatedItem.filename,
+    url: updatedItem.url,
+    storage_path: updatedItem.storagePath,
+    file_size: updatedItem.fileSize,
+    mime_type: updatedItem.mimeType,
+    category: updatedItem.category,
+    alt: updatedItem.alt,
+    fit: updatedItem.fit,
+    position: updatedItem.position,
+    updated_at: updatedItem.updatedAt,
+  });
+
+  if (dbErr) {
+    throw new Error(`Failed to save asset updates to Supabase (${dbErr.message}).`);
+  }
+
+  const updatedList = currentList.map((m) => (m.id === id ? updatedItem : m));
+  writeLocal(CMS_STORAGE_KEY_MEDIA, updatedList);
+  notifyListeners();
+
+  return updatedItem;
+};
+
 // 4. FAQS
 export const fetchFaqs = async (): Promise<FaqItem[]> => {
   const local = readLocal<FaqItem[]>(CMS_STORAGE_KEY_FAQS, defaultFaqs);

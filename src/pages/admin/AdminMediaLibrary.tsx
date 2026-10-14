@@ -3,12 +3,14 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  Edit3,
   ExternalLink,
   Eye,
   Filter,
   Image as ImageIcon,
   Maximize2,
   Plus,
+  RefreshCw,
   Search,
   Sparkles,
   Trash2,
@@ -25,7 +27,7 @@ interface AdminMediaLibraryProps {
 }
 
 export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibraryProps) {
-  const { media, uploadMedia, deleteMedia, updateSettings } = useCms();
+  const { media, uploadMedia, updateMedia, deleteMedia } = useCms();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -38,6 +40,20 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
   const [uploadCategory, setUploadCategory] = useState<MediaItem["category"]>("hero");
   const [customTitle, setCustomTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pickerUploadRef = useRef<HTMLInputElement>(null);
+
+  // Edit / Replace asset state
+  const [editingAsset, setEditingAsset] = useState<MediaItem | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAlt, setEditAlt] = useState("");
+  const [editCategory, setEditCategory] = useState<MediaItem["category"]>("other");
+  const [editFit, setEditFit] = useState<"cover" | "contain">("cover");
+  const [editPosition, setEditPosition] = useState<"center" | "top" | "bottom">("center");
+  const [replacementFile, setReplacementFile] = useState<File | null>(null);
+  const [replacementPreview, setReplacementPreview] = useState<string | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const replacementInputRef = useRef<HTMLInputElement>(null);
 
   // Delete confirmation modal state
   const [deleteConfirm, setDeleteConfirm] = useState<MediaItem | null>(null);
@@ -100,6 +116,69 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
     }
   };
 
+  const handleOpenEdit = (item: MediaItem) => {
+    setEditingAsset(item);
+    setEditTitle(item.title);
+    setEditAlt(item.alt || "");
+    setEditCategory(item.category);
+    setEditFit((item.fit as "cover" | "contain") || "cover");
+    setEditPosition((item.position as "center" | "top" | "bottom") || "center");
+    setReplacementFile(null);
+    setReplacementPreview(null);
+    setEditError("");
+  };
+
+  const handleReplacementFileChange = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setEditError(`"${file.name}" exceeds 5MB limit. Please select a smaller optimized image.`);
+      return;
+    }
+    if (!file.type.match(/^image\/(jpeg|png|webp|avif)$/)) {
+      setEditError("Only JPG, PNG, WebP, and AVIF images are supported.");
+      return;
+    }
+    setEditError("");
+    setReplacementFile(file);
+    if (replacementPreview) URL.revokeObjectURL(replacementPreview);
+    setReplacementPreview(URL.createObjectURL(file));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingAsset) return;
+    setSavingEdit(true);
+    setEditError("");
+    try {
+      const updated = await updateMedia(
+        editingAsset.id,
+        {
+          title: editTitle.trim() || editingAsset.title,
+          alt: editAlt.trim(),
+          category: editCategory,
+          fit: editFit,
+          position: editPosition,
+        },
+        replacementFile || undefined
+      );
+
+      setSuccessMessage(`Successfully saved changes for "${updated.title}" to Supabase.`);
+      if (selectedAsset?.id === editingAsset.id) {
+        setSelectedAsset(updated);
+      }
+      if (replacementPreview) {
+        URL.revokeObjectURL(replacementPreview);
+      }
+      setEditingAsset(null);
+      setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Failed to update asset.");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const handleCopyUrl = (item: MediaItem) => {
     navigator.clipboard.writeText(item.url);
     setCopiedId(item.id);
@@ -134,8 +213,8 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
             </div>
             <h2>Media Library &amp; Asset Control</h2>
             <p>
-              Upload, preview, organize, and replace images across homepage heroes, promotional tiles,
-              department storefronts, and service flyers without touching code.
+              Upload, preview, edit, replace, and organize images across homepage heroes, promotional tiles,
+              storefront categories, and service flyers without touching code.
             </p>
           </div>
 
@@ -167,64 +246,109 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
         </div>
       )}
 
-      {/* Upload Box */}
-      <div className="admin-card space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <Upload size={17} className="text-[#d4af37]" />
-            <h3 className="font-bold text-slate-900 text-sm">Upload Image to Supabase Storage</h3>
-          </div>
-          <span className="text-xs text-slate-400">Max size: 5MB &bull; JPEG, PNG, WebP, AVIF</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {/* Quick Upload directly in picker mode */}
+      {isPicker && (
+        <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Asset Placement Category</label>
-            <select
-              value={uploadCategory}
-              onChange={(e) => setUploadCategory(e.target.value as MediaItem["category"])}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
-            >
-              <option value="hero">Hero Carousel Banners</option>
-              <option value="storefront">Storefront / Promo Tiles</option>
-              <option value="flyer">Service Flyers (Repairs, Trade-in)</option>
-              <option value="product">Product Photography</option>
-              <option value="brand">Brand Logo &amp; Shop Banners</option>
-              <option value="other">General / Other</option>
-            </select>
+            <span className="text-xs font-bold text-amber-950 block">Pick an Image or Upload Directly</span>
+            <span className="text-[0.7rem] text-amber-800">
+              Select any asset below to assign it immediately, or upload a new photo directly from your computer.
+            </span>
+          </div>
+          <input
+            ref={pickerUploadRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            className="hidden"
+            onChange={async (e) => {
+              const files = e.target.files;
+              if (!files || files.length === 0) return;
+              const file = files[0];
+              setUploading(true);
+              setUploadError("");
+              try {
+                const item = await uploadMedia(file, "storefront", file.name.replace(/\.[^.]+$/, ""));
+                setSuccessMessage(`Uploaded "${item.title}".`);
+                if (onSelect) onSelect(item);
+              } catch (err) {
+                setUploadError(err instanceof Error ? err.message : "Failed to upload file.");
+              } finally {
+                setUploading(false);
+              }
+            }}
+          />
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => pickerUploadRef.current?.click()}
+            className="px-3.5 py-2 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-1.5 shrink-0 transition shadow-sm disabled:opacity-50"
+          >
+            <Upload size={14} />
+            <span>{uploading ? "Uploading to Supabase..." : "Upload from Computer & Select"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Upload Box (Standard view) */}
+      {!isPicker && (
+        <div className="admin-card space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Upload size={17} className="text-[#d4af37]" />
+              <h3 className="font-bold text-slate-900 text-sm">Upload Image to Supabase Storage</h3>
+            </div>
+            <span className="text-xs text-slate-400">Max size: 5MB &bull; JPEG, PNG, WebP, AVIF</span>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Asset Title (Optional)</label>
-            <input
-              type="text"
-              value={customTitle}
-              onChange={(e) => setCustomTitle(e.target.value)}
-              placeholder="e.g. iPhone 18 Pro Midnight Hero"
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Asset Placement Category</label>
+              <select
+                value={uploadCategory}
+                onChange={(e) => setUploadCategory(e.target.value as MediaItem["category"])}
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
+              >
+                <option value="hero">Hero Carousel Banners</option>
+                <option value="storefront">Storefront / Promo Tiles</option>
+                <option value="flyer">Service Flyers (Repairs, Trade-in)</option>
+                <option value="product">Product Photography</option>
+                <option value="brand">Brand Logo &amp; Shop Banners</option>
+                <option value="other">General / Other</option>
+              </select>
+            </div>
 
-          <div className="flex items-end">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif"
-              className="hidden"
-              onChange={(e) => handleFileChange(e.target.files)}
-            />
-            <button
-              type="button"
-              disabled={uploading}
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full p-2.5 rounded-lg bg-slate-900 hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
-            >
-              <Upload size={15} />
-              <span>{uploading ? "Uploading to Supabase..." : "Select Image from Computer"}</span>
-            </button>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Asset Title (Optional)</label>
+              <input
+                type="text"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="e.g. iPad Air Promo Tile"
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white text-xs"
+              />
+            </div>
+
+            <div className="flex items-end">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="hidden"
+                onChange={(e) => handleFileChange(e.target.files)}
+              />
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full p-2.5 rounded-lg bg-slate-900 hover:bg-black text-white text-xs font-bold flex items-center justify-center gap-2 transition disabled:opacity-50"
+              >
+                <Upload size={15} />
+                <span>{uploading ? "Uploading to Supabase..." : "Select Image from Computer"}</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -276,7 +400,7 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
                   onError={() => setImgErrors((prev) => ({ ...prev, [item.id]: true }))}
                   style={{
                     objectFit:
-                      item.fit ||
+                      (item.fit as any) ||
                       (item.category === "brand" || item.category === "flyer"
                         ? "contain"
                         : "cover"),
@@ -297,34 +421,47 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
               </span>
 
               {/* Hover Overlay Actions */}
-              <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedAsset(item)}
-                  aria-label="Inspect asset"
-                  className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
-                  title="Inspect details"
-                >
-                  <Eye size={15} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCopyUrl(item)}
-                  aria-label="Copy public URL"
-                  className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
-                  title="Copy URL"
-                >
-                  {copiedId === item.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
-                </button>
-                {isPicker && onSelect && (
+              <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-2">
+                {isPicker && onSelect ? (
                   <button
                     type="button"
                     onClick={() => onSelect(item)}
-                    className="p-2 rounded-full bg-[#d4af37] text-white hover:bg-slate-900 transition shadow"
-                    title="Select for slot"
+                    className="px-3 py-1.5 rounded-lg bg-[#d4af37] text-white hover:bg-white hover:text-slate-900 text-xs font-bold transition shadow flex items-center gap-1"
+                    title="Select this image"
                   >
-                    <Check size={15} />
+                    <Check size={14} />
+                    <span>Select</span>
                   </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(item)}
+                      aria-label="Edit or replace asset"
+                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
+                      title="Edit / Replace Image"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAsset(item)}
+                      aria-label="Inspect asset"
+                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
+                      title="Inspect details"
+                    >
+                      <Eye size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyUrl(item)}
+                      aria-label="Copy public URL"
+                      className="p-2 rounded-full bg-white text-slate-900 hover:bg-[#d4af37] hover:text-white transition shadow"
+                      title="Copy URL"
+                    >
+                      {copiedId === item.id ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -343,37 +480,39 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
                   <button
                     type="button"
                     onClick={() => onSelect(item)}
-                    className="w-full py-1 rounded bg-[#d4af37] hover:bg-slate-900 text-white text-[0.7rem] font-bold transition"
+                    className="w-full py-1.5 rounded bg-[#d4af37] hover:bg-slate-900 text-white text-[0.7rem] font-bold transition flex items-center justify-center gap-1"
                   >
-                    Select Asset
+                    <Check size={12} />
+                    <span>Select for Slot</span>
                   </button>
                 ) : (
                   <>
                     <button
                       type="button"
-                      onClick={() => handleCopyUrl(item)}
-                      className="text-[0.7rem] font-bold text-slate-600 hover:text-[#d4af37] flex items-center gap-1 transition"
+                      onClick={() => handleOpenEdit(item)}
+                      className="text-[0.7rem] font-bold text-[#d4af37] hover:text-slate-900 flex items-center gap-1 transition"
                     >
-                      {copiedId === item.id ? (
-                        <>
-                          <Check size={12} className="text-emerald-600" />
-                          <span className="text-emerald-600">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={12} />
-                          <span>Copy URL</span>
-                        </>
-                      )}
+                      <Edit3 size={12} />
+                      <span>Edit / Replace</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteConfirm(item)}
-                      className="text-[0.7rem] font-semibold text-rose-500 hover:text-rose-700 transition"
-                      title="Delete asset"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyUrl(item)}
+                        className="text-[0.7rem] font-semibold text-slate-400 hover:text-slate-700 transition"
+                        title="Copy URL"
+                      >
+                        {copiedId === item.id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirm(item)}
+                        className="text-[0.7rem] font-semibold text-rose-500 hover:text-rose-700 transition"
+                        title="Delete asset"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -387,6 +526,225 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
           <ImageIcon size={36} className="mx-auto mb-2 opacity-40" />
           <p className="text-sm font-semibold">No media assets match your filter.</p>
           <p className="text-xs mt-1">Upload new images using the button above.</p>
+        </div>
+      )}
+
+      {/* EDIT / REPLACE IMAGE MODAL */}
+      {editingAsset && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => {
+            if (!savingEdit) {
+              if (replacementPreview) URL.revokeObjectURL(replacementPreview);
+              setEditingAsset(null);
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Edit3 size={18} className="text-[#d4af37]" />
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Edit &amp; Replace Media Asset
+                </h3>
+              </div>
+              <button
+                type="button"
+                disabled={savingEdit}
+                onClick={() => {
+                  if (replacementPreview) URL.revokeObjectURL(replacementPreview);
+                  setEditingAsset(null);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-900 disabled:opacity-40"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={15} />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            {/* Side-by-Side Image Previews */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <span className="text-[0.7rem] font-bold uppercase tracking-wider text-slate-500">
+                  Current Image
+                </span>
+                <div className="aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden border border-slate-200 flex items-center justify-center p-2">
+                  <img
+                    src={editingAsset.url}
+                    alt={editingAsset.alt}
+                    style={{
+                      objectFit: editFit,
+                      objectPosition: editPosition,
+                    }}
+                    className="w-full h-full max-h-full max-w-full"
+                  />
+                </div>
+                <span className="text-[0.65rem] text-slate-400 truncate block">
+                  {editingAsset.filename}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[0.7rem] font-bold uppercase tracking-wider text-slate-500">
+                    {replacementPreview ? "New Replacement (Preview)" : "Replacement Image"}
+                  </span>
+                  {replacementPreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (replacementPreview) URL.revokeObjectURL(replacementPreview);
+                        setReplacementPreview(null);
+                        setReplacementFile(null);
+                      }}
+                      className="text-[0.65rem] text-rose-600 font-bold hover:underline"
+                    >
+                      Revert
+                    </button>
+                  )}
+                </div>
+                <div className="aspect-[4/3] bg-slate-50 rounded-xl overflow-hidden border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-2 text-center">
+                  {replacementPreview ? (
+                    <img
+                      src={replacementPreview}
+                      alt="Replacement preview"
+                      style={{
+                        objectFit: editFit,
+                        objectPosition: editPosition,
+                      }}
+                      className="w-full h-full max-h-full max-w-full"
+                    />
+                  ) : (
+                    <div className="p-4 space-y-2">
+                      <ImageIcon size={28} className="mx-auto text-slate-300" />
+                      <p className="text-[0.7rem] text-slate-500">
+                        Select a file from your computer to replace this image without creating duplicates.
+                      </p>
+                      <input
+                        ref={replacementInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/avif"
+                        className="hidden"
+                        onChange={(e) => handleReplacementFileChange(e.target.files)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => replacementInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition"
+                      >
+                        Choose Replacement File
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {replacementFile && (
+                  <span className="text-[0.65rem] text-emerald-600 font-semibold truncate block">
+                    ✓ New file: {replacementFile.name} ({(replacementFile.size / 1024).toFixed(0)} KB)
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Image Name / Title *</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  placeholder="e.g. iPad Air Promo Tile"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Description / Alt Text *</label>
+                <input
+                  type="text"
+                  value={editAlt}
+                  onChange={(e) => setEditAlt(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                  placeholder="Descriptive image summary for storefront presentation and accessibility"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Category</label>
+                <select
+                  value={editCategory}
+                  onChange={(e) => setEditCategory(e.target.value as MediaItem["category"])}
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                >
+                  <option value="hero">Hero Carousel Banners</option>
+                  <option value="storefront">Storefront / Promo Tiles</option>
+                  <option value="flyer">Service Flyers</option>
+                  <option value="product">Product Imagery</option>
+                  <option value="brand">Brand Logo &amp; Shop Banners</option>
+                  <option value="other">General / Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Display Fit Mode</label>
+                <select
+                  value={editFit}
+                  onChange={(e) => setEditFit(e.target.value as "cover" | "contain")}
+                  className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                >
+                  <option value="contain">Contain (No cropping, full artwork visible)</option>
+                  <option value="cover">Cover (Fill container, balanced framing)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span className="text-[0.7rem] text-slate-400">
+                Saves permanently to Supabase with AAL2 authorization.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={savingEdit}
+                  onClick={() => {
+                    if (replacementPreview) URL.revokeObjectURL(replacementPreview);
+                    setEditingAsset(null);
+                  }}
+                  className="admin-btn admin-btn-secondary text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={savingEdit}
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white text-xs font-bold transition shadow flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingEdit ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>Saving to Supabase...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -440,6 +798,17 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handleOpenEdit(selectedAsset);
+                  setSelectedAsset(null);
+                }}
+                className="admin-btn admin-btn-secondary text-xs"
+              >
+                <Edit3 size={14} />
+                <span>Edit / Replace</span>
+              </button>
               <button
                 type="button"
                 onClick={() => handleCopyUrl(selectedAsset)}

@@ -21,6 +21,7 @@ import {
   saveSiteSettings,
   saveStorefrontContent,
   subscribeToCms,
+  updateMediaAsset,
   uploadMediaAsset,
 } from "./supabaseCmsRepository";
 import type {
@@ -47,6 +48,17 @@ interface CmsContextValue {
     file: File,
     category?: MediaItem["category"],
     customTitle?: string
+  ) => Promise<MediaItem>;
+  updateMedia: (
+    id: string,
+    updates: {
+      title?: string;
+      alt?: string;
+      category?: MediaItem["category"];
+      fit?: "cover" | "contain";
+      position?: "center" | "top" | "bottom";
+    },
+    replacementFile?: File
   ) => Promise<MediaItem>;
   deleteMedia: (id: string) => Promise<void>;
   updateFaqs: (faqs: FaqItem[]) => Promise<FaqItem[]>;
@@ -129,6 +141,22 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     return uploaded;
   };
 
+  const handleUpdateMedia = async (
+    id: string,
+    updates: {
+      title?: string;
+      alt?: string;
+      category?: MediaItem["category"];
+      fit?: "cover" | "contain";
+      position?: "center" | "top" | "bottom";
+    },
+    replacementFile?: File
+  ) => {
+    const updated = await updateMediaAsset(id, updates, replacementFile);
+    setMedia((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    return updated;
+  };
+
   const handleDeleteMedia = async (id: string) => {
     await deleteMediaItemById(id);
     setMedia((prev) => prev.filter((m) => m.id !== id));
@@ -171,6 +199,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateSettings: handleUpdateSettings,
         updateHomepage: handleUpdateHomepage,
         uploadMedia: handleUploadMedia,
+        updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,
         updateFaqs: handleUpdateFaqs,
         updatePage: handleUpdatePage,
