@@ -8,6 +8,7 @@ import "./index.css";
 import "./styles/product-experience.css";
 import "./styles/mobile-premium.css";
 import "./styles/global-header.css";
+import "./styles/homepage-reference.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
