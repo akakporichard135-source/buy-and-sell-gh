@@ -45,6 +45,8 @@ try {
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
   const editorialStories = await bundle(path.join(projectRoot, "src/catalog/editorialStories.ts"), path.join(outdir, "editorialStories.mjs"));
+  const iphoneEducation = await bundle(path.join(projectRoot, "src/data/iphone18ProEducation.ts"), path.join(outdir, "iphone18ProEducation.mjs"));
+  const macStudio = await bundle(path.join(projectRoot, "src/data/macStudioStory.ts"), path.join(outdir, "macStudioStory.mjs"));
   const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
   const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
   const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
@@ -389,12 +391,14 @@ try {
   }
   const editorialComponentSource = await readFile(path.join(projectRoot, "src/components/EditorialProductStory.tsx"), "utf8");
   assert.match(editorialComponentSource, /story\.slug === "iphone-18-pro" \? <Iphone18ProEducation/, "The iPhone 18 Pro uses its focused educational story");
-  const iphoneEducationSource = await readFile(path.join(projectRoot, "src/components/Iphone18ProEducation.tsx"), "utf8");
-  assert.equal((iphoneEducationSource.match(/<img\b/g) ?? []).length, 5, "The educational story uses five focused product images");
-  assert.match(iphoneEducationSource, /iphone-18-pro-supplied-blue-front-back\.jpg/, "The educational display section includes the recovered Glacier composition");
-  assert.match(iphoneEducationSource, /iphone-18-pro-supplied-four-finishes\.jpg/, "The educational camera section includes the recovered rear-finish lineup");
-  assert.doesNotMatch(iphoneEducationSource, /A19 Pro|titanium|2500 nits/i, "The educational story omits superseded hardware claims");
-  assert.match(iphoneEducationSource, /apple\.com\/iphone-18-pro\/specs\//, "The educational story links to Apple's published specifications");
+  const education = iphoneEducation.iphone18ProEducation;
+  assert.equal(education.chapters.length, 8, "The educational story preserves all eight chapters");
+  assert.equal(education.chapters.flatMap((chapter) => [...chapter.imagesBefore, ...chapter.imagesAfter]).length + 1, 5, "The educational story uses five focused product images");
+  const educationCopy = JSON.stringify(education);
+  assert.match(educationCopy, /iphone-18-pro-supplied-blue-front-back\.jpg/, "The educational display section includes the recovered Glacier composition");
+  assert.match(educationCopy, /iphone-18-pro-supplied-four-finishes\.jpg/, "The educational camera section includes the recovered rear-finish lineup");
+  assert.doesNotMatch(educationCopy, /A19 Pro|titanium|2500 nits/i, "The educational story omits superseded hardware claims");
+  assert.match(education.before.specsUrl, /apple\.com\/iphone-18-pro\/specs\//, "The educational story links to Apple's published specifications");
   assert.equal((editorialComponentSource.match(/className="editorial-buy"/g) ?? []).length, 2, "Editorial stories have a hero CTA and an optional final-image CTA");
   assert.doesNotMatch(editorialComponentSource, /editorial-subnav|editorial-close/, "Editorial stories omit duplicate product navigation and closing purchase banner");
   const productFamilySource = await readFile(path.join(projectRoot, "src/pages/ProductFamilyPage.tsx"), "utf8");
@@ -416,9 +420,9 @@ try {
   assert.match(newMacLaunchSource, /Mac mini \(M6 or M5 Pro\)/, "Mac mini preorder preserves both announced chip options");
   assert.match(newMacLaunchSource, /Mac Studio \(M5 Max or M5 Ultra\)/, "Mac Studio preorder preserves both announced chip options");
   assert.match(newMacLaunchSource, /\/pre-order\?category=Mac&model=/, "New Mac CTAs use the existing model-prefilled preorder flow");
-  const macLaunchPageSource = await readFile(path.join(projectRoot, "src/pages/MacLaunchPage.tsx"), "utf8");
-  assert.match(macLaunchPageSource, /Wi-Fi 7 and Bluetooth 6/, "Launch stories include verified connectivity details");
-  assert.match(macLaunchPageSource, /Up to 512GB unified memory/, "Mac Studio story includes the verified M5 Ultra memory ceiling");
+  const macStudioCopy = JSON.stringify(macStudio.macStudioStory);
+  assert.match(macStudioCopy, /Wi-Fi 7 and Bluetooth 6/, "Launch stories include verified connectivity details");
+  assert.match(macStudioCopy, /Up to 512GB unified memory/, "Mac Studio story includes the verified M5 Ultra memory ceiling");
 
   const migration012 = await readFile(path.join(projectRoot, "supabase/migrations/012_admin_mfa_hardening.sql"), "utf8");
   assert.match(migration012, /auth\.jwt\(\)\s*->>\s*'aal'.*'aal2'/s, "Admin database helpers require AAL2");

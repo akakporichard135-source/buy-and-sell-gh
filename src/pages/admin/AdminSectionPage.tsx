@@ -1,5 +1,7 @@
+import { Navigate } from "react-router-dom";
 import { AdminAccountPage } from "./AdminAccountPage";
 import { AdminHomepageManager } from "./AdminHomepageManager";
+import { AdminLearnMorePages } from "./AdminLearnMorePages";
 import { AdminInquiriesPage } from "./AdminInquiriesPage";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 import { AdminOrdersPage } from "./AdminOrdersPage";
@@ -18,6 +20,7 @@ export type AdminSection =
   | "orders"
   | "media"
   | "homepage"
+  | "learn-more"
   | "storefront"
   | "services"
   | "pages"
@@ -34,13 +37,15 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
     case "products":
       return <AdminProductManager />;
     case "pricing":
-      return <AdminPricingManager />;
+      return <Navigate to="/admin/products" replace />;
     case "orders":
       return <AdminOrdersPage />;
     case "media":
       return <AdminMediaLibrary />;
     case "homepage":
       return <AdminHomepageManager />;
+    case "learn-more":
+      return <AdminLearnMorePages />;
     case "storefront":
       return <AdminStorefrontManager />;
     case "services":

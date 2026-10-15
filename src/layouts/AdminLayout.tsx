@@ -47,7 +47,6 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Overview", to: "/admin", icon: BarChart3 },
       { label: "Products", to: "/admin/products", icon: Package },
-      { label: "Pricing & Stock", to: "/admin/pricing", icon: DollarSign },
       { label: "Orders", to: "/admin/orders", icon: ShoppingBag, badgeKey: "orders" },
     ],
   },
@@ -56,6 +55,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Media Library", to: "/admin/media", icon: ImageIcon },
       { label: "Homepage", to: "/admin/homepage", icon: Layout },
+      { label: "Learn More Pages", to: "/admin/learn-more", icon: FileText },
       { label: "Storefront", to: "/admin/storefront", icon: Grid },
       { label: "Services", to: "/admin/services", icon: Wrench },
       { label: "Pages & Content", to: "/admin/pages", icon: FileText },
@@ -87,6 +87,7 @@ const pageTitles: Record<string, string> = {
   "/admin/orders": "Order Requests",
   "/admin/media": "Media Library & Digital Assets",
   "/admin/homepage": "Homepage Content & Campaigns",
+  "/admin/learn-more": "Learn More Pages",
   "/admin/storefront": "Storefront & Categories",
   "/admin/services": "Services & Trade-In",
   "/admin/pages": "Pages, Contact & Policy Management",

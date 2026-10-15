@@ -1,7 +1,10 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { Fragment, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { EditorialImage, EditorialStory } from "../catalog/editorialStories";
+import { sectionsAt, type LearnMoreSection } from "../cms/learnMoreRepository";
+import type { IphoneEducationContent } from "../data/iphone18ProEducation";
+import { LearnMoreSections } from "./LearnMoreSections";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { SEO } from "./SEO";
@@ -24,7 +27,7 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
   );
 }
 
-export function EditorialProductStory({ story }: { story: EditorialStory }) {
+export function EditorialProductStory({ story, sections = [], education }: { story: EditorialStory; sections?: LearnMoreSection[]; education?: IphoneEducationContent }) {
   const railRef = useRef<HTMLDivElement>(null);
   const { activeProducts } = useProductCatalog();
 
@@ -98,7 +101,9 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
         )}
       </section>
 
-      {story.slug === "iphone-18-pro" ? <Iphone18ProEducation buyPath={story.buyPath} hero={story.hero} /> : <>
+      <LearnMoreSections sections={sectionsAt(sections, "after-hero")} />
+
+      {story.slug === "iphone-18-pro" ? <Iphone18ProEducation buyPath={story.buyPath} hero={story.hero} sections={sections} content={education} /> : <>
       <section className="editorial-highlights" id="highlights" aria-labelledby="editorial-highlights-title">
         <div className="editorial-highlights-heading">
           <h2 id="editorial-highlights-title">Get the highlights.</h2>
@@ -119,6 +124,7 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           ))}
         </div>
       </section>
+      <LearnMoreSections sections={sectionsAt(sections, "after-highlights")} />
 
       {story.cinematicVideo && (
         <section
@@ -144,8 +150,9 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           </div>
         </section>
       )}
+      <LearnMoreSections sections={sectionsAt(sections, "after-hardware")} />
 
-      {story.chapters.map((chapter) => (
+      {story.chapters.map((chapter) => (<Fragment key={chapter.id}>
         <section className={`editorial-chapter editorial-chapter-${chapter.layout} editorial-tone-${chapter.tone}${chapter.image ? "" : " editorial-chapter-no-image"}`} id={chapter.id} key={chapter.id} aria-labelledby={`${chapter.id}-title`}>
           <div className="editorial-chapter-copy">
             <p className="editorial-eyebrow">{chapter.label}</p>
@@ -167,7 +174,8 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           </div>
           {chapter.image && <div className="editorial-chapter-art"><ProductImage image={chapter.image} /></div>}
         </section>
-      ))}
+        <LearnMoreSections sections={sectionsAt(sections, `after-chapter:${chapter.id}`)} />
+      </Fragment>))}
 
       {story.information && (
         <section className="editorial-information" id="information" aria-labelledby="editorial-info-title">
@@ -189,6 +197,9 @@ export function EditorialProductStory({ story }: { story: EditorialStory }) {
           </div>
         </section>
       )}
+      <LearnMoreSections sections={sectionsAt(sections, "after-information")} />
+
+      <LearnMoreSections sections={sectionsAt(sections, "end")} />
 
       {story.finalImage && (
         <section className="editorial-final-beauty" aria-label={`${story.name} final product view`}>

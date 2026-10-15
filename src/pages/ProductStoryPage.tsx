@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { editorialStories } from "../catalog/editorialStories";
+import { fetchPublishedLearnMore, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
 import {
   familyMatchesProduct,
   getProductStory,
@@ -13,22 +14,44 @@ import {
 } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
 import { EditorialProductStory } from "../components/EditorialProductStory";
+import { LearnMoreSections } from "../components/LearnMoreSections";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
 import "../styles/product-experience.css";
 
 export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
+  const [published, setPublished] = useState<LearnMoreContent | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void fetchPublishedLearnMore(slug).catch(() => null).then((content) => {
+      if (active) setPublished(content);
+    });
+    return () => { active = false; };
+  }, [slug]);
+
   const editorialStory = editorialStories[slug];
-  if (editorialStory) return <EditorialProductStory story={editorialStory} />;
-  return <CatalogProductStory family={family} slug={slug} />;
+  if (editorialStory) return <EditorialProductStory
+    story={published?.kind === "editorial" && published.story.slug === slug
+      ? refreshBundledStoryAssets(published.story, editorialStory) : editorialStory}
+    sections={published?.story.slug === slug ? published.sections : undefined}
+    education={published?.kind === "editorial" && published.story.slug === slug ? published.education : undefined} />;
+  return <CatalogProductStory family={family} slug={slug}
+    published={published?.story.slug === slug ? published : null} />;
 }
 
-function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug: string }) {
+export function CatalogProductStory({ family, slug, published }: { family: ProductFamilyKey; slug: string; published: LearnMoreContent | null }) {
   const { activeProducts, loading } = useProductCatalog();
   const configuredStory = getProductStory(family, slug);
   const product = activeProducts.find((item) => item.slug === slug && familyMatchesProduct(item, family));
-  const story = useMemo(() => configuredStory ?? (product ? storyFromProduct(product, family) : undefined), [configuredStory, family, product]);
+  const story = useMemo(() => {
+    const current = configuredStory ?? (product ? storyFromProduct(product, family) : undefined);
+    return published?.kind === "catalog" && current
+      ? refreshBundledStoryAssets(published.story, current)
+      : published?.kind === "catalog" ? published.story : current;
+  }, [configuredStory, family, product, published]);
+  const sections = published?.sections || [];
   const [filmOpen, setFilmOpen] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -79,6 +102,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
         </div>
         <StoryMedia media={story.media} priority />
       </section>
+      <LearnMoreSections sections={sectionsAt(sections, "after-hero")} />
 
       <section className={`story-introduction ${story.slug === "iphone-18-pro" ? "story-introduction-iphone-18-pro" : ""}`}>
         <p>Overview</p>
@@ -91,6 +115,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
           <h2>{story.introduction}</h2>
         )}
       </section>
+      <LearnMoreSections sections={sectionsAt(sections, "after-intro")} />
 
       <section className="story-highlights" id="highlights">
         <div className="story-highlights-header">
@@ -137,6 +162,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
           ))}
         </div>
       </section>
+      <LearnMoreSections sections={sectionsAt(sections, "after-highlights")} />
 
       {story.media.type === "video" && (
         <section className="story-film-section" id="film">
@@ -153,6 +179,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
           </button>
         </section>
       )}
+      <LearnMoreSections sections={sectionsAt(sections, "after-film")} />
 
       <section className={`story-design ${story.designMedia ? "story-design-cinematic" : ""}`} id="design">
         <div className="story-design-copy">
@@ -168,6 +195,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
             : <><StoryDesignFrame src={story.media.src} label={story.media.alt} /><span className="experience-source-mask" aria-hidden="true" /></>}
         </div>
       </section>
+      <LearnMoreSections sections={sectionsAt(sections, "after-design")} />
 
       {story.colorStory && (
         <section className="story-color-section" id="colors">
@@ -179,6 +207,7 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
           <img src={story.colorStory.media.src} alt={story.colorStory.media.alt} loading="lazy" decoding="async" />
         </section>
       )}
+      <LearnMoreSections sections={sectionsAt(sections, "after-colors")} />
 
       <section className="story-details" id="tech-specs">
         <div className="experience-heading">
@@ -195,6 +224,8 @@ function CatalogProductStory({ family, slug }: { family: ProductFamilyKey; slug:
           ))}
         </div>
       </section>
+
+      <LearnMoreSections sections={sectionsAt(sections, "end")} />
 
       <section className="story-final-cta" aria-labelledby="story-final-cta-title">
         <p className="story-final-eyebrow">{story.name}</p>
@@ -471,7 +502,7 @@ function useCinematicPlayback(
   };
 }
 
-function storyFromProduct(product: Product, family: ProductFamilyKey): ProductStoryDefinition {
+export function storyFromProduct(product: Product, family: ProductFamilyKey): ProductStoryDefinition {
   const image = resolveProductImage(product);
   const specifications = product.specifications ?? product.specs ?? [];
   const highlights = specifications.slice(0, 3).map((item, index) => {

@@ -1,0 +1,44 @@
+.learn-more-extra-section {
+  padding: clamp(64px, 8vw, 120px) 24px;
+  background: #fff;
+  color: #1d1d1f;
+}
+
+.learn-more-extra-section:nth-child(even) { background: #f5f5f7; }
+
+.learn-more-extra-inner { width: min(1100px, 100%); margin: 0 auto; }
+
+.learn-more-extra-copy { max-width: 740px; margin: 0 auto 36px; text-align: center; }
+.learn-more-extra-eyebrow { margin: 0 0 12px; color: #987018; font-weight: 700; }
+.learn-more-extra-copy h2 { margin: 0; font-size: clamp(2rem, 3.5vw, 3.5rem); line-height: 1.12; }
+.learn-more-extra-copy > p:last-of-type { font-size: clamp(1rem, 1.4vw, 1.2rem); line-height: 1.65; }
+
+.learn-more-extra-image, .learn-more-extra-gallery, .learn-more-extra-video { width: 100%; }
+.learn-more-extra-image picture, .learn-more-extra-gallery picture { display: block; }
+.learn-more-extra-image img { display: block; width: 100%; max-height: 700px; object-fit: contain; }
+.learn-more-extra-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px; }
+.learn-more-extra-gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; }
+.learn-more-extra-video { display: block; max-height: 720px; background: #000; object-fit: contain; }
+.learn-more-extra-button { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 20px; border-radius: 999px; background: var(--brand-gold); color: #171307; font-weight: 700; text-decoration: none; }
+
+.learn-more-extra-text-image .learn-more-extra-inner,
+.learn-more-extra-camera .learn-more-extra-inner,
+.learn-more-extra-performance .learn-more-extra-inner,
+.learn-more-extra-battery .learn-more-extra-inner {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 48px;
+}
+.learn-more-extra-text-image .learn-more-extra-copy,
+.learn-more-extra-camera .learn-more-extra-copy,
+.learn-more-extra-performance .learn-more-extra-copy,
+.learn-more-extra-battery .learn-more-extra-copy { text-align: left; margin: 0; }
+
+@media (max-width: 700px) {
+  .learn-more-extra-text-image .learn-more-extra-inner,
+  .learn-more-extra-camera .learn-more-extra-inner,
+  .learn-more-extra-performance .learn-more-extra-inner,
+  .learn-more-extra-battery .learn-more-extra-inner { grid-template-columns: 1fr; gap: 24px; }
+  .learn-more-extra-text-image .learn-more-extra-copy,
+  .learn-more-extra-camera .learn-more-extra-copy,
+  .learn-more-extra-performance .learn-more-extra-copy,
+  .learn-more-extra-battery .learn-more-extra-copy { text-align: center; margin: 0 auto; }
+}

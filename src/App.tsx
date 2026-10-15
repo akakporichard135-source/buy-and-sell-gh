@@ -59,11 +59,12 @@ export default function App() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="products" element={<AdminSectionPage section="products" />} />
-                  <Route path="pricing" element={<AdminSectionPage section="pricing" />} />
+                  <Route path="pricing" element={<Navigate to="/admin/products" replace />} />
                   <Route path="orders" element={<AdminSectionPage section="orders" />} />
                   <Route path="orders/:orderId" element={<AdminOrderDetailPage />} />
                   <Route path="media" element={<AdminSectionPage section="media" />} />
                   <Route path="homepage" element={<AdminSectionPage section="homepage" />} />
+                  <Route path="learn-more" element={<AdminSectionPage section="learn-more" />} />
                   <Route path="storefront" element={<AdminSectionPage section="storefront" />} />
                   <Route path="services" element={<AdminSectionPage section="services" />} />
                   <Route path="pages" element={<AdminSectionPage section="pages" />} />

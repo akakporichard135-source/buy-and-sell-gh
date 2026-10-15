@@ -21,6 +21,7 @@
 .iphone-edu-lesson p, .iphone-edu-audience p { margin: 0; color: #545960; font-size: 15px; line-height: 1.65; }
 .iphone-edu-dark .iphone-edu-lesson p { color: #c5c8cb; }
 .iphone-edu-figure { margin: 48px 0 0; }
+.iphone-edu-figure picture { display: block; width: 100%; }
 .iphone-edu-figure img { width: 100%; height: 100%; object-fit: contain; }
 .iphone-edu-figure figcaption { margin-top: 12px; color: #73777b; font-size: 12px; line-height: 1.5; }
 .iphone-edu-figure-hero { display: grid; justify-items: center; }
