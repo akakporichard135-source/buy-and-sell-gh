@@ -613,10 +613,10 @@ body:has(.home-reference) .store-footer {
 
   /* Dedicated Mobile Hero with Portrait Artwork */
   .home-ref-hero.has-mobile-hero {
-    height: clamp(480px, 72svh, 550px);
+    height: clamp(510px, 76svh, 570px);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     position: relative;
     padding-bottom: 0;
@@ -629,6 +629,7 @@ body:has(.home-reference) .store-footer {
     padding: 24px 16px 0;
     max-width: 440px;
     width: 100%;
+    order: 1;
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-copy h1 {
@@ -640,12 +641,12 @@ body:has(.home-reference) .store-footer {
 
   .home-ref-hero.has-mobile-hero .home-ref-copy p {
     font-size: clamp(0.95rem, 4vw, 1.12rem);
-    margin-top: 4px;
+    margin-top: 6px;
     line-height: 1.35;
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-actions {
-    margin-top: 10px;
+    margin-top: 14px;
     gap: 10px;
   }
 
@@ -660,14 +661,15 @@ body:has(.home-reference) .store-footer {
     flex: 1;
     width: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     overflow: hidden;
     z-index: 1;
-    padding-bottom: 0;
+    padding-bottom: 8px;
     position: relative;
     inset: auto;
-    margin-top: 16px;
+    margin-top: 28px;
+    order: 2;
   }
 
   .home-ref-hero.has-mobile-hero .home-ref-hero-image,
@@ -678,21 +680,21 @@ body:has(.home-reference) .store-footer {
     transform: none !important;
     display: block !important;
     width: auto !important;
-    max-width: min(86vw, 340px) !important;
-    height: 100% !important;
-    max-height: min(390px, 54svh) !important;
+    max-width: min(84vw, 320px) !important;
+    height: auto !important;
+    max-height: min(340px, 48svh) !important;
     object-fit: contain !important;
-    object-position: center center !important;
+    object-position: center top !important;
     margin: 0 auto !important;
   }
 
   .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro .home-ref-hero-image,
   .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro picture img {
     width: auto !important;
-    max-width: min(86vw, 340px) !important;
-    max-height: min(390px, 54svh) !important;
+    max-width: min(84vw, 320px) !important;
+    max-height: min(340px, 48svh) !important;
     object-fit: contain !important;
-    object-position: center center !important;
+    object-position: center top !important;
   }
 
   .home-ref-iphone-18-pro:not(.has-mobile-hero) .home-ref-hero-image {
@@ -700,30 +702,70 @@ body:has(.home-reference) .store-footer {
     bottom: 45px;
   }
 
-  /* iPhone Duo Mobile: Move image higher and reduce excessive white space */
+  /* iPhone Duo Mobile: Copy and buttons at top, phone-in-hand artwork downward with breathing room */
   .home-ref-hero.home-ref-iphone-duo {
-    height: clamp(440px, 60svh, 460px);
+    height: clamp(480px, 68svh, 530px);
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
+    position: relative;
+    overflow: hidden;
+    background: #fbfbfd;
   }
 
   .home-ref-iphone-duo .home-ref-copy {
-    padding-top: 26px;
+    position: relative;
+    z-index: 2;
+    padding: 26px 16px 0;
+    width: 100%;
+    max-width: 440px;
+    order: 1;
+  }
+
+  .home-ref-iphone-duo .home-ref-copy h1 {
+    font-size: clamp(2.15rem, 9.5vw, 2.85rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+
+  .home-ref-iphone-duo .home-ref-copy p {
+    font-size: clamp(0.95rem, 4vw, 1.12rem);
+    margin-top: 6px;
+    line-height: 1.35;
+  }
+
+  .home-ref-iphone-duo .home-ref-actions {
+    margin-top: 14px;
+    gap: 10px;
+  }
+
+  .home-ref-iphone-duo .home-ref-button {
+    min-height: 36px;
+    padding: 7px 18px;
+    font-size: 0.78rem;
+    font-weight: 600;
   }
 
   .home-ref-iphone-duo .home-ref-hero-image {
-    position: relative;
-    width: min(96vw, 420px);
-    height: auto;
-    max-height: min(330px, 50svh);
+    position: relative !important;
+    inset: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    max-width: min(92vw, 380px) !important;
+    height: auto !important;
+    max-height: min(280px, 42svh) !important;
     min-height: 0;
-    margin: 18px auto 0;
-    bottom: auto;
-    left: auto;
-    transform: none;
-    object-fit: contain;
-    object-position: center bottom;
+    margin: 32px auto 0 !important;
+    object-fit: contain !important;
+    object-position: center bottom !important;
+    mix-blend-mode: multiply;
+    z-index: 1;
+    order: 2;
   }
 
   /* Watch Ultra 4 Mobile: Move watch artwork higher and reduce top whitespace */
@@ -890,8 +932,52 @@ body:has(.home-reference) .store-footer {
     scroll-snap-stop: normal;
   }
 
-  body:has(.home-reference) .store-footer {
-    padding-inline: 20px;
+}
+
+@media (max-width: 360px) {
+  .home-ref-hero.has-mobile-hero .home-ref-copy,
+  .home-ref-hero.home-ref-iphone-duo .home-ref-copy {
+    padding: 20px 10px 0 !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy h1,
+  .home-ref-hero.home-ref-iphone-duo .home-ref-copy h1 {
+    font-size: 1.95rem !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy p,
+  .home-ref-hero.home-ref-iphone-duo .home-ref-copy p {
+    font-size: 0.88rem !important;
+    margin-top: 4px !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-actions,
+  .home-ref-hero.home-ref-iphone-duo .home-ref-actions {
+    margin-top: 10px !important;
+    gap: 8px !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-button,
+  .home-ref-hero.home-ref-iphone-duo .home-ref-button {
+    min-height: 32px !important;
+    padding: 5px 14px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-hero-picture {
+    margin-top: 22px !important;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-hero-image,
+  .home-ref-hero.has-mobile-hero picture img {
+    max-width: min(84vw, 270px) !important;
+    max-height: min(310px, 46svh) !important;
+  }
+
+  .home-ref-hero.home-ref-iphone-duo .home-ref-hero-image {
+    margin: 24px auto 0 !important;
+    max-width: min(94vw, 295px) !important;
+    max-height: min(230px, 40svh) !important;
   }
 }
 

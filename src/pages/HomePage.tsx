@@ -173,7 +173,7 @@ export function HomePage() {
         {heroes.map((fallbackCampaign, index) => {
           if (index >= activeHeroes.length) return null;
           const campaign = activeHeroes[index] || fallbackCampaign;
-          return <ProductHero campaign={campaign} key={campaign.id} priority={index === 0} />;
+          return <ProductHero campaign={campaign} key={campaign.id} priority={index < 2} />;
         })}
         {activeHeroes.slice(heroes.length).map((campaign) => (
           <ProductHero campaign={campaign} key={campaign.id} priority={false} />
