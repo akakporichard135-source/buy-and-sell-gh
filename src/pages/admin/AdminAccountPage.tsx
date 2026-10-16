@@ -8,7 +8,7 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { assertAdminAal2 } from "../../admin/adminAuthorization";
 import { supabase } from "../../lib/supabase";
@@ -29,8 +29,32 @@ export function AdminAccountPage() {
   const [emailError, setEmailError] = useState("");
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const [syncingProfile, setSyncingProfile] = useState(false);
+  const [authEmailStatus, setAuthEmailStatus] = useState<{ email: string; pendingEmail: string | null } | null>(null);
+  const [checkingEmailStatus, setCheckingEmailStatus] = useState(false);
   const approvedEmailChangeAccount = session?.userId === "950ec818-3b39-4e28-a02c-01f0597b5455" &&
     session.email.toLowerCase() === "akakporichard135@gmail.com";
+
+  const checkAuthEmailStatus = useCallback(async () => {
+    if (!supabase || session?.mode !== "supabase" || session.assuranceLevel !== "aal2") return;
+    setCheckingEmailStatus(true);
+    try {
+      const { data, error: userError } = await supabase.auth.getUser();
+      if (userError || !data.user?.email || data.user.id !== session.userId) {
+        throw new Error("Could not verify the current Auth account. Sign in again.");
+      }
+      setAuthEmailStatus({ email: data.user.email, pendingEmail: data.user.new_email || null });
+      setEmailError("");
+    } catch (statusError) {
+      setEmailError(statusError instanceof Error ? statusError.message : "Could not check email status.");
+    } finally {
+      setCheckingEmailStatus(false);
+    }
+  }, [session?.userId, session?.mode, session?.assuranceLevel]);
+
+  useEffect(() => {
+    setAuthEmailStatus(null);
+    void checkAuthEmailStatus();
+  }, [checkAuthEmailStatus]);
 
   useEffect(() => {
     setProfileEmail(null);
@@ -60,6 +84,7 @@ export function AdminAccountPage() {
         setEmailMessage("Verification requested. Your login email has not changed yet. Confirm the message sent to the new inbox, and the current inbox if Supabase requests it. Then sign in again with MFA.");
         setNewEmail("");
         setConfirmEmail("");
+        await checkAuthEmailStatus();
       }
     } catch {
       setEmailError("Could not request an email change. Try again later.");
@@ -285,6 +310,15 @@ export function AdminAccountPage() {
         <p className="text-xs text-slate-600">
           Current login: <strong>{session?.email || "N/A"}</strong>. Approved destination: <strong>buyandsellgh@yahoo.com</strong>. Supabase will request email verification before changing this account. Your user ID and authenticator enrollment stay with the same account.
         </p>
+        {session?.mode === "supabase" && session.assuranceLevel === "aal2" && (
+          <div className="space-y-2 border-y border-slate-100 py-3 text-xs text-slate-600">
+            <p>Verified Supabase Auth email: <strong>{authEmailStatus?.email || "Checking..."}</strong></p>
+            {authEmailStatus?.pendingEmail && <p>Pending new email: <strong>{authEmailStatus.pendingEmail}</strong>. Complete every confirmation email from Supabase before signing in with it.</p>}
+            <button type="button" onClick={checkAuthEmailStatus} disabled={checkingEmailStatus} className="admin-btn admin-btn-secondary">
+              <RefreshCw size={14} /> {checkingEmailStatus ? "Checking..." : "Check Verification Status"}
+            </button>
+          </div>
+        )}
         <form onSubmit={handleRequestEmailChange} className="grid gap-3 text-xs sm:grid-cols-2">
           <label className="font-semibold text-slate-700">New email
             <input required type="email" maxLength={254} autoComplete="off" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5" />
