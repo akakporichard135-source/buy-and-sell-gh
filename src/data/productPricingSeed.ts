@@ -10,6 +10,174 @@ export interface SeedPricingItem {
 }
 
 export const initialProductPricingSeed: Record<string, SeedPricingItem> = {
+  "iphone-18-pro": {
+    "price": 20500,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "18p-256",
+        "productId": "iphone-18-pro",
+        "title": "iPhone 18 Pro 256GB",
+        "sku": "BSGH-IPHONE-18P-256",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 20500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "18p-512",
+        "productId": "iphone-18-pro",
+        "title": "iPhone 18 Pro 512GB",
+        "sku": "BSGH-IPHONE-18P-512",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 23000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "18p-1tb",
+        "productId": "iphone-18-pro",
+        "title": "iPhone 18 Pro 1TB",
+        "sku": "BSGH-IPHONE-18P-1TB",
+        "storage": "1TB",
+        "condition": "Brand New",
+        "price": 26500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      }
+    ]
+  },
+  "product-1792163179762": {
+    "price": 20500,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "18p-256",
+        "productId": "product-1792163179762",
+        "title": "iPhone 18 Pro 256GB",
+        "sku": "BSGH-IPHONE-18P-256",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 20500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "18p-512",
+        "productId": "product-1792163179762",
+        "title": "iPhone 18 Pro 512GB",
+        "sku": "BSGH-IPHONE-18P-512",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 23000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "18p-1tb",
+        "productId": "product-1792163179762",
+        "title": "iPhone 18 Pro 1TB",
+        "sku": "BSGH-IPHONE-18P-1TB",
+        "storage": "1TB",
+        "condition": "Brand New",
+        "price": 26500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      }
+    ]
+  },
+  "iphone-18-pro-max": {
+    "price": 22500,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "18pm-256",
+        "productId": "iphone-18-pro-max",
+        "title": "iPhone 18 Pro Max 256GB",
+        "sku": "BSGH-IPHONE-18PM-256",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 22500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "18pm-512",
+        "productId": "iphone-18-pro-max",
+        "title": "iPhone 18 Pro Max 512GB",
+        "sku": "BSGH-IPHONE-18PM-512",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 25500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "18pm-1tb",
+        "productId": "iphone-18-pro-max",
+        "title": "iPhone 18 Pro Max 1TB",
+        "sku": "BSGH-IPHONE-18PM-1TB",
+        "storage": "1TB",
+        "condition": "Brand New",
+        "price": 28500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      },
+      {
+        "id": "18pm-2tb",
+        "productId": "iphone-18-pro-max",
+        "title": "iPhone 18 Pro Max 2TB",
+        "sku": "BSGH-IPHONE-18PM-2TB",
+        "storage": "2TB",
+        "condition": "Brand New",
+        "price": 32000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 4
+      }
+    ]
+  },
   "iphone-17-pro-max": {
     "price": 22500,
     "condition": "Brand New",

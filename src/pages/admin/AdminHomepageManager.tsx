@@ -497,7 +497,7 @@ export function AdminHomepageManager() {
                         };
                         setContent({ ...content, heroes });
                       }}
-                      placeholder="Button label (e.g. View pricing)"
+                      placeholder="Button label (e.g. Buy)"
                       className="w-full p-2 rounded border border-slate-200 bg-white"
                     />
                     <input

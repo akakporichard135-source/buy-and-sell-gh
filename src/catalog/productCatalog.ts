@@ -50,9 +50,16 @@ export const getPrimaryImage = (product: Product) => {
 
 export const normalizeProduct = (product: Product): Product => {
   const seedPricing = initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug];
-  const price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
-  const previousPrice = product.previousPrice ?? product.oldPrice ?? seedPricing?.previousPrice;
   const variants = (product.variants && product.variants.length > 0) ? product.variants : (seedPricing?.variants ?? []);
+  let price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
+  if (variants.length > 0) {
+    const activeVars = variants.filter((v) => v.available !== false && v.price > 0);
+    const minVarPrice = activeVars.length > 0 ? Math.min(...activeVars.map((v) => v.price)) : 0;
+    if (minVarPrice > 0 && (price <= 0 || price > minVarPrice || (product.slug === "iphone-18-pro" && price === 30000))) {
+      price = minVarPrice;
+    }
+  }
+  const previousPrice = product.previousPrice ?? product.oldPrice ?? seedPricing?.previousPrice;
   const condition = (product.condition === "To Confirm" && seedPricing?.condition)
     ? normalizeCondition(seedPricing.condition as ProductCondition)
     : normalizeCondition(product.condition);

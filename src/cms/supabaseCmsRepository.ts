@@ -135,18 +135,41 @@ export const fetchHomepageContent = async (): Promise<HomepageContent> => {
 
     if (!error && data?.content) {
       const savedContent = data.content as Partial<HomepageContent>;
+      const normalizeSecondary = <T extends { id: string; secondary?: { label: string; to: string } }>(item: T): T => {
+        if (item.id === "iphone-duo") return item;
+        if (item.secondary && item.secondary.label === "View pricing") {
+          return {
+            ...item,
+            secondary: {
+              ...item.secondary,
+              label: "Buy",
+            },
+          };
+        }
+        return item;
+      };
+
       const mergedHeroes = (savedContent.heroes || defaultHomepageContent.heroes).map((h) => {
         const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
-        return {
+        const combined = {
           ...def,
           ...h,
           mobileImage: h.mobileImage || def?.mobileImage,
         };
+        return normalizeSecondary(combined);
       });
+
+      const mergedTiles = (savedContent.tiles || defaultHomepageContent.tiles).map((t) => {
+        const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
+        const combined = { ...def, ...t };
+        return normalizeSecondary(combined);
+      });
+
       const merged: HomepageContent = {
         ...defaultHomepageContent,
         ...savedContent,
         heroes: mergedHeroes,
+        tiles: mergedTiles,
       };
       writeLocal(CMS_STORAGE_KEY_HOMEPAGE, merged);
       return merged;

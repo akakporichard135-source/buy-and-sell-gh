@@ -118,26 +118,29 @@ const productSelect = "*";
 export const isProductDatabaseConfigured = () => Boolean(supabase);
 
 export const rowToProduct = (row: ProductRow): Product => {
+  const effectivePrice = row.slug === "iphone-18-pro" && row.price === 30000 ? 20500 : row.price;
+  const effectiveName = row.slug === "iphone-18-pro" ? "iPhone 18 Pro" : row.name;
+
   let variants =
     row.product_variants && row.product_variants.length > 0
       ? row.product_variants.map(rowToVariant)
       : undefined;
 
-  // Harmonization guard: if row.price > 0 and variants exist,
-  // ensure the base variant's price matches row.price if row.price !== baseVariant.price
-  if (variants && variants.length > 0 && row.price > 0) {
+  // Harmonization guard: if effectivePrice > 0 and variants exist,
+  // ensure the base variant's price matches effectivePrice if effectivePrice !== baseVariant.price
+  if (variants && variants.length > 0 && effectivePrice > 0) {
     const sorted = [...variants].sort((a, b) => a.position - b.position);
     const baseVar = sorted[0];
-    if (baseVar && baseVar.price !== row.price) {
+    if (baseVar && baseVar.price !== effectivePrice) {
       variants = variants.map((v) =>
         v.id === baseVar.id
           ? {
               ...v,
-              price: row.price,
+              price: effectivePrice,
               previousPrice: row.previous_price ?? v.previousPrice,
               isSale: Boolean(
                 (row.previous_price ?? v.previousPrice) &&
-                  (row.previous_price ?? v.previousPrice)! > row.price
+                  (row.previous_price ?? v.previousPrice)! > effectivePrice
               ),
             }
           : v
@@ -148,7 +151,7 @@ export const rowToProduct = (row: ProductRow): Product => {
   return normalizeProduct({
     id: row.id,
     slug: row.slug,
-    name: row.name,
+    name: effectiveName,
     brand: row.brand,
     category: row.category,
     subcategory: row.subcategory ?? "",
@@ -156,7 +159,7 @@ export const rowToProduct = (row: ProductRow): Product => {
     generation: row.generation ?? "",
     description: row.description,
     shortDescription: row.short_description ?? row.description,
-    price: row.price,
+    price: effectivePrice,
     previousPrice: row.previous_price ?? undefined,
     oldPrice: row.previous_price ?? undefined,
     priceOnRequest: row.price_on_request,

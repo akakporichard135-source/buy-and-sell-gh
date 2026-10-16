@@ -170,6 +170,76 @@ export const isOrderDatabaseConfigured = () => Boolean(supabase);
 
 export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
   const client = getSupabaseOrThrow();
+
+  // Authoritative item resolution: ensure product_id matches active database product
+  const resolvedItems = await Promise.all(
+    input.items.map(async (item) => {
+      let resolvedProductId = item.productId;
+      let resolvedVariantId = item.variantId ?? null;
+
+      try {
+        // 1. Verify if product_id exists directly
+        const { data: exactProduct } = await client
+          .from("products")
+          .select("id, slug")
+          .eq("id", resolvedProductId)
+          .maybeSingle();
+
+        if (!exactProduct && item.productSlug) {
+          // Resolve by slug if id was synthetic/fallback
+          const { data: slugProduct } = await client
+            .from("products")
+            .select("id, slug")
+            .eq("slug", item.productSlug)
+            .maybeSingle();
+          if (slugProduct?.id) {
+            resolvedProductId = slugProduct.id;
+          }
+        }
+
+        // 2. Verify variant_id in product_variants table
+        if (resolvedVariantId) {
+          const { data: exactVariant } = await client
+            .from("product_variants")
+            .select("id")
+            .eq("id", resolvedVariantId)
+            .eq("product_id", resolvedProductId)
+            .maybeSingle();
+
+          if (!exactVariant) {
+            // Check if matching storage variant exists in product_variants
+            if (item.selectedStorage) {
+              const { data: storageVariant } = await client
+                .from("product_variants")
+                .select("id")
+                .eq("product_id", resolvedProductId)
+                .eq("storage", item.selectedStorage)
+                .eq("available", true)
+                .order("position", { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+              resolvedVariantId = storageVariant?.id ?? null;
+            } else {
+              resolvedVariantId = null;
+            }
+          }
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+
+      return {
+        product_id: resolvedProductId,
+        product_slug: item.productSlug,
+        selected_storage: item.selectedStorage,
+        selected_colour: item.selectedColour,
+        quantity: item.quantity,
+        variant_id: resolvedVariantId,
+      };
+    })
+  );
+
   const { data, error } = await client.rpc("create_order_request", {
     customer_payload: {
       full_name: input.customer.fullName,
@@ -185,14 +255,7 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
       additional_note: input.customer.additionalNote ?? null,
       payment_method: input.customer.preferredPaymentMethod,
     },
-    items_payload: input.items.map((item) => ({
-      product_id: item.productId,
-      product_slug: item.productSlug,
-      selected_storage: item.selectedStorage,
-      selected_colour: item.selectedColour,
-      quantity: item.quantity,
-      variant_id: item.variantId ?? null,
-    })),
+    items_payload: resolvedItems,
     submission_token: input.submissionToken,
   });
   if (error) throw new Error(error.message || "Order request could not be saved.");

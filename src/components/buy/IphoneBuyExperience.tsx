@@ -63,8 +63,9 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const fallbackProduct: Product = useMemo(() => {
     const isMax = model === "iPhone 18 Pro Max";
     const basePrice = isMax ? 22500 : 20500;
+    const resolvedId = !isMax && catalogProduct?.id ? catalogProduct.id : (isMax ? "iphone-18-pro-max" : "iphone-18-pro");
     return {
-      id: isMax ? "iphone-18-pro-max" : "iphone-18-pro",
+      id: resolvedId,
       slug: isMax ? "iphone-18-pro-max" : "iphone-18-pro",
       name: model,
       model,
@@ -80,19 +81,37 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       imageTone: "dark",
       images: [{ src: currentFinishImage, alt: `${model} ${finish}` }],
       variants: [
-        { id: `${isMax ? "18pm" : "18p"}-256`, productId: isMax ? "iphone-18-pro-max" : "iphone-18-pro", title: `${model} 256GB`, storage: "256GB", price: isMax ? 22500 : 20500, condition: "Brand New", stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" },
-        { id: `${isMax ? "18pm" : "18p"}-512`, productId: isMax ? "iphone-18-pro-max" : "iphone-18-pro", title: `${model} 512GB`, storage: "512GB", price: isMax ? 25500 : 23000, condition: "Brand New", stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" },
-        { id: `${isMax ? "18pm" : "18p"}-1tb`, productId: isMax ? "iphone-18-pro-max" : "iphone-18-pro", title: `${model} 1TB`, storage: "1TB", price: isMax ? 28500 : 26500, condition: "Brand New", stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" },
-        ...(isMax ? [{ id: "18pm-2tb", productId: "iphone-18-pro-max", title: `${model} 2TB`, storage: "2TB", price: 32000, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const }] : []),
+        { id: `${isMax ? "18pm" : "18p"}-256`, productId: resolvedId, title: `${model} 256GB`, storage: "256GB", price: isMax ? 22500 : 20500, condition: "Brand New", stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" },
+        { id: `${isMax ? "18pm" : "18p"}-512`, productId: resolvedId, title: `${model} 512GB`, storage: "512GB", price: isMax ? 25500 : 23000, condition: "Brand New", stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" },
+        { id: `${isMax ? "18pm" : "18p"}-1tb`, productId: resolvedId, title: `${model} 1TB`, storage: "1TB", price: isMax ? 28500 : 26500, condition: "Brand New", stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" },
+        ...(isMax ? [{ id: "18pm-2tb", productId: resolvedId, title: `${model} 2TB`, storage: "2TB", price: 32000, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const }] : []),
       ],
       available: true,
       stockStatus: "In Stock",
       stockQuantity: 10,
       featured: true,
     };
-  }, [model, storageOptions, currentFinishImage, finish]);
+  }, [model, storageOptions, currentFinishImage, finish, catalogProduct?.id]);
 
-  const activeProduct = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const activeProduct: Product = useMemo(() => {
+    const isMax = model === "iPhone 18 Pro Max";
+    const isTargetModel = isMax
+      ? catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name === "iPhone 18 Pro Max"
+      : catalogProduct?.slug === "iphone-18-pro" || (catalogProduct?.name?.includes("18 Pro") && !catalogProduct?.name?.includes("Max"));
+
+    if (isTargetModel && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
+      const variants = (catalogProduct.variants && catalogProduct.variants.length > 0)
+        ? catalogProduct.variants
+        : fallbackProduct.variants;
+      return {
+        ...catalogProduct,
+        id: catalogProduct.id,
+        variants,
+      };
+    }
+    return fallbackProduct;
+  }, [model, catalogProduct, fallbackProduct]);
+
   const configured = resolveConfiguredPrice(activeProduct, { storage, model });
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;

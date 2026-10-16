@@ -28,7 +28,7 @@ const heroes: Campaign[] = [
     alt: "Burgundy iPhone 18 Pro in front of a metallic PRO composition",
     tone: "dark",
     primary: { label: "Learn more", to: "/iphone/iphone-18-pro" },
-    secondary: { label: "View pricing", to: "/shop/buy-iphone/iphone-18-pro" },
+    secondary: { label: "Buy", to: "/shop/buy-iphone/iphone-18-pro" },
   },
   {
     id: "iphone-duo",
@@ -48,7 +48,7 @@ const heroes: Campaign[] = [
     alt: "Black Apple Watch Series 12 with a dark watch face",
     tone: "dark",
     primary: { label: "Learn more", to: "/watch/apple-watch-series-12" },
-    secondary: { label: "View pricing", to: "/shop/buy-watch/apple-watch-series-12" },
+    secondary: { label: "Buy", to: "/shop/buy-watch/apple-watch-series-12" },
   },
 ];
 
@@ -62,7 +62,7 @@ const tileRows: Campaign[][] = [
       alt: "Close view of the Apple Watch Ultra 4 case and display",
       tone: "dark",
       primary: { label: "Learn more", to: "/watch/apple-watch-ultra-4" },
-      secondary: { label: "View pricing", to: "/shop/buy-watch/apple-watch-ultra-4" },
+      secondary: { label: "Buy", to: "/shop/buy-watch/apple-watch-ultra-4" },
     },
     {
       id: "airpods-pro-3",
@@ -72,7 +72,7 @@ const tileRows: Campaign[][] = [
       alt: "AirPods Pro 3 earbuds above their open MagSafe Charging Case",
       tone: "light",
       primary: { label: "Learn more", to: "/airpods/airpods-pro-3" },
-      secondary: { label: "View pricing", to: "/shop/buy-airpods/airpods-pro-3" },
+      secondary: { label: "Buy", to: "/shop/buy-airpods/airpods-pro-3" },
       placement: "bottom",
     },
   ],
@@ -95,7 +95,7 @@ const tileRows: Campaign[][] = [
       alt: "MacBook Air opening to show its thin profile and display",
       tone: "mist",
       primary: { label: "Learn more", to: "/mac/macbook-air" },
-      secondary: { label: "View pricing", to: "/shop/buy-mac/macbook-air" },
+      secondary: { label: "Buy", to: "/shop/buy-mac/macbook-air" },
     },
   ],
   [
@@ -121,6 +121,20 @@ const tileRows: Campaign[][] = [
   ],
 ];
 
+function normalizeHomepageCampaign(campaign: Campaign): Campaign {
+  if (campaign.id === "iphone-duo") return campaign;
+  if (campaign.secondary && campaign.secondary.label === "View pricing") {
+    return {
+      ...campaign,
+      secondary: {
+        ...campaign.secondary,
+        label: "Buy",
+      },
+    };
+  }
+  return campaign;
+}
+
 const serviceFlyers = [
   { title: "Repairs", image: "/services/repairs.png", alt: "Buy & Sell GH repairs flyer for phones, laptops and game consoles", to: "/repairs" },
   { title: "Installment Payment", image: "/services/installment-payment.png", alt: "Buy & Sell GH installment payment flyer", to: "/installment" },
@@ -132,15 +146,17 @@ const serviceFlyers = [
 export function HomePage() {
   const { homepage } = useCms();
 
-  const activeHeroes: Campaign[] =
+  const rawHeroes: Campaign[] =
     homepage?.heroes?.filter((h) => h.enabled) && homepage.heroes.filter((h) => h.enabled).length > 0
       ? (homepage.heroes.filter((h) => h.enabled) as Campaign[])
       : heroes;
+  const activeHeroes = rawHeroes.map(normalizeHomepageCampaign);
 
-  const activeTiles: Campaign[] =
+  const rawTiles: Campaign[] =
     homepage?.tiles?.filter((t) => t.enabled) && homepage.tiles.filter((t) => t.enabled).length > 0
       ? (homepage.tiles.filter((t) => t.enabled) as Campaign[])
       : tileRows.flat();
+  const activeTiles = rawTiles.map(normalizeHomepageCampaign);
 
   const tileGridRows: Campaign[][] = [];
   for (let i = 0; i < activeTiles.length; i += 2) {

@@ -57,6 +57,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(id);
   }, [toast]);
 
+  // Reconcile cart items with authoritative database product IDs when catalog loads
+  useEffect(() => {
+    setItems((currentItems) => {
+      let changed = false;
+      const nextItems = currentItems.map((item) => {
+        const catalogProd = getProductBySlug(item.product.slug);
+        if (catalogProd && catalogProd.id !== item.product.id) {
+          changed = true;
+          return {
+            ...item,
+            product: {
+              ...item.product,
+              id: catalogProd.id,
+            },
+          };
+        }
+        return item;
+      });
+      return changed ? nextItems : currentItems;
+    });
+  }, [getProductBySlug]);
+
   const addItem = (
     product: Product,
     storage = product.storage[0],
