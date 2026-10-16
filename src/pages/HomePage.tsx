@@ -331,11 +331,18 @@ function ServiceFlyerCarousel() {
         </div>
       </div>
       <div className="home-ref-service-track" ref={trackRef} role="region" aria-label="Buy & Sell GH service flyers" tabIndex={0}>
-        {activeFlyers.map((flyer) => (
-          <Link className="home-ref-service-card" to={flyer.to} key={flyer.title} aria-label={flyer.title}>
-            <img src={flyer.image} alt={flyer.alt} width={1024} height={1536} loading="lazy" decoding="async" />
-          </Link>
-        ))}
+        {activeFlyers.map((flyer) => {
+          const webpSrc = flyer.image.endsWith(".png") ? flyer.image.replace(/\.png$/, ".webp") : flyer.image;
+          const pngSrc = flyer.image.endsWith(".webp") ? flyer.image.replace(/\.webp$/, ".png") : flyer.image;
+          return (
+            <Link className="home-ref-service-card" to={flyer.to} key={flyer.title} aria-label={flyer.title}>
+              <picture>
+                <source type="image/webp" srcSet={webpSrc} />
+                <img src={pngSrc} alt={flyer.alt} width={1024} height={1536} loading="eager" decoding="async" />
+              </picture>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
