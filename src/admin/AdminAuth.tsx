@@ -39,12 +39,16 @@ interface AdminAuthValue {
   cancelTotpEnrollment: (factorId: string) => Promise<void>;
   verifyTotp: (factorId: string, code: string) => Promise<AdminAuthResult>;
   requestPasswordReset: (email: string) => Promise<AdminAuthResult>;
+  requestEmailChange: (email: string) => Promise<AdminAuthResult>;
   updatePassword: (password: string) => Promise<AdminAuthResult>;
 }
 
 const STORAGE_KEY = "buyandsell-gh-temp-admin-session";
 const AdminAuthContext = createContext<AdminAuthValue | undefined>(undefined);
 const LOCAL_ADMIN_ENABLED = import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true";
+const EMAIL_CHANGE_ACCOUNT_ID = "950ec818-3b39-4e28-a02c-01f0597b5455";
+const EMAIL_CHANGE_OLD = "akakporichard135@gmail.com";
+const EMAIL_CHANGE_NEW = "buyandsellgh@yahoo.com";
 
 const clearAdminClientState = () => {
   localStorage.removeItem(STORAGE_KEY);
@@ -293,6 +297,32 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/admin/reset-password`,
       });
+      return { ok: true };
+    },
+    requestEmailChange: async (email) => {
+      if (!supabase || !session || session.mode !== "supabase") {
+        return { ok: false, message: "A Supabase administrator session is required." };
+      }
+      const nextEmail = email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail) || nextEmail.length > 254) {
+        return { ok: false, message: "Enter a valid email address." };
+      }
+      if (session.userId !== EMAIL_CHANGE_ACCOUNT_ID ||
+          session.email.toLowerCase() !== EMAIL_CHANGE_OLD || nextEmail !== EMAIL_CHANGE_NEW) {
+        return { ok: false, message: "This request does not match the approved account and email change." };
+      }
+      try {
+        await assertAdminAal2();
+      } catch {
+        return { ok: false, message: "Authenticator verification is required before changing the login email." };
+      }
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user || userData.user.id !== session.userId ||
+          userData.user.email?.toLowerCase() !== session.email.toLowerCase()) {
+        return { ok: false, message: "The administrator session could not be verified. Sign in again." };
+      }
+      const { error } = await supabase.auth.updateUser({ email: nextEmail });
+      if (error) return { ok: false, message: "Supabase could not start email verification. Try again later." };
       return { ok: true };
     },
     updatePassword: async (password) => {

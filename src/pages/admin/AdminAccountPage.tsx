@@ -8,11 +8,13 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAdminAuth } from "../../admin/AdminAuth";
+import { assertAdminAal2 } from "../../admin/adminAuthorization";
+import { supabase } from "../../lib/supabase";
 
 export function AdminAccountPage() {
-  const { session, updatePassword, requestPasswordReset } = useAdminAuth();
+  const { session, updatePassword, requestPasswordReset, requestEmailChange } = useAdminAuth();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,6 +22,77 @@ export function AdminAccountPage() {
   const [resetSending, setResetSending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [syncingProfile, setSyncingProfile] = useState(false);
+  const approvedEmailChangeAccount = session?.userId === "950ec818-3b39-4e28-a02c-01f0597b5455" &&
+    session.email.toLowerCase() === "akakporichard135@gmail.com";
+
+  useEffect(() => {
+    setProfileEmail(null);
+    if (!supabase || session?.mode !== "supabase" || session.assuranceLevel !== "aal2") return;
+    let active = true;
+    supabase.from("admin_profiles").select("email").eq("user_id", session.userId).maybeSingle()
+      .then(({ data, error }) => {
+        if (active && !error) setProfileEmail(data?.email ?? null);
+      });
+    return () => { active = false; };
+  }, [session?.userId, session?.mode, session?.assuranceLevel, session?.email]);
+
+  const handleRequestEmailChange = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setEmailError("");
+    setEmailMessage("");
+    if (newEmail.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()) {
+      setEmailError("Email addresses do not match.");
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const result = await requestEmailChange(newEmail);
+      if (!result.ok) {
+        setEmailError(result.message);
+      } else {
+        setEmailMessage("Verification requested. Your login email has not changed yet. Confirm the message sent to the new inbox, and the current inbox if Supabase requests it. Then sign in again with MFA.");
+        setNewEmail("");
+        setConfirmEmail("");
+      }
+    } catch {
+      setEmailError("Could not request an email change. Try again later.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const syncVerifiedProfileEmail = async () => {
+    if (!supabase || !session || session.mode !== "supabase") return;
+    setSyncingProfile(true);
+    setEmailError("");
+    try {
+      await assertAdminAal2("owner");
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user?.email || userData.user.id !== session.userId ||
+          userData.user.email !== session.email) {
+        throw new Error("The verified Auth email could not be confirmed. Sign in again.");
+      }
+      const { data, error: updateError } = await supabase.from("admin_profiles")
+        .update({ email: userData.user.email })
+        .eq("user_id", userData.user.id)
+        .select("email")
+        .single();
+      if (updateError || !data) throw new Error("Could not synchronize the admin profile email.");
+      setProfileEmail(data.email);
+      setEmailMessage("Verified admin profile email synchronized.");
+    } catch (syncError) {
+      setEmailError(syncError instanceof Error ? syncError.message : "Could not synchronize the admin profile email.");
+    } finally {
+      setSyncingProfile(false);
+    }
+  };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +275,39 @@ export function AdminAccountPage() {
             </button>
           </form>
         </div>
+      </div>
+
+      <div className="admin-card space-y-4">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+          <Mail size={18} className="text-[#d4af37]" />
+          <h3 className="font-bold text-slate-900 text-sm">Change Login Email</h3>
+        </div>
+        <p className="text-xs text-slate-600">
+          Current login: <strong>{session?.email || "N/A"}</strong>. Approved destination: <strong>buyandsellgh@yahoo.com</strong>. Supabase will request email verification before changing this account. Your user ID and authenticator enrollment stay with the same account.
+        </p>
+        <form onSubmit={handleRequestEmailChange} className="grid gap-3 text-xs sm:grid-cols-2">
+          <label className="font-semibold text-slate-700">New email
+            <input required type="email" maxLength={254} autoComplete="off" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5" />
+          </label>
+          <label className="font-semibold text-slate-700">Confirm new email
+            <input required type="email" maxLength={254} autoComplete="off" value={confirmEmail} onChange={(event) => setConfirmEmail(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5" />
+          </label>
+          <button type="submit" disabled={emailSending || !approvedEmailChangeAccount || session?.mode !== "supabase" || session.assuranceLevel !== "aal2"} className="admin-btn admin-btn-primary w-full justify-center sm:w-fit">
+            <Mail size={14} /> {emailSending ? "Requesting..." : "Send Verification Emails"}
+          </button>
+        </form>
+        {emailMessage && <p role="status" className="text-xs text-emerald-700">{emailMessage}</p>}
+        {emailError && <p role="alert" className="text-xs text-rose-700">{emailError}</p>}
+        {profileEmail && session?.email && profileEmail.toLowerCase() !== session.email.toLowerCase() && (
+          <div className="border-t border-slate-100 pt-3 text-xs text-slate-600">
+            <p>The admin profile still records a different email. Synchronize it only after the verified new email appears above.</p>
+            {session.role === "owner" && (
+              <button type="button" onClick={syncVerifiedProfileEmail} disabled={syncingProfile} className="admin-btn admin-btn-secondary mt-2">
+                <RefreshCw size={14} /> {syncingProfile ? "Synchronizing..." : "Sync Verified Profile Email"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
