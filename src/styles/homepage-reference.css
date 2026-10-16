@@ -982,6 +982,95 @@ body:has(.home-reference) .store-footer {
   }
 }
 
+/* Desktop Hero Spacing: iPhone 18 Pro & iPhone Duo (min-width: 801px) */
+@media (min-width: 801px) {
+  /* iPhone 18 Pro Desktop: Clean visual separation between buttons and metallic PRO artwork */
+  .home-ref-hero.home-ref-iphone-18-pro {
+    height: clamp(660px, 80vh, 750px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+
+  .home-ref-hero.home-ref-iphone-18-pro .home-ref-copy {
+    position: relative;
+    z-index: 2;
+    padding-top: clamp(42px, 4.8vh, 56px);
+    width: 100%;
+    flex: none;
+  }
+
+  .home-ref-hero.home-ref-iphone-18-pro .home-ref-hero-picture {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    flex: 1;
+    margin-top: clamp(34px, 3.8vw, 50px);
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .home-ref-hero.home-ref-iphone-18-pro .home-ref-hero-image {
+    position: relative !important;
+    inset: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    max-width: min(1120px, 86vw) !important;
+    height: auto !important;
+    max-height: min(450px, 52vh) !important;
+    object-fit: contain !important;
+    object-position: center top !important;
+    margin: 0 auto !important;
+  }
+
+  .home-ref-hero.home-ref-iphone-18-pro > .home-ref-hero-image {
+    margin: clamp(34px, 3.8vw, 50px) auto 0 !important;
+  }
+
+  /* iPhone Duo Desktop: Comfortable spacing between buttons and phone in hands */
+  .home-ref-hero.home-ref-iphone-duo {
+    height: clamp(660px, 80vh, 740px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    background: #fbfbfd;
+  }
+
+  .home-ref-hero.home-ref-iphone-duo .home-ref-copy {
+    position: relative;
+    z-index: 2;
+    padding-top: clamp(42px, 4.8vh, 56px);
+    width: 100%;
+    flex: none;
+  }
+
+  .home-ref-hero.home-ref-iphone-duo .home-ref-hero-image {
+    position: relative !important;
+    inset: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    max-width: min(880px, 76vw) !important;
+    height: auto !important;
+    max-height: min(440px, 50vh) !important;
+    margin: clamp(34px, 3.8vw, 50px) auto 0 !important;
+    object-fit: contain !important;
+    object-position: center top !important;
+    mix-blend-mode: multiply;
+    z-index: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .home-ref-button {
     transition: none;
