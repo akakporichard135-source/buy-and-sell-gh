@@ -36,7 +36,7 @@ import {
 } from "../../catalog/productCatalog";
 import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
-import type { Product, ProductImage } from "../../types/product";
+import type { Product, ProductImage, ProductVariant } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import {
   hasOwnerUploadedProductImages,
@@ -145,11 +145,11 @@ export function AdminProductManager() {
   const [searchParams, setSearchParams] = useSearchParams();
   const isMaintenance = searchParams.get("view") === "maintenance";
   const [maintenanceTab, setMaintenanceTab] = useState<"all" | "missing" | "unpublished" | "archived">("all");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(searchParams.get("search") ?? "");
   const [brand, setBrand] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");
-  const [stock, setStock] = useState("All");
+  const [stock, setStock] = useState(searchParams.get("stock") ?? "All");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
 
@@ -446,10 +446,6 @@ export function AdminProductManager() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Link to="/admin/pricing" className="admin-btn admin-btn-secondary">
-            <Tag size={16} className="text-[#d4af37]" />
-            <span>Pricing &amp; Stock</span>
-          </Link>
           <button className="admin-btn admin-btn-primary" type="button" onClick={startAdd}>
             <Plus size={16} />
             <span>Add New Product</span>
@@ -1504,33 +1500,35 @@ function ProductForm({
 
           {existingVariants.length > 0 && (
             <div className="md:col-span-2 p-3 rounded-lg bg-amber-50/60 border border-amber-200/80">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center mb-2">
                 <span className="font-bold text-slate-800 flex items-center gap-1.5">
                   <Tag size={13} className="text-amber-600" />
-                  <span>Configured Storage Tiers ({existingVariants.length})</span>
+                  <span>Variant Prices &amp; Stock ({existingVariants.length})</span>
                 </span>
-                <Link
-                  to={`/admin/pricing?search=${encodeURIComponent(form.name)}`}
-                  className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Manage individual variant prices in Pricing &amp; Stock →
-                </Link>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {existingVariants.map((v, idx) => (
-                  <div key={v.id} className="p-2 rounded bg-white border border-amber-100 text-[11px]">
-                    <div className="flex items-center justify-between font-semibold text-slate-700">
-                      <span>{v.storage || v.title}</span>
-                      {idx === 0 && (
-                        <span className="text-[9px] px-1 py-0.2 bg-amber-100 text-amber-800 rounded font-bold">
-                          Base
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-bold text-slate-900 mt-0.5">{formatGhs(v.price)}</div>
-                  </div>
+              <div className="space-y-2">
+                {existingVariants.map((variant) => (
+                  <VariantPricingEditor
+                    key={variant.id}
+                    variant={variant}
+                    onSaved={(fields) => {
+                      const variants = existingVariants.map((item) =>
+                        item.id === variant.id ? { ...item, ...fields } : item
+                      );
+                      const active = variants.filter((item) => item.available && item.price > 0);
+                      const lowest = active.reduce<ProductVariant | null>(
+                        (current, item) => !current || item.price < current.price ? item : current,
+                        null
+                      );
+                      if (lowest) {
+                        setForm({
+                          ...form,
+                          price: String(lowest.price),
+                          previousPrice: lowest.previousPrice ? String(lowest.previousPrice) : "",
+                        });
+                      }
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -1803,6 +1801,95 @@ function getBackendLabel(status: string) {
   if (status === "error") return "Supabase Error";
   if (status === "local-catalog") return "Local Dev Catalogue";
   return "Seed Fallback";
+}
+
+function VariantPricingEditor({
+  variant,
+  onSaved,
+}: {
+  variant: ProductVariant;
+  onSaved: (fields: Pick<ProductVariant, "price" | "previousPrice" | "isSale" | "stockStatus" | "stockQuantity" | "available">) => void;
+}) {
+  const { updateVariantPriceAndStock, backendStatus } = useProductCatalog();
+  const [price, setPrice] = useState(String(variant.price));
+  const [previousPrice, setPreviousPrice] = useState(variant.previousPrice == null ? "" : String(variant.previousPrice));
+  const [quantity, setQuantity] = useState(String(variant.stockQuantity));
+  const [stockStatus, setStockStatus] = useState(variant.stockStatus);
+  const [available, setAvailable] = useState(variant.available);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setPrice(String(variant.price));
+    setPreviousPrice(variant.previousPrice == null ? "" : String(variant.previousPrice));
+    setQuantity(String(variant.stockQuantity));
+    setStockStatus(variant.stockStatus);
+    setAvailable(variant.available);
+  }, [variant]);
+
+  const save = async () => {
+    if (import.meta.env.PROD && backendStatus !== "supabase") {
+      setMessage("Supabase is required to save production variant changes.");
+      return;
+    }
+    const nextPrice = Number(price);
+    const nextPrevious = previousPrice.trim() === "" ? null : Number(previousPrice);
+    const nextQuantity = Number(quantity);
+    if (!Number.isFinite(nextPrice) || nextPrice < 0 ||
+        (nextPrevious !== null && (!Number.isFinite(nextPrevious) || nextPrevious < 0)) ||
+        !Number.isInteger(nextQuantity) || nextQuantity < 0) {
+      setMessage("Enter valid non-negative prices and a whole-number quantity.");
+      return;
+    }
+    const fields = {
+      price: nextPrice,
+      previousPrice: nextPrevious,
+      isSale: nextPrevious !== null && nextPrevious > nextPrice,
+      stockStatus,
+      stockQuantity: nextQuantity,
+      available,
+    };
+    setSaving(true);
+    setMessage("");
+    try {
+      await updateVariantPriceAndStock(variant.id, fields);
+      onSaved(fields);
+      setMessage("Saved");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Variant could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded border border-amber-100 bg-white p-3 text-xs">
+      <div className="mb-2 font-semibold text-slate-800">{variant.title}</div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <label className="font-medium text-slate-600">Price (GH₵)
+          <input aria-label={`${variant.title} price`} type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} className="mt-1 w-full rounded border border-slate-200 p-2" />
+        </label>
+        <label className="font-medium text-slate-600">Previous (GH₵)
+          <input aria-label={`${variant.title} previous price`} type="number" min="0" step="0.01" value={previousPrice} onChange={(event) => setPreviousPrice(event.target.value)} className="mt-1 w-full rounded border border-slate-200 p-2" />
+        </label>
+        <label className="font-medium text-slate-600">Quantity
+          <input aria-label={`${variant.title} quantity`} type="number" min="0" step="1" value={quantity} onChange={(event) => setQuantity(event.target.value)} className="mt-1 w-full rounded border border-slate-200 p-2" />
+        </label>
+        <label className="font-medium text-slate-600">Stock status
+          <select aria-label={`${variant.title} stock status`} value={stockStatus} onChange={(event) => setStockStatus(event.target.value as Product["stockStatus"])} className="mt-1 w-full rounded border border-slate-200 p-2">
+            {stockStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 font-medium text-slate-600">
+          <input type="checkbox" checked={available} onChange={(event) => setAvailable(event.target.checked)} /> Available
+        </label>
+        <button type="button" onClick={save} disabled={saving} aria-label={`Save ${variant.title} variant`} className="admin-btn admin-btn-secondary self-end justify-center">
+          <Save size={14} /> {saving ? "Saving..." : "Save variant"}
+        </button>
+      </div>
+      {message && <p role="status" className="mt-2 text-slate-700">{message}</p>}
+    </div>
+  );
 }
 
 export function formToProduct(form: ProductFormState, products: Product[]): Product {

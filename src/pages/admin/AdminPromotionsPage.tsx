@@ -141,9 +141,9 @@ export function AdminPromotionsPage() {
           </p>
         </div>
 
-        <Link to="/admin/pricing" className="admin-btn admin-btn-primary">
+        <Link to="/admin/products" className="admin-btn admin-btn-primary">
           <Tag size={16} />
-          <span>Edit in Pricing Manager</span>
+          <span>Edit in Products</span>
         </Link>
       </div>
 
@@ -198,8 +198,8 @@ export function AdminPromotionsPage() {
         <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
         <span>
           <strong>Zero Pricing Conflict:</strong> This promotions manager is fully synchronized with the
-          Authoritative Pricing &amp; Stock engine. Changes made to sale prices or previous prices in the
-          pricing engine instantly propagate to the storefront, cart, and this dashboard.
+          Products editor. Changes made to sale prices or previous prices in
+          Products propagate to the storefront, cart, and this dashboard.
         </span>
       </div>
 
@@ -260,7 +260,7 @@ export function AdminPromotionsPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-8 text-slate-400">
-                    No active promotions found. Set a "Previous Price" in the Pricing Manager to launch
+                    No active promotions found. Set a "Previous Price" in Products to launch
                     a discount deal.
                   </td>
                 </tr>
@@ -301,7 +301,7 @@ export function AdminPromotionsPage() {
                     </td>
                     <td>
                       <Link
-                        to={`/admin/pricing?q=${encodeURIComponent(item.productName)}`}
+                        to={`/admin/products?search=${encodeURIComponent(item.productName)}`}
                         className="admin-btn admin-btn-secondary admin-btn-sm"
                       >
                         <span>Adjust</span>

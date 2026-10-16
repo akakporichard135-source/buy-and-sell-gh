@@ -1,4 +1,3 @@
-import { Navigate } from "react-router-dom";
 import { AdminAccountPage } from "./AdminAccountPage";
 import { AdminHomepageManager } from "./AdminHomepageManager";
 import { AdminLearnMorePages } from "./AdminLearnMorePages";
@@ -6,7 +5,6 @@ import { AdminInquiriesPage } from "./AdminInquiriesPage";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 import { AdminOrdersPage } from "./AdminOrdersPage";
 import { AdminPagesManager } from "./AdminPagesManager";
-import { AdminPricingManager } from "./AdminPricingManager";
 import { AdminProductManager } from "./AdminProductManager";
 import { AdminPromotionsPage } from "./AdminPromotionsPage";
 import { AdminReviewsPage } from "./AdminReviewsPage";
@@ -16,7 +14,6 @@ import { AdminStorefrontManager } from "./AdminStorefrontManager";
 
 export type AdminSection =
   | "products"
-  | "pricing"
   | "orders"
   | "media"
   | "homepage"
@@ -36,8 +33,6 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
   switch (section) {
     case "products":
       return <AdminProductManager />;
-    case "pricing":
-      return <Navigate to="/admin/products" replace />;
     case "orders":
       return <AdminOrdersPage />;
     case "media":

@@ -241,9 +241,9 @@ export function AdminDashboardPage() {
 
           {/* 3. Low Stock */}
           <Link
-            to="/admin/pricing"
+            to="/admin/products?stock=Low%20Stock"
             className="admin-metric-card hover:border-amber-500/70 transition"
-            title="View Low Stock Products in Pricing & Stock"
+            title="View Low Stock Products"
           >
             <div className="admin-metric-header">
               <span className="admin-metric-label">Low Stock</span>
@@ -261,9 +261,9 @@ export function AdminDashboardPage() {
 
           {/* 4. Out of Stock */}
           <Link
-            to="/admin/pricing"
+            to="/admin/products?stock=Out%20of%20Stock"
             className="admin-metric-card hover:border-rose-500/70 transition"
-            title="View Out of Stock Products in Pricing & Stock"
+            title="View Out of Stock Products"
           >
             <div className="admin-metric-header">
               <span className="admin-metric-label">Out of Stock</span>
@@ -316,10 +316,6 @@ export function AdminDashboardPage() {
           <Link to="/admin/products" className="admin-btn admin-btn-secondary">
             <Package size={16} />
             <span>Manage Store Products</span>
-          </Link>
-          <Link to="/admin/pricing" className="admin-btn admin-btn-secondary">
-            <DollarSign size={16} className="text-[#d4af37]" />
-            <span>Authoritative Pricing &amp; Stock</span>
           </Link>
           <Link to="/admin/orders" className="admin-btn admin-btn-secondary">
             <ShoppingBag size={16} />

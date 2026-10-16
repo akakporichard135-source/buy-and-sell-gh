@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  DollarSign,
   FileText,
   Grid,
   Image as ImageIcon,
@@ -83,7 +82,6 @@ const navGroups: NavGroup[] = [
 const pageTitles: Record<string, string> = {
   "/admin": "Overview Dashboard",
   "/admin/products": "Product Management",
-  "/admin/pricing": "Authoritative Pricing & Stock",
   "/admin/orders": "Order Requests",
   "/admin/media": "Media Library & Digital Assets",
   "/admin/homepage": "Homepage Content & Campaigns",

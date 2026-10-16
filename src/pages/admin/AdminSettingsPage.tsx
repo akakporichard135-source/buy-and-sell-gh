@@ -378,7 +378,7 @@ export function AdminSettingsPage() {
                 <strong>Catalog &amp; Pricing:</strong> Product details, descriptions, Ghana cedi prices, sale discounts, and inventory counts are governed by Supabase database tables (
                 <code className="text-slate-800 bg-slate-50 px-1 py-0.5 rounded font-mono">products</code> and{" "}
                 <code className="text-slate-800 bg-slate-50 px-1 py-0.5 rounded font-mono">product_variants</code>
-                ) and can be modified directly on the <strong>Products</strong> and <strong>Pricing</strong> pages without any code deployments.
+                ) and can be modified directly in <strong>Products</strong> without any code deployments.
               </p>
             </div>
           </div>
