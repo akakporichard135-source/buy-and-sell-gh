@@ -15,7 +15,7 @@ import {
 } from "./adminOrderNotificationState";
 
 export const ADMIN_NEW_ORDER_EVENT = "buyandsell:admin-new-order";
-const FALLBACK_REFRESH_MS = 60_000;
+const FALLBACK_REFRESH_MS = 12_000;
 const NOTIFICATION_LIFETIME_MS = 10_000;
 
 interface UseAdminOrderNotificationsOptions {
@@ -54,52 +54,70 @@ export function useAdminOrderNotifications({ userId, reviewingOrders }: UseAdmin
     soundEnabledRef.current = soundEnabled;
   }, [soundEnabled]);
 
-  const unlockAudio = useCallback(async (force = false) => {
-    if (!force && !soundEnabledRef.current) return;
+  const getOrCreateAudioContext = useCallback(async (): Promise<AudioContext | null> => {
     try {
       const AudioContextClass = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const context = audioContextRef.current ?? new AudioContextClass();
-      audioContextRef.current = context;
-      if (context.state === "suspended") await context.resume();
+      if (!AudioContextClass) return null;
+      let context = audioContextRef.current;
+      if (!context || context.state === "closed") {
+        context = new AudioContextClass();
+        audioContextRef.current = context;
+      }
+      if (context.state === "suspended") {
+        await context.resume();
+      }
       audioReadyRef.current = context.state === "running";
+      return context;
+    } catch {
+      audioReadyRef.current = false;
+      return null;
+    }
+  }, []);
+
+  const playChimeTone = useCallback((context: AudioContext) => {
+    try {
+      const now = context.currentTime;
+      // High-clarity Apple dual chime: 784 Hz (G5) -> 1046.5 Hz (C6)
+      [
+        { freq: 784, start: 0, dur: 0.16 },
+        { freq: 1046.5, start: 0.12, dur: 0.28 },
+      ].forEach(({ freq, start, dur }) => {
+        const osc = context.createOscillator();
+        const gain = context.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + start);
+        gain.gain.setValueAtTime(0.0001, now + start);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + start + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+        osc.connect(gain);
+        gain.connect(context.destination);
+        osc.start(now + start);
+        osc.stop(now + start + dur + 0.02);
+      });
     } catch {
       audioReadyRef.current = false;
     }
   }, []);
 
+  const playOrderSound = useCallback(async () => {
+    if (!soundEnabledRef.current) return;
+    const context = await getOrCreateAudioContext();
+    if (context && context.state === "running") {
+      playChimeTone(context);
+    }
+  }, [getOrCreateAudioContext, playChimeTone]);
+
   useEffect(() => {
-    const enableAfterInteraction = () => void unlockAudio();
+    const enableAfterInteraction = () => {
+      void getOrCreateAudioContext();
+    };
     window.addEventListener("pointerdown", enableAfterInteraction, { once: true });
     window.addEventListener("keydown", enableAfterInteraction, { once: true });
     return () => {
       window.removeEventListener("pointerdown", enableAfterInteraction);
       window.removeEventListener("keydown", enableAfterInteraction);
     };
-  }, [unlockAudio]);
-
-  const playOrderSound = useCallback(() => {
-    const context = audioContextRef.current;
-    if (!soundEnabledRef.current || !audioReadyRef.current || !context || context.state !== "running") return;
-    try {
-      const now = context.currentTime;
-      [0, 0.16].forEach((offset, index) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.value = index === 0 ? 740 : 988;
-        gain.gain.setValueAtTime(0.0001, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.08, now + offset + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.14);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start(now + offset);
-        oscillator.stop(now + offset + 0.15);
-      });
-    } catch {
-      audioReadyRef.current = false;
-    }
-  }, []);
+  }, [getOrCreateAudioContext]);
 
   const dismissNotification = useCallback((orderId: string) => {
     const timer = notificationTimers.current.get(orderId);
@@ -120,7 +138,7 @@ export function useAdminOrderNotifications({ userId, reviewingOrders }: UseAdmin
         return next;
       });
     }
-    playOrderSound();
+    void playOrderSound();
     window.dispatchEvent(new CustomEvent(ADMIN_NEW_ORDER_EVENT, { detail: { orderId: newOrder.id } }));
     const timer = window.setTimeout(() => dismissNotification(newOrder.id), NOTIFICATION_LIFETIME_MS);
     notificationTimers.current.set(newOrder.id, timer);
@@ -152,6 +170,15 @@ export function useAdminOrderNotifications({ userId, reviewingOrders }: UseAdmin
       pollingTimer = window.setInterval(() => void refreshForNewOrders(), FALLBACK_REFRESH_MS);
     };
 
+    const handleVisibilityOrFocus = () => {
+      if (!disposed && document.visibilityState === "visible") {
+        void refreshForNewOrders();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+
     const initialize = async () => {
       try {
         const historicalOrders = await fetchAdminOrderNotifications();
@@ -173,6 +200,8 @@ export function useAdminOrderNotifications({ userId, reviewingOrders }: UseAdmin
     void initialize();
     return () => {
       disposed = true;
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
       removeSubscription?.();
       stopPolling();
       if (retryTimer) window.clearTimeout(retryTimer);
@@ -185,15 +214,23 @@ export function useAdminOrderNotifications({ userId, reviewingOrders }: UseAdmin
     void audioContextRef.current?.close();
   }, []);
 
-  const toggleSound = useCallback(() => {
+  const toggleSound = useCallback(async () => {
     setSoundEnabled((current) => {
       const next = !current;
       soundEnabledRef.current = next;
       saveOrderSoundPreference(window.localStorage, next);
-      if (next) void unlockAudio(true);
+      if (next) {
+        // Enable and test playback immediately so the administrator confirms sound is working
+        void (async () => {
+          const context = await getOrCreateAudioContext();
+          if (context && context.state === "running") {
+            playChimeTone(context);
+          }
+        })();
+      }
       return next;
     });
-  }, [unlockAudio]);
+  }, [getOrCreateAudioContext, playChimeTone]);
 
   const markOrdersRead = useCallback(() => {
     setUnreadOrderIds([]);

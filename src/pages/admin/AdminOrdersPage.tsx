@@ -81,6 +81,7 @@ export function AdminOrdersPage() {
     hard: boolean;
     reason: string;
   } | null>(null);
+  const [deleteModalError, setDeleteModalError] = useState("");
   const [clearCompletedOpen, setClearCompletedOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
 
@@ -353,6 +354,7 @@ export function AdminOrdersPage() {
   const handleExecuteDelete = async () => {
     if (!deleteTarget || deleteTarget.orders.length === 0 || actionBusy) return;
     setActionBusy(true);
+    setDeleteModalError("");
     try {
       const targetList = deleteTarget.orders;
       if (targetList.length === 1) {
@@ -391,8 +393,11 @@ export function AdminOrdersPage() {
           : `${targetList.length} orders ${deleteTarget.hard ? "permanently deleted" : "safely removed"}.`
       );
       setDeleteTarget(null);
+      setDeleteModalError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete order(s).");
+      const msg = err instanceof Error ? err.message : "Failed to delete order(s).";
+      setDeleteModalError(msg);
+      setError(msg);
     } finally {
       setActionBusy(false);
     }
@@ -1332,12 +1337,23 @@ export function AdminOrdersPage() {
                   className="w-full text-xs p-2.5 rounded-lg border border-slate-200 bg-white outline-none focus:border-slate-800"
                 />
               </div>
+
+              {/* Error banner if deletion failed */}
+              {deleteModalError && (
+                <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
+                  <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{deleteModalError}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2.5 p-4 bg-slate-50 border-t border-slate-200">
               <button
                 type="button"
-                onClick={() => setDeleteTarget(null)}
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteModalError("");
+                }}
                 disabled={actionBusy}
                 className="admin-btn admin-btn-secondary admin-btn-sm"
               >

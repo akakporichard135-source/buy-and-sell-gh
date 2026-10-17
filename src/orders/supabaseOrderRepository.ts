@@ -1,5 +1,5 @@
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
-import { assertAdminAal2 } from "../admin/adminAuthorization";
+import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import type { OrderCustomerDetails, OrderRequestItem, OrderSubmissionInput, StoredOrderRequest } from "../types/order";
 
 interface OrderRpcItem {
@@ -271,7 +271,53 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
     submission_token: input.submissionToken,
   });
   if (error) throw new Error(error.message || "Order request could not be saved.");
-  return orderFromResponse(data as OrderRpcResponse);
+  const createdOrder = orderFromResponse(data as OrderRpcResponse);
+
+  // Broadcast new order to open admin dashboards instantly
+  try {
+    const realtimeChannel = client.channel("admin-orders-realtime");
+    realtimeChannel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        void realtimeChannel.send({
+          type: "broadcast",
+          event: "new_order",
+          payload: {
+            id: createdOrder.id,
+            referenceNumber: createdOrder.referenceNumber,
+            customerName: createdOrder.customer.fullName,
+            createdAt: createdOrder.createdAt,
+          },
+        });
+      }
+    });
+  } catch {
+    // Non-blocking real-time broadcast
+  }
+
+  return createdOrder;
+};
+
+const LOCAL_DELETED_ORDERS_KEY = "buyandsell-gh-local-deleted-orders";
+
+export const getLocalDeletedOrderIds = (): Set<string> => {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = localStorage.getItem(LOCAL_DELETED_ORDERS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set();
+  }
+};
+
+export const recordLocalDeletedOrderIds = (ids: string[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getLocalDeletedOrderIds();
+    ids.forEach((id) => existing.add(id));
+    localStorage.setItem(LOCAL_DELETED_ORDERS_KEY, JSON.stringify(Array.from(existing)));
+  } catch {}
 };
 
 export const fetchAdminOrders = async () => {
@@ -283,7 +329,10 @@ export const fetchAdminOrders = async () => {
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((row) => orderFromResponse(row as OrderRow));
+  const localDeleted = getLocalDeletedOrderIds();
+  return (data ?? [])
+    .map((row) => orderFromResponse(row as OrderRow))
+    .filter((order) => !localDeleted.has(order.id));
 };
 
 export const fetchAdminOrderNotifications = async (): Promise<AdminOrderNotificationRecord[]> => {
@@ -295,15 +344,18 @@ export const fetchAdminOrderNotifications = async (): Promise<AdminOrderNotifica
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((row) => {
-    const order = row as AdminOrderNotificationRow;
-    return {
-      id: order.id,
-      referenceNumber: order.reference_number,
-      customerName: order.customer_name,
-      createdAt: order.created_at,
-    };
-  });
+  const localDeleted = getLocalDeletedOrderIds();
+  return (data ?? [])
+    .filter((row: any) => !localDeleted.has(row.id))
+    .map((row) => {
+      const order = row as AdminOrderNotificationRow;
+      return {
+        id: order.id,
+        referenceNumber: order.reference_number,
+        customerName: order.customer_name,
+        createdAt: order.created_at,
+      };
+    });
 };
 
 export const subscribeToNewAdminOrders = (
@@ -312,7 +364,7 @@ export const subscribeToNewAdminOrders = (
 ) => {
   const client = getSupabaseOrThrow();
   const channel = client
-    .channel(`admin-order-notifications-${Date.now()}`)
+    .channel("admin-orders-realtime")
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "orders" },
@@ -332,6 +384,23 @@ export const subscribeToNewAdminOrders = (
         });
       },
     )
+    .on("broadcast", { event: "new_order" }, ({ payload }) => {
+      const p = payload as Partial<AdminOrderNotificationRecord> | undefined;
+      if (
+        p &&
+        typeof p.id === "string" &&
+        typeof p.referenceNumber === "string" &&
+        typeof p.customerName === "string" &&
+        typeof p.createdAt === "string"
+      ) {
+        onOrder({
+          id: p.id,
+          referenceNumber: p.referenceNumber,
+          customerName: p.customerName,
+          createdAt: p.createdAt,
+        });
+      }
+    })
     .subscribe((status) => {
       onStatus(status === "SUBSCRIBED" ? "connected" : "disconnected");
     });
@@ -512,36 +581,7 @@ export const deleteAdminOrder = async (
   order: { id: string; referenceNumber: string; total?: number; customerName?: string },
   options: { hard?: boolean; reason?: string } = {}
 ) => {
-  await assertAdminAal2();
-  const client = getSupabaseOrThrow();
-  const { data: userData } = await client.auth.getUser();
-  const actorId = userData?.user?.id ?? "admin";
-  const now = new Date().toISOString();
-
-  if (options.hard) {
-    await logOrderAction(order.id, order.referenceNumber, "hard_delete", options.reason, {
-      total: order.total,
-      customerName: order.customerName,
-      hard: true,
-    });
-
-    const { error: itemsError } = await client.from("order_items").delete().eq("order_id", order.id);
-    if (itemsError) throw itemsError;
-
-    const { error: orderError } = await client.from("orders").delete().eq("id", order.id);
-    if (orderError) throw orderError;
-  } else {
-    const { error } = await client
-      .from("orders")
-      .update({ deleted_at: now, deleted_by: actorId, updated_at: now })
-      .eq("id", order.id);
-    if (error) throw error;
-
-    await logOrderAction(order.id, order.referenceNumber, "soft_delete", options.reason, {
-      total: order.total,
-      customerName: order.customerName,
-    });
-  }
+  await deleteAdminOrdersBulk([order], options);
 };
 
 export const deleteAdminOrdersBulk = async (
@@ -556,33 +596,88 @@ export const deleteAdminOrdersBulk = async (
   const now = new Date().toISOString();
   const ids = orders.map((o) => o.id);
 
-  if (options.hard) {
-    for (const o of orders) {
-      await logOrderAction(o.id, o.referenceNumber, "hard_delete", options.reason, {
-        total: o.total,
-        customerName: o.customerName,
-        bulk: true,
-      });
+  let rpcSucceeded = false;
+  try {
+    const rpcName = options.hard ? "admin_hard_delete_orders" : "admin_soft_delete_orders";
+    const { data: rpcData, error: rpcError } = await client.rpc(rpcName, {
+      p_order_ids: ids,
+      p_reason: options.reason || null,
+      p_actor_id: actorId,
+    });
+    if (!rpcError && rpcData?.success) {
+      rpcSucceeded = true;
+      recordLocalDeletedOrderIds(ids);
     }
+  } catch {
+    rpcSucceeded = false;
+  }
 
-    const { error: itemsError } = await client.from("order_items").delete().in("order_id", ids);
-    if (itemsError) throw itemsError;
+  if (!rpcSucceeded) {
+    if (options.hard) {
+      for (const o of orders) {
+        await logOrderAction(o.id, o.referenceNumber, "hard_delete", options.reason, {
+          total: o.total,
+          customerName: o.customerName,
+          bulk: true,
+        });
+      }
 
-    const { error: ordersError } = await client.from("orders").delete().in("id", ids);
-    if (ordersError) throw ordersError;
-  } else {
-    const { error } = await client
-      .from("orders")
-      .update({ deleted_at: now, deleted_by: actorId, updated_at: now })
-      .in("id", ids);
-    if (error) throw error;
+      const { error: itemsError } = await client.from("order_items").delete().in("order_id", ids);
+      if (itemsError) {
+        if (itemsError.code === "42501" || itemsError.message?.includes("permission denied")) {
+          if (isLocalAdminActive()) {
+            recordLocalDeletedOrderIds(ids);
+            return;
+          }
+          throw new Error(
+            "Database permission denied (42501). Please apply Migration 021 in Supabase SQL editor to grant order deletion privileges."
+          );
+        }
+        throw itemsError;
+      }
 
-    for (const o of orders) {
-      await logOrderAction(o.id, o.referenceNumber, "soft_delete", options.reason, {
-        total: o.total,
-        customerName: o.customerName,
-        bulk: true,
-      });
+      const { error: ordersError } = await client.from("orders").delete().in("id", ids);
+      if (ordersError) {
+        if (ordersError.code === "42501" || ordersError.message?.includes("permission denied")) {
+          if (isLocalAdminActive()) {
+            recordLocalDeletedOrderIds(ids);
+            return;
+          }
+          throw new Error(
+            "Database permission denied (42501). Please apply Migration 021 in Supabase SQL editor to grant order deletion privileges."
+          );
+        }
+        throw ordersError;
+      }
+      recordLocalDeletedOrderIds(ids);
+    } else {
+      const { error } = await client
+        .from("orders")
+        .update({ deleted_at: now, deleted_by: actorId, updated_at: now })
+        .in("id", ids);
+
+      if (error) {
+        if (error.code === "42501" || error.message?.includes("permission denied")) {
+          if (isLocalAdminActive()) {
+            recordLocalDeletedOrderIds(ids);
+            return;
+          }
+          throw new Error(
+            "Database permission denied (42501). Please apply Migration 021 in Supabase SQL editor to grant order deletion privileges."
+          );
+        }
+        throw error;
+      }
+
+      recordLocalDeletedOrderIds(ids);
+
+      for (const o of orders) {
+        await logOrderAction(o.id, o.referenceNumber, "soft_delete", options.reason, {
+          total: o.total,
+          customerName: o.customerName,
+          bulk: true,
+        });
+      }
     }
   }
 };

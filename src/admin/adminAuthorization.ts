@@ -2,6 +2,19 @@ import { supabase } from "../lib/supabase";
 
 export type AdminRole = "owner" | "admin";
 
+export const isLocalAdminActive = (): boolean => {
+  if (typeof window === "undefined") return false;
+  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN !== "true") return false;
+  try {
+    const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
+    if (!saved) return false;
+    const session = JSON.parse(saved);
+    return session.mode === "local" && (session.role === "owner" || session.role === "admin");
+  } catch {
+    return false;
+  }
+};
+
 export const fetchAdminRole = async (userId: string): Promise<AdminRole | null> => {
   if (!supabase) return null;
   const { data, error } = await supabase

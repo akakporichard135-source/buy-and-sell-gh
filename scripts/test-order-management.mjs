@@ -52,5 +52,20 @@ export async function testOrderManagement(projectRoot) {
   assert.match(adminOrderDetailPageSource, /Delete Order Safely/, "AdminOrderDetailPage provides Delete modal");
   assert.match(adminOrderDetailPageSource, /This order is currently archived/, "AdminOrderDetailPage renders archived notice banner");
 
+  // 5. Verify Migration 021 and Realtime Order Notification Sound Fixes
+  const migration021 = await readFile(
+    path.join(projectRoot, "supabase/migrations/021_order_delete_and_realtime_permissions.sql"),
+    "utf8"
+  );
+  assert.match(migration021, /GRANT UPDATE \(archived_at, archived_by, deleted_at, deleted_by, updated_at\) ON public\.orders TO authenticated/i, "Migration 021 grants column UPDATE to authenticated");
+  assert.match(migration021, /GRANT DELETE ON public\.orders TO authenticated/i, "Migration 021 grants DELETE on orders to authenticated");
+  assert.match(migration021, /ALTER PUBLICATION supabase_realtime ADD TABLE public\.orders/i, "Migration 021 adds orders to supabase_realtime");
+  assert.match(migration021, /admin_soft_delete_orders/i, "Migration 021 creates admin_soft_delete_orders RPC");
+  assert.match(migration021, /admin_hard_delete_orders/i, "Migration 021 creates admin_hard_delete_orders RPC");
+
+  assert.match(adminOrdersPageSource, /deleteModalError/, "AdminOrdersPage tracks deleteModalError inside modal");
+  assert.match(orderRepoSource, /admin-orders-realtime/, "Order repository uses unified admin-orders-realtime channel");
+  assert.match(orderRepoSource, /\.on\("broadcast",\s*\{\s*event:\s*"new_order"\s*\}/, "Order repository subscribes to broadcast new_order");
+
   console.log("Order management tests passed successfully!");
 }
