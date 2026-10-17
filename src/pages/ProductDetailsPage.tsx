@@ -268,7 +268,7 @@ export function ProductDetailsPage() {
             <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <a className="btn-secondary" href={`tel:${business.whatsapp.primary}`}><Phone size={18} /> Call Shop</a>
+            <a className="btn-secondary" href={`tel:+${business.whatsapp.primary.replace(/^\+/, "")}`}><Phone size={18} /> Call Shop</a>
             <button className="btn-secondary" type="button" onClick={handleShare}><Share2 size={18} /> Share Product</button>
           </div>
           <div className="product-purchase-assurance" aria-label="Ordering reassurance">

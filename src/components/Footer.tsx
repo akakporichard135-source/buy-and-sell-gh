@@ -58,8 +58,8 @@ export function Footer() {
         ))}
       </div>
       <div className="store-footer-contact">
-        <a href={`tel:${primaryWhatsApp}`}><Phone size={15} /> {primaryPhone}</a>
-        <a href={`https://wa.me/${primaryWhatsApp}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
+        <a href={`tel:+${primaryWhatsApp.replace(/^\+/, "")}`}><Phone size={15} /> {primaryPhone}</a>
+        <a href={`https://wa.me/${primaryWhatsApp.replace(/^\+/, "")}`} target="_blank" rel="noopener noreferrer"><MessageCircle size={15} /> WhatsApp</a>
         <span><MapPin size={15} /> {storeLocation}</span>
         <a href={instagram} target="_blank" rel="noopener noreferrer"><Instagram size={15} /> {username}</a>
       </div>

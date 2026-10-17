@@ -21,7 +21,7 @@ export function StoreCategoryIntro({ config }: StoreCategoryIntroProps) {
         <div className="store-cat-intro-right">
           <div className="store-cat-help-stack">
             <a
-              href="https://wa.me/233244182149"
+              href="https://wa.me/233551975451"
               target="_blank"
               rel="noopener noreferrer"
               className="store-cat-help-item"

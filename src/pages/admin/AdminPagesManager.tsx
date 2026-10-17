@@ -249,7 +249,7 @@ export function AdminPagesManager() {
                   })
                 }
                 className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-emerald-700"
-                placeholder="233244182149"
+                placeholder="233551975451"
               />
             </div>
 

@@ -8,9 +8,9 @@ export const business = {
   location: "Accra, Dome Pillar 2, No Visa",
   address: "Dome Pillar 2, No Visa, Accra",
   email: "",
-  phones: ["024 418 2149", "055 197 5451"],
+  phones: ["055 197 5451"],
   whatsapp: {
-    primary: "233244182149",
+    primary: "233551975451",
     secondary: "233551975451",
   },
   social: {

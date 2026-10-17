@@ -28,8 +28,10 @@ export function ContactPage() {
       </section>
       <section className="contact-experience-layout">
         <aside className="contact-experience-details">
-          <a href={`tel:${waPrimary}`}><Phone /> <div><strong>{phonePrimary}</strong><span>Primary phone and WhatsApp</span></div></a>
-          <a href={`tel:${waSecondary}`}><Phone /> <div><strong>{phoneSecondary}</strong><span>Secondary phone and WhatsApp</span></div></a>
+          <a href={`tel:+${waPrimary.replace(/^\+/, "")}`}><Phone /> <div><strong>{phonePrimary}</strong><span>Phone and WhatsApp</span></div></a>
+          {phoneSecondary && phoneSecondary !== phonePrimary && (
+            <a href={`tel:+${waSecondary.replace(/^\+/, "")}`}><Phone /> <div><strong>{phoneSecondary}</strong><span>Secondary phone and WhatsApp</span></div></a>
+          )}
           <div><MapPin /> <div><strong>{storeLocation}</strong><span>Confirm product availability and pickup timing before setting off.</span></div></div>
           <div className="contact-experience-hours">
             <h2 className="text-xl font-black">Opening hours</h2>
@@ -50,7 +52,7 @@ export function ContactPage() {
             <p className="mt-3 text-sm font-bold leading-7 text-ink/65">Contact Buy & Sell GH before setting off so product availability and pickup timing can be confirmed.</p>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <WhatsAppButton className="sm:w-auto">Confirm Visit</WhatsAppButton>
-              <a className="btn-secondary" href={`tel:${waPrimary}`}><Phone size={17} /> Call Shop</a>
+              <a className="btn-secondary" href={`tel:+${waPrimary.replace(/^\+/, "")}`}><Phone size={17} /> Call Shop</a>
               <a className="btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeLocation)}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink size={17} /> Open Map
               </a>

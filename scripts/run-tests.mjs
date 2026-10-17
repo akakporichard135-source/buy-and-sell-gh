@@ -113,7 +113,7 @@ try {
   assert.equal(normalized[0].quantity, 3, "Stored quantities are normalized");
 
   const productUrl = whatsapp.productWhatsAppUrl(product, "256GB", "Natural Titanium", "https://example.com/product");
-  assert.ok(productUrl.startsWith("https://wa.me/233244182149?text="), "Product WhatsApp link uses primary number");
+  assert.ok(productUrl.startsWith("https://wa.me/233551975451?text="), "Product WhatsApp link uses primary number");
   assert.ok(decodeURIComponent(productUrl).includes("iPhone 15 Pro Max"), "Product WhatsApp link includes product name");
 
   const order = orders.buildOrderRequestPayload(items, {
@@ -130,7 +130,7 @@ try {
 
   const orderRequestUrl = whatsapp.orderRequestWhatsAppUrl(order);
   const decodedOrderRequest = decodeURIComponent(orderRequestUrl);
-  assert.ok(orderRequestUrl.startsWith("https://wa.me/233244182149?text="), "Order request WhatsApp link uses primary number");
+  assert.ok(orderRequestUrl.startsWith("https://wa.me/233551975451?text="), "Order request WhatsApp link uses primary number");
   assert.ok(decodedOrderRequest.includes("Reference: BSGH-TEST-0001"), "Order request WhatsApp link includes reference");
   assert.ok(decodedOrderRequest.includes("Order total: GHS 14,500"), "Order request WhatsApp link includes total");
 

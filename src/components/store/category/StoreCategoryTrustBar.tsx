@@ -32,7 +32,7 @@ export function StoreCategoryTrustBar() {
       title: "WhatsApp Specialist",
       copy: "Need live serial checks, unboxing videos, or condition photos? Our Accra support team answers quickly.",
       linkText: "Chat on WhatsApp",
-      to: "https://wa.me/233244182149",
+      to: "https://wa.me/233551975451",
       isExternal: true,
     },
   ];

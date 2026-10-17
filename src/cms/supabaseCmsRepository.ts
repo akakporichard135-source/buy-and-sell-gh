@@ -62,9 +62,34 @@ const writeLocal = <T>(key: string, data: T) => {
   }
 };
 
+const sanitizeSiteSettings = (settings: SiteSettings): SiteSettings => {
+  const oldPhoneDigits = "0244182149";
+  const oldWaDigits = "233244182149";
+  const newPhone = "055 197 5451";
+  const newWa = "233551975451";
+
+  const rawPhones = Array.isArray(settings.phones) ? settings.phones : [];
+  const phones = rawPhones
+    .map((p) => (p.replace(/\s+/g, "") === oldPhoneDigits ? newPhone : p))
+    .filter((p, i, arr) => arr.indexOf(p) === i);
+  if (phones.length === 0) phones.push(newPhone);
+
+  const primary = (settings.whatsapp?.primary || "").replace(/\s+/g, "").replace(/^\+/, "");
+  const secondary = (settings.whatsapp?.secondary || "").replace(/\s+/g, "").replace(/^\+/, "");
+
+  return {
+    ...settings,
+    phones,
+    whatsapp: {
+      primary: primary === oldWaDigits || !primary ? newWa : primary,
+      secondary: secondary === oldWaDigits || !secondary ? newWa : secondary,
+    },
+  };
+};
+
 // 1. SITE SETTINGS
 export const fetchSiteSettings = async (): Promise<SiteSettings> => {
-  const local = readLocal<SiteSettings>(CMS_STORAGE_KEY_SETTINGS, defaultSiteSettings);
+  const local = sanitizeSiteSettings(readLocal<SiteSettings>(CMS_STORAGE_KEY_SETTINGS, defaultSiteSettings));
   if (!supabase) return local;
 
   try {
@@ -75,7 +100,7 @@ export const fetchSiteSettings = async (): Promise<SiteSettings> => {
       .maybeSingle();
 
     if (!error && data?.settings) {
-      const merged = { ...defaultSiteSettings, ...(data.settings as Partial<SiteSettings>) };
+      const merged = sanitizeSiteSettings({ ...defaultSiteSettings, ...(data.settings as Partial<SiteSettings>) });
       writeLocal(CMS_STORAGE_KEY_SETTINGS, merged);
       return merged;
     }
