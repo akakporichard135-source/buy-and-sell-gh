@@ -4,6 +4,7 @@ import type { CategoryFeaturedCardData } from "./categoryData";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { useProductCatalog } from "../../../catalog/ProductCatalogContext";
 import { getCardPriceDisplay } from "../../../utils/productPricing";
+import { resolveCatalogueProductImage } from "../../../utils/productImages";
 
 interface StoreCategoryCardProps {
   card: CategoryFeaturedCardData;
@@ -47,6 +48,14 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
         {card.image ? (
           <img
             src={card.image}
+            alt={card.alt || card.title}
+            loading="lazy"
+            decoding="async"
+            className="store-cat-card-img"
+          />
+        ) : matchedProduct && resolveCatalogueProductImage(matchedProduct) ? (
+          <img
+            src={resolveCatalogueProductImage(matchedProduct)!.src}
             alt={card.alt || card.title}
             loading="lazy"
             decoding="async"

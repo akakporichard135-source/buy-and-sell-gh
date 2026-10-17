@@ -125,6 +125,14 @@ export interface CategoryFeaturedCardData {
   order?: number;
 }
 
+export interface CategoryAccessoryOverride {
+  id: string; // accessory slug, e.g. "apple-20w-usb-c-power-adapter"
+  name?: string;
+  image?: string;
+  alt?: string;
+  price?: string;
+}
+
 export interface CategoryDepartmentConfig {
   key: ProductFamilyKey;
   label: string;
@@ -137,6 +145,7 @@ export interface CategoryDepartmentConfig {
   catalogTitle: string;
   catalogSubtitle: string;
   storeCategoryFilter: string;
+  accessoryOverrides?: Record<string, CategoryAccessoryOverride>;
 }
 
 export interface FaqItem {

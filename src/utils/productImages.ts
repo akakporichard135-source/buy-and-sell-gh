@@ -179,7 +179,12 @@ export function isUsedProductCondition(condition: Product["condition"]) {
 
 export function isOwnerUploadedProductImage(image?: ProductImage | null) {
   if (!isValidProductImage(image)) return false;
-  return /\/storage\/v1\/object\/(?:public|sign)\/product-images\//i.test(image.src) || /\/product-images\//i.test(image.src);
+  return (
+    /\/storage\/v1\/object\/(?:public|sign)\/product-images\//i.test(image.src) ||
+    /\/product-images\//i.test(image.src) ||
+    /\/storage\/v1\/object\/(?:public|sign)\/media-library\//i.test(image.src) ||
+    /\/media-library\//i.test(image.src)
+  );
 }
 
 export function hasOwnerUploadedProductImages(product: Pick<Product, "images">) {
@@ -220,18 +225,24 @@ export function resolveProductGallery(
   // 2. For used devices on public storefront without owner photos, enforce real photo requirement
   if (isUsedProductCondition(product.condition) && !options?.allowRepresentativeForUsed) return [];
 
-  if (product.category === "Accessories" && missingCleanAccessoryImageSlugs.has(product.slug)) return [];
+  // 3. For accessories: clean local asset takes precedence over non-owner images (blocks old gold seed art)
+  if (product.category === "Accessories") {
+    if (missingCleanAccessoryImageSlugs.has(product.slug)) return [];
+    const localImage = getLocalPremiumImage(product);
+    if (localImage) return [localImage];
+  }
 
-  // 3. Clean local premium white-background render
-  const localImage = getLocalPremiumImage(product);
-  if (localImage) return [localImage];
-
-  // 4. Other valid custom images
+  // 4. Custom/admin-assigned images (from Media Library or upload) take priority over local static bundles
   if (isValidProductImage(primaryImage)) {
     return [primaryImage, ...validImages.filter((image) => image.src !== primaryImage.src)];
   }
 
   if (validImages.length > 0) return validImages;
+
+  // 5. Clean local premium white-background render fallback
+  const localImage = getLocalPremiumImage(product);
+  if (localImage) return [localImage];
+
   return [];
 }
 

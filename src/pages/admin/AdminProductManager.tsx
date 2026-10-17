@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
+  Image as ImageIcon,
   ImagePlus,
   Package,
   Plus,
@@ -23,6 +24,8 @@ import {
 import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
+import { AdminMediaLibrary } from "./AdminMediaLibrary";
+import type { MediaItem } from "../../cms/types";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
 import {
@@ -1194,8 +1197,18 @@ function ProductForm({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
+  const [showMediaLibraryPicker, setShowMediaLibraryPicker] = useState(false);
   const existingProduct = products.find((p) => p.id === form.id);
   const existingVariants = existingProduct?.variants ?? [];
+
+  const handleMediaPickerSelect = (item: MediaItem) => {
+    const nextImages = [
+      ...form.images,
+      { src: item.url, alt: item.alt || item.title || `${form.name || "Product"} image` },
+    ];
+    update("images", nextImages);
+    setShowMediaLibraryPicker(false);
+  };
 
   const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) =>
     setForm({ ...form, [key]: value });
@@ -1744,8 +1757,8 @@ function ProductForm({
           </div>
         )}
 
-        {/* Upload Trigger */}
-        <div className="pt-2">
+        {/* Upload & Media Library Triggers */}
+        <div className="pt-2 flex flex-wrap items-center gap-2">
           <label className="admin-btn admin-btn-secondary text-xs cursor-pointer inline-flex items-center gap-2">
             <ImagePlus size={15} />
             <span>{uploading ? `Uploading (${uploadProgress}%)...` : "Upload Photos to Supabase"}</span>
@@ -1758,6 +1771,14 @@ function ProductForm({
               className="hidden"
             />
           </label>
+          <button
+            type="button"
+            onClick={() => setShowMediaLibraryPicker(true)}
+            className="admin-btn admin-btn-secondary text-xs inline-flex items-center gap-2"
+          >
+            <ImageIcon size={15} />
+            <span>Choose from Media Library</span>
+          </button>
         </div>
       </div>
 
@@ -1792,6 +1813,34 @@ function ProductForm({
           </button>
         </div>
       </div>
+
+      {/* Media Library Picker Modal */}
+      {showMediaLibraryPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowMediaLibraryPicker(false)}
+        >
+          <div
+            className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={18} className="text-[#d4af37]" />
+                <h3 className="font-bold text-slate-900 text-sm">Select Product Image from Media Library</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMediaLibraryPicker(false)}
+                className="p-1 text-slate-400 hover:text-slate-900"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <AdminMediaLibrary isPicker onSelect={handleMediaPickerSelect} />
+          </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -1,40 +1,94 @@
 import {
   AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
   CheckCircle2,
   ChevronRight,
   Edit,
   Eye,
   Grid,
   Image as ImageIcon,
+  ImagePlus,
   Layers,
+  Package,
   Plus,
+  RefreshCw,
+  RotateCcw,
   Save,
+  Search,
   ShoppingBag,
   Sparkles,
   Tag,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
-import type { CategoryDepartmentConfig, CategoryFeaturedCardData, MediaItem } from "../../cms/types";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
+import { uploadProductImage } from "../../catalog/supabaseProductRepository";
+import type {
+  CategoryAccessoryOverride,
+  CategoryDepartmentConfig,
+  CategoryFeaturedCardData,
+  MediaItem,
+} from "../../cms/types";
 import { CATEGORY_DEPARTMENTS } from "../../components/store/category/categoryData";
+import { getCategoryRelevantAccessories } from "../../components/store/category/StoreCategoryAccessoriesRail";
+import { resolveAdminProductImage, resolveCatalogueProductImage, resolveProductImage } from "../../utils/productImages";
+import { formatGhs } from "../../utils/format";
+import type { Product, ProductImage } from "../../types/product";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
+type StorefrontSection = "featured" | "listings" | "accessories";
+
 export function AdminStorefrontManager() {
-  const { departments: cmsDepartments, updateStorefront } = useCms();
+  const { departments: cmsDepartments, updateStorefront, uploadMedia } = useCms();
+  const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
+
   const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(cmsDepartments);
-  const [selectedDeptKey, setSelectedDeptKey] = useState<string>("iphone");
+  const [selectedDeptKey, setSelectedDeptKey] = useState<ProductFamilyKey>("iphone");
+  const [activeSection, setActiveSection] = useState<StorefrontSection>("featured");
+
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Media picker modal state
-  const [cardImagePickerIndex, setCardImagePickerIndex] = useState<number | null>(null);
+  // Media picker modal state: target could be a featured card index, an accessory slug, or a product id
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<
+    | { type: "card"; cardIndex: number }
+    | { type: "accessory"; slug: string }
+    | { type: "product"; productId: string }
+    | null
+  >(null);
 
-  const currentDept = departments[selectedDeptKey] || departments.iphone;
+  // File upload state for cards / accessories
+  const [uploadingTarget, setUploadingTarget] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string>("");
 
-  const handleSave = async () => {
+  // Product Listings management state
+  const [productSearch, setProductSearch] = useState("");
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [productImagesState, setProductImagesState] = useState<Record<string, { images: ProductImage[]; primaryIndex: number }>>({});
+  const [savingProductId, setSavingProductId] = useState<string | null>(null);
+  const [productSaveSuccess, setProductSaveSuccess] = useState<string | null>(null);
+  const [productSaveError, setProductSaveError] = useState<string | null>(null);
+
+  const currentDept = departments[selectedDeptKey] || CATEGORY_DEPARTMENTS[selectedDeptKey] || CATEGORY_DEPARTMENTS.iphone;
+
+  // Filter products for the current department
+  const categoryProducts = useMemo(() => {
+    return products.filter((p) => familyMatchesProduct(p, selectedDeptKey));
+  }, [products, selectedDeptKey]);
+
+  // Filter accessories for the current department
+  const categoryAccessories = useMemo(() => {
+    return getCategoryRelevantAccessories(selectedDeptKey);
+  }, [selectedDeptKey]);
+
+  const handleSaveStorefront = async () => {
     setSaving(true);
     setSaveError("");
     setSaveSuccess(false);
@@ -53,12 +107,13 @@ export function AdminStorefrontManager() {
     setDepartments((prev) => ({
       ...prev,
       [selectedDeptKey]: {
-        ...prev[selectedDeptKey],
+        ...(prev[selectedDeptKey] || CATEGORY_DEPARTMENTS[selectedDeptKey]),
         ...partial,
       },
     }));
   };
 
+  // ---------------- FEATURED CARDS HANDLERS ----------------
   const updateFeaturedCard = (cardIndex: number, partial: Partial<CategoryFeaturedCardData>) => {
     const updatedCards = [...currentDept.featuredCards];
     updatedCards[cardIndex] = { ...updatedCards[cardIndex], ...partial };
@@ -80,19 +135,148 @@ export function AdminStorefrontManager() {
       badge: "In Stock",
       image: "/products/campaigns/iphone-18-pro-colors.webp",
       alt: "Featured product device",
-      buyPath: "/store",
+      buyPath: `/shop/buy-${selectedDeptKey}`,
       buyLabel: "Buy",
-      storyPath: "/store",
+      storyPath: `/shop/buy-${selectedDeptKey}`,
       storyLabel: "Learn more",
       isDark: false,
     };
     updateCurrentDept({ featuredCards: [...currentDept.featuredCards, newCard] });
   };
 
-  const handleCardImageSelect = (item: MediaItem) => {
-    if (cardImagePickerIndex === null) return;
-    updateFeaturedCard(cardImagePickerIndex, { image: item.url });
-    setCardImagePickerIndex(null);
+  // ---------------- ACCESSORY OVERRIDES HANDLERS ----------------
+  const updateAccessoryOverride = (slug: string, partial: Partial<CategoryAccessoryOverride>) => {
+    const currentOverrides = currentDept.accessoryOverrides || {};
+    const existing = currentOverrides[slug] || { id: slug };
+    const updated: CategoryAccessoryOverride = { ...existing, ...partial };
+    updateCurrentDept({
+      accessoryOverrides: {
+        ...currentOverrides,
+        [slug]: updated,
+      },
+    });
+  };
+
+  const removeAccessoryOverride = (slug: string) => {
+    const currentOverrides = { ...(currentDept.accessoryOverrides || {}) };
+    delete currentOverrides[slug];
+    updateCurrentDept({ accessoryOverrides: currentOverrides });
+  };
+
+  // ---------------- DIRECT UPLOAD HANDLERS ----------------
+  const handleFeaturedCardFileUpload = async (cardIndex: number, file: File) => {
+    setUploadingTarget(`card-${cardIndex}`);
+    setUploadError("");
+    try {
+      const uploaded = await uploadMedia(file, "storefront", `Showcase Card ${cardIndex + 1} Image`);
+      updateFeaturedCard(cardIndex, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload card image.");
+    } finally {
+      setUploadingTarget(null);
+    }
+  };
+
+  const handleAccessoryFileUpload = async (slug: string, file: File, accName: string) => {
+    setUploadingTarget(`accessory-${slug}`);
+    setUploadError("");
+    try {
+      const uploaded = await uploadMedia(file, "product", `${accName} photo`);
+      updateAccessoryOverride(slug, { image: uploaded.url, alt: uploaded.alt || accName });
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload accessory image.");
+    } finally {
+      setUploadingTarget(null);
+    }
+  };
+
+  // ---------------- PRODUCT LISTING IMAGES HANDLERS ----------------
+  const getProductImageState = (product: Product) => {
+    if (productImagesState[product.id]) {
+      return productImagesState[product.id];
+    }
+    const images = product.images ?? [];
+    return {
+      images,
+      primaryIndex: Math.max(0, Math.min(product.primaryImageIndex ?? 0, Math.max(0, images.length - 1))),
+    };
+  };
+
+  const setProductImageStateFor = (productId: string, images: ProductImage[], primaryIndex: number) => {
+    setProductImagesState((prev) => ({
+      ...prev,
+      [productId]: { images, primaryIndex },
+    }));
+  };
+
+  const handleProductListingUpload = async (product: Product, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingTarget(`product-${product.id}`);
+    setProductSaveError(null);
+    try {
+      const current = getProductImageState(product);
+      const newImages = [...current.images];
+      for (const file of Array.from(files)) {
+        const uploaded = await uploadProductImage(file, product.id);
+        newImages.push({ src: uploaded.src, alt: uploaded.alt || `${product.name} photo` });
+      }
+      setProductImageStateFor(product.id, newImages, current.primaryIndex);
+    } catch (err) {
+      setProductSaveError(err instanceof Error ? err.message : "Failed to upload product images.");
+    } finally {
+      setUploadingTarget(null);
+    }
+  };
+
+  const handleSaveProductImages = async (product: Product) => {
+    setSavingProductId(product.id);
+    setProductSaveError(null);
+    setProductSaveSuccess(null);
+    try {
+      const state = getProductImageState(product);
+      const updatedProduct: Product = {
+        ...product,
+        images: state.images,
+        primaryImageIndex: state.primaryIndex,
+        updatedAt: new Date().toISOString(),
+      };
+      await saveProduct(updatedProduct);
+      setProductSaveSuccess(`Updated images for "${product.name}" successfully! Live store updated.`);
+      setTimeout(() => setProductSaveSuccess(null), 4000);
+    } catch (err) {
+      setProductSaveError(err instanceof Error ? err.message : "Failed to save product images.");
+    } finally {
+      setSavingProductId(null);
+    }
+  };
+
+  // ---------------- MEDIA PICKER SELECTION ----------------
+  const handleMediaPickerSelect = (item: MediaItem) => {
+    if (!mediaPickerTarget) return;
+
+    if (mediaPickerTarget.type === "card") {
+      updateFeaturedCard(mediaPickerTarget.cardIndex, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "accessory") {
+      updateAccessoryOverride(mediaPickerTarget.slug, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "product") {
+      const prod = products.find((p) => p.id === mediaPickerTarget.productId);
+      if (prod) {
+        const current = getProductImageState(prod);
+        const nextImages = [
+          ...current.images,
+          { src: item.url, alt: item.alt || item.title || `${prod.name} image` },
+        ];
+        setProductImageStateFor(prod.id, nextImages, current.primaryIndex);
+      }
+    }
+
+    setMediaPickerTarget(null);
   };
 
   return (
@@ -102,22 +286,22 @@ export function AdminStorefrontManager() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
-              Storefront Architecture
+              Storefront Architecture &amp; Images
             </span>
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
-            <span className="text-xs font-semibold text-slate-500">Product Lineup Showcase</span>
+            <span className="text-xs font-semibold text-slate-500">Live Visual Asset Control</span>
           </div>
           <h2>Storefront &amp; Category Manager</h2>
           <p>
-            Manage department headlines, shopping intros, featured lineup carousels, badges, and
-            highlighted flagship models for iPhone, Mac, iPad, Watch, AirPods, and Accessories.
+            Manage department headlines, featured lineup showcase carousels, catalog product listings, and
+            essential accessory cards for iPhone, Mac, iPad, Watch, AirPods, and Accessories.
           </p>
         </div>
 
         <button
           type="button"
           disabled={saving}
-          onClick={handleSave}
+          onClick={handleSaveStorefront}
           className="admin-btn admin-btn-primary"
         >
           <Save size={16} />
@@ -128,7 +312,7 @@ export function AdminStorefrontManager() {
       {saveSuccess && (
         <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
           <CheckCircle2 size={16} />
-          <span>Storefront categories and showcase carousels updated successfully!</span>
+          <span>Storefront categories, showcase carousels and accessories updated successfully!</span>
         </div>
       )}
 
@@ -139,207 +323,665 @@ export function AdminStorefrontManager() {
         </div>
       )}
 
-      {/* Department Selector */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
-        {Object.entries(departments).map(([key, dept]) => (
+      {uploadError && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle size={16} />
+          <span>{uploadError}</span>
+        </div>
+      )}
+
+      {/* 2. Step 1: Category Selector */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+          1. Select Category Department
+        </label>
+        <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
+          {(["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[]).map((key) => {
+            const dept = departments[key] || CATEGORY_DEPARTMENTS[key];
+            const isSelected = selectedDeptKey === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSelectedDeptKey(key)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                  isSelected
+                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>{dept?.label || key.toUpperCase()}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. Step 2: Section Tabs (Featured Cards, Product Listings, Accessories) */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+          2. Select Store Section to Manage
+        </label>
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
           <button
-            key={key}
             type="button"
-            onClick={() => setSelectedDeptKey(key)}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              selectedDeptKey === key
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+            onClick={() => setActiveSection("featured")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeSection === "featured"
+                ? "bg-slate-900 text-white shadow"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            <ShoppingBag size={14} className={selectedDeptKey === key ? "text-[#d4af37]" : "text-slate-400"} />
-            <span>{dept.label}</span>
+            <Sparkles size={14} className={activeSection === "featured" ? "text-[#d4af37]" : "text-slate-400"} />
+            <span>Featured Lineup Carousel</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "featured" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+              {currentDept.featuredCards.length}
+            </span>
           </button>
-        ))}
-      </div>
 
-      {/* Department Details Editor */}
-      <div className="admin-card space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900 text-sm">
-            {currentDept.label} Department Presentation
-          </h3>
-          <span className="text-xs text-slate-400 font-mono">Route: /{selectedDeptKey}</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">Department Label</label>
-            <input
-              type="text"
-              value={currentDept.label}
-              onChange={(e) => updateCurrentDept({ label: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">Tagline Headline</label>
-            <input
-              type="text"
-              value={currentDept.tagline}
-              onChange={(e) => updateCurrentDept({ tagline: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block font-bold text-slate-700 mb-1">Department Introduction Copy</label>
-            <textarea
-              rows={2}
-              value={currentDept.description}
-              onChange={(e) => updateCurrentDept({ description: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">SEO Page Title</label>
-            <input
-              type="text"
-              value={currentDept.seoTitle}
-              onChange={(e) => updateCurrentDept({ seoTitle: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">SEO Description</label>
-            <input
-              type="text"
-              value={currentDept.seoDescription}
-              onChange={(e) => updateCurrentDept({ seoDescription: e.target.value })}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Featured Showcase Cards */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              {currentDept.label} Featured Showcase Cards ({currentDept.featuredCards.length})
-            </h3>
-            <p className="text-xs text-slate-500">
-              These horizontal showcase cards appear at the top of the {currentDept.label} shopping page.
-            </p>
-          </div>
           <button
             type="button"
-            onClick={addFeaturedCard}
-            className="admin-btn admin-btn-sm admin-btn-secondary"
+            onClick={() => setActiveSection("listings")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeSection === "listings"
+                ? "bg-slate-900 text-white shadow"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
           >
-            <Plus size={14} />
-            <span>Add Showcase Card</span>
+            <Grid size={14} className={activeSection === "listings" ? "text-[#d4af37]" : "text-slate-400"} />
+            <span>All Product Listings Grid</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "listings" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+              {categoryProducts.length}
+            </span>
           </button>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {currentDept.featuredCards.map((card, idx) => (
-            <div
-              key={card.id}
-              className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
-                  Card #{idx + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeFeaturedCard(idx)}
-                  className="p-1 rounded text-rose-500 hover:text-rose-700"
-                  title="Remove card"
-                >
-                  <Trash2 size={13} />
-                </button>
-              </div>
-
-              <div className="aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 relative">
-                <img src={card.image} alt={card.alt} className="max-h-32 object-contain" />
-                {card.badge && (
-                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900 text-white font-bold text-[0.65rem]">
-                    {card.badge}
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">Eyebrow</label>
-                  <input
-                    type="text"
-                    value={card.eyebrow}
-                    onChange={(e) => updateFeaturedCard(idx, { eyebrow: e.target.value })}
-                    className="w-full p-1.5 rounded border border-slate-200 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">Title</label>
-                  <input
-                    type="text"
-                    value={card.title}
-                    onChange={(e) => updateFeaturedCard(idx, { title: e.target.value })}
-                    className="w-full p-1.5 rounded border border-slate-200 bg-white font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">Price Display</label>
-                  <input
-                    type="text"
-                    value={card.price}
-                    onChange={(e) => updateFeaturedCard(idx, { price: e.target.value })}
-                    className="w-full p-1.5 rounded border border-slate-200 bg-white text-emerald-700 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">Badge (e.g. In Stock, New)</label>
-                  <input
-                    type="text"
-                    value={card.badge || ""}
-                    onChange={(e) => updateFeaturedCard(idx, { badge: e.target.value })}
-                    className="w-full p-1.5 rounded border border-slate-200 bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-0.5">Buy Destination Link</label>
-                  <input
-                    type="text"
-                    value={card.buyPath}
-                    onChange={(e) => updateFeaturedCard(idx, { buyPath: e.target.value })}
-                    className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setCardImagePickerIndex(idx)}
-                  className="w-full py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
-                >
-                  <ImageIcon size={13} />
-                  <span>Choose Image from Library</span>
-                </button>
-              </div>
-            </div>
-          ))}
+          <button
+            type="button"
+            onClick={() => setActiveSection("accessories")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeSection === "accessories"
+                ? "bg-slate-900 text-white shadow"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            <Package size={14} className={activeSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
+            <span>Essential Accessories Rail</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+              {categoryAccessories.length}
+            </span>
+          </button>
         </div>
       </div>
 
-      {/* Media Picker Modal */}
-      {cardImagePickerIndex !== null && (
+      {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS ===================== */}
+      {activeSection === "featured" && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Explore the {currentDept.label} Lineup ({currentDept.featuredCards.length} Cards)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Large horizontal featured cards shown in the carousel at the top of the {currentDept.label} Store page.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addFeaturedCard}
+              className="admin-btn admin-btn-sm admin-btn-secondary"
+            >
+              <Plus size={14} />
+              <span>Add Showcase Card</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {currentDept.featuredCards.map((card, idx) => (
+              <div
+                key={card.id || idx}
+                className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                    Card #{idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFeaturedCard(idx)}
+                    className="p-1 rounded text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                    title="Remove card"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+
+                {/* Live Preview Stage */}
+                <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
+                  {card.image ? (
+                    <img
+                      src={card.image}
+                      alt={card.alt || card.title}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-slate-400">No Image Assigned</span>
+                  )}
+                  {card.badge && (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900 text-white font-bold text-[0.65rem] shadow">
+                      {card.badge}
+                    </span>
+                  )}
+                </div>
+
+                {/* Image Management Actions */}
+                <div className="flex items-center gap-2 pt-1">
+                  <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                    <Upload size={13} />
+                    <span>
+                      {uploadingTarget === `card-${idx}` ? "Uploading..." : "Upload New Image"}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      disabled={uploadingTarget !== null}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleFeaturedCardFileUpload(idx, file);
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setMediaPickerTarget({ type: "card", cardIndex: idx })}
+                    className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                  >
+                    <ImageIcon size={13} />
+                    <span>Media Library</span>
+                  </button>
+                </div>
+
+                {/* Card Fields */}
+                <div className="space-y-2 text-xs pt-1 border-t border-slate-100">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={card.eyebrow}
+                      onChange={(e) => updateFeaturedCard(idx, { eyebrow: e.target.value })}
+                      className="w-full p-1.5 rounded border border-slate-200 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Title</label>
+                    <input
+                      type="text"
+                      value={card.title}
+                      onChange={(e) => updateFeaturedCard(idx, { title: e.target.value })}
+                      className="w-full p-1.5 rounded border border-slate-200 bg-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Subtitle</label>
+                    <input
+                      type="text"
+                      value={card.subtitle}
+                      onChange={(e) => updateFeaturedCard(idx, { subtitle: e.target.value })}
+                      className="w-full p-1.5 rounded border border-slate-200 bg-white text-slate-600"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Price Display</label>
+                      <input
+                        type="text"
+                        value={card.price}
+                        onChange={(e) => updateFeaturedCard(idx, { price: e.target.value })}
+                        className="w-full p-1.5 rounded border border-slate-200 bg-white text-emerald-700 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5">Badge</label>
+                      <input
+                        type="text"
+                        value={card.badge || ""}
+                        onChange={(e) => updateFeaturedCard(idx, { badge: e.target.value })}
+                        className="w-full p-1.5 rounded border border-slate-200 bg-white"
+                        placeholder="In Stock, New..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Buy Destination Link</label>
+                    <input
+                      type="text"
+                      value={card.buyPath}
+                      onChange={(e) => updateFeaturedCard(idx, { buyPath: e.target.value })}
+                      className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-0.5">Image URL</label>
+                    <input
+                      type="text"
+                      value={card.image}
+                      onChange={(e) => updateFeaturedCard(idx, { image: e.target.value })}
+                      className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem] text-slate-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== SECTION 2: ALL PRODUCT LISTINGS ===================== */}
+      {activeSection === "listings" && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                All {currentDept.label} Listings ({categoryProducts.length} Products)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Replace main images or manage photo galleries for products appearing on the /{selectedDeptKey} listing grid and product detail pages.
+              </p>
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search models..."
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
+              />
+            </div>
+          </div>
+
+          {productSaveSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <CheckCircle2 size={15} />
+              <span>{productSaveSuccess}</span>
+            </div>
+          )}
+
+          {productSaveError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+              <AlertCircle size={15} />
+              <span>{productSaveError}</span>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {categoryProducts
+              .filter((p) => !productSearch || p.name.toLowerCase().includes(productSearch.toLowerCase()) || p.slug.includes(productSearch.toLowerCase()))
+              .map((product) => {
+                const imgState = getProductImageState(product);
+                const isExpanded = editingProductId === product.id;
+                const resolvedPrimary =
+                  imgState.images[imgState.primaryIndex]?.src ||
+                  resolveCatalogueProductImage(product)?.src ||
+                  resolveProductImage(product)?.src;
+
+                return (
+                  <div
+                    key={product.id}
+                    className="admin-card p-4 rounded-xl border border-slate-200 bg-white space-y-3 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-14 h-14 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                          {resolvedPrimary ? (
+                            <img
+                              src={resolvedPrimary}
+                              alt={product.name}
+                              className="max-h-full max-w-full object-contain"
+                            />
+                          ) : (
+                            <ImageIcon size={20} className="text-slate-300" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-slate-900 text-xs truncate">{product.name}</h4>
+                            <span className={`text-[0.65rem] px-1.5 py-0.2 rounded font-bold ${
+                              product.condition === "Brand New"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-amber-50 text-amber-700 border border-amber-200"
+                            }`}>
+                              {product.condition}
+                            </span>
+                          </div>
+                          <p className="text-[0.68rem] text-slate-500 font-mono truncate">
+                            slug: {product.slug} • {imgState.images.length} custom image{imgState.images.length === 1 ? "" : "s"}
+                          </p>
+                          <p className="text-[0.7rem] font-bold text-emerald-700">
+                            {product.priceOnRequest ? "Contact for price" : formatGhs(product.price)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditingProductId(isExpanded ? null : product.id)}
+                          className="admin-btn admin-btn-sm admin-btn-secondary text-xs"
+                        >
+                          <Edit size={13} />
+                          <span>{isExpanded ? "Hide Image Editor" : "Manage Images"}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Image Management Sub-Panel */}
+                    {isExpanded && (
+                      <div className="pt-3 border-t border-slate-100 space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-700">
+                            Product Images Gallery ({imgState.images.length})
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            <label className="admin-btn admin-btn-sm admin-btn-secondary text-xs cursor-pointer inline-flex items-center gap-1.5">
+                              <Upload size={13} />
+                              <span>{uploadingTarget === `product-${product.id}` ? "Uploading..." : "Upload Photos"}</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/avif"
+                                multiple
+                                disabled={uploadingTarget !== null}
+                                onChange={(e) => void handleProductListingUpload(product, e.target.files)}
+                                className="hidden"
+                              />
+                            </label>
+
+                            <button
+                              type="button"
+                              onClick={() => setMediaPickerTarget({ type: "product", productId: product.id })}
+                              className="admin-btn admin-btn-sm admin-btn-secondary text-xs inline-flex items-center gap-1.5"
+                            >
+                              <ImageIcon size={13} />
+                              <span>Pick from Media Library</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={savingProductId === product.id}
+                              onClick={() => void handleSaveProductImages(product)}
+                              className="admin-btn admin-btn-sm admin-btn-primary text-xs inline-flex items-center gap-1.5"
+                            >
+                              <Save size={13} />
+                              <span>{savingProductId === product.id ? "Saving..." : "Save Product Images"}</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {imgState.images.length === 0 ? (
+                          <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
+                            <AlertCircle size={14} className="text-amber-500 shrink-0" />
+                            <span>Currently displaying the built-in clean catalogue render. Upload or select an image from the Media Library above to override it.</span>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                            {imgState.images.map((img, imgIdx) => {
+                              const isPrimary = imgState.primaryIndex === imgIdx;
+                              return (
+                                <div
+                                  key={imgIdx}
+                                  className={`p-2 rounded-xl bg-white border relative ${
+                                    isPrimary ? "border-[#d4af37] ring-2 ring-[#d4af37]/20" : "border-slate-200"
+                                  }`}
+                                >
+                                  <div className="aspect-square rounded-lg bg-slate-50 overflow-hidden flex items-center justify-center p-1 mb-2">
+                                    <img
+                                      src={img.src}
+                                      alt={img.alt || product.name}
+                                      className="max-h-full max-w-full object-contain"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => setProductImageStateFor(product.id, imgState.images, imgIdx)}
+                                      className={`w-full py-0.5 rounded text-[0.65rem] font-bold ${
+                                        isPrimary
+                                          ? "bg-[#d4af37] text-white"
+                                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                      }`}
+                                    >
+                                      {isPrimary ? "Primary Image" : "Set Primary"}
+                                    </button>
+
+                                    <div className="flex items-center justify-between text-[0.65rem] text-slate-400">
+                                      <div className="flex items-center gap-1">
+                                        {imgIdx > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const next = [...imgState.images];
+                                              [next[imgIdx], next[imgIdx - 1]] = [next[imgIdx - 1], next[imgIdx]];
+                                              setProductImageStateFor(product.id, next, imgState.primaryIndex === imgIdx ? imgIdx - 1 : imgState.primaryIndex === imgIdx - 1 ? imgIdx : imgState.primaryIndex);
+                                            }}
+                                            className="p-0.5 hover:text-slate-900"
+                                            title="Move left"
+                                          >
+                                            <ArrowLeft size={11} />
+                                          </button>
+                                        )}
+                                        {imgIdx < imgState.images.length - 1 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const next = [...imgState.images];
+                                              [next[imgIdx], next[imgIdx + 1]] = [next[imgIdx + 1], next[imgIdx]];
+                                              setProductImageStateFor(product.id, next, imgState.primaryIndex === imgIdx ? imgIdx + 1 : imgState.primaryIndex === imgIdx + 1 ? imgIdx : imgState.primaryIndex);
+                                            }}
+                                            className="p-0.5 hover:text-slate-900"
+                                            title="Move right"
+                                          >
+                                            <ArrowRight size={11} />
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const next = imgState.images.filter((_, i) => i !== imgIdx);
+                                          const nextPrimary = Math.max(0, Math.min(imgState.primaryIndex, next.length - 1));
+                                          setProductImageStateFor(product.id, next, nextPrimary);
+                                        }}
+                                        className="text-rose-500 hover:text-rose-700 font-bold"
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== SECTION 3: ESSENTIAL ACCESSORIES ===================== */}
+      {activeSection === "accessories" && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">
+                Essential {currentDept.label} Accessories ({categoryAccessories.length} Cards)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Replace &quot;Image coming soon&quot; placeholders with actual photos. Assign images to each accessory from the Media Library or upload new ones.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={saving}
+              onClick={handleSaveStorefront}
+              className="admin-btn admin-btn-sm admin-btn-primary"
+            >
+              <Save size={14} />
+              <span>Save Accessories Changes</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {categoryAccessories.map((acc) => {
+              const currentOverrides = currentDept.accessoryOverrides || {};
+              const override = currentOverrides[acc.slug];
+              const catalogProduct = activeProducts.find((p) => p.slug === acc.slug);
+
+              const resolvedImageSrc =
+                override?.image ||
+                (catalogProduct ? resolveCatalogueProductImage(catalogProduct)?.src : undefined) ||
+                resolveCatalogueProductImage(acc)?.src ||
+                resolveProductImage(acc)?.src;
+
+              const isCustomized = Boolean(override?.image);
+
+              return (
+                <div
+                  key={acc.slug}
+                  className={`admin-card p-4 space-y-3 border rounded-2xl bg-white shadow-sm flex flex-col justify-between ${
+                    isCustomized ? "border-[#d4af37] ring-1 ring-[#d4af37]/30" : "border-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                      {acc.subcategory || "Accessory"}
+                    </span>
+                    {isCustomized ? (
+                      <span className="text-[0.65rem] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
+                        Admin Image Active
+                      </span>
+                    ) : (
+                      <span className="text-[0.65rem] font-bold px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-200">
+                        Default Genuine Asset
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Live Visual Stage */}
+                  <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-3">
+                    {resolvedImageSrc ? (
+                      <img
+                        src={resolvedImageSrc}
+                        alt={override?.alt || acc.name}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <div className="text-center p-3 text-slate-400">
+                        <ImageIcon size={28} className="mx-auto mb-1 text-slate-300" />
+                        <span className="text-xs font-bold block">Image coming soon</span>
+                        <span className="text-[0.65rem]">Upload photo below</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title & Info */}
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-slate-900 text-xs">{override?.name || acc.name}</h4>
+                    <p className="text-[0.65rem] text-slate-400 font-mono">slug: {acc.slug}</p>
+                    <p className="text-xs font-bold text-emerald-700">
+                      {override?.price || (acc.priceOnRequest || acc.price <= 0 ? "Contact for price" : formatGhs(acc.price))}
+                    </p>
+                  </div>
+
+                  {/* Action Controls */}
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                        <Upload size={13} />
+                        <span>
+                          {uploadingTarget === `accessory-${acc.slug}` ? "Uploading..." : "Upload Photo"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/avif"
+                          disabled={uploadingTarget !== null}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) void handleAccessoryFileUpload(acc.slug, file, acc.name);
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => setMediaPickerTarget({ type: "accessory", slug: acc.slug })}
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                      >
+                        <ImageIcon size={13} />
+                        <span>Media Library</span>
+                      </button>
+                    </div>
+
+                    {isCustomized && (
+                      <button
+                        type="button"
+                        onClick={() => removeAccessoryOverride(acc.slug)}
+                        className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold"
+                      >
+                        Reset to Default Image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Global Bottom Save Action */}
+      <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between shadow-sm">
+        <div>
+          <span className="text-xs font-bold text-slate-900 block">
+            Save All Storefront Changes
+          </span>
+          <span className="text-[0.68rem] text-slate-500">
+            Updates department configuration, carousel featured cards, and accessory cards live in Supabase.
+          </span>
+        </div>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={handleSaveStorefront}
+          className="admin-btn admin-btn-primary text-xs"
+        >
+          <Save size={15} />
+          <span>{saving ? "Saving Changes..." : "Save Storefront Changes"}</span>
+        </button>
+      </div>
+
+      {/* Unified Media Picker Modal */}
+      {mediaPickerTarget !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={() => setCardImagePickerIndex(null)}
+          onClick={() => setMediaPickerTarget(null)}
         >
           <div
             className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto"
@@ -348,18 +990,24 @@ export function AdminStorefrontManager() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <ImageIcon size={18} className="text-[#d4af37]" />
-                <h3 className="font-bold text-slate-900 text-sm">Select Image for Showcase Card</h3>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  {mediaPickerTarget.type === "card"
+                    ? "Select Image for Featured Showcase Card"
+                    : mediaPickerTarget.type === "accessory"
+                    ? "Select Image for Accessory Card"
+                    : "Select Image for Product Listing"}
+                </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setCardImagePickerIndex(null)}
+                onClick={() => setMediaPickerTarget(null)}
                 className="p-1 text-slate-400 hover:text-slate-900"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <AdminMediaLibrary isPicker onSelect={handleCardImageSelect} />
+            <AdminMediaLibrary isPicker onSelect={handleMediaPickerSelect} />
           </div>
         </div>
       )}

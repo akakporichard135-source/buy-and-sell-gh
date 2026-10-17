@@ -1,8 +1,14 @@
+import catalogueAdapter20WPremium from "../assets/catalogue-products/apple-20w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter30WPremium from "../assets/catalogue-products/apple-30w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter35WDualPremium from "../assets/catalogue-products/apple-35w-dual-usb-c-power-adapter-premium.webp";
 import catalogueAdapter70WPremium from "../assets/catalogue-products/apple-70w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter96WPremium from "../assets/catalogue-products/apple-96w-usb-c-power-adapter-premium.webp";
 import catalogueAdapter140WPremium from "../assets/catalogue-products/apple-140w-usb-c-power-adapter-premium.webp";
+import catalogueUsbCChargeCablePremium from "../assets/catalogue-products/apple-usb-c-charge-cable-premium.webp";
+import catalogue60WChargeCablePremium from "../assets/catalogue-products/apple-60w-usb-c-charge-cable-premium.webp";
+import catalogue240WChargeCablePremium from "../assets/catalogue-products/apple-240w-usb-c-charge-cable-premium.webp";
+import catalogueUsbCToMagsafe3CablePremium from "../assets/catalogue-products/apple-usb-c-to-magsafe-3-cable-premium.webp";
+import catalogueWatchFastChargerPremium from "../assets/catalogue-products/apple-watch-fast-charger-usb-c-premium.webp";
 import catalogueUsbCToLightningPremium from "../assets/catalogue-products/apple-usb-c-to-lightning-cable-premium.webp";
 import catalogueMagsafeIphoneCasePremium from "../assets/catalogue-products/apple-magsafe-iphone-case-premium.webp";
 import catalogueClearIphoneCasePremium from "../assets/catalogue-products/apple-clear-iphone-case-magsafe-premium.webp";
@@ -102,7 +108,7 @@ import catalogueMacbookPro14M5Premium from "../assets/catalogue-products/macbook
 import catalogueMacbookPro14M5ProMaxPremium from "../assets/catalogue-products/macbook-pro-14-inch-m5-pro-max-premium.webp";
 import catalogueMacbookPro16M5Premium from "../assets/catalogue-products/macbook-pro-16-inch-m5-pro-max-premium.webp";
 
-// Existing catalogue files for these products still contain baked-in gold scenery.
+// Products that lack verified clean catalogue imagery fallback
 export const missingCleanAccessoryImageSlugs = new Set([
   "apple-20w-usb-c-power-adapter",
   "apple-60w-usb-c-charge-cable",
@@ -116,11 +122,17 @@ export const missingCleanAccessoryImageSlugs = new Set([
 ]);
 
 export const localCatalogueImageBySlug: Record<string, string> = {
+  "apple-20w-usb-c-power-adapter": catalogueAdapter20WPremium,
   "apple-30w-usb-c-power-adapter": catalogueAdapter30WPremium,
   "apple-35w-dual-usb-c-power-adapter": catalogueAdapter35WDualPremium,
   "apple-70w-usb-c-power-adapter": catalogueAdapter70WPremium,
   "apple-96w-usb-c-power-adapter": catalogueAdapter96WPremium,
   "apple-140w-usb-c-power-adapter": catalogueAdapter140WPremium,
+  "apple-usb-c-charge-cable": catalogueUsbCChargeCablePremium,
+  "apple-60w-usb-c-charge-cable": catalogue60WChargeCablePremium,
+  "apple-240w-usb-c-charge-cable": catalogue240WChargeCablePremium,
+  "apple-usb-c-to-magsafe-3-cable": catalogueUsbCToMagsafe3CablePremium,
+  "apple-watch-magnetic-fast-charger-usb-c": catalogueWatchFastChargerPremium,
   "apple-magsafe-charger": "/products/campaigns/accessory-magsafe-puck.webp",
   "apple-usb-c-to-lightning-cable": catalogueUsbCToLightningPremium,
   "apple-magsafe-iphone-case": catalogueMagsafeIphoneCasePremium,

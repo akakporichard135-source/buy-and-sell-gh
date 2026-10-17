@@ -1,6 +1,15 @@
 import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import macStudioLaunchImage from "../../../assets/homepage/homepage-mac-studio-m5-launch.webp";
 import { localCatalogueImageBySlug } from "../../../utils/catalogueProductImages";
+import adapter20W from "../../../assets/catalogue-products/apple-20w-usb-c-power-adapter-premium.webp";
+import usbCChargeCable from "../../../assets/catalogue-products/apple-usb-c-charge-cable-premium.webp";
+import cable60W from "../../../assets/catalogue-products/apple-60w-usb-c-charge-cable-premium.webp";
+import cable240W from "../../../assets/catalogue-products/apple-240w-usb-c-charge-cable-premium.webp";
+import usbCToLightning from "../../../assets/catalogue-products/apple-usb-c-to-lightning-cable-premium.webp";
+import magsafeIphoneCase from "../../../assets/catalogue-products/apple-magsafe-iphone-case-premium.webp";
+import clearIphoneCase from "../../../assets/catalogue-products/apple-clear-iphone-case-magsafe-premium.webp";
+import watchFastCharger from "../../../assets/catalogue-products/apple-watch-fast-charger-usb-c-premium.webp";
+import magsafe3Cable from "../../../assets/catalogue-products/apple-usb-c-to-magsafe-3-cable-premium.webp";
 
 export interface CategorySubnavItem {
   id: string;
@@ -25,6 +34,14 @@ export interface CategoryFeaturedCardData {
   isViewPricingOnly?: boolean;
 }
 
+export interface CategoryAccessoryOverride {
+  id: string; // accessory slug, e.g. "apple-20w-usb-c-power-adapter"
+  name?: string;
+  image?: string;
+  alt?: string;
+  price?: string;
+}
+
 export interface CategoryDepartmentConfig {
   key: ProductFamilyKey;
   label: string;
@@ -37,6 +54,7 @@ export interface CategoryDepartmentConfig {
   catalogTitle: string;
   catalogSubtitle: string;
   storeCategoryFilter: string;
+  accessoryOverrides?: Record<string, CategoryAccessoryOverride>;
 }
 
 export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentConfig> = {
@@ -135,6 +153,64 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All iPhone Listings.",
     catalogSubtitle: "Real Buy & Sell GH store listings with verified storage, cosmetic grading, and confirmed battery health.",
     storeCategoryFilter: "Phones",
+    accessoryOverrides: {
+      "apple-20w-usb-c-power-adapter": {
+        id: "apple-20w-usb-c-power-adapter",
+        name: "20W USB-C Power Adapter",
+        image: adapter20W,
+        alt: "Apple 20W USB-C Power Adapter",
+        price: "GH₵ 450",
+      },
+      "apple-usb-c-charge-cable": {
+        id: "apple-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable (1m)",
+        image: usbCChargeCable,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+      "apple-60w-usb-c-charge-cable": {
+        id: "apple-60w-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable",
+        image: cable60W,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+      "apple-240w-usb-c-charge-cable": {
+        id: "apple-240w-usb-c-charge-cable",
+        name: "240W USB-C Charge Cable (2m)",
+        image: cable240W,
+        alt: "Apple 240W USB-C Charge Cable",
+        price: "GH₵ 550",
+      },
+      "apple-magsafe-charger": {
+        id: "apple-magsafe-charger",
+        name: "MagSafe Charger (1m)",
+        image: "/products/campaigns/accessory-magsafe-puck.webp",
+        alt: "Apple MagSafe Wireless Charger",
+        price: "GH₵ 650",
+      },
+      "apple-magsafe-iphone-case": {
+        id: "apple-magsafe-iphone-case",
+        name: "iPhone Case with MagSafe",
+        image: magsafeIphoneCase,
+        alt: "Apple Silicone Case with MagSafe",
+        price: "GH₵ 550",
+      },
+      "apple-clear-iphone-case-magsafe": {
+        id: "apple-clear-iphone-case-magsafe",
+        name: "Clear Case with MagSafe",
+        image: clearIphoneCase,
+        alt: "Apple Clear Case with MagSafe",
+        price: "GH₵ 550",
+      },
+      "apple-usb-c-to-lightning-cable": {
+        id: "apple-usb-c-to-lightning-cable",
+        name: "USB-C to Lightning Cable",
+        image: usbCToLightning,
+        alt: "Apple USB-C to Lightning Cable",
+        price: "GH₵ 350",
+      },
+    },
   },
 
   mac: {
@@ -246,6 +322,22 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All Mac Listings.",
     catalogSubtitle: "Confirmed MacBook Air and MacBook Pro notebooks with verified memory, SSD capacities, and battery cycles.",
     storeCategoryFilter: "Laptops",
+    accessoryOverrides: {
+      "apple-usb-c-charge-cable": {
+        id: "apple-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable (1m)",
+        image: usbCChargeCable,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+      "apple-usb-c-to-magsafe-3-cable": {
+        id: "apple-usb-c-to-magsafe-3-cable",
+        name: "USB-C to MagSafe 3 Cable (2m)",
+        image: magsafe3Cable,
+        alt: "Apple USB-C to MagSafe 3 Cable",
+        price: "GH₵ 850",
+      },
+    },
   },
 
   ipad: {
@@ -327,6 +419,22 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All iPad Listings.",
     catalogSubtitle: "Real listed iPad configurations across storage tiers, Wi-Fi and Cellular models, and verified cosmetic conditions.",
     storeCategoryFilter: "Tablets",
+    accessoryOverrides: {
+      "apple-usb-c-charge-cable": {
+        id: "apple-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable (1m)",
+        image: usbCChargeCable,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+      "apple-20w-usb-c-power-adapter": {
+        id: "apple-20w-usb-c-power-adapter",
+        name: "20W USB-C Power Adapter",
+        image: adapter20W,
+        alt: "Apple 20W USB-C Power Adapter",
+        price: "GH₵ 450",
+      },
+    },
   },
 
   watch: {
@@ -392,6 +500,29 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All Apple Watch Listings.",
     catalogSubtitle: "Available Apple Watch hardware with verified case sizing (40mm to 49mm), battery health, and pairing guarantee.",
     storeCategoryFilter: "Watches",
+    accessoryOverrides: {
+      "apple-watch-magnetic-fast-charger-usb-c": {
+        id: "apple-watch-magnetic-fast-charger-usb-c",
+        name: "Apple Watch Magnetic Fast Charger to USB-C Cable",
+        image: watchFastCharger,
+        alt: "Apple Watch Magnetic Fast Charger",
+        price: "GH₵ 550",
+      },
+      "apple-20w-usb-c-power-adapter": {
+        id: "apple-20w-usb-c-power-adapter",
+        name: "20W USB-C Power Adapter",
+        image: adapter20W,
+        alt: "Apple 20W USB-C Power Adapter",
+        price: "GH₵ 450",
+      },
+      "apple-magsafe-charger": {
+        id: "apple-magsafe-charger",
+        name: "MagSafe Charger (1m)",
+        image: "/products/campaigns/accessory-magsafe-puck.webp",
+        alt: "Apple MagSafe Wireless Charger",
+        price: "GH₵ 650",
+      },
+    },
   },
 
   airpods: {
@@ -457,6 +588,29 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All AirPods Listings.",
     catalogSubtitle: "Authentic Apple wireless audio hardware with confirmed case generations, USB-C ports, and serial verification.",
     storeCategoryFilter: "Audio",
+    accessoryOverrides: {
+      "apple-20w-usb-c-power-adapter": {
+        id: "apple-20w-usb-c-power-adapter",
+        name: "20W USB-C Power Adapter",
+        image: adapter20W,
+        alt: "Apple 20W USB-C Power Adapter",
+        price: "GH₵ 450",
+      },
+      "apple-magsafe-charger": {
+        id: "apple-magsafe-charger",
+        name: "MagSafe Charger (1m)",
+        image: "/products/campaigns/accessory-magsafe-puck.webp",
+        alt: "Apple MagSafe Wireless Charger",
+        price: "GH₵ 650",
+      },
+      "apple-usb-c-charge-cable": {
+        id: "apple-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable (1m)",
+        image: usbCChargeCable,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+    },
   },
 
   accessories: {
@@ -538,5 +692,42 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
     catalogTitle: "All Accessory Listings.",
     catalogSubtitle: "Genuine Apple power bricks, braided cords, input peripherals, and protection verified by the Buy & Sell GH team.",
     storeCategoryFilter: "Accessories",
+    accessoryOverrides: {
+      "apple-20w-usb-c-power-adapter": {
+        id: "apple-20w-usb-c-power-adapter",
+        name: "20W USB-C Power Adapter",
+        image: adapter20W,
+        alt: "Apple 20W USB-C Power Adapter",
+        price: "GH₵ 450",
+      },
+      "apple-usb-c-charge-cable": {
+        id: "apple-usb-c-charge-cable",
+        name: "60W USB-C Charge Cable (1m)",
+        image: usbCChargeCable,
+        alt: "Apple 60W USB-C Charge Cable",
+        price: "GH₵ 350",
+      },
+      "apple-watch-magnetic-fast-charger-usb-c": {
+        id: "apple-watch-magnetic-fast-charger-usb-c",
+        name: "Apple Watch Magnetic Fast Charger to USB-C Cable",
+        image: watchFastCharger,
+        alt: "Apple Watch Magnetic Fast Charger",
+        price: "GH₵ 550",
+      },
+      "apple-usb-c-to-magsafe-3-cable": {
+        id: "apple-usb-c-to-magsafe-3-cable",
+        name: "USB-C to MagSafe 3 Cable (2m)",
+        image: magsafe3Cable,
+        alt: "Apple USB-C to MagSafe 3 Cable",
+        price: "GH₵ 850",
+      },
+      "apple-usb-c-to-lightning-cable": {
+        id: "apple-usb-c-to-lightning-cable",
+        name: "USB-C to Lightning Cable",
+        image: usbCToLightning,
+        alt: "Apple USB-C to Lightning Cable",
+        price: "GH₵ 350",
+      },
+    },
   },
 };

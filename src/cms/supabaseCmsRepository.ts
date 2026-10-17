@@ -944,8 +944,28 @@ export const savePageContent = async <K extends keyof PageContentRegistry>(
 
 // 6. STOREFRONT CONTENT (Category Departments & Showcase Collections)
 export const fetchStorefrontContent = async (): Promise<Record<string, CategoryDepartmentConfig>> => {
+  const mergeWithDefaults = (source: Record<string, CategoryDepartmentConfig>) => {
+    const res: Record<string, CategoryDepartmentConfig> = { ...CATEGORY_DEPARTMENTS };
+    for (const [key, def] of Object.entries(CATEGORY_DEPARTMENTS)) {
+      const s = source[key];
+      if (s) {
+        res[key] = {
+          ...def,
+          ...s,
+          featuredCards: s.featuredCards && s.featuredCards.length > 0 ? s.featuredCards : def.featuredCards,
+          accessoryOverrides: {
+            ...(def.accessoryOverrides || {}),
+            ...(s.accessoryOverrides || {}),
+          },
+        };
+      }
+    }
+    return res;
+  };
+
   const local = readLocal<Record<string, CategoryDepartmentConfig>>(CMS_STORAGE_KEY_STOREFRONT, CATEGORY_DEPARTMENTS);
-  if (!supabase) return local;
+  const mergedLocal = mergeWithDefaults(local);
+  if (!supabase) return mergedLocal;
 
   try {
     const { data, error } = await supabase
@@ -955,7 +975,7 @@ export const fetchStorefrontContent = async (): Promise<Record<string, CategoryD
       .maybeSingle();
 
     if (!error && data?.config) {
-      const merged = { ...CATEGORY_DEPARTMENTS, ...(data.config as Record<string, CategoryDepartmentConfig>) };
+      const merged = mergeWithDefaults(data.config as Record<string, CategoryDepartmentConfig>);
       writeLocal(CMS_STORAGE_KEY_STOREFRONT, merged);
       return merged;
     }
@@ -963,7 +983,7 @@ export const fetchStorefrontContent = async (): Promise<Record<string, CategoryD
     // Non-blocking fallback
   }
 
-  return local;
+  return mergedLocal;
 };
 
 export const saveStorefrontContent = async (
@@ -1078,7 +1098,7 @@ async function cascadeMediaUrlUpdate(
       });
     }
 
-    // 2. Storefront content cascade (department featured cards)
+    // 2. Storefront content cascade (department featured cards and accessory overrides)
     const currentStorefront = await fetchStorefrontContent();
     let storefrontChanged = false;
     const updatedStorefront: Record<string, CategoryDepartmentConfig> = {};
@@ -1088,7 +1108,8 @@ async function cascadeMediaUrlUpdate(
         if (
           card.image === oldItem.url ||
           (oldItem.id === "media-tile-ipad-air" && card.id.includes("ipad-air")) ||
-          (oldItem.id === "media-product-ipad-air-colors" && (card.image.includes("ipad-air-colors") || card.id.includes("ipad-air")))
+          (oldItem.id === "media-product-ipad-air-colors" && (card.image.includes("ipad-air-colors") || card.id.includes("ipad-air"))) ||
+          (oldItem.id && card.id && (card.id === oldItem.id || oldItem.id.endsWith(card.id)))
         ) {
           storefrontChanged = true;
           return {
@@ -1099,11 +1120,64 @@ async function cascadeMediaUrlUpdate(
         }
         return card;
       });
-      updatedStorefront[deptKey] = { ...dept, featuredCards: updatedCards };
+
+      const updatedOverrides = { ...(dept.accessoryOverrides || {}) };
+      for (const [accSlug, override] of Object.entries(updatedOverrides)) {
+        if (override.image === oldItem.url || oldItem.id.includes(accSlug) || oldItem.filename.includes(accSlug)) {
+          storefrontChanged = true;
+          updatedOverrides[accSlug] = {
+            ...override,
+            image: newItem.url,
+            alt: updates.alt !== undefined ? updates.alt.trim() : override.alt,
+          };
+        }
+      }
+
+      updatedStorefront[deptKey] = {
+        ...dept,
+        featuredCards: updatedCards,
+        accessoryOverrides: updatedOverrides,
+      };
     }
 
     if (storefrontChanged) {
       await saveStorefrontContent(updatedStorefront);
+    }
+
+    // 3. Products table cascade (update any product referencing this image in Supabase)
+    if (supabase) {
+      try {
+        const { data: dbProducts } = await supabase
+          .from("products")
+          .select("id, images");
+
+        if (dbProducts) {
+          for (const prod of dbProducts) {
+            const rawImages = Array.isArray(prod.images) ? prod.images : [];
+            let prodChanged = false;
+            const nextImages = rawImages.map((img: { src?: string; alt?: string }) => {
+              if (img?.src === oldItem.url) {
+                prodChanged = true;
+                return {
+                  ...img,
+                  src: newItem.url,
+                  alt: updates.alt !== undefined ? updates.alt.trim() : img.alt,
+                };
+              }
+              return img;
+            });
+
+            if (prodChanged) {
+              await supabase
+                .from("products")
+                .update({ images: nextImages, updated_at: new Date().toISOString() })
+                .eq("id", prod.id);
+            }
+          }
+        }
+      } catch (prodCascadeErr) {
+        console.warn("Product image cascade update failed:", prodCascadeErr);
+      }
     }
   } catch (cascadeErr) {
     console.warn("Cascade URL update to content failed:", cascadeErr);

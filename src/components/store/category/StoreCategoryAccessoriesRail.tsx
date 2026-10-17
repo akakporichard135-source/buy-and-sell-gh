@@ -3,84 +3,20 @@ import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import type { Product } from "../../../types/product";
 import { accessoryProducts } from "../../../data/accessoryProducts";
 import { StoreCarousel } from "../StoreCarousel";
-import { resolveCatalogueProductImage } from "../../../utils/productImages";
+import { resolveCatalogueProductImage, resolveProductImage } from "../../../utils/productImages";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { formatGhs } from "../../../utils/format";
+import { useCms } from "../../../cms/CmsContext";
+import { useProductCatalog } from "../../../catalog/ProductCatalogContext";
+import type { CategoryAccessoryOverride } from "./categoryData";
 
 interface StoreCategoryAccessoriesRailProps {
   family: ProductFamilyKey;
 }
 
-export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessoriesRailProps) {
-  // If we are on the Accessories page itself, we show categorized accessory collections
-  if (family === "accessories") {
-    const chargingItems = accessoryProducts.filter((p) => p.subcategory === "Charging & Power");
-    const cableItems = accessoryProducts.filter((p) => p.subcategory === "Cables");
-    const inputItems = accessoryProducts.filter((p) =>
-      p.slug.includes("keyboard") || p.slug.includes("mouse") || p.slug.includes("pencil") || p.slug.includes("trackpad")
-    );
-
-    return (
-      <div className="store-cat-accessories-multi-section">
-        {chargingItems.length > 0 && (
-          <section className="store-cat-acc-rail-wrap" aria-labelledby="charging-rail-title">
-            <div className="store-cat-acc-rail-container">
-              <StoreCarousel
-                eyebrow="POWER & CHARGING"
-                title="Keep your devices charged anywhere."
-                subtitle="Genuine Apple USB-C adapters and magnetic wireless chargers. Confirm availability before ordering."
-                controlsAriaLabel="Charging accessories carousel"
-                trackClassName="store-cat-acc-track"
-              >
-                {chargingItems.map((item) => (
-                  <AccessoryMiniCard key={item.id} product={item} />
-                ))}
-              </StoreCarousel>
-            </div>
-          </section>
-        )}
-
-        {inputItems.length > 0 && (
-          <section className="store-cat-acc-rail-wrap" aria-labelledby="input-rail-title">
-            <div className="store-cat-acc-rail-container">
-              <StoreCarousel
-                eyebrow="INPUT & PRODUCTIVITY"
-                title="Precision tools for your Mac and iPad."
-                subtitle="Original Apple Magic Keyboards, Magic Mouse, Trackpads, and Apple Pencil Pro."
-                controlsAriaLabel="Productivity accessories carousel"
-                trackClassName="store-cat-acc-track"
-              >
-                {inputItems.map((item) => (
-                  <AccessoryMiniCard key={item.id} product={item} />
-                ))}
-              </StoreCarousel>
-            </div>
-          </section>
-        )}
-
-        {cableItems.length > 0 && (
-          <section className="store-cat-acc-rail-wrap" aria-labelledby="cables-rail-title">
-            <div className="store-cat-acc-rail-container">
-              <StoreCarousel
-                eyebrow="CABLES & CONNECTIVITY"
-                title="Durable braided cables for fast transfer and power."
-                subtitle="Apple 60W, 240W braided cables and MagSafe 3 cables."
-                controlsAriaLabel="Cables carousel"
-                trackClassName="store-cat-acc-track"
-              >
-                {cableItems.map((item) => (
-                  <AccessoryMiniCard key={item.id} product={item} />
-                ))}
-              </StoreCarousel>
-            </div>
-          </section>
-        )}
-      </div>
-    );
-  }
-
-  // Filter relevant accessories for this device category
-  const relevantAccessories = accessoryProducts.filter((product) => {
+export function getCategoryRelevantAccessories(family: ProductFamilyKey): Product[] {
+  if (family === "accessories") return accessoryProducts;
+  return accessoryProducts.filter((product) => {
     const slug = product.slug;
     if (family === "mac") {
       return (
@@ -128,6 +64,96 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
     }
     return true;
   });
+}
+
+export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessoriesRailProps) {
+  const { departments } = useCms();
+  const { activeProducts } = useProductCatalog();
+
+  const currentOverrides = departments[family]?.accessoryOverrides || departments.accessories?.accessoryOverrides || {};
+  const relevantAccessories = getCategoryRelevantAccessories(family);
+
+  // If we are on the Accessories page itself, we show categorized accessory collections
+  if (family === "accessories") {
+    const chargingItems = accessoryProducts.filter((p) => p.subcategory === "Charging & Power");
+    const cableItems = accessoryProducts.filter((p) => p.subcategory === "Cables");
+    const inputItems = accessoryProducts.filter((p) =>
+      p.slug.includes("keyboard") || p.slug.includes("mouse") || p.slug.includes("pencil") || p.slug.includes("trackpad")
+    );
+
+    return (
+      <div className="store-cat-accessories-multi-section">
+        {chargingItems.length > 0 && (
+          <section className="store-cat-acc-rail-wrap" aria-labelledby="charging-rail-title">
+            <div className="store-cat-acc-rail-container">
+              <StoreCarousel
+                eyebrow="POWER & CHARGING"
+                title="Keep your devices charged anywhere."
+                subtitle="Genuine Apple USB-C adapters and magnetic wireless chargers. Confirm availability before ordering."
+                controlsAriaLabel="Charging accessories carousel"
+                trackClassName="store-cat-acc-track"
+              >
+                {chargingItems.map((item) => (
+                  <AccessoryMiniCard
+                    key={item.id}
+                    product={item}
+                    override={currentOverrides[item.slug]}
+                    catalogProduct={activeProducts.find((p) => p.slug === item.slug)}
+                  />
+                ))}
+              </StoreCarousel>
+            </div>
+          </section>
+        )}
+
+        {inputItems.length > 0 && (
+          <section className="store-cat-acc-rail-wrap" aria-labelledby="input-rail-title">
+            <div className="store-cat-acc-rail-container">
+              <StoreCarousel
+                eyebrow="INPUT & PRODUCTIVITY"
+                title="Precision tools for your Mac and iPad."
+                subtitle="Original Apple Magic Keyboards, Magic Mouse, Trackpads, and Apple Pencil Pro."
+                controlsAriaLabel="Productivity accessories carousel"
+                trackClassName="store-cat-acc-track"
+              >
+                {inputItems.map((item) => (
+                  <AccessoryMiniCard
+                    key={item.id}
+                    product={item}
+                    override={currentOverrides[item.slug]}
+                    catalogProduct={activeProducts.find((p) => p.slug === item.slug)}
+                  />
+                ))}
+              </StoreCarousel>
+            </div>
+          </section>
+        )}
+
+        {cableItems.length > 0 && (
+          <section className="store-cat-acc-rail-wrap" aria-labelledby="cables-rail-title">
+            <div className="store-cat-acc-rail-container">
+              <StoreCarousel
+                eyebrow="CABLES & CONNECTIVITY"
+                title="Durable braided cables for fast transfer and power."
+                subtitle="Apple 60W, 240W braided cables and MagSafe 3 cables."
+                controlsAriaLabel="Cables carousel"
+                trackClassName="store-cat-acc-track"
+              >
+                {cableItems.map((item) => (
+                  <AccessoryMiniCard
+                    key={item.id}
+                    product={item}
+                    override={currentOverrides[item.slug]}
+                    catalogProduct={activeProducts.find((p) => p.slug === item.slug)}
+                  />
+                ))}
+              </StoreCarousel>
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
 
   if (relevantAccessories.length === 0) return null;
 
@@ -177,7 +203,12 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
           trackClassName="store-cat-acc-track"
         >
           {relevantAccessories.map((product) => (
-            <AccessoryMiniCard key={product.id} product={product} />
+            <AccessoryMiniCard
+              key={product.id}
+              product={product}
+              override={currentOverrides[product.slug]}
+              catalogProduct={activeProducts.find((p) => p.slug === product.slug)}
+            />
           ))}
         </StoreCarousel>
       </div>
@@ -185,19 +216,34 @@ export function StoreCategoryAccessoriesRail({ family }: StoreCategoryAccessorie
   );
 }
 
-function AccessoryMiniCard({ product }: { product: Product }) {
-  const resolvedImg = resolveCatalogueProductImage(product);
-  const priceDisplay = product.priceOnRequest || product.price <= 0
-    ? "Contact for price"
-    : formatGhs(product.price);
+interface AccessoryMiniCardProps {
+  product: Product;
+  override?: CategoryAccessoryOverride;
+  catalogProduct?: Product;
+}
+
+function AccessoryMiniCard({ product, override, catalogProduct }: AccessoryMiniCardProps) {
+  const catalogImg = catalogProduct
+    ? (resolveCatalogueProductImage(catalogProduct) || resolveProductImage(catalogProduct))
+    : undefined;
+  const fallbackImg = resolveCatalogueProductImage(product) || resolveProductImage(product);
+
+  const displaySrc = override?.image || catalogImg?.src || fallbackImg?.src;
+  const displayAlt = override?.alt || catalogImg?.alt || fallbackImg?.alt || product.name;
+
+  const priceDisplay = override?.price || (
+    product.priceOnRequest || product.price <= 0
+      ? "Contact for price"
+      : formatGhs(product.price)
+  );
 
   return (
     <article className="store-cat-acc-card">
       <div className="store-cat-acc-card-media">
-        {resolvedImg ? (
+        {displaySrc ? (
           <img
-            src={resolvedImg.src}
-            alt={resolvedImg.alt || product.name}
+            src={displaySrc}
+            alt={displayAlt}
             loading="lazy"
             decoding="async"
             className="store-cat-acc-card-img"
@@ -209,7 +255,7 @@ function AccessoryMiniCard({ product }: { product: Product }) {
 
       <div className="store-cat-acc-card-content">
         <span className="store-cat-acc-card-family">{product.subcategory || "Accessory"}</span>
-        <h4 className="store-cat-acc-card-title">{product.name}</h4>
+        <h4 className="store-cat-acc-card-title">{override?.name || product.name}</h4>
         <span className="store-cat-acc-card-price">{priceDisplay}</span>
 
         <Link
