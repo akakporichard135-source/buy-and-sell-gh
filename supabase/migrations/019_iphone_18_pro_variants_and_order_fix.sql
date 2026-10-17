@@ -30,7 +30,7 @@ insert into public.products (
 select
   'iphone-18-pro-max', 'iphone-18-pro-max', 'iPhone 18 Pro Max', 'Apple', 'iPhones', 'Flagship Pro', 'iPhone 18 Pro Max',
   'Flagship iPhone 18 Pro Max with contoured aerospace-grade titanium unibody, A19 Pro chip, and expansive Super Retina XDR display.',
-  22500, 'Brand New', array['256GB', '512GB', '1TB', '2TB'], array['Deep Burgundy', 'Space Black', 'Natural Titanium', 'Light Blue'], 'Deep Burgundy',
+  22500, 'Brand New', '["256GB", "512GB", "1TB", "2TB"]'::jsonb, '["Deep Burgundy", "Space Black", "Natural Titanium", "Light Blue"]'::jsonb, 'Deep Burgundy',
   10, 'In Stock', true, true, false, now(), now()
 where not exists (select 1 from public.products where slug = 'iphone-18-pro-max');
 

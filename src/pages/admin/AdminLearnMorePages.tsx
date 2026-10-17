@@ -190,6 +190,29 @@ function SectionEditor({ section, index, count, assets, placements, onChange, on
   </details>;
 }
 
+function toErrorMessage(cause: unknown): string {
+  if (!cause) return "Unknown error";
+  if (cause instanceof Error) return cause.message;
+  if (typeof cause === "string") return cause;
+  if (typeof cause === "object") {
+    const obj = cause as Record<string, unknown>;
+    if (typeof obj.message === "string" && obj.message) {
+      const parts = [obj.message];
+      if (typeof obj.details === "string" && obj.details) parts.push(obj.details);
+      if (typeof obj.hint === "string" && obj.hint) parts.push(obj.hint);
+      return parts.join(" — ");
+    }
+    if (typeof obj.error_description === "string") return obj.error_description;
+    if (typeof obj.error === "string") return obj.error;
+    try {
+      return JSON.stringify(cause);
+    } catch {
+      return String(cause);
+    }
+  }
+  return String(cause);
+}
+
 export function AdminLearnMorePages() {
   const { media } = useCms();
   const { activeProducts } = useProductCatalog();
@@ -218,8 +241,34 @@ export function AdminLearnMorePages() {
     const fallback = storyChoices.find((choice) => choice.story.slug === selected);
     setDocument(fallback ? clone(fallback) : null);
     setMessage(""); setError(""); setPreview(false);
-    void Promise.all([fetchPublishedLearnMore(selected), fetchDraftLearnMore(selected), listLearnMoreMedia()])
-      .then(([published, draft, storedAssets]) => {
+
+    const loadData = async () => {
+      try {
+        const published = await fetchPublishedLearnMore(selected).catch(() => null);
+        let draft: LearnMoreContent | null = null;
+        let storedAssets: string[] = [];
+
+        try {
+          draft = await fetchDraftLearnMore(selected);
+        } catch (draftErr) {
+          const draftErrMsg = toErrorMessage(draftErr);
+          if (active) {
+            if (draftErrMsg.includes("Authenticator verification")) {
+              setError("Authenticator verification (MFA AAL2) is required to save or edit drafts.");
+            } else if (draftErrMsg.includes("learn_more_drafts") || draftErrMsg.includes("42P01") || draftErrMsg.includes("PGRST205")) {
+              setError(`CMS unavailable: ${draftErrMsg}. Apply migration 018 before saving.`);
+            } else {
+              setError(`CMS notice: ${draftErrMsg}`);
+            }
+          }
+        }
+
+        try {
+          storedAssets = await listLearnMoreMedia();
+        } catch {
+          // Non-blocking asset listing
+        }
+
         if (!active) return;
         const loaded = clone(draft || published || fallback || null);
         if (loaded?.kind === "editorial" && loaded.story.slug === "iphone-18-pro" && !loaded.education) {
@@ -227,9 +276,15 @@ export function AdminLearnMorePages() {
         }
         setDocument(loaded);
         setUploadedAssets(storedAssets);
-      }).catch((cause) => {
-        if (active) setError(`CMS unavailable: ${cause instanceof Error ? cause.message : String(cause)}. Apply migration 018 before saving.`);
-      });
+      } catch (cause) {
+        if (active) {
+          const msg = toErrorMessage(cause);
+          setError(`CMS unavailable: ${msg}.`);
+        }
+      }
+    };
+
+    void loadData();
     return () => { active = false; };
   }, [selected, storyChoices]);
 
@@ -259,7 +314,7 @@ export function AdminLearnMorePages() {
         if (!verified || JSON.stringify(verified) !== JSON.stringify(document)) throw new Error("Publish verification failed. Check Supabase before editing further.");
       } else await saveDraftLearnMore(document);
       setMessage(publish ? "Published. Refresh the public Learn More page to see the update." : "Draft saved privately.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    } catch (cause) { setError(toErrorMessage(cause)); }
     finally { setBusy(false); }
   };
 
@@ -270,7 +325,7 @@ export function AdminLearnMorePages() {
       const url = await uploadLearnMoreMedia(file, setUploadProgress);
       setUploadedAssets((current) => [url, ...current]);
       setMessage("Media uploaded. Select it in a field, then save your draft.");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : String(cause)); }
+    } catch (cause) { setError(toErrorMessage(cause)); }
     finally { setBusy(false); }
   };
 

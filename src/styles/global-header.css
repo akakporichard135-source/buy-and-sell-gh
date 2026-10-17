@@ -285,12 +285,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 15px 4px;
+  padding: 16px 4px;
+  min-height: 56px;
   background: transparent;
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.07);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: 21px;
+  font-size: clamp(22px, 5.8vw, 25px);
   font-weight: 600;
   letter-spacing: -0.015em;
   color: #1d1d1f;
@@ -327,7 +328,7 @@
 
 .global-mobile-quick-link {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: #6e6e73;
   text-decoration: none;
@@ -347,18 +348,19 @@
 }
 
 .global-mobile-submenu-header {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .global-mobile-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 0;
+  padding: 8px 0;
+  min-height: 44px;
   background: transparent;
   border: none;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   color: #6e6e73;
   cursor: pointer;
@@ -372,12 +374,13 @@
 
 .global-mobile-submenu-title {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Helvetica, Arial, sans-serif;
-  font-size: 26px;
+  font-size: clamp(28px, 7.5vw, 34px);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   color: #1d1d1f;
-  margin: 0 0 16px 0;
-  padding-bottom: 12px;
+  margin: 0 0 14px 0;
+  padding-bottom: 14px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -391,18 +394,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 4px;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: 17px;
+  padding: 16px 4px;
+  min-height: 56px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
+  font-size: clamp(21px, 5.6vw, 24px);
   font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
   color: #1d1d1f;
   text-decoration: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   transition: color 0.15s ease;
+  word-break: break-word;
 }
 
 .global-mobile-subitem-link.is-explore-link {
-  font-size: 17px;
   font-weight: 600;
   color: #1d1d1f;
 }
@@ -410,6 +417,37 @@
 .global-mobile-subitem-link:hover,
 .global-mobile-subitem-link:active {
   color: #c59f27;
+}
+
+/* Responsiveness on standard vs compact screens */
+@media (min-width: 390px) {
+  .global-mobile-subitem-link {
+    font-size: 24px;
+    padding: 17px 4px;
+    min-height: 58px;
+  }
+
+  .global-mobile-submenu-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 360px) {
+  .global-mobile-subitem-link {
+    font-size: 20px;
+    padding: 14px 2px;
+    min-height: 50px;
+  }
+
+  .global-mobile-submenu-title {
+    font-size: 26px;
+  }
+
+  .global-mobile-section-btn {
+    font-size: 20px;
+    padding: 14px 2px;
+    min-height: 50px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

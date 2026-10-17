@@ -69,4 +69,9 @@ CREATE POLICY learn_more_media_admin_delete ON storage.objects
   FOR DELETE TO authenticated
   USING (bucket_id = 'learn-more-media' AND public.is_admin() AND auth.jwt() ->> 'aal' = 'aal2');
 
+DROP POLICY IF EXISTS learn_more_media_public_read ON storage.objects;
+CREATE POLICY learn_more_media_public_read ON storage.objects
+  FOR SELECT TO public
+  USING (bucket_id = 'learn-more-media');
+
 COMMIT;
