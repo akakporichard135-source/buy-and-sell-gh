@@ -63,13 +63,8 @@ export const normalizeProduct = (product: Product): Product => {
   const condition = (product.condition === "To Confirm" && seedPricing?.condition)
     ? normalizeCondition(seedPricing.condition as ProductCondition)
     : normalizeCondition(product.condition);
-  const stockQuantity = (product.stockQuantity === 0 && price > 0 && product.stockStatus !== "Sold")
-    ? 10
-    : product.stockQuantity;
-  const initialStockStatus = normalizeStockStatus({ ...product, stockQuantity });
-  const stockStatus = (initialStockStatus === "Out of Stock" && price > 0 && product.stockStatus !== "Sold")
-    ? "In Stock"
-    : initialStockStatus;
+  const stockQuantity = typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
+  const stockStatus = normalizeStockStatus({ ...product, stockQuantity });
 
   const now = new Date().toISOString();
   const specs = product.specifications ?? product.specs;
