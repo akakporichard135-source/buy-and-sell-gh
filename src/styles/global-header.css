@@ -85,7 +85,7 @@
   list-style: none;
 }
 
-.site-header.global-header nav a,
+.site-header.global-header .global-header-nav a,
 .site-header.global-header .global-header-link {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Myriad Set Pro", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 12px;
@@ -101,13 +101,13 @@
   background: transparent !important;
 }
 
-.site-header.global-header nav a:hover,
+.site-header.global-header .global-header-nav a:hover,
 .site-header.global-header .global-header-link:hover {
   color: #000000 !important;
 }
 
 /* Subtle Active Navigation State */
-.site-header.global-header nav a.is-active,
+.site-header.global-header .global-header-nav a.is-active,
 .site-header.global-header .global-header-link.is-active {
   color: #000000 !important;
   font-weight: 600;
@@ -390,63 +390,70 @@
   width: 100%;
 }
 
-.global-mobile-subitem-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 4px;
-  min-height: 56px;
-  box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif;
-  font-size: clamp(21px, 5.6vw, 24px);
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.018em;
-  color: #1d1d1f;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  transition: color 0.15s ease;
-  word-break: break-word;
+.global-mobile-subitem-link,
+.site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 4px !important;
+  min-height: 56px !important;
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif !important;
+  font-size: clamp(21px, 5.6vw, 24px) !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.018em !important;
+  color: #1d1d1f !important;
+  text-decoration: none !important;
+  white-space: normal !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  transition: color 0.15s ease !important;
+  word-break: break-word !important;
 }
 
-.global-mobile-subitem-link.is-explore-link {
-  font-weight: 600;
-  color: #1d1d1f;
+.global-mobile-subitem-link.is-explore-link,
+.site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link.is-explore-link {
+  font-weight: 600 !important;
+  color: #1d1d1f !important;
 }
 
 .global-mobile-subitem-link:hover,
-.global-mobile-subitem-link:active {
-  color: #c59f27;
+.global-mobile-subitem-link:active,
+.site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link:hover,
+.site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link:active {
+  color: #c59f27 !important;
 }
 
 /* Responsiveness on standard vs compact screens */
 @media (min-width: 390px) {
-  .global-mobile-subitem-link {
-    font-size: 24px;
-    padding: 17px 4px;
-    min-height: 58px;
+  .global-mobile-subitem-link,
+  .site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link {
+    font-size: 24px !important;
+    padding: 17px 4px !important;
+    min-height: 58px !important;
   }
 
   .global-mobile-submenu-title {
-    font-size: 32px;
+    font-size: 32px !important;
   }
 }
 
 @media (max-width: 360px) {
-  .global-mobile-subitem-link {
-    font-size: 20px;
-    padding: 14px 2px;
-    min-height: 50px;
+  .global-mobile-subitem-link,
+  .site-header.global-header .global-mobile-subitems-nav a.global-mobile-subitem-link {
+    font-size: 20px !important;
+    padding: 14px 2px !important;
+    min-height: 50px !important;
   }
 
   .global-mobile-submenu-title {
-    font-size: 26px;
+    font-size: 26px !important;
   }
 
   .global-mobile-section-btn {
-    font-size: 20px;
-    padding: 14px 2px;
-    min-height: 50px;
+    font-size: 20px !important;
+    padding: 14px 2px !important;
+    min-height: 50px !important;
   }
 }
 
