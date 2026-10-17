@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import { testMarketplace } from "./test-marketplace.mjs";
 import { testStore } from "./test-store.mjs";
+import { testOrderManagement } from "./test-order-management.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -228,6 +229,7 @@ try {
     shopSource: await readFile(path.join(projectRoot, "src/pages/ShopPage.tsx"), "utf8"),
     cardSource: await readFile(path.join(projectRoot, "src/components/StoreProductCard.tsx"), "utf8"),
   });
+  await testOrderManagement(projectRoot);
 
   const notificationStorageData = new Map();
   const notificationStorage = {

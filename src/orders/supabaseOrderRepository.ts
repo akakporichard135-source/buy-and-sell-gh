@@ -62,6 +62,10 @@ interface OrderRow {
   payment_status: StoredOrderRequest["paymentStatus"];
   order_status: StoredOrderRequest["status"];
   admin_note?: string | null;
+  archived_at?: string | null;
+  archived_by?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
   updated_at: string;
   order_items?: OrderRpcItem[];
@@ -101,6 +105,10 @@ const orderSelect = `
   payment_status,
   order_status,
   admin_note,
+  archived_at,
+  archived_by,
+  deleted_at,
+  deleted_by,
   created_at,
   updated_at,
   order_items (
@@ -161,6 +169,10 @@ export const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrder
     paymentStatus: row.payment_status,
     status: row.order_status,
     adminNote: (row.admin_note ?? "").trim(),
+    archivedAt: "archived_at" in row ? (row.archived_at ?? null) : null,
+    archivedBy: "archived_by" in row ? (row.archived_by ?? null) : null,
+    deletedAt: "deleted_at" in row ? (row.deleted_at ?? null) : null,
+    deletedBy: "deleted_by" in row ? (row.deleted_by ?? null) : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -265,7 +277,11 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
 export const fetchAdminOrders = async () => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
-  const { data, error } = await client.from("orders").select(orderSelect).order("created_at", { ascending: false });
+  const { data, error } = await client
+    .from("orders")
+    .select(orderSelect)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((row) => orderFromResponse(row as OrderRow));
 };
@@ -276,6 +292,7 @@ export const fetchAdminOrderNotifications = async (): Promise<AdminOrderNotifica
   const { data, error } = await client
     .from("orders")
     .select("id, reference_number, customer_name, created_at")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((row) => {
@@ -327,7 +344,11 @@ export const subscribeToNewAdminOrders = (
 export const fetchAdminOrderById = async (orderId: string) => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
-  const { data, error } = await client.from("orders").select(orderSelect).eq("id", orderId).single();
+  const { data, error } = await client
+    .from("orders")
+    .select(orderSelect)
+    .eq("id", orderId)
+    .single();
   if (error) throw error;
   return orderFromResponse(data as OrderRow);
 };
@@ -361,4 +382,207 @@ export const updateAdminOrder = async (
     .single();
   if (error) throw error;
   return orderFromResponse(data as OrderRow);
+};
+
+async function logOrderAction(
+  orderId: string,
+  referenceNumber: string,
+  action: "archive" | "restore" | "soft_delete" | "hard_delete",
+  reason?: string,
+  metadata?: Record<string, unknown>
+) {
+  try {
+    const client = getSupabaseOrThrow();
+    const { data: userData } = await client.auth.getUser();
+    const actorId = userData?.user?.id ?? "admin";
+    const actorEmail = userData?.user?.email ?? null;
+
+    await client.from("order_action_logs").insert({
+      order_id: orderId,
+      reference_number: referenceNumber,
+      action,
+      actor_id: actorId,
+      actor_email: actorEmail,
+      reason: reason ?? null,
+      metadata: metadata ?? {},
+    });
+  } catch (err) {
+    console.warn("Failed to log order action to order_action_logs:", err);
+  }
+}
+
+export const archiveAdminOrder = async (orderId: string, referenceNumber?: string) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const actorId = userData?.user?.id ?? "admin";
+  const now = new Date().toISOString();
+
+  const { data, error } = await client
+    .from("orders")
+    .update({ archived_at: now, archived_by: actorId, updated_at: now })
+    .eq("id", orderId)
+    .select(orderSelect)
+    .single();
+  if (error) throw error;
+
+  const order = orderFromResponse(data as OrderRow);
+  await logOrderAction(orderId, referenceNumber || order.referenceNumber, "archive");
+  return order;
+};
+
+export const restoreAdminOrder = async (orderId: string, referenceNumber?: string) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const now = new Date().toISOString();
+
+  const { data, error } = await client
+    .from("orders")
+    .update({ archived_at: null, archived_by: null, updated_at: now })
+    .eq("id", orderId)
+    .select(orderSelect)
+    .single();
+  if (error) throw error;
+
+  const order = orderFromResponse(data as OrderRow);
+  await logOrderAction(orderId, referenceNumber || order.referenceNumber, "restore");
+  return order;
+};
+
+export const archiveAdminOrdersBulk = async (orders: { id: string; referenceNumber: string }[]) => {
+  if (orders.length === 0) return;
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const actorId = userData?.user?.id ?? "admin";
+  const now = new Date().toISOString();
+  const ids = orders.map((o) => o.id);
+
+  const { error } = await client
+    .from("orders")
+    .update({ archived_at: now, archived_by: actorId, updated_at: now })
+    .in("id", ids);
+  if (error) throw error;
+
+  for (const o of orders) {
+    await logOrderAction(o.id, o.referenceNumber, "archive", "Bulk archive");
+  }
+};
+
+export const restoreAdminOrdersBulk = async (orders: { id: string; referenceNumber: string }[]) => {
+  if (orders.length === 0) return;
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const now = new Date().toISOString();
+  const ids = orders.map((o) => o.id);
+
+  const { error } = await client
+    .from("orders")
+    .update({ archived_at: null, archived_by: null, updated_at: now })
+    .in("id", ids);
+  if (error) throw error;
+
+  for (const o of orders) {
+    await logOrderAction(o.id, o.referenceNumber, "restore", "Bulk restore");
+  }
+};
+
+export const clearCompletedOrders = async (completedOrders: { id: string; referenceNumber: string }[]) => {
+  if (completedOrders.length === 0) return 0;
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const actorId = userData?.user?.id ?? "admin";
+  const now = new Date().toISOString();
+  const ids = completedOrders.map((o) => o.id);
+
+  const { error } = await client
+    .from("orders")
+    .update({ archived_at: now, archived_by: actorId, updated_at: now })
+    .in("id", ids);
+  if (error) throw error;
+
+  for (const o of completedOrders) {
+    await logOrderAction(o.id, o.referenceNumber, "archive", "Clear completed orders action");
+  }
+  return completedOrders.length;
+};
+
+export const deleteAdminOrder = async (
+  order: { id: string; referenceNumber: string; total?: number; customerName?: string },
+  options: { hard?: boolean; reason?: string } = {}
+) => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const actorId = userData?.user?.id ?? "admin";
+  const now = new Date().toISOString();
+
+  if (options.hard) {
+    await logOrderAction(order.id, order.referenceNumber, "hard_delete", options.reason, {
+      total: order.total,
+      customerName: order.customerName,
+      hard: true,
+    });
+
+    const { error: itemsError } = await client.from("order_items").delete().eq("order_id", order.id);
+    if (itemsError) throw itemsError;
+
+    const { error: orderError } = await client.from("orders").delete().eq("id", order.id);
+    if (orderError) throw orderError;
+  } else {
+    const { error } = await client
+      .from("orders")
+      .update({ deleted_at: now, deleted_by: actorId, updated_at: now })
+      .eq("id", order.id);
+    if (error) throw error;
+
+    await logOrderAction(order.id, order.referenceNumber, "soft_delete", options.reason, {
+      total: order.total,
+      customerName: order.customerName,
+    });
+  }
+};
+
+export const deleteAdminOrdersBulk = async (
+  orders: { id: string; referenceNumber: string; total?: number; customerName?: string }[],
+  options: { hard?: boolean; reason?: string } = {}
+) => {
+  if (orders.length === 0) return;
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const actorId = userData?.user?.id ?? "admin";
+  const now = new Date().toISOString();
+  const ids = orders.map((o) => o.id);
+
+  if (options.hard) {
+    for (const o of orders) {
+      await logOrderAction(o.id, o.referenceNumber, "hard_delete", options.reason, {
+        total: o.total,
+        customerName: o.customerName,
+        bulk: true,
+      });
+    }
+
+    const { error: itemsError } = await client.from("order_items").delete().in("order_id", ids);
+    if (itemsError) throw itemsError;
+
+    const { error: ordersError } = await client.from("orders").delete().in("id", ids);
+    if (ordersError) throw ordersError;
+  } else {
+    const { error } = await client
+      .from("orders")
+      .update({ deleted_at: now, deleted_by: actorId, updated_at: now })
+      .in("id", ids);
+    if (error) throw error;
+
+    for (const o of orders) {
+      await logOrderAction(o.id, o.referenceNumber, "soft_delete", options.reason, {
+        total: o.total,
+        customerName: o.customerName,
+        bulk: true,
+      });
+    }
+  }
 };

@@ -1,4 +1,6 @@
 import {
+  AlertTriangle,
+  Archive,
   ArrowLeft,
   CheckCircle2,
   Clock,
@@ -8,16 +10,22 @@ import {
   MessageCircle,
   Package,
   Phone,
+  RotateCcw,
   Save,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   Truck,
   User,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
+  archiveAdminOrder,
+  deleteAdminOrder,
   fetchAdminOrderById,
+  restoreAdminOrder,
   updateAdminOrder,
   updateAdminOrderStatus,
 } from "../../orders/supabaseOrderRepository";
@@ -34,12 +42,19 @@ import { orderRequestWhatsAppUrl } from "../../utils/whatsapp";
 
 export function AdminOrderDetailPage() {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<StoredOrderRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
   const [staffNote, setStaffNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
+
+  // Deletion modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [hardDelete, setHardDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
 
   useEffect(() => {
     if (!orderId) return;
@@ -109,6 +124,69 @@ export function AdminOrderDetailPage() {
     }
   };
 
+  const handleArchive = async () => {
+    if (!order || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await archiveAdminOrder(order.id, order.referenceNumber);
+      const now = new Date().toISOString();
+      setOrder({ ...order, archivedAt: now });
+      setActionSuccess(`Order ${order.referenceNumber} has been moved to Archived Orders.`);
+      window.setTimeout(() => setActionSuccess(""), 4000);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Failed to archive order.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!order || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await restoreAdminOrder(order.id, order.referenceNumber);
+      setOrder({ ...order, archivedAt: null, archivedBy: null });
+      setActionSuccess(`Order ${order.referenceNumber} restored to Active Orders queue.`);
+      window.setTimeout(() => setActionSuccess(""), 4000);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Failed to restore order.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!order || saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await deleteAdminOrder(
+        {
+          id: order.id,
+          referenceNumber: order.referenceNumber,
+          total: order.total,
+          customerName: order.customer.fullName,
+        },
+        { hard: hardDelete, reason: deleteReason }
+      );
+      setDeleteModalOpen(false);
+      navigate("/admin/orders", {
+        state: {
+          flashMessage: `Order ${order.referenceNumber} ${
+            hardDelete ? "permanently deleted" : "safely removed"
+          }.`,
+        },
+      });
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Failed to delete order.");
+      setDeleteModalOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-12 text-center text-slate-400 font-medium">
@@ -170,7 +248,7 @@ export function AdminOrderDetailPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span
             className={`admin-badge text-sm px-3 py-1 ${
               isCompleted
@@ -184,12 +262,100 @@ export function AdminOrderDetailPage() {
           >
             {order.status}
           </span>
+
+          {order.archivedAt ? (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void handleRestore()}
+              className="admin-btn admin-btn-secondary admin-btn-sm text-emerald-700 hover:text-emerald-800"
+              title="Restore to active queue"
+            >
+              <RotateCcw size={14} />
+              <span>Restore Order</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void handleArchive()}
+              className="admin-btn admin-btn-secondary admin-btn-sm text-slate-700 hover:text-slate-900"
+              title="Archive this order"
+            >
+              <Archive size={14} />
+              <span>Archive Order</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              setHardDelete(false);
+              setDeleteReason("");
+              setDeleteModalOpen(true);
+            }}
+            className="admin-btn admin-btn-secondary admin-btn-sm text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+            title="Delete this order"
+          >
+            <Trash2 size={14} />
+            <span>Delete</span>
+          </button>
+
           <Link to="/admin/orders" className="admin-btn admin-btn-secondary admin-btn-sm">
             <ArrowLeft size={14} />
             <span>Back to Queue</span>
           </Link>
         </div>
       </div>
+
+      {/* Archived Banner if order is archived */}
+      {order.archivedAt && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <Archive size={20} className="text-amber-700 shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-amber-900">
+                This order is currently archived
+              </p>
+              <p className="text-[0.75rem] text-amber-800">
+                Archived on{" "}
+                {new Date(order.archivedAt).toLocaleDateString("en-GH", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {order.archivedBy ? ` by ${order.archivedBy}` : ""}.
+                It is hidden from the active orders queue and excluded from active order counts.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void handleRestore()}
+            className="admin-btn admin-btn-secondary admin-btn-sm bg-white border-amber-300 text-amber-900 hover:bg-amber-100 shrink-0 font-bold"
+          >
+            <RotateCcw size={14} />
+            <span>Restore to Active Orders</span>
+          </button>
+        </div>
+      )}
+
+      {actionSuccess && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between">
+          <span>{actionSuccess}</span>
+          <button
+            type="button"
+            onClick={() => setActionSuccess("")}
+            className="text-emerald-600 hover:text-emerald-800"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {isTestOrder(order) && (
         <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs flex items-center justify-between">
@@ -508,6 +674,113 @@ export function AdminOrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Safe Delete Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="p-6">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 grid place-items-center mb-4">
+                <AlertTriangle size={24} className="text-rose-600" />
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900">Delete Order Safely</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                You are about to remove order{" "}
+                <span className="font-mono font-bold text-slate-900">
+                  {order.referenceNumber}
+                </span>{" "}
+                ({formatGhs(order.total)} &bull; {order.customer.fullName}).
+              </p>
+
+              {/* Deletion Mode selector */}
+              <div className="mt-4 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="deleteMode"
+                    checked={!hardDelete}
+                    onChange={() => setHardDelete(false)}
+                    className="mt-0.5 text-slate-900 focus:ring-slate-900"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Soft Delete (Recommended)
+                    </span>
+                    <span className="text-[0.72rem] text-slate-500 block leading-tight">
+                      Hides order from all views while preserving historical revenue, customer record, and audit log.
+                    </span>
+                  </div>
+                </label>
+
+                <div className="border-t border-slate-200/80 my-1" />
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="deleteMode"
+                    checked={hardDelete}
+                    onChange={() => setHardDelete(true)}
+                    className="mt-0.5 text-rose-600 focus:ring-rose-600"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-rose-700 block">
+                      Permanent Hard Delete
+                    </span>
+                    <span className="text-[0.72rem] text-slate-500 block leading-tight">
+                      Requires AAL2 MFA admin permission. Writes full snapshot to audit log, then purges order records. Customers and products are never deleted.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Optional Reason */}
+              <div className="mt-4">
+                <label className="block text-[0.72rem] font-bold text-slate-700 mb-1">
+                  Reason for Deletion (Logged in Audit History):
+                </label>
+                <input
+                  type="text"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="e.g. Duplicate order, test run, customer canceled..."
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#d4af37]/30"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setDeleteModalOpen(false)}
+                className="admin-btn admin-btn-secondary admin-btn-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void handleExecuteDelete()}
+                className={`admin-btn admin-btn-sm font-bold text-white shadow-xs ${
+                  hardDelete
+                    ? "bg-rose-700 hover:bg-rose-800"
+                    : "bg-slate-900 hover:bg-slate-800"
+                }`}
+              >
+                <Trash2 size={13} />
+                <span>
+                  {saving
+                    ? "Deleting..."
+                    : hardDelete
+                    ? "Permanently Purge"
+                    : "Safely Remove"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

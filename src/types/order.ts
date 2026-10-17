@@ -66,6 +66,10 @@ export interface OrderRequestPayload {
 export interface StoredOrderRequest extends OrderRequestPayload {
   id: string;
   updatedAt?: string;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 export interface OrderSubmissionInput {
