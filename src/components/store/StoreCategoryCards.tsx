@@ -1,68 +1,12 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCms } from "../../cms/CmsContext";
 import { StoreCarousel } from "./StoreCarousel";
 
-interface CategoryCardItem {
-  id: string;
-  path: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  alt: string;
-}
-
-const categoryCards: CategoryCardItem[] = [
-  {
-    id: "phones",
-    path: "/iphone",
-    title: "Phones",
-    subtitle: "iPhone 18 Pro, iPhone Duo and verified UK Used devices.",
-    image: "/products/campaigns/iphone-18-pro-silver.webp",
-    alt: "iPhone devices",
-  },
-  {
-    id: "laptops",
-    path: "/mac",
-    title: "Mac & Laptops",
-    subtitle: "MacBook Air, MacBook Pro and Apple silicon desktops.",
-    image: "/products/campaigns/macbook-air-floating.webp",
-    alt: "MacBook laptops",
-  },
-  {
-    id: "tablets",
-    path: "/ipad",
-    title: "iPads",
-    subtitle: "iPad Air, iPad Pro, and portable everyday iPads.",
-    image: "/products/campaigns/ipad-air-colors.webp",
-    alt: "iPad models",
-  },
-  {
-    id: "watches",
-    path: "/watch",
-    title: "Apple Watch",
-    subtitle: "Apple Watch Series 12, Ultra 4 and rugged sports bands.",
-    image: "/products/homepage/watch-series-12.webp",
-    alt: "Apple Watch smartwatches",
-  },
-  {
-    id: "audio",
-    path: "/airpods",
-    title: "AirPods & Audio",
-    subtitle: "AirPods 5, Pro, Max and premium sound accessories.",
-    image: "/products/homepage/airpods-5.jpg",
-    alt: "AirPods wireless audio",
-  },
-  {
-    id: "accessories",
-    path: "/accessories",
-    title: "Accessories",
-    subtitle: "Genuine power adapters, MagSafe chargers and keyboards.",
-    image: "/products/campaigns/accessory-magsafe-puck.webp",
-    alt: "Apple MagSafe and store accessories",
-  },
-];
-
 export function StoreCategoryCards() {
+  const { mainStore } = useCms();
+  const categoryCards = mainStore?.categoryCards || [];
+
   return (
     <section className="store-section store-category-section" aria-labelledby="store-category-title">
       <div className="store-container">

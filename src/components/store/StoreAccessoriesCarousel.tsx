@@ -1,5 +1,7 @@
 import { Eye, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCms } from "../../cms/CmsContext";
+import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
 import { useCart } from "../../context/CartContext";
 import type { Product } from "../../types/product";
@@ -26,24 +28,44 @@ function getAccessoryEyebrow(product: Product): string {
 
 export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselProps) {
   const { addItem } = useCart();
-  const featuredSlugs: { slug: string; family: ProductFamilyKey }[] = [
-    { slug: "apple-magsafe-iphone-case", family: "accessories" },
-    { slug: "airpods-4-anc", family: "airpods" },
-    { slug: "apple-clear-iphone-case-magsafe", family: "accessories" },
-    { slug: "apple-pencil-pro", family: "accessories" },
-    { slug: "apple-magic-keyboard-ipad", family: "accessories" },
-    { slug: "airpods-pro-3", family: "airpods" },
-    { slug: "apple-20w-usb-c-power-adapter", family: "accessories" },
-    { slug: "apple-magsafe-charger", family: "accessories" },
-  ];
-  const featuredAccessories = featuredSlugs.flatMap(({ slug, family }) => {
-    const product = products.find((item) => item.slug === slug);
-    return product ? [{ product, family }] : [];
+  const { mainStore } = useCms();
+  const accessoryConfigs = mainStore?.accessories?.length
+    ? mainStore.accessories
+    : defaultMainStoreConfig.accessories;
+
+  const featuredAccessories = accessoryConfigs.flatMap((item) => {
+    const product = products.find((p) => p.slug === item.id);
+    if (!product) return [];
+
+    let imageSrc = "";
+    let imageAlt = item.alt || product.name;
+
+    if (item.image && item.image.trim() !== "") {
+      imageSrc = item.image;
+    } else {
+      const catImg = resolveCatalogueProductImage(product);
+      imageSrc = catImg?.src || "";
+      imageAlt = catImg?.alt || product.name;
+    }
+
+    const family: ProductFamilyKey = item.family || (product.category === "AirPods" || product.category === "Audio" ? "airpods" : "accessories");
+    const eyebrow = item.eyebrow || getAccessoryEyebrow(product);
+    const displayName = item.name || product.name;
+
+    return [{
+      product,
+      family,
+      imageSrc,
+      imageAlt,
+      eyebrow,
+      displayName,
+    }];
   });
 
   if (featuredAccessories.length === 0) {
     return null;
   }
+
 
   return (
     <section className="store-section store-accessories-section" aria-labelledby="store-accessories-title">
@@ -60,23 +82,21 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
             </Link>
           }
         >
-          {featuredAccessories.map(({ product, family }) => {
-            const image = resolveCatalogueProductImage(product);
+          {featuredAccessories.map(({ product, family, imageSrc, imageAlt, eyebrow, displayName }) => {
             const enquiry = product.priceOnRequest === true || product.price <= 0;
             const purchasable = isProductPurchasable(product);
-            const eyebrow = getAccessoryEyebrow(product);
 
             return (
               <article key={product.id} className="store-accessory-card">
                 <Link
                   to={productStoryPath(family, product.slug)}
                   className="store-accessory-media"
-                  aria-label={`View ${product.name}`}
+                  aria-label={`View ${displayName}`}
                 >
-                  {image?.src ? (
+                  {imageSrc ? (
                     <img
-                      src={image.src}
-                      alt={image.alt || product.name}
+                      src={imageSrc}
+                      alt={imageAlt || displayName}
                       loading="lazy"
                       decoding="async"
                       className="store-accessory-img"
@@ -93,7 +113,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
                   <p className="store-accessory-detail">{eyebrow}</p>
                   <h3 className="store-accessory-name">
                     <Link to={productStoryPath(family, product.slug)}>
-                      {product.name}
+                      {displayName}
                     </Link>
                   </h3>
                   <p className="store-accessory-price">

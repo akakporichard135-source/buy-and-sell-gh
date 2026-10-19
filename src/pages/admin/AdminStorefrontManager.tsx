@@ -24,15 +24,23 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
+import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
+import macMiniImage from "../../assets/homepage/homepage-mac-mini-white.webp";
+import { newMacLaunches } from "../../data/newMacLaunches";
 import type {
   CategoryAccessoryOverride,
   CategoryDepartmentConfig,
   CategoryFeaturedCardData,
+  MainStoreAccessoryItem,
+  MainStoreCategoryCard,
+  MainStoreConfig,
+  MainStoreFamilyItem,
+  MainStorePromoCard,
   MediaItem,
 } from "../../cms/types";
 import { CATEGORY_DEPARTMENTS } from "../../components/store/category/categoryData";
@@ -42,25 +50,46 @@ import { formatGhs } from "../../utils/format";
 import type { Product, ProductImage } from "../../types/product";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
+export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
 type StorefrontSection = "featured" | "listings" | "accessories";
+type MainStoreSection = "latest" | "categories" | "moreToLove" | "families" | "accessories";
 
 export function AdminStorefrontManager() {
-  const { departments: cmsDepartments, updateStorefront, uploadMedia } = useCms();
+  const { departments: cmsDepartments, mainStore: cmsMainStore, updateStorefront, updateMainStore, uploadMedia } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
 
   const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(cmsDepartments);
-  const [selectedDeptKey, setSelectedDeptKey] = useState<ProductFamilyKey>("iphone");
+  const [selectedDeptKey, setSelectedDeptKey] = useState<StorefrontDepartmentKey>("main-store");
   const [activeSection, setActiveSection] = useState<StorefrontSection>("featured");
+  const [activeMainStoreSection, setActiveMainStoreSection] = useState<MainStoreSection>("latest");
+  const [mainStoreConfig, setMainStoreConfig] = useState<MainStoreConfig>(cmsMainStore || defaultMainStoreConfig);
+
+  useEffect(() => {
+    if (cmsMainStore) {
+      setMainStoreConfig(cmsMainStore);
+    }
+  }, [cmsMainStore]);
+
+  useEffect(() => {
+    if (cmsDepartments) {
+      setDepartments(cmsDepartments);
+    }
+  }, [cmsDepartments]);
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Media picker modal state: target could be a featured card index, an accessory slug, or a product id
+  // Media picker modal state: target could be a featured card index, an accessory slug, a product id, or main store item
   const [mediaPickerTarget, setMediaPickerTarget] = useState<
     | { type: "card"; cardIndex: number }
     | { type: "accessory"; slug: string }
     | { type: "product"; productId: string }
+    | { type: "main-store-latest"; index: number }
+    | { type: "main-store-category"; index: number }
+    | { type: "main-store-more"; index: number }
+    | { type: "main-store-family"; index: number }
+    | { type: "main-store-accessory"; index: number }
     | null
   >(null);
 
@@ -76,24 +105,30 @@ export function AdminStorefrontManager() {
   const [productSaveSuccess, setProductSaveSuccess] = useState<string | null>(null);
   const [productSaveError, setProductSaveError] = useState<string | null>(null);
 
-  const currentDept = departments[selectedDeptKey] || CATEGORY_DEPARTMENTS[selectedDeptKey] || CATEGORY_DEPARTMENTS.iphone;
+  const currentDeptKey: ProductFamilyKey = selectedDeptKey === "main-store" ? "iphone" : selectedDeptKey;
+  const currentDept = departments[currentDeptKey] || CATEGORY_DEPARTMENTS[currentDeptKey] || CATEGORY_DEPARTMENTS.iphone;
 
   // Filter products for the current department
   const categoryProducts = useMemo(() => {
-    return products.filter((p) => familyMatchesProduct(p, selectedDeptKey));
-  }, [products, selectedDeptKey]);
+    if (selectedDeptKey === "main-store") return [];
+    return products.filter((p) => familyMatchesProduct(p, currentDeptKey));
+  }, [products, selectedDeptKey, currentDeptKey]);
 
   // Filter accessories for the current department
   const categoryAccessories = useMemo(() => {
-    return getCategoryRelevantAccessories(selectedDeptKey);
-  }, [selectedDeptKey]);
+    if (selectedDeptKey === "main-store") return [];
+    return getCategoryRelevantAccessories(currentDeptKey);
+  }, [selectedDeptKey, currentDeptKey]);
 
   const handleSaveStorefront = async () => {
     setSaving(true);
     setSaveError("");
     setSaveSuccess(false);
     try {
-      await updateStorefront(departments);
+      await Promise.all([
+        updateStorefront(departments),
+        updateMainStore(mainStoreConfig),
+      ]);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
@@ -104,6 +139,7 @@ export function AdminStorefrontManager() {
   };
 
   const updateCurrentDept = (partial: Partial<CategoryDepartmentConfig>) => {
+    if (selectedDeptKey === "main-store") return;
     setDepartments((prev) => ({
       ...prev,
       [selectedDeptKey]: {
@@ -112,6 +148,7 @@ export function AdminStorefrontManager() {
       },
     }));
   };
+
 
   // ---------------- FEATURED CARDS HANDLERS ----------------
   const updateFeaturedCard = (cardIndex: number, partial: Partial<CategoryFeaturedCardData>) => {
@@ -250,6 +287,105 @@ export function AdminStorefrontManager() {
     }
   };
 
+  // ---------------- MAIN STORE PAGE HANDLERS ----------------
+  const updateMainStoreFamily = (index: number, partial: Partial<MainStoreFamilyItem>) => {
+    setMainStoreConfig((prev) => {
+      const list = [...(prev.productFamilies || defaultMainStoreConfig.productFamilies)];
+      list[index] = { ...list[index], ...partial };
+      return { ...prev, productFamilies: list };
+    });
+  };
+
+  const updateMainStoreLatest = (index: number, partial: Partial<MainStorePromoCard>) => {
+    setMainStoreConfig((prev) => {
+      const list = [...(prev.latestCards || defaultMainStoreConfig.latestCards)];
+      list[index] = { ...list[index], ...partial };
+      return { ...prev, latestCards: list };
+    });
+  };
+
+  const updateMainStoreCategory = (index: number, partial: Partial<MainStoreCategoryCard>) => {
+    setMainStoreConfig((prev) => {
+      const list = [...(prev.categoryCards || defaultMainStoreConfig.categoryCards)];
+      list[index] = { ...list[index], ...partial };
+      return { ...prev, categoryCards: list };
+    });
+  };
+
+  const updateMainStoreMore = (index: number, partial: Partial<MainStorePromoCard>) => {
+    setMainStoreConfig((prev) => {
+      const list = [...(prev.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards)];
+      list[index] = { ...list[index], ...partial };
+      return { ...prev, moreToLoveCards: list };
+    });
+  };
+
+  const updateMainStoreAccessory = (index: number, partial: Partial<MainStoreAccessoryItem>) => {
+    setMainStoreConfig((prev) => {
+      const list = [...(prev.accessories || defaultMainStoreConfig.accessories)];
+      list[index] = { ...list[index], ...partial };
+      return { ...prev, accessories: list };
+    });
+  };
+
+  const handleMainStoreFileUpload = async (
+    target: "family" | "latest" | "category" | "more" | "accessory",
+    index: number,
+    file: File,
+    fallbackLabel: string
+  ) => {
+    setUploadingTarget(`ms-${target}-${index}`);
+    setUploadError("");
+    try {
+      const uploaded = await uploadMedia(file, "storefront", fallbackLabel);
+      if (target === "family") {
+        updateMainStoreFamily(index, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+      } else if (target === "latest") {
+        updateMainStoreLatest(index, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+      } else if (target === "category") {
+        updateMainStoreCategory(index, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+      } else if (target === "more") {
+        updateMainStoreMore(index, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+      } else if (target === "accessory") {
+        updateMainStoreAccessory(index, { image: uploaded.url, alt: uploaded.alt || uploaded.title });
+      }
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload image.");
+    } finally {
+      setUploadingTarget(null);
+    }
+  };
+
+  const resolveMainStorePromoPreview = (card: MainStorePromoCard): { src: string; isCustom: boolean } => {
+    if (card.image && card.image.trim() !== "") {
+      return { src: card.image, isCustom: true };
+    }
+    if (card.id === "mac-mini") {
+      return { src: macMiniImage, isCustom: false };
+    }
+    if (card.id === "mac-studio") {
+      return { src: newMacLaunches["mac-studio"].image, isCustom: false };
+    }
+    const prod = products.find((p) => p.slug === card.id);
+    if (prod) {
+      const catImg = resolveCatalogueProductImage(prod);
+      if (catImg?.src) return { src: catImg.src, isCustom: false };
+    }
+    return { src: card.image || "", isCustom: false };
+  };
+
+  const resolveMainStoreAccessoryPreview = (item: MainStoreAccessoryItem): { src: string; isCustom: boolean; displayName: string } => {
+    const prod = products.find((p) => p.slug === item.id);
+    if (item.image && item.image.trim() !== "") {
+      return { src: item.image, isCustom: true, displayName: item.name || prod?.name || item.id };
+    }
+    if (prod) {
+      const catImg = resolveCatalogueProductImage(prod);
+      if (catImg?.src) return { src: catImg.src, isCustom: false, displayName: item.name || prod.name };
+    }
+    return { src: item.image || "", isCustom: false, displayName: item.name || item.id };
+  };
+
   // ---------------- MEDIA PICKER SELECTION ----------------
   const handleMediaPickerSelect = (item: MediaItem) => {
     if (!mediaPickerTarget) return;
@@ -274,10 +410,36 @@ export function AdminStorefrontManager() {
         ];
         setProductImageStateFor(prod.id, nextImages, current.primaryIndex);
       }
+    } else if (mediaPickerTarget.type === "main-store-latest") {
+      updateMainStoreLatest(mediaPickerTarget.index, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "main-store-category") {
+      updateMainStoreCategory(mediaPickerTarget.index, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "main-store-more") {
+      updateMainStoreMore(mediaPickerTarget.index, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "main-store-family") {
+      updateMainStoreFamily(mediaPickerTarget.index, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
+    } else if (mediaPickerTarget.type === "main-store-accessory") {
+      updateMainStoreAccessory(mediaPickerTarget.index, {
+        image: item.url,
+        alt: item.alt || item.title,
+      });
     }
 
     setMediaPickerTarget(null);
   };
+
 
   return (
     <div className="space-y-6">
@@ -330,12 +492,28 @@ export function AdminStorefrontManager() {
         </div>
       )}
 
-      {/* 2. Step 1: Category Selector */}
+      {/* 2. Step 1: Category / Store Selector */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-          1. Select Category Department
+          1. Select Category / Department
         </label>
         <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setSelectedDeptKey("main-store")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+              selectedDeptKey === "main-store"
+                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Sparkles size={14} className={selectedDeptKey === "main-store" ? "text-[#d4af37]" : "text-slate-400"} />
+            <span>Main Store Page</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
+              35 Images
+            </span>
+          </button>
+
           {(["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[]).map((key) => {
             const dept = departments[key] || CATEGORY_DEPARTMENTS[key];
             const isSelected = selectedDeptKey === key;
@@ -358,64 +536,965 @@ export function AdminStorefrontManager() {
         </div>
       </div>
 
-      {/* 3. Step 2: Section Tabs (Featured Cards, Product Listings, Accessories) */}
+      {/* 3. Step 2: Store Section Tabs */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
           2. Select Store Section to Manage
         </label>
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
-          <button
-            type="button"
-            onClick={() => setActiveSection("featured")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeSection === "featured"
-                ? "bg-slate-900 text-white shadow"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            <Sparkles size={14} className={activeSection === "featured" ? "text-[#d4af37]" : "text-slate-400"} />
-            <span>Featured Lineup Carousel</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "featured" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-              {currentDept.featuredCards.length}
-            </span>
-          </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveSection("listings")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeSection === "listings"
-                ? "bg-slate-900 text-white shadow"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            <Grid size={14} className={activeSection === "listings" ? "text-[#d4af37]" : "text-slate-400"} />
-            <span>All Product Listings Grid</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "listings" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-              {categoryProducts.length}
-            </span>
-          </button>
+        {selectedDeptKey === "main-store" ? (
+          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+            <button
+              type="button"
+              onClick={() => setActiveMainStoreSection("latest")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "latest"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Sparkles size={14} className={activeMainStoreSection === "latest" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>The Latest (What&apos;s New)</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "latest" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveSection("accessories")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeSection === "accessories"
-                ? "bg-slate-900 text-white shadow"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            <Package size={14} className={activeSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
-            <span>Essential Accessories Rail</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-              {categoryAccessories.length}
-            </span>
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => setActiveMainStoreSection("categories")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "categories"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Grid size={14} className={activeMainStoreSection === "categories" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Shop by Category</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "categories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMainStoreSection("moreToLove")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "moreToLove"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Sparkles size={14} className={activeMainStoreSection === "moreToLove" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>More to Love</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "moreToLove" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMainStoreSection("families")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "families"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Layers size={14} className={activeMainStoreSection === "families" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Product Family Strip</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "families" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMainStoreSection("accessories")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "accessories"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Package size={14} className={activeMainStoreSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Featured Accessories</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length}
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
+            <button
+              type="button"
+              onClick={() => setActiveSection("featured")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeSection === "featured"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Sparkles size={14} className={activeSection === "featured" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Featured Lineup Carousel</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "featured" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {currentDept.featuredCards.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSection("listings")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeSection === "listings"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Grid size={14} className={activeSection === "listings" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>All Product Listings Grid</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "listings" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {categoryProducts.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveSection("accessories")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeSection === "accessories"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Package size={14} className={activeSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Essential Accessories Rail</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {categoryAccessories.length}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS ===================== */}
-      {activeSection === "featured" && (
+      {/* ===================== MAIN STORE PAGE EDITORS ===================== */}
+      {selectedDeptKey === "main-store" && (
+        <div className="space-y-6">
+          {/* 1. The Latest (8 cards) */}
+          {activeMainStoreSection === "latest" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    The Latest — What&apos;s New Carousel ({(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length} Cards)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Featured showcase carousel cards on the main Store landing page. Each image can be custom-uploaded, chosen from the Media Library, or fall back to verified product images.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).map((card, idx) => {
+                  const preview = resolveMainStorePromoPreview(card);
+                  const isUploading = uploadingTarget === `ms-latest-${idx}`;
+
+                  return (
+                    <div
+                      key={card.id || idx}
+                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                          Card #{idx + 1} • {card.name}
+                        </span>
+                        {preview.isCustom ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            Custom Image
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
+                            Product Default
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Live Preview Box */}
+                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
+                        {preview.src ? (
+                          <img
+                            src={preview.src}
+                            alt={card.alt || card.name}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">No Image Assigned</span>
+                        )}
+                      </div>
+
+                      {/* Image Management Actions */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                            <Upload size={13} />
+                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              disabled={uploadingTarget !== null}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleMainStoreFileUpload("latest", idx, file, card.name);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "main-store-latest", index: idx })}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                          >
+                            <ImageIcon size={13} />
+                            <span>Media Library</span>
+                          </button>
+                        </div>
+
+                        {preview.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => updateMainStoreLatest(idx, { image: defaultMainStoreConfig.latestCards[idx]?.image || "", alt: defaultMainStoreConfig.latestCards[idx]?.alt || "" })}
+                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Reset to Default Image</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Inputs */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={card.image}
+                            placeholder={preview.src}
+                            onChange={(e) => updateMainStoreLatest(idx, { image: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={card.alt}
+                            placeholder={card.name}
+                            onChange={(e) => updateMainStoreLatest(idx, { alt: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Eyebrow
+                            </label>
+                            <input
+                              type="text"
+                              value={card.eyebrow}
+                              onChange={(e) => updateMainStoreLatest(idx, { eyebrow: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              value={card.name}
+                              onChange={(e) => updateMainStoreLatest(idx, { name: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Statement / Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            value={card.statement}
+                            onChange={(e) => updateMainStoreLatest(idx, { statement: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 2. Shop by Category (6 cards) */}
+          {activeMainStoreSection === "categories" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Shop by Category Tiles ({(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length} Cards)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Category exploration tiles linking customers to Phones, Mac &amp; Laptops, iPads, Apple Watch, AirPods &amp; Audio, and Accessories.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).map((cat, idx) => {
+                  const defaultImg = defaultMainStoreConfig.categoryCards[idx]?.image || "";
+                  const isCustom = Boolean(cat.image && cat.image !== defaultImg);
+                  const isUploading = uploadingTarget === `ms-category-${idx}`;
+
+                  return (
+                    <div
+                      key={cat.id || idx}
+                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                          Category #{idx + 1} • {cat.title}
+                        </span>
+                        {isCustom ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            Custom Image
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
+                            Default Asset
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Live Preview Box */}
+                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
+                        {cat.image ? (
+                          <img
+                            src={cat.image}
+                            alt={cat.alt || cat.title}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">No Image Assigned</span>
+                        )}
+                      </div>
+
+                      {/* Image Management Actions */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                            <Upload size={13} />
+                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              disabled={uploadingTarget !== null}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleMainStoreFileUpload("category", idx, file, cat.title);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "main-store-category", index: idx })}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                          >
+                            <ImageIcon size={13} />
+                            <span>Media Library</span>
+                          </button>
+                        </div>
+
+                        {isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => updateMainStoreCategory(idx, { image: defaultImg, alt: defaultMainStoreConfig.categoryCards[idx]?.alt || "" })}
+                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Reset to Default Image</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Inputs */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={cat.image}
+                            placeholder={defaultImg}
+                            onChange={(e) => updateMainStoreCategory(idx, { image: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={cat.alt}
+                            placeholder={cat.title}
+                            onChange={(e) => updateMainStoreCategory(idx, { alt: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Title
+                            </label>
+                            <input
+                              type="text"
+                              value={cat.title}
+                              onChange={(e) => updateMainStoreCategory(idx, { title: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Path
+                            </label>
+                            <input
+                              type="text"
+                              value={cat.path}
+                              onChange={(e) => updateMainStoreCategory(idx, { path: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            value={cat.subtitle}
+                            onChange={(e) => updateMainStoreCategory(idx, { subtitle: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 3. More to Love (7 cards) */}
+          {activeMainStoreSection === "moreToLove" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    More to Love Carousel ({(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length} Cards)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Second featured product rail on the main Store page highlighting new launches and flagship Apple products.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).map((card, idx) => {
+                  const preview = resolveMainStorePromoPreview(card);
+                  const isUploading = uploadingTarget === `ms-more-${idx}`;
+
+                  return (
+                    <div
+                      key={card.id || idx}
+                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                          Card #{idx + 1} • {card.name}
+                        </span>
+                        {preview.isCustom ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            Custom Image
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
+                            Product Default
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Live Preview Box */}
+                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
+                        {preview.src ? (
+                          <img
+                            src={preview.src}
+                            alt={card.alt || card.name}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">No Image Assigned</span>
+                        )}
+                      </div>
+
+                      {/* Image Management Actions */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                            <Upload size={13} />
+                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              disabled={uploadingTarget !== null}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleMainStoreFileUpload("more", idx, file, card.name);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "main-store-more", index: idx })}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                          >
+                            <ImageIcon size={13} />
+                            <span>Media Library</span>
+                          </button>
+                        </div>
+
+                        {preview.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => updateMainStoreMore(idx, { image: defaultMainStoreConfig.moreToLoveCards[idx]?.image || "", alt: defaultMainStoreConfig.moreToLoveCards[idx]?.alt || "" })}
+                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Reset to Default Image</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Inputs */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={card.image}
+                            placeholder={preview.src}
+                            onChange={(e) => updateMainStoreMore(idx, { image: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={card.alt}
+                            placeholder={card.name}
+                            onChange={(e) => updateMainStoreMore(idx, { alt: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Eyebrow
+                            </label>
+                            <input
+                              type="text"
+                              value={card.eyebrow}
+                              onChange={(e) => updateMainStoreMore(idx, { eyebrow: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              value={card.name}
+                              onChange={(e) => updateMainStoreMore(idx, { name: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Statement / Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            value={card.statement}
+                            onChange={(e) => updateMainStoreMore(idx, { statement: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Product Family Strip (6 items) */}
+          {activeMainStoreSection === "families" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Product Family Strip ({(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length} Items)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Top horizontal category icons representing iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).map((fam, idx) => {
+                  const defaultImg = defaultMainStoreConfig.productFamilies[idx]?.image || "";
+                  const isCustom = Boolean(fam.image && fam.image !== defaultImg);
+                  const isUploading = uploadingTarget === `ms-family-${idx}`;
+
+                  return (
+                    <div
+                      key={fam.id || idx}
+                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                          Family #{idx + 1} • {fam.name}
+                        </span>
+                        {isCustom ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            Custom Image
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
+                            Default Asset
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Live Preview Box */}
+                      <div className="h-32 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-3">
+                        {fam.image ? (
+                          <img
+                            src={fam.image}
+                            alt={fam.alt || fam.name}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">No Image Assigned</span>
+                        )}
+                      </div>
+
+                      {/* Image Management Actions */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                            <Upload size={13} />
+                            <span>{isUploading ? "Uploading..." : "Upload Icon"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              disabled={uploadingTarget !== null}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleMainStoreFileUpload("family", idx, file, fam.name);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "main-store-family", index: idx })}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                          >
+                            <ImageIcon size={13} />
+                            <span>Media Library</span>
+                          </button>
+                        </div>
+
+                        {isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => updateMainStoreFamily(idx, { image: defaultImg, alt: defaultMainStoreConfig.productFamilies[idx]?.alt || "" })}
+                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Reset to Default Icon</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Inputs */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={fam.image}
+                            placeholder={defaultImg}
+                            onChange={(e) => updateMainStoreFamily(idx, { image: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={fam.alt}
+                            placeholder={fam.name}
+                            onChange={(e) => updateMainStoreFamily(idx, { alt: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              value={fam.name}
+                              onChange={(e) => updateMainStoreFamily(idx, { name: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Path
+                            </label>
+                            <input
+                              type="text"
+                              value={fam.path}
+                              onChange={(e) => updateMainStoreFamily(idx, { path: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 5. Featured Accessories (8 cards) */}
+          {activeMainStoreSection === "accessories" && (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Featured Accessories Carousel ({(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length} Cards)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Essential accessories showcased on the main Store page. Promotional card images can be customized without altering product catalog images.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).map((acc, idx) => {
+                  const preview = resolveMainStoreAccessoryPreview(acc);
+                  const isUploading = uploadingTarget === `ms-accessory-${idx}`;
+
+                  return (
+                    <div
+                      key={acc.id || idx}
+                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
+                    >
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                          Accessory #{idx + 1} • {preview.displayName}
+                        </span>
+                        {preview.isCustom ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            Custom Image
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
+                            Catalog Image
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Live Preview Box */}
+                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
+                        {preview.src ? (
+                          <img
+                            src={preview.src}
+                            alt={acc.alt || preview.displayName}
+                            className="max-h-full max-w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400">No Image Assigned</span>
+                        )}
+                      </div>
+
+                      {/* Image Management Actions */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
+                            <Upload size={13} />
+                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              disabled={uploadingTarget !== null}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void handleMainStoreFileUpload("accessory", idx, file, preview.displayName);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "main-store-accessory", index: idx })}
+                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
+                          >
+                            <ImageIcon size={13} />
+                            <span>Media Library</span>
+                          </button>
+                        </div>
+
+                        {preview.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => updateMainStoreAccessory(idx, { image: "", alt: defaultMainStoreConfig.accessories[idx]?.alt || "" })}
+                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Reset to Default Image</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Inputs */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Image URL
+                          </label>
+                          <input
+                            type="text"
+                            value={acc.image || ""}
+                            placeholder={preview.src}
+                            onChange={(e) => updateMainStoreAccessory(idx, { image: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Alt Text
+                          </label>
+                          <input
+                            type="text"
+                            value={acc.alt || ""}
+                            placeholder={preview.displayName}
+                            onChange={(e) => updateMainStoreAccessory(idx, { alt: e.target.value })}
+                            className="admin-input text-xs py-1 px-2 w-full"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Eyebrow
+                            </label>
+                            <input
+                              type="text"
+                              value={acc.eyebrow || ""}
+                              onChange={(e) => updateMainStoreAccessory(idx, { eyebrow: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                              Display Name
+                            </label>
+                            <input
+                              type="text"
+                              value={acc.name || ""}
+                              placeholder={preview.displayName}
+                              onChange={(e) => updateMainStoreAccessory(idx, { name: e.target.value })}
+                              className="admin-input text-xs py-1 px-2 w-full"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
+                            Catalog Slug
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            value={acc.id}
+                            className="admin-input text-xs py-1 px-2 w-full font-mono bg-slate-50 text-slate-500 cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS (DEPARTMENTS) ===================== */}
+      {selectedDeptKey !== "main-store" && activeSection === "featured" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
@@ -435,6 +1514,7 @@ export function AdminStorefrontManager() {
               <span>Add Showcase Card</span>
             </button>
           </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {currentDept.featuredCards.map((card, idx) => (
@@ -584,7 +1664,7 @@ export function AdminStorefrontManager() {
       )}
 
       {/* ===================== SECTION 2: ALL PRODUCT LISTINGS ===================== */}
-      {activeSection === "listings" && (
+      {selectedDeptKey !== "main-store" && activeSection === "listings" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -824,7 +1904,7 @@ export function AdminStorefrontManager() {
       )}
 
       {/* ===================== SECTION 3: ESSENTIAL ACCESSORIES ===================== */}
-      {activeSection === "accessories" && (
+      {selectedDeptKey !== "main-store" && activeSection === "accessories" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
@@ -995,7 +2075,17 @@ export function AdminStorefrontManager() {
                     ? "Select Image for Featured Showcase Card"
                     : mediaPickerTarget.type === "accessory"
                     ? "Select Image for Accessory Card"
-                    : "Select Image for Product Listing"}
+                    : mediaPickerTarget.type === "product"
+                    ? "Select Image for Product Listing"
+                    : mediaPickerTarget.type === "main-store-latest"
+                    ? "Select Image for Main Store 'The Latest' Card"
+                    : mediaPickerTarget.type === "main-store-category"
+                    ? "Select Image for Main Store 'Shop by Category' Card"
+                    : mediaPickerTarget.type === "main-store-more"
+                    ? "Select Image for Main Store 'More to Love' Card"
+                    : mediaPickerTarget.type === "main-store-family"
+                    ? "Select Image for Main Store Product Family Strip"
+                    : "Select Image for Main Store Accessory Card"}
                 </h3>
               </div>
               <button

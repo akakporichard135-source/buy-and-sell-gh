@@ -3,6 +3,7 @@ import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData"
 import {
   defaultFaqs,
   defaultHomepageContent,
+  defaultMainStoreConfig,
   defaultMediaItems,
   defaultPageContent,
   defaultSiteSettings,
@@ -12,6 +13,7 @@ import {
   deleteMediaItemPermanently,
   fetchFaqs,
   fetchHomepageContent,
+  fetchMainStoreContent,
   fetchMediaLibrary,
   fetchPageContent,
   fetchSiteSettings,
@@ -19,6 +21,7 @@ import {
   removeMediaItemFromLibrary,
   saveFaqs,
   saveHomepageContent,
+  saveMainStoreContent,
   savePageContent,
   saveSiteSettings,
   saveStorefrontContent,
@@ -30,6 +33,7 @@ import type {
   CategoryDepartmentConfig,
   FaqItem,
   HomepageContent,
+  MainStoreConfig,
   MediaItem,
   PageContentRegistry,
   SiteSettings,
@@ -38,6 +42,7 @@ import type {
 interface CmsContextValue {
   settings: SiteSettings;
   homepage: HomepageContent;
+  mainStore: MainStoreConfig;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -46,6 +51,7 @@ interface CmsContextValue {
   refreshCms: () => Promise<void>;
   updateSettings: (partial: Partial<SiteSettings>) => Promise<SiteSettings>;
   updateHomepage: (content: HomepageContent) => Promise<HomepageContent>;
+  updateMainStore: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -80,6 +86,7 @@ const CmsContext = createContext<CmsContextValue | null>(null);
 export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [homepage, setHomepage] = useState<HomepageContent>(defaultHomepageContent);
+  const [mainStore, setMainStore] = useState<MainStoreConfig>(defaultMainStoreConfig);
   const [media, setMedia] = useState<MediaItem[]>(defaultMediaItems);
   const [faqs, setFaqs] = useState<FaqItem[]>(defaultFaqs);
   const [pages, setPages] = useState<PageContentRegistry>(defaultPageContent);
@@ -89,13 +96,14 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
   const loadAll = async () => {
     try {
-      const [s, h, m, f, p, d] = await Promise.all([
+      const [s, h, m, f, p, d, ms] = await Promise.all([
         fetchSiteSettings(),
         fetchHomepageContent(),
         fetchMediaLibrary(),
         fetchFaqs(),
         fetchPageContent(),
         fetchStorefrontContent(),
+        fetchMainStoreContent(),
       ]);
 
       startTransition(() => {
@@ -105,6 +113,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         setFaqs(f);
         setPages(p);
         setDepartments(d);
+        setMainStore(ms);
       });
     } catch {
       // Graceful fallback to initial values
@@ -203,11 +212,18 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     return updated;
   };
 
+  const handleUpdateMainStore = async (newConfig: MainStoreConfig) => {
+    const updated = await saveMainStoreContent(newConfig);
+    setMainStore(updated);
+    return updated;
+  };
+
   return (
     <CmsContext.Provider
       value={{
         settings,
         homepage,
+        mainStore,
         media,
         faqs,
         pages,
@@ -216,6 +232,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         refreshCms: loadAll,
         updateSettings: handleUpdateSettings,
         updateHomepage: handleUpdateHomepage,
+        updateMainStore: handleUpdateMainStore,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,

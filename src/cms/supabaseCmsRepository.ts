@@ -1,9 +1,10 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
-import { assertAdminAal2 } from "../admin/adminAuthorization";
+import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import {
   defaultFaqs,
   defaultHomepageContent,
+  defaultMainStoreConfig,
   defaultMediaItems,
   defaultPageContent,
   defaultSiteSettings,
@@ -12,6 +13,7 @@ import type {
   CategoryDepartmentConfig,
   FaqItem,
   HomepageContent,
+  MainStoreConfig,
   MediaItem,
   PageContentRegistry,
   SiteSettings,
@@ -23,6 +25,7 @@ const CMS_STORAGE_KEY_MEDIA = "buyandsell_cms_media_v1";
 const CMS_STORAGE_KEY_FAQS = "buyandsell_cms_faqs_v1";
 const CMS_STORAGE_KEY_PAGES = "buyandsell_cms_pages_v1";
 const CMS_STORAGE_KEY_STOREFRONT = "buyandsell_cms_storefront_v1";
+const CMS_STORAGE_KEY_MAIN_STORE = "buyandsell_cms_main_store_v1";
 
 // Cache listeners for reactive UI across tabs and components
 type CmsListener = () => void;
@@ -1024,6 +1027,11 @@ export const saveStorefrontContent = async (
   });
 
   if (error) {
+    if (isLocalAdminActive()) {
+      writeLocal(CMS_STORAGE_KEY_STOREFRONT, departments);
+      notifyListeners();
+      return departments;
+    }
     throw new Error(
       `Failed to save storefront departments to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
     );
@@ -1032,6 +1040,96 @@ export const saveStorefrontContent = async (
   writeLocal(CMS_STORAGE_KEY_STOREFRONT, departments);
   notifyListeners();
   return departments;
+};
+
+// 7. MAIN STORE PAGE CONTENT (Store Landing Page)
+const mergeMainStoreWithDefaults = (source?: Partial<MainStoreConfig> | null): MainStoreConfig => {
+  if (!source) return defaultMainStoreConfig;
+
+  const productFamilies = defaultMainStoreConfig.productFamilies.map((def) => {
+    const s = (source.productFamilies || []).find((item) => item.id === def.id);
+    return s ? { ...def, ...s } : def;
+  });
+
+  const latestCards = defaultMainStoreConfig.latestCards.map((def) => {
+    const s = (source.latestCards || []).find((item) => item.id === def.id);
+    return s ? { ...def, ...s } : def;
+  });
+
+  const categoryCards = defaultMainStoreConfig.categoryCards.map((def) => {
+    const s = (source.categoryCards || []).find((item) => item.id === def.id);
+    return s ? { ...def, ...s } : def;
+  });
+
+  const moreToLoveCards = defaultMainStoreConfig.moreToLoveCards.map((def) => {
+    const s = (source.moreToLoveCards || []).find((item) => item.id === def.id);
+    return s ? { ...def, ...s } : def;
+  });
+
+  const accessories = defaultMainStoreConfig.accessories.map((def) => {
+    const s = (source.accessories || []).find((item) => item.id === def.id);
+    return s ? { ...def, ...s } : def;
+  });
+
+  return {
+    productFamilies,
+    latestCards,
+    categoryCards,
+    moreToLoveCards,
+    accessories,
+  };
+};
+
+export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
+  const local = readLocal<MainStoreConfig>(CMS_STORAGE_KEY_MAIN_STORE, defaultMainStoreConfig);
+  const mergedLocal = mergeMainStoreWithDefaults(local);
+  if (!supabase) return mergedLocal;
+
+  try {
+    const { data, error } = await supabase
+      .from("storefront_content")
+      .select("config")
+      .eq("key", "main_store")
+      .maybeSingle();
+
+    if (!error && data?.config) {
+      const merged = mergeMainStoreWithDefaults(data.config as Partial<MainStoreConfig>);
+      writeLocal(CMS_STORAGE_KEY_MAIN_STORE, merged);
+      return merged;
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+
+  return mergedLocal;
+};
+
+export const saveMainStoreContent = async (
+  config: MainStoreConfig
+): Promise<MainStoreConfig> => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+
+  const { error } = await client.from("storefront_content").upsert({
+    key: "main_store",
+    config,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    if (isLocalAdminActive()) {
+      writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
+      notifyListeners();
+      return config;
+    }
+    throw new Error(
+      `Failed to save main store content to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
+    );
+  }
+
+  writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
+  notifyListeners();
+  return config;
 };
 
 // Cascades replaced media URLs to homepage content and storefront departments
@@ -1167,6 +1265,60 @@ async function cascadeMediaUrlUpdate(
 
     if (storefrontChanged) {
       await saveStorefrontContent(updatedStorefront);
+    }
+
+    // 2b. Main Store page content cascade
+    const currentMainStore = await fetchMainStoreContent();
+    let mainStoreChanged = false;
+
+    const nextFamilies = currentMainStore.productFamilies.map((f) => {
+      if (f.image === oldItem.url) {
+        mainStoreChanged = true;
+        return { ...f, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : f.alt };
+      }
+      return f;
+    });
+
+    const nextLatest = currentMainStore.latestCards.map((c) => {
+      if (c.image === oldItem.url) {
+        mainStoreChanged = true;
+        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
+      }
+      return c;
+    });
+
+    const nextCategories = currentMainStore.categoryCards.map((c) => {
+      if (c.image === oldItem.url) {
+        mainStoreChanged = true;
+        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
+      }
+      return c;
+    });
+
+    const nextMore = currentMainStore.moreToLoveCards.map((c) => {
+      if (c.image === oldItem.url) {
+        mainStoreChanged = true;
+        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
+      }
+      return c;
+    });
+
+    const nextAccessories = currentMainStore.accessories.map((a) => {
+      if (a.image === oldItem.url) {
+        mainStoreChanged = true;
+        return { ...a, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : a.alt };
+      }
+      return a;
+    });
+
+    if (mainStoreChanged) {
+      await saveMainStoreContent({
+        productFamilies: nextFamilies,
+        latestCards: nextLatest,
+        categoryCards: nextCategories,
+        moreToLoveCards: nextMore,
+        accessories: nextAccessories,
+      });
     }
 
     // 3. Products table cascade (update any product referencing this image in Supabase)

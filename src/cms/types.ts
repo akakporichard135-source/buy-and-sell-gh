@@ -188,3 +188,50 @@ export interface PageContentRegistry {
   repairs: RepairsPageContent;
   tradeIn: TradeInPageContent;
 }
+
+export interface MainStoreFamilyItem {
+  id: string; // e.g. "iphone", "mac", "ipad", "watch", "airpods", "accessories"
+  name: string;
+  image: string;
+  alt: string;
+  path: string;
+}
+
+export interface MainStorePromoCard {
+  id: string; // e.g. "macbook-pro-14-m5", "mac-mini", etc.
+  eyebrow: string;
+  name: string;
+  statement: string;
+  image: string; // custom image URL or empty for catalog product default
+  alt: string;
+  theme?: "light" | "dark";
+  learnMorePath: string;
+  actionPath: string;
+  actionLabel?: string;
+}
+
+export interface MainStoreCategoryCard {
+  id: string; // "phones", "laptops", "tablets", "watches", "audio", "accessories"
+  path: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  alt: string;
+}
+
+export interface MainStoreAccessoryItem {
+  id: string; // slug, e.g. "apple-magsafe-iphone-case"
+  family?: ProductFamilyKey;
+  name?: string;
+  eyebrow?: string;
+  image?: string; // custom image URL or empty for catalog product default
+  alt?: string;
+}
+
+export interface MainStoreConfig {
+  productFamilies: MainStoreFamilyItem[];
+  latestCards: MainStorePromoCard[];
+  categoryCards: MainStoreCategoryCard[];
+  moreToLoveCards: MainStorePromoCard[];
+  accessories: MainStoreAccessoryItem[];
+}
