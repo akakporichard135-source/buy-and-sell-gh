@@ -1145,6 +1145,37 @@
   }
 }
 
+/* Art-directed Presentation for iPhone Duo Clean Cinematic */
+.editorial-story-iphone-duo .editorial-cinematic-opening-media {
+  max-width: min(100vw, 1200px);
+}
+
+.editorial-story-iphone-duo .editorial-cinematic-opening-media .cinematic-video-container {
+  background: #ffffff !important;
+  border: none !important;
+  aspect-ratio: 16/9 !important;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.10);
+  border-radius: clamp(14px, 2.5vw, 24px);
+  overflow: hidden;
+}
+
+/* Non-destructive crop: smoothly scales video slightly so the embedded letterbox black bar is cleanly pushed outside the overflow-hidden container */
+.editorial-story-iphone-duo .editorial-cinematic-opening-media .cinematic-video-media {
+  transform: scale(1.12) translateY(-2px);
+  transform-origin: center center;
+}
+
+@media (max-width: 640px) {
+  .editorial-story-iphone-duo .editorial-cinematic-opening-media .cinematic-video-container {
+    aspect-ratio: 16/9 !important;
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
+  }
+  .editorial-story-iphone-duo .editorial-cinematic-opening-media .cinematic-video-media {
+    transform: scale(1.14) translateY(-2px);
+  }
+}
+
 .editorial-tone-ink .cinematic-clean-fallback {
   background: #000000;
 }

@@ -190,6 +190,15 @@
 
 /* Breakpoint: <= 834px collapses into Mobile Header */
 @media (max-width: 834px) {
+  .site-header.global-header {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+
+  .site-header.global-header.nav-hidden {
+    transform: translateY(-100%) !important;
+  }
+
   .global-header-nav {
     display: none !important;
   }
@@ -200,6 +209,12 @@
 
   .global-header-actions {
     gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header.global-header {
+    transition: none !important;
   }
 }
 

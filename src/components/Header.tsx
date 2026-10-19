@@ -148,15 +148,71 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
   const { totalItems } = useCart();
   const location = useLocation();
   const drawerRef = useRef<HTMLDivElement>(null);
+  const lastScrollYRef = useRef(0);
 
   // Close mobile menu and reset submenu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setActiveSubmenuId(null);
+    setNavVisible(true);
   }, [location.pathname, location.search]);
+
+  // Apple-inspired smooth mobile scroll navigation
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        if (typeof window === "undefined") return;
+
+        // Desktop (width > 834px) keeps header fixed without scroll-hide
+        if (window.innerWidth > 834) {
+          setNavVisible(true);
+          return;
+        }
+
+        // Never hide while mobile menu drawer or search modal is open
+        if (mobileMenuOpen || searchOpen) {
+          setNavVisible(true);
+          return;
+        }
+
+        const currentY = window.scrollY;
+        const lastY = lastScrollYRef.current;
+        const delta = currentY - lastY;
+
+        // Keep normal header visible at top of page
+        if (currentY <= 44) {
+          setNavVisible(true);
+          lastScrollYRef.current = Math.max(0, currentY);
+          return;
+        }
+
+        // Deadzone threshold of 8px prevents jitter during touch inertia
+        if (Math.abs(delta) >= 8) {
+          if (delta > 0 && currentY > 56) {
+            // Scrolling down: slide navigation out of the way
+            setNavVisible(false);
+          } else if (delta < 0) {
+            // Scrolling up: smoothly slide back into view
+            setNavVisible(true);
+          }
+          lastScrollYRef.current = currentY;
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [mobileMenuOpen, searchOpen]);
 
   // Lock body scroll and handle Escape key when mobile menu is active
   useEffect(() => {
@@ -212,8 +268,13 @@ export function Header() {
     setActiveSubmenuId(null);
   };
 
+  const isNavHidden = !navVisible && !mobileMenuOpen && !searchOpen;
+
   return (
-    <header className="site-header global-header sticky top-0 z-50">
+    <header
+      className={`site-header global-header sticky top-0 z-50 ${isNavHidden ? "nav-hidden" : ""}`}
+      onFocusCapture={() => setNavVisible(true)}
+    >
       <div className="global-header-inner">
         {/* Brand logo at Apple mark position */}
         <Logo compact className="global-header-brand" />

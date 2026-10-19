@@ -5,8 +5,6 @@ import type { EditorialImage, EditorialStory } from "../catalog/editorialStories
 import { sectionsAt, type LearnMoreSection } from "../cms/learnMoreRepository";
 import type { IphoneEducationContent } from "../data/iphone18ProEducation";
 import { LearnMoreSections } from "./LearnMoreSections";
-import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { getCardPriceDisplay } from "../utils/productPricing";
 import { SEO } from "./SEO";
 import { CinematicVideo } from "./CinematicVideo";
 import { Iphone18ProEducation } from "./Iphone18ProEducation";
@@ -29,22 +27,6 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
 
 export function EditorialProductStory({ story, sections = [], education }: { story: EditorialStory; sections?: LearnMoreSection[]; education?: IphoneEducationContent }) {
   const railRef = useRef<HTMLDivElement>(null);
-  const { activeProducts } = useProductCatalog();
-
-  const startingPrice = useMemo(() => {
-    const prod = activeProducts.find((p) => p.slug === story.slug || story.buyPath.endsWith(`/${p.slug}`));
-    if (prod) {
-      const cardPrice = getCardPriceDisplay(prod);
-      if (!cardPrice.isEnquiry) return cardPrice.current;
-    }
-    if (story.slug === "iphone-18-pro") return "From GH₵ 20,500";
-    if (story.slug === "macbook-air") return "From GH₵ 13,500";
-    if (story.slug === "apple-watch-series-12") return "From GH₵ 7,800";
-    if (story.slug === "apple-watch-ultra-4") return "From GH₵ 14,800";
-    if (story.slug === "ipad-air") return "From GH₵ 9,800";
-    if (story.slug === "airpods-5") return "From GH₵ 2,800";
-    return null;
-  }, [activeProducts, story.slug, story.buyPath]);
 
   useEffect(() => {
     if (railRef.current) {
@@ -71,7 +53,6 @@ export function EditorialProductStory({ story, sections = [], education }: { sto
           <h1 id="editorial-title">{story.name}</h1>
           <p className="editorial-hero-tagline">{story.tagline}</p>
           <div className="editorial-hero-actions">
-            {startingPrice && <span className="editorial-hero-price-pill">{startingPrice}</span>}
             <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
           </div>
         </div>
