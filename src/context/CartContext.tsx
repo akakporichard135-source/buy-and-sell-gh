@@ -10,7 +10,8 @@ interface CartContextValue {
     storage?: string,
     color?: string,
     quantity?: number,
-    variant?: ProductVariant
+    variant?: ProductVariant,
+    colorImageSrc?: string
   ) => boolean;
   removeItem: (productId: string, storage: string, color: string, variantId?: string) => void;
   updateQuantity: (
@@ -84,7 +85,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     storage = product.storage[0],
     color = product.colors[0],
     quantity = 1,
-    variant?: ProductVariant
+    variant?: ProductVariant,
+    colorImageSrc?: string
   ) => {
     const currentProduct = getProductBySlug(product.slug) ?? product;
     if (!currentProduct) {
@@ -100,7 +102,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant));
+    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant, colorImageSrc));
     setToast(`${currentProduct.name} added to cart.`);
     return true;
   };

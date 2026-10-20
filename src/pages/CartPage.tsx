@@ -160,7 +160,7 @@ export function CartPage() {
               return (
                 <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={itemKey}>
                   <Link to={`/product/${item.product.slug}`} aria-label={`View ${displayName}`}>
-                    <ProductVisual product={item.product} />
+                    <ProductVisual product={item.product} overrideImageSrc={item.colorImageSrc} />
                   </Link>
                   <div className="min-w-0">
                     <Link to={`/product/${item.product.slug}`} className="text-xl font-black text-ink hover:text-gold-dark">{displayName}</Link>
@@ -206,10 +206,11 @@ export function CartPage() {
                 const displayName = item.variantTitle ?? item.product.name;
                 const summaryKey = `summary-${item.product.id}-${item.storage}-${item.color}-${item.variantId ?? "def"}`;
 
+                const imageSrc = item.colorImageSrc || resolveProductImage(item.product)?.src;
                 return (
                   <div className="order-summary-line" key={summaryKey}>
-                    {resolveProductImage(item.product) ? (
-                      <img src={resolveProductImage(item.product)?.src} alt={resolveProductImage(item.product)?.alt ?? displayName} loading="lazy" />
+                    {imageSrc ? (
+                      <img src={imageSrc} alt={displayName} loading="lazy" />
                     ) : (
                       <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>
                     )}

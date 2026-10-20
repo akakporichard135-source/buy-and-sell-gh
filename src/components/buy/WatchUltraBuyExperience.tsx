@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
@@ -15,10 +15,19 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+
 const ULTRA_FINISHES: ColorOption[] = [
-  { name: "Natural Titanium", hex: "#9b968e" },
-  { name: "Black Titanium", hex: "#232324" },
+  resolveColorOption("Natural Titanium"),
+  resolveColorOption("Black Titanium"),
 ];
+
+const ULTRA_FINISH_IMAGE_MAP: Record<string, string> = {
+  "Natural Titanium": "/products/campaigns/watch-ultra-4-rugged.webp",
+  "Black Titanium": localCatalogueImageBySlug["apple-watch-ultra-3"] || "/products/campaigns/watch-ultra-4-hero.webp",
+};
 
 const ULTRA_BANDS = [
   { name: "Alpine Loop", desc: "Two textile layers woven into one continuous piece without stitching. Titanium G-hook ensures secure fit for outdoor adventure." },
@@ -27,9 +36,9 @@ const ULTRA_BANDS = [
 ];
 
 const ULTRA_BAND_COLORS: ColorOption[] = [
-  { name: "Safety Orange", hex: "#ff6a00" },
-  { name: "Dark Charcoal", hex: "#2a2d32" },
-  { name: "Ice Blue", hex: "#7ba5be" },
+  resolveColorOption("Safety Orange"),
+  resolveColorOption("Dark Charcoal"),
+  resolveColorOption("Ice Blue"),
 ];
 
 export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -45,11 +54,25 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = useMemo(() => finish === "Natural Titanium" ? [
-    { src: "/products/campaigns/watch-ultra-4-rugged.webp", alt: "Natural Titanium Apple Watch Ultra 4 with orange Alpine Loop on white" },
-  ] : [], [finish]);
+  const currentFinishImg = ULTRA_FINISH_IMAGE_MAP[finish] || ULTRA_FINISH_IMAGE_MAP["Natural Titanium"];
 
-  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
+  // Preload Ultra finish images
+  useEffect(() => {
+    preloadProductImages([
+      "/products/campaigns/watch-ultra-4-rugged.webp",
+      "/products/campaigns/watch-ultra-4-orange.webp",
+      "/products/campaigns/watch-ultra-4-hero.webp",
+      localCatalogueImageBySlug["apple-watch-ultra-3"],
+    ]);
+  }, []);
+
+  const thumbnails = useMemo(() => [
+    { src: currentFinishImg, alt: `${finish} Apple Watch Ultra with Alpine Loop on white` },
+    { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra high-contrast action display" },
+    { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra dual perspective" },
+  ], [currentFinishImg, finish]);
+
+  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
   const fallbackProduct: Product = useMemo(() => {
     const slug = "apple-watch-ultra-4";
@@ -103,7 +126,8 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       "49mm GPS + Cellular",
       `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
       1,
-      configured.variant
+      configured.variant,
+      activeImage
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);

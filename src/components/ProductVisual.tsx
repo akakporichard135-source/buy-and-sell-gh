@@ -21,8 +21,23 @@ function DeviceSilhouetteIcon({ category }: { category: string }) {
   return <Sparkles size={28} className="text-black/35 stroke-[1.25]" />;
 }
 
-export function ProductVisual({ product, size = "card", priority = false, imageVariant = "default" }: { product: Product; size?: "card" | "large"; priority?: boolean; imageVariant?: "default" | "catalogue" }) {
-  const image = imageVariant === "catalogue" ? resolveCatalogueProductImage(product) : resolveProductImage(product);
+export function ProductVisual({
+  product,
+  size = "card",
+  priority = false,
+  imageVariant = "default",
+  overrideImageSrc,
+}: {
+  product: Product;
+  size?: "card" | "large";
+  priority?: boolean;
+  imageVariant?: "default" | "catalogue";
+  overrideImageSrc?: string;
+}) {
+  const resolved = imageVariant === "catalogue" ? resolveCatalogueProductImage(product) : resolveProductImage(product);
+  const image = overrideImageSrc
+    ? { src: overrideImageSrc, alt: product.name }
+    : resolved;
   const cleanProductStage = product.category === "Accessories" || product.category === "AirPods";
   if (image) {
     return (

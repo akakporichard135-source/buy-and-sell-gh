@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
@@ -7,9 +7,12 @@ import { whatsappUrl, productWhatsAppUrl } from "../../utils/whatsapp";
 import { isProductPurchasable } from "../../catalog/productCatalog";
 import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
+import { resolveColorOptions } from "../../utils/productColors";
+import { resolveProductColorImage, resolveProductColorGallery, preloadProductImages } from "../../utils/productColorImages";
 import {
   BuyLayout,
   BuyOptionCard,
+  BuyColorSwatches,
   BuyTradeInStep,
   BuyPaymentStep,
   BuyFulfillmentStep,
@@ -17,10 +20,6 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 import type { ProductFamilyKey } from "../../catalog/productExperience";
-
-const knownCatalogueImageFinishes: Record<string, string> = {
-  "iphone-16-pro-max": "Desert Titanium",
-};
 
 export function GenericBuyExperience({
   product,
@@ -40,6 +39,8 @@ export function GenericBuyExperience({
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
+  const colorOptions = useMemo(() => resolveColorOptions(product?.colors ?? []), [product?.colors]);
+
   useEffect(() => {
     if (product) {
       if (product.storage && product.storage.length > 0 && (!storage || !product.storage.includes(storage))) {
@@ -51,48 +52,55 @@ export function GenericBuyExperience({
     }
   }, [product]);
 
-  const name = product?.name ?? slug.split("-").map((s) => s ? `${s[0].toUpperCase()}${s.slice(1)}` : s).join(" ");
+  // Preload all available finish images so clicking swatches has 0 latency
+  useEffect(() => {
+    if (product && colorOptions.length > 0) {
+      const urls = colorOptions.map((c) => resolveProductColorImage(product, c.name));
+      preloadProductImages(urls);
+    }
+  }, [product, colorOptions]);
+
+  const name = product?.name ?? slug.split("-").map((s) => (s ? `${s[0].toUpperCase()}${s.slice(1)}` : s)).join(" ");
   const rawGallery = product ? resolveProductGallery(product) : [];
   const missingCleanImage = missingCleanAccessoryImageSlugs.has(product?.slug ?? slug);
-  const canUseCatalogueImage = (!product || !isUsedProductCondition(product.condition))
-    && !missingCleanImage;
+  const canUseCatalogueImage = (!product || !isUsedProductCondition(product.condition)) && !missingCleanImage;
   const fallbackAsset = canUseCatalogueImage ? localCatalogueImageBySlug[product?.slug ?? slug] : undefined;
   const hasOwnerImages = Boolean(product && hasOwnerUploadedProductImages(product));
-  const knownImageFinish = knownCatalogueImageFinishes[product?.slug ?? slug];
-  const finishImageMismatch = Boolean(!hasOwnerImages && knownImageFinish && color && color !== knownImageFinish);
-  const cleanCatalogueImage = product && !hasOwnerImages ? fallbackAsset : undefined;
-  const safeRawGallery = missingCleanImage && !hasOwnerImages ? [] : rawGallery;
-  const gallery = finishImageMismatch
-    ? []
-    : cleanCatalogueImage
-    ? [{ src: cleanCatalogueImage, alt: name }]
-    : safeRawGallery.length > 0
-    ? safeRawGallery
-    : fallbackAsset
-      ? [{ src: fallbackAsset, alt: name }]
-      : [];
+
+  // Determine active finish image & angle thumbnails
+  const matchedFinishImage = resolveProductColorImage(product, color, fallbackAsset);
+  const gallery = useMemo(() => {
+    if (hasOwnerImages) {
+      return rawGallery;
+    }
+    return resolveProductColorGallery(product, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
+  }, [product, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
+
+  const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
 
   const configured = resolveConfiguredPrice(product, { storage });
-  const purchasable = product ? (configured.price > 0 && !product.priceOnRequest) : false;
+  const purchasable = product ? configured.price > 0 && !product.priceOnRequest : false;
   const priceLabel = configured.price > 0
     ? configured.formattedPrice
-    : (product && !product.priceOnRequest && product.price > 0
-        ? formatGhs(product.price)
-        : "Price confirmed on enquiry");
+    : product && !product.priceOnRequest && product.price > 0
+    ? formatGhs(product.price)
+    : "Price confirmed on enquiry";
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
-  const activeImage = finishImageMismatch ? undefined : gallery[activeThumb]?.src || gallery[0]?.src || fallbackAsset;
-
   const whatsAppEnquiry = product
     ? productWhatsAppUrl(product, storage, color)
-    : whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${name}. Storage: ${storage}, Colour: ${color}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "Pickup (Dome)" : "Delivery"}. Please confirm availability and price.`);
+    : whatsappUrl(
+        `Hello Buy & Sell GH, I would like to enquire about ${name}. Storage: ${storage}, Finish: ${color}, Payment: ${paymentMethod}, Fulfillment: ${
+          fulfillment === "pickup" ? "Pickup (Dome)" : "Delivery"
+        }. Please confirm availability and price.`
+      );
 
   const handleAddToBag = () => {
     if (product && purchasable) {
-      const added = addItem(product, storage || "Standard", color || "Standard", 1, configured.variant);
+      const added = addItem(product, storage || "Standard", color || "Standard", 1, configured.variant, activeImage);
       if (added) {
-        setNotice(`${product.name}${storage ? ` (${storage})` : ""} - ${priceLabel} added to your bag.`);
+        setNotice(`${product.name}${storage ? ` (${storage})` : ""}${color ? ` - ${color}` : ""} added to your bag.`);
       }
     } else {
       setNotice(`Connecting to WhatsApp to confirm ${name} availability...`);
@@ -115,7 +123,7 @@ export function GenericBuyExperience({
       categoryLabel={familyLabels[family]?.label ?? "Store"}
       categoryPath={familyLabels[family]?.path ?? "/store"}
       activeImageSrc={activeImage}
-      activeImageAlt={name}
+      activeImageAlt={`${name}${color ? ` in ${color}` : ""}`}
       priceLabel={priceLabel}
       badge={product?.condition}
       thumbnails={gallery}
@@ -137,7 +145,7 @@ export function GenericBuyExperience({
         </p>
       </div>
 
-      {/* Storage / Option */}
+      {/* Storage / Capacity Option */}
       {product && product.storage && product.storage.length > 0 && (
         <section className="apple-buy-step">
           <div className="apple-buy-step-header">
@@ -156,22 +164,20 @@ export function GenericBuyExperience({
         </section>
       )}
 
-      {/* Finish / Color */}
-      {product && product.colors && product.colors.length > 0 && (
+      {/* Finish / Circular Color Swatches */}
+      {colorOptions.length > 0 && (
         <section className="apple-buy-step">
           <div className="apple-buy-step-header">
-            <h3 className="apple-buy-step-title">Colour. <span>Available finishes.</span></h3>
+            <h3 className="apple-buy-step-title">Finish. <span>Pick your favourite.</span></h3>
           </div>
-          <div className="apple-buy-cards-grid">
-            {product.colors.map((c) => (
-              <BuyOptionCard
-                key={c}
-                title={c}
-                selected={color === c}
-                onClick={() => setColor(c)}
-              />
-            ))}
-          </div>
+          <BuyColorSwatches
+            colors={colorOptions}
+            selectedColor={color}
+            onSelect={(selectedFinish) => {
+              setColor(selectedFinish);
+              setActiveThumb(0);
+            }}
+          />
         </section>
       )}
 
@@ -192,7 +198,7 @@ export function GenericBuyExperience({
         items={[
           { label: "Product", value: name },
           ...(storage ? [{ label: "Configuration", value: storage }] : []),
-          ...(color ? [{ label: "Colour", value: color }] : []),
+          ...(color ? [{ label: "Finish", value: color }] : []),
           { label: "Condition", value: product?.condition ?? "Verified Unit" },
           { label: "Payment", value: paymentMethod },
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },

@@ -18,9 +18,12 @@ import type { Product } from "../../types/product";
 import ipadProBlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
 import ipadProSilverWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m4-premium.webp";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+
 const IPAD_PRO_FINISHES: ColorOption[] = [
-  { name: "Space Black", hex: "#2b2b2d" },
-  { name: "Silver", hex: "#e3e4e5" },
+  resolveColorOption("Space Black"),
+  resolveColorOption("Silver"),
 ];
 
 export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -46,6 +49,15 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     }
   }, [catalogProduct]);
 
+  // Preload finish images
+  useEffect(() => {
+    preloadProductImages([
+      ipadProBlackWhite,
+      ipadProSilverWhite,
+      "/products/campaigns/ipad-pro-cinematic.webp",
+    ]);
+  }, []);
+
   // Nano-texture glass is only available on 1TB and 2TB models
   useEffect(() => {
     if (storage !== "1TB" && storage !== "2TB" && glass === "Nano-texture glass") {
@@ -54,16 +66,14 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   }, [storage, glass]);
 
   const thumbnails = useMemo(() => {
-    if (screenSize === "11-inch" && finish === "Space Black") {
-      return [{ src: ipadProBlackWhite, alt: "Space Black 11-inch iPad Pro on white" }];
-    }
-    if (screenSize === "13-inch" && finish === "Silver") {
-      return [{ src: ipadProSilverWhite, alt: "Silver 13-inch iPad Pro on white" }];
-    }
-    return [];
+    const primarySrc = finish === "Space Black" ? ipadProBlackWhite : ipadProSilverWhite;
+    return [
+      { src: primarySrc, alt: `${finish} ${screenSize} iPad Pro on white` },
+      { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro Ultra Retina XDR display` },
+    ];
   }, [screenSize, finish]);
 
-  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
+  const activeImage = thumbnails[activeThumb]?.src || (finish === "Space Black" ? ipadProBlackWhite : ipadProSilverWhite);
 
   const fallbackProduct: Product = useMemo(() => {
     const is13 = screenSize === "13-inch";
@@ -164,7 +174,8 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       storage,
       `${screenSize} / ${finish} / ${connectivity}${glass === "Nano-texture glass" ? " / Nano-texture" : ""}`,
       1,
-      configured.variant
+      configured.variant,
+      activeImage
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);

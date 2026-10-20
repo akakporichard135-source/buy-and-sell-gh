@@ -25,7 +25,7 @@ const bundle = async (entry, outfile) => {
       "import.meta.env.VITE_SUPABASE_URL": "\"\"",
     },
     format: "esm",
-    loader: { ".webp": "file" },
+    loader: { ".webp": "file", ".png": "file", ".jpg": "file", ".jpeg": "file", ".svg": "file" },
     outfile,
     platform: "node",
   });
@@ -437,6 +437,21 @@ try {
   const headerMap = Object.fromEntries(globalHeaders.map((header) => [header.key, header.value]));
   assert.match(headerMap["Content-Security-Policy"], /frame-ancestors 'none'/, "CSP blocks framing");
   assert.match(headerMap["Strict-Transport-Security"], /max-age=63072000/, "HSTS is configured for two years");
+
+  // Universal Product Color Selector Verification
+  const productColors = await bundle(path.join(projectRoot, "src/utils/productColors.ts"), path.join(outdir, "productColors.mjs"));
+  assert(productColors.resolveColorOption("Natural Titanium").hex === "#b5b0a8", "Natural titanium resolves accurate hex");
+  assert(productColors.resolveColorOption("Silver").border === true, "Silver has border flag for pure white stages");
+  assert(productColors.resolveColorOption("Space Black").hex === "#2b2b2d", "Space Black resolves accurate hex");
+
+  const productColorImages = await bundle(path.join(projectRoot, "src/utils/productColorImages.ts"), path.join(outdir, "productColorImages.mjs"));
+  const mbaTestProd = { id: "mba", slug: "macbook-air-13-m4", name: "MacBook Air", category: "MacBooks", price: 13500, available: true, stockStatus: "In Stock", stockQuantity: 5, storage: ["512GB"], colors: ["Midnight", "Silver"] };
+  const mbaMidnightImg = productColorImages.resolveProductColorImage(mbaTestProd, "Midnight");
+  const mbaSilverImg = productColorImages.resolveProductColorImage(mbaTestProd, "Silver");
+  assert(mbaMidnightImg && mbaSilverImg && mbaMidnightImg !== mbaSilverImg, "MacBook Air resolves distinct images for distinct finishes");
+
+  const cartWithColor = cart.addCartItem([], mbaTestProd, "512GB", "Midnight", 1, undefined, mbaMidnightImg);
+  assert.equal(cartWithColor[0].colorImageSrc, mbaMidnightImg, "CartItem preserves selected color finish image");
 
   console.log("All tests passed");
 } finally {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
@@ -17,11 +17,14 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+
 const IPHONE_18_COLORS: ColorOption[] = [
-  { name: "Deep Burgundy", hex: "#4e1b24" },
-  { name: "Space Black", hex: "#222224" },
-  { name: "Natural Titanium", hex: "#b5b0a8" },
-  { name: "Light Blue", hex: "#7e9bb5" },
+  resolveColorOption("Deep Burgundy"),
+  resolveColorOption("Space Black"),
+  resolveColorOption("Natural Titanium"),
+  resolveColorOption("Light Blue"),
 ];
 
 const FINISH_IMAGE_MAP: Record<string, string> = {
@@ -47,6 +50,18 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const [notice, setNotice] = useState("");
 
   const currentFinishImage = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Silver;
+
+  // Preload iPhone 18 Pro finish images
+  useEffect(() => {
+    preloadProductImages([
+      "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
+      "/products/buy/iphone-18-pro-colors-white.png",
+      "/products/campaigns/iphone-18-pro-silver.webp",
+      "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
+      "/products/buy/iphone-18-pro-gallery-2-silver.jpg",
+      "/products/buy/iphone-18-pro-gallery-3-blue.jpg",
+    ]);
+  }, []);
 
   const thumbnails = [
     { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
@@ -122,7 +137,7 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, finish, 1, configured.variant);
+    const added = addItem(activeProduct, storage, finish, 1, configured.variant, activeImage);
     if (added) {
       setNotice(`${model} (${storage}, ${finish}) - ${priceLabel} added to your bag.`);
     }

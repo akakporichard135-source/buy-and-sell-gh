@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
@@ -18,11 +18,14 @@ import ipadAirBlueWhite from "../../assets/catalogue-products/ipad-air-11-inch-m
 import ipadAirPurpleWhite from "../../assets/catalogue-products/ipad-air-13-inch-m3-premium.webp";
 import ipadKeyboardWhite from "../../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+
 const IPAD_AIR_COLORS: ColorOption[] = [
-  { name: "Blue", hex: "#7ca2be" },
-  { name: "Purple", hex: "#b5a5c6" },
-  { name: "Starlight", hex: "#e8dfd4" },
-  { name: "Space Gray", hex: "#68696d" },
+  resolveColorOption("Blue"),
+  resolveColorOption("Purple"),
+  resolveColorOption("Starlight"),
+  resolveColorOption("Space Gray"),
 ];
 
 const IPAD_FINISH_IMAGE_MAP: Record<string, string> = {
@@ -44,6 +47,17 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  // Preload all iPad Air finishes
+  useEffect(() => {
+    preloadProductImages([
+      "/products/campaigns/ipad-air-blue.webp",
+      "/products/campaigns/ipad-air-space-gray.webp",
+      "/products/campaigns/ipad-air-editorial-pure-white.png",
+      ipadAirPurpleWhite,
+      ipadAirBlueWhite,
+    ]);
+  }, []);
 
   const currentFinishImg = IPAD_FINISH_IMAGE_MAP[finish] || ipadAirBlueWhite;
 
@@ -146,7 +160,8 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       storage,
       `${screenSize} / ${finish} / ${connectivity}`,
       1,
-      configured.variant
+      configured.variant,
+      activeImage
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);

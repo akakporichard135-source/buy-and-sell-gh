@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
@@ -17,11 +17,14 @@ import {
 import type { Product } from "../../types/product";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+
 const MACBOOK_FINISHES: ColorOption[] = [
-  { name: "Midnight", hex: "#1e2530" },
-  { name: "Starlight", hex: "#e6ded4" },
-  { name: "Space Gray", hex: "#707175" },
-  { name: "Silver", hex: "#e3e4e5" },
+  resolveColorOption("Midnight"),
+  resolveColorOption("Starlight"),
+  resolveColorOption("Space Gray"),
+  resolveColorOption("Silver"),
 ];
 
 const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | undefined>> = {
@@ -35,7 +38,7 @@ const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | 
     Midnight: "macbook-air-15-m2",
     Starlight: "macbook-air-15-m4",
     "Space Gray": "macbook-air-15-m3",
-    Silver: undefined,
+    Silver: "macbook-air-13-m4",
   },
 };
 
@@ -58,11 +61,26 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     ? MACBOOK_AIR_SHOWCASE_IMAGE
     : (finishImageSlug ? (localCatalogueImageBySlug[finishImageSlug] || MACBOOK_AIR_SHOWCASE_IMAGE) : MACBOOK_AIR_SHOWCASE_IMAGE);
 
+  // Preload all 4 finishes for both screen sizes
+  useEffect(() => {
+    const urls = [
+      MACBOOK_AIR_SHOWCASE_IMAGE,
+      localCatalogueImageBySlug["macbook-air-13-m2"],
+      localCatalogueImageBySlug["macbook-air-13-m3"],
+      localCatalogueImageBySlug["macbook-air-13-m4"],
+      localCatalogueImageBySlug["macbook-air-15-m2"],
+      localCatalogueImageBySlug["macbook-air-15-m4"],
+      localCatalogueImageBySlug["macbook-air-15-m3"],
+    ];
+    preloadProductImages(urls);
+  }, []);
+
   const thumbnails = [
     { src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` },
     ...(currentFinishImg !== MACBOOK_AIR_SHOWCASE_IMAGE
       ? [{ src: MACBOOK_AIR_SHOWCASE_IMAGE, alt: `MacBook Air ${screenSize} Midnight front view` }]
       : []),
+    { src: "/products/campaigns/macbook-air-lineup.webp", alt: `MacBook Air ${screenSize} side profile` },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
@@ -115,7 +133,7 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant);
+    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant, activeImage);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }

@@ -113,5 +113,6 @@ export interface CartItem {
   variantTitle?: string;
   configuredPrice?: number;
   originalPrice?: number | null;
+  colorImageSrc?: string;
 }
 

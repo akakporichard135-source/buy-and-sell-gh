@@ -46,6 +46,7 @@ import {
   isUsedProductCondition,
   resolveAdminProductImage,
 } from "../../utils/productImages";
+import { resolveColorOption } from "../../utils/productColors";
 
 const listToText = (items?: string[]) => (items ?? []).join("\n");
 const textToList = (value: string) =>
@@ -1636,15 +1637,90 @@ function ProductForm({
             />
           </div>
 
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">Color Finishes (One per line)</label>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block font-bold text-slate-700">Color Finishes (One per line)</label>
+              {form.slug && (
+                <a
+                  href={
+                    form.category === "iPhones"
+                      ? `/shop/buy-iphone/${form.slug}`
+                      : form.category === "MacBooks"
+                      ? `/shop/buy-mac/${form.slug}`
+                      : form.category === "iPads"
+                      ? `/shop/buy-ipad/${form.slug}`
+                      : form.category === "Apple Watches"
+                      ? `/shop/buy-watch/${form.slug}`
+                      : form.category === "AirPods"
+                      ? `/shop/buy-airpods/${form.slug}`
+                      : `/shop/buy-accessory/${form.slug}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  <span>Preview Buy Page</span>
+                  <span>↗</span>
+                </a>
+              )}
+            </div>
             <textarea
               rows={3}
               value={form.colors}
               onChange={(e) => update("colors", e.target.value)}
-              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-mono text-xs"
               placeholder="Natural Titanium&#10;Black Titanium&#10;White Titanium"
             />
+            {/* Live circular swatches preview */}
+            {form.colors.trim() && (
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Live Swatch Preview</span>
+                <div className="flex flex-wrap gap-2 items-center">
+                  {textToList(form.colors).map((cName) => {
+                    const option = resolveColorOption(cName);
+                    return (
+                      <div
+                        key={cName}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-xs text-slate-700 shadow-xs"
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full inline-block border border-white shadow-xs"
+                          style={{
+                            backgroundColor: option.hex,
+                            boxShadow: option.border ? "0 0 0 1px rgba(0,0,0,0.2)" : "0 0 0 1px rgba(0,0,0,0.1)",
+                          }}
+                        />
+                        <span className="font-medium">{option.name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{option.hex}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {/* Quick Apple finish presets */}
+            <div className="pt-1">
+              <span className="text-[11px] font-medium text-slate-400 block mb-1">Quick Finish Presets:</span>
+              <div className="flex flex-wrap gap-1">
+                {["Natural Titanium", "Desert Titanium", "Black Titanium", "White Titanium", "Space Black", "Silver", "Midnight", "Starlight", "Space Gray", "Ultramarine", "Teal", "Blue", "Purple"].map((preset) => {
+                  const isPresent = textToList(form.colors).some((c) => c.toLowerCase() === preset.toLowerCase());
+                  if (isPresent) return null;
+                  return (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => {
+                        const current = form.colors.trim();
+                        update("colors", current ? `${current}\n${preset}` : preset);
+                      }}
+                      className="px-2 py-0.5 text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md transition-colors"
+                    >
+                      + {preset}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div>

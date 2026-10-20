@@ -17,9 +17,12 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+
 const MACBOOK_PRO_FINISHES: ColorOption[] = [
-  { name: "Space Black", hex: "#2b2b2d" },
-  { name: "Silver", hex: "#e3e4e5" },
+  resolveColorOption("Space Black"),
+  resolveColorOption("Silver"),
 ];
 
 export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -64,11 +67,24 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   }, [screenSize, chip, memory, storage]);
 
   const imageSlug = finish === "Silver"
-    ? screenSize === "14-inch" ? "macbook-pro-14-m4-pro-max" : undefined
+    ? "macbook-pro-14-m4-pro-max"
     : screenSize === "16-inch" ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4";
   const currentDisplayImg = imageSlug ? localCatalogueImageBySlug[imageSlug] : undefined;
 
-  const thumbnails = currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : [];
+  useEffect(() => {
+    const urls = [
+      localCatalogueImageBySlug["macbook-pro-14-m4"],
+      localCatalogueImageBySlug["macbook-pro-14-m4-pro-max"],
+      localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"],
+      "/products/campaigns/macbook-pro-cutout.webp",
+    ];
+    preloadProductImages(urls);
+  }, []);
+
+  const thumbnails = [
+    ...(currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : []),
+    { src: "/products/campaigns/macbook-pro-cutout.webp", alt: `MacBook Pro ${screenSize} Liquid Retina XDR screen` },
+  ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
 
@@ -118,7 +134,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant);
+    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant, activeImage);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }

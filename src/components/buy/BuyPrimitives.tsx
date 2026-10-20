@@ -157,32 +157,72 @@ export function BuyOptionCard({ title, subtitle, priceDiff, selected, onClick }:
 export interface ColorOption {
   name: string;
   hex: string;
+  border?: boolean;
 }
 
 export interface BuyColorSwatchesProps {
   colors: ColorOption[];
   selectedColor: string;
   onSelect: (color: string) => void;
+  labelPrefix?: string;
 }
 
-export function BuyColorSwatches({ colors, selectedColor, onSelect }: BuyColorSwatchesProps) {
+export function BuyColorSwatches({
+  colors,
+  selectedColor,
+  onSelect,
+  labelPrefix = "Finish",
+}: BuyColorSwatchesProps) {
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let nextIndex = -1;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (index + 1) % colors.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (index - 1 + colors.length) % colors.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = colors.length - 1;
+    }
+
+    if (nextIndex >= 0 && colors[nextIndex]) {
+      onSelect(colors[nextIndex].name);
+    }
+  };
+
   return (
     <div className="apple-buy-swatches">
       <div className="apple-buy-swatch-label">
-        Color — <strong>{selectedColor}</strong>
+        {labelPrefix} — <strong>{selectedColor}</strong>
       </div>
-      <div className="apple-buy-swatch-list">
-        {colors.map((c) => (
-          <button
-            type="button"
-            key={c.name}
-            className={`apple-buy-swatch-btn ${selectedColor.toLowerCase() === c.name.toLowerCase() ? "is-selected" : ""}`}
-            style={{ backgroundColor: c.hex }}
-            onClick={() => onSelect(c.name)}
-            title={c.name}
-            aria-label={`Select finish: ${c.name}`}
-          />
-        ))}
+      <div
+        className="apple-buy-swatch-list"
+        role="radiogroup"
+        aria-label={`${labelPrefix} selection`}
+      >
+        {colors.map((c, idx) => {
+          const isSelected = selectedColor.trim().toLowerCase() === c.name.trim().toLowerCase();
+          return (
+            <div key={c.name} className="apple-buy-swatch-target">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={isSelected}
+                tabIndex={isSelected ? 0 : -1}
+                className={`apple-buy-swatch-btn ${isSelected ? "is-selected" : ""} ${c.border ? "has-border" : ""}`}
+                style={{ backgroundColor: c.hex }}
+                onClick={() => onSelect(c.name)}
+                onKeyDown={(e) => handleKeyDown(e, idx)}
+                title={c.name}
+                aria-label={`Select ${labelPrefix.toLowerCase()}: ${c.name}`}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

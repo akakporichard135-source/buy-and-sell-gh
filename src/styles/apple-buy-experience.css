@@ -411,28 +411,47 @@
 
 .apple-buy-swatch-list {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.apple-buy-swatch-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .apple-buy-swatch-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
   cursor: pointer;
   padding: 0;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  outline: none;
+}
+
+.apple-buy-swatch-btn.has-border {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 .apple-buy-swatch-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
+}
+
+.apple-buy-swatch-btn:focus-visible {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4.5px var(--brand-gold-strong, #c59f27);
 }
 
 .apple-buy-swatch-btn.is-selected {
-  box-shadow: 0 0 0 2px var(--brand-gold-strong), 0 0 0 4px rgba(216, 167, 45, 0.2);
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4.5px var(--brand-gold-strong, #c59f27);
+  transform: scale(1.06);
 }
 
 /* --------------------------------------------------------------------------

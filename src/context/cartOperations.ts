@@ -45,7 +45,8 @@ export const addCartItem = (
   storage = product.storage[0] ?? "",
   color = product.colors[0] ?? "",
   quantity = 1,
-  variant?: ProductVariant
+  variant?: ProductVariant,
+  colorImageSrc?: string
 ): CartItem[] => {
   if (isSoldOut(product)) return items;
   const nextQuantity = Math.max(1, Math.floor(quantity));
@@ -79,6 +80,7 @@ export const addCartItem = (
             variantTitle: variantTitle ?? item.variantTitle,
             configuredPrice,
             originalPrice,
+            colorImageSrc: colorImageSrc ?? item.colorImageSrc,
             quantity: Math.min(effectiveStock, item.quantity + nextQuantity),
           }
         : item
@@ -95,6 +97,7 @@ export const addCartItem = (
       variantTitle,
       configuredPrice,
       originalPrice,
+      colorImageSrc,
       quantity: Math.min(effectiveStock, nextQuantity),
     },
   ];

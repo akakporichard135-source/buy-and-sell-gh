@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
@@ -15,13 +15,25 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 
+import { resolveColorOption } from "../../utils/productColors";
+import { preloadProductImages } from "../../utils/productColorImages";
+import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+
 const WATCH_12_FINISHES: ColorOption[] = [
-  { name: "Jet Black", hex: "#111111" },
-  { name: "Silver", hex: "#e2e4e6" },
-  { name: "Rose Gold", hex: "#e0b0a8" },
-  { name: "Natural Titanium", hex: "#9a958e" },
-  { name: "Slate", hex: "#404044" },
+  resolveColorOption("Jet Black"),
+  resolveColorOption("Silver"),
+  resolveColorOption("Rose Gold"),
+  resolveColorOption("Natural Titanium"),
+  resolveColorOption("Slate"),
 ];
+
+const WATCH_12_FINISH_IMAGE_MAP: Record<string, string> = {
+  "Jet Black": "/products/campaigns/watch-series-12-hero.webp",
+  Silver: localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-product.webp",
+  "Rose Gold": localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-angle.webp",
+  "Natural Titanium": "/products/buy/watch-series-12-angle-white.png",
+  Slate: localCatalogueImageBySlug["apple-watch-series-10"] || "/products/campaigns/watch-series-12-cinematic.webp",
+};
 
 const BAND_STYLES = [
   { name: "Sport Band", desc: "Durable fluoroelastomer with pin-and-tuck closure, sweat and water resistant." },
@@ -31,10 +43,10 @@ const BAND_STYLES = [
 ];
 
 const BAND_COLORS: ColorOption[] = [
-  { name: "Midnight", hex: "#1c2530" },
-  { name: "Starlight", hex: "#e5ded4" },
-  { name: "Teal", hex: "#1d6363" },
-  { name: "Plum", hex: "#4a2d3b" },
+  resolveColorOption("Midnight"),
+  resolveColorOption("Starlight"),
+  resolveColorOption("Teal"),
+  resolveColorOption("Plum"),
 ];
 
 export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
@@ -52,13 +64,26 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = useMemo(() => finish === "Jet Black" ? [
-    { src: "/products/campaigns/watch-series-12-hero.webp", alt: "Apple Watch Series 12 with black sport band" },
-    { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 profile on white" },
-    { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
-  ] : [], [finish]);
+  const currentFinishImg = WATCH_12_FINISH_IMAGE_MAP[finish] || WATCH_12_FINISH_IMAGE_MAP["Jet Black"];
 
-  const activeImage = thumbnails[activeThumb]?.src || thumbnails[0]?.src;
+  // Preload all finish assets
+  useEffect(() => {
+    preloadProductImages([
+      "/products/campaigns/watch-series-12-hero.webp",
+      "/products/buy/watch-series-12-angle-white.png",
+      "/products/campaigns/watch-series-12-display.webp",
+      localCatalogueImageBySlug["apple-watch-series-11"],
+      localCatalogueImageBySlug["apple-watch-series-10"],
+    ]);
+  }, []);
+
+  const thumbnails = useMemo(() => [
+    { src: currentFinishImg, alt: `Apple Watch Series 12 in ${finish}` },
+    { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 contoured profile on white" },
+    { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
+  ], [currentFinishImg, finish]);
+
+  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
   const fallbackProduct: Product = useMemo(() => {
     const is46 = caseSize === "46mm";
@@ -117,7 +142,8 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       `${caseSize} / ${connectivity}`,
       `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
       1,
-      configured.variant
+      configured.variant,
+      activeImage
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);
