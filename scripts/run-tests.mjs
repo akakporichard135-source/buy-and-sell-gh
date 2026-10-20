@@ -346,8 +346,20 @@ try {
   assert.equal(productExperience.productFamilies.iphone.path, "/iphone", "Product experience exposes the canonical iPhone family path");
   assert.equal(productExperience.getProductStory("iphone", "iphone-18-pro").buyPath, "/shop/buy-iphone/iphone-18-pro", "iPhone 18 Pro story links to the dedicated buying flow");
   assert.equal(productExperience.getProductStory("accessories", "charging-and-power").buyPath, "/shop/buy-accessory/charging-and-power", "Accessories featured Learn More route has a matching enquiry journey");
-  const editorialSlugs = ["iphone-18-pro", "iphone-duo", "apple-watch-series-12", "apple-watch-ultra-4", "airpods-5", "airpods-pro-3", "macbook-air", "mac-mini", "ipad-air"];
-  assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All nine Learn More stories are configured, including the preserved AirPods 5 route");
+  const editorialSlugs = [
+    "iphone-18-pro",
+    "iphone-duo",
+    "apple-watch-series-12",
+    "apple-watch-ultra-4",
+    "airpods-5",
+    "airpods-pro-3",
+    "macbook-air",
+    "macbook-pro",
+    "mac-mini",
+    "ipad-air",
+    "ipad-pro",
+  ];
+  assert.deepEqual(Object.keys(editorialStories.editorialStories).sort(), [...editorialSlugs].sort(), "All eleven Learn More stories are configured, including the preserved AirPods 5 route");
   for (const [slug, filename] of [
     ["iphone-18-pro", "iphone-18-pro-cinematic-20261011.mp4"],
     ["iphone-duo", "iphone-duo-showcase.mp4"],

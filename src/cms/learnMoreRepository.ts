@@ -74,12 +74,46 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
   return published;
 }
 
+export interface LearnMoreRevision {
+  id: string;
+  page_id: string;
+  revision_number: number;
+  content: LearnMoreContent;
+  notes?: string;
+  author_id?: string;
+  author_email?: string;
+  created_at: string;
+}
+
+interface CacheEntry {
+  content: LearnMoreContent | null;
+  fetchedAt: number;
+}
+const publicCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 60 * 1000; // 60s TTL
+
+export function invalidateLearnMoreCache(id?: string) {
+  if (id) {
+    publicCache.delete(id);
+  } else {
+    publicCache.clear();
+  }
+}
+
 export async function fetchPublishedLearnMore(id: string): Promise<LearnMoreContent | null> {
+  const cached = publicCache.get(id);
+  const now = Date.now();
+  if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
+    return cached.content;
+  }
+
   if (!supabase) return null;
   const { data, error } = await supabase.from("learn_more_published")
     .select("content").eq("id", id).maybeSingle();
   if (error) return null;
-  return validContent(data?.content, id) ? data.content : null;
+  const content = validContent(data?.content, id) ? data.content : null;
+  publicCache.set(id, { content, fetchedAt: now });
+  return content;
 }
 
 export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent | null> {
@@ -98,16 +132,122 @@ export async function saveDraftLearnMore(content: LearnMoreContent): Promise<voi
   if (error) throw error;
 }
 
-export async function publishLearnMore(content: LearnMoreContent): Promise<void> {
+export async function fetchLearnMoreRevisions(id: string): Promise<LearnMoreRevision[]> {
+  await assertAdminAal2();
+  try {
+    const { data, error } = await getSupabaseOrThrow()
+      .from("learn_more_revisions")
+      .select("id, page_id, revision_number, content, notes, author_id, author_email, created_at")
+      .eq("page_id", id)
+      .order("revision_number", { ascending: false });
+    if (error) {
+      console.warn("Could not fetch revisions:", error.message);
+      return [];
+    }
+    return (data || []).map((row) => ({
+      ...row,
+      content: validContent(row.content, id) ? row.content : (row.content as LearnMoreContent),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function publishLearnMore(content: LearnMoreContent, notes?: string): Promise<number> {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
+  const pageId = content.story.slug;
+
+  // 1. Attempt atomic RPC call if available
+  try {
+    const { data: revNum, error: rpcError } = await client.rpc("publish_learn_more_page", {
+      p_page_id: pageId,
+      p_content: content,
+      p_notes: notes || "Published via Visual Admin Editor",
+    });
+    if (!rpcError && typeof revNum === "number") {
+      invalidateLearnMoreCache(pageId);
+      return revNum;
+    }
+  } catch (err) {
+    console.warn("RPC publish_learn_more_page fallback to direct operations:", err);
+  }
+
+  // 2. Direct fallback
   const { error } = await client.from("learn_more_published").upsert({
-    id: content.story.slug, content, updated_at: new Date().toISOString(),
+    id: pageId, content, updated_at: new Date().toISOString(),
   });
   if (error) throw error;
-  const { error: draftError } = await client.from("learn_more_drafts")
-    .delete().eq("id", content.story.slug);
-  if (draftError) throw new Error(`Published, but the draft could not be cleared: ${draftError.message}`);
+
+  // Insert revision record
+  try {
+    const { data: revData } = await client
+      .from("learn_more_revisions")
+      .select("revision_number")
+      .eq("page_id", pageId)
+      .order("revision_number", { ascending: false })
+      .limit(1);
+    const nextRev = (((revData?.[0]?.revision_number as number) || 0) + 1);
+    await client.from("learn_more_revisions").insert({
+      page_id: pageId,
+      revision_number: nextRev,
+      content,
+      notes: notes || "Published via Visual Admin Editor",
+      created_at: new Date().toISOString(),
+    });
+    await client.from("learn_more_drafts").delete().eq("id", pageId);
+    invalidateLearnMoreCache(pageId);
+    return nextRev;
+  } catch {
+    await client.from("learn_more_drafts").delete().eq("id", pageId);
+    invalidateLearnMoreCache(pageId);
+    return 1;
+  }
+}
+
+export async function rollbackLearnMoreRevision(pageId: string, revisionNumber: number): Promise<number> {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+
+  try {
+    const { data: newRev, error: rpcError } = await client.rpc("rollback_learn_more_revision", {
+      p_page_id: pageId,
+      p_target_revision: revisionNumber,
+    });
+    if (!rpcError && typeof newRev === "number") {
+      invalidateLearnMoreCache(pageId);
+      return newRev;
+    }
+  } catch (err) {
+    console.warn("RPC rollback_learn_more_revision fallback to direct operations:", err);
+  }
+
+  // Direct fallback
+  const { data: rev, error: fetchErr } = await client
+    .from("learn_more_revisions")
+    .select("content")
+    .eq("page_id", pageId)
+    .eq("revision_number", revisionNumber)
+    .single();
+  if (fetchErr || !rev) throw new Error(`Could not find revision ${revisionNumber}`);
+
+  const content = rev.content as LearnMoreContent;
+  const { error: pubErr } = await client.from("learn_more_published").upsert({
+    id: pageId, content, updated_at: new Date().toISOString(),
+  });
+  if (pubErr) throw pubErr;
+
+  await client.from("learn_more_drafts").delete().eq("id", pageId);
+  invalidateLearnMoreCache(pageId);
+  return revisionNumber;
+}
+
+export async function unpublishLearnMore(pageId: string): Promise<void> {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const { error } = await client.from("learn_more_published").delete().eq("id", pageId);
+  if (error) throw error;
+  invalidateLearnMoreCache(pageId);
 }
 
 export async function uploadLearnMoreMedia(

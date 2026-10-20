@@ -1,4 +1,4 @@
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
+import { ChevronDown, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -34,6 +34,7 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
       { label: "Shop Apple Watch", to: "/watch" },
       { label: "Shop AirPods", to: "/airpods" },
       { label: "Shop Accessories", to: "/accessories" },
+      { label: "View All Store", to: "/store" },
     ],
   },
   {
@@ -43,11 +44,12 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     matchPrefixes: ["/mac", "/shop/buy-mac", "/mac-mini", "/mac-studio"],
     subitems: [
       { label: "Explore All Mac", to: "/mac", isExplore: true },
-      { label: "MacBook Air", to: "/shop/buy-mac/macbook-air-13-m4" },
-      { label: "MacBook Pro", to: "/shop/buy-mac/macbook-pro-14-m4" },
+      { label: "MacBook Air", to: "/shop/buy-mac/macbook-air" },
+      { label: "MacBook Pro", to: "/shop/buy-mac/macbook-pro" },
       { label: "Mac mini", to: "/mac-mini" },
       { label: "Mac Studio", to: "/mac-studio" },
-      { label: "Shop Mac", to: "/mac" },
+      { label: "Learn More MacBook Air", to: "/mac/macbook-air" },
+      { label: "Learn More MacBook Pro", to: "/mac/macbook-pro" },
     ],
   },
   {
@@ -57,11 +59,12 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     matchPrefixes: ["/ipad", "/shop/buy-ipad"],
     subitems: [
       { label: "Explore All iPad", to: "/ipad", isExplore: true },
-      { label: "iPad Pro", to: "/shop/buy-ipad/ipad-pro-13-inch-m4" },
-      { label: "iPad Air", to: "/shop/buy-ipad/ipad-air-11-inch-m4" },
-      { label: "iPad", to: "/shop/buy-ipad/ipad-10th-generation" },
+      { label: "iPad Pro", to: "/shop/buy-ipad/ipad-pro" },
+      { label: "iPad Air", to: "/shop/buy-ipad/ipad-air" },
+      { label: "iPad (10th Generation)", to: "/shop/buy-ipad/ipad-10th-generation" },
       { label: "iPad mini", to: "/shop/buy-ipad/ipad-mini-a17-pro" },
-      { label: "Shop iPad", to: "/ipad" },
+      { label: "Learn More iPad Pro", to: "/ipad/ipad-pro" },
+      { label: "Learn More iPad Air", to: "/ipad/ipad-air" },
     ],
   },
   {
@@ -73,8 +76,9 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
       { label: "Explore All iPhone", to: "/iphone", isExplore: true },
       { label: "iPhone 18 Pro", to: "/shop/buy-iphone/iphone-18-pro" },
       { label: "iPhone Duo", to: "/shop/buy-iphone/iphone-duo" },
-      { label: "iPhone Air", to: "/shop/buy-iphone/iphone-air" },
-      { label: "Shop iPhone", to: "/iphone" },
+      { label: "iPhone 16 Pro Max", to: "/shop/buy-iphone/iphone-16-pro-max" },
+      { label: "iPhone 16 Pro", to: "/shop/buy-iphone/iphone-16-pro" },
+      { label: "Learn More iPhone 18 Pro", to: "/iphone/iphone-18-pro" },
     ],
   },
   {
@@ -87,7 +91,7 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
       { label: "Apple Watch Series 12", to: "/shop/buy-watch/apple-watch-series-12" },
       { label: "Apple Watch Ultra 4", to: "/shop/buy-watch/apple-watch-ultra-4" },
       { label: "Apple Watch SE", to: "/shop/buy-watch/apple-watch-se-3" },
-      { label: "Shop Watch", to: "/watch" },
+      { label: "Learn More Ultra 4", to: "/watch/apple-watch-ultra-4" },
     ],
   },
   {
@@ -97,10 +101,10 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     matchPrefixes: ["/airpods", "/shop/buy-airpods"],
     subitems: [
       { label: "Explore All AirPods", to: "/airpods", isExplore: true },
-      { label: "AirPods Pro", to: "/shop/buy-airpods/airpods-pro-2" },
-      { label: "AirPods", to: "/shop/buy-airpods/airpods-4" },
+      { label: "AirPods Pro 3", to: "/shop/buy-airpods/airpods-pro-3" },
+      { label: "AirPods 5", to: "/shop/buy-airpods/airpods-5" },
       { label: "AirPods Max", to: "/shop/buy-airpods/airpods-max-2" },
-      { label: "Shop AirPods", to: "/airpods" },
+      { label: "Learn More AirPods Pro", to: "/airpods/airpods-pro-3" },
     ],
   },
   {
@@ -110,11 +114,10 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     matchPrefixes: ["/accessories", "/shop/buy-accessory"],
     subitems: [
       { label: "Explore All Accessories", to: "/accessories", isExplore: true },
-      { label: "iPhone Accessories", to: "/accessories" },
-      { label: "Mac Accessories", to: "/accessories" },
-      { label: "iPad Accessories", to: "/accessories" },
-      { label: "Watch Accessories", to: "/accessories" },
-      { label: "Shop Accessories", to: "/accessories" },
+      { label: "MagSafe Chargers & Power", to: "/accessories/apple-magsafe-charger" },
+      { label: "iPhone Protection & Cases", to: "/accessories" },
+      { label: "iPad Keyboards & Stylus", to: "/accessories" },
+      { label: "Apple Watch Straps & Docks", to: "/accessories" },
     ],
   },
   {
@@ -124,9 +127,9 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     matchPrefixes: ["/support", "/contact", "/repairs", "/faq", "/shopping-information"],
     subitems: [
       { label: "Contact Us", to: "/contact", isExplore: true },
-      { label: "Repairs", to: "/repairs" },
-      { label: "Warranty", to: "/shopping-information" },
-      { label: "Delivery", to: "/shopping-information" },
+      { label: "Repairs & Diagnostic", to: "/repairs" },
+      { label: "Warranty & Coverage", to: "/shopping-information" },
+      { label: "Delivery & Pickup", to: "/shopping-information" },
       { label: "FAQs", to: "/faq" },
     ],
   },
@@ -148,6 +151,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMenuMounted, setIsMenuMounted] = useState(false);
   const [isMenuClosing, setIsMenuClosing] = useState(false);
+  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const { totalItems } = useCart();
@@ -167,6 +171,7 @@ export function Header() {
     if (!mobileMenuOpen && !isMenuMounted) return;
     setMobileMenuOpen(false);
     setIsMenuClosing(true);
+    setExpandedSectionId(null);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
       setIsMenuMounted(false);
@@ -179,6 +184,11 @@ export function Header() {
     setMobileMenuOpen(false);
     setIsMenuMounted(false);
     setIsMenuClosing(false);
+    setExpandedSectionId(null);
+  };
+
+  const toggleSection = (id: string) => {
+    setExpandedSectionId((prev) => (prev === id ? null : id));
   };
 
   const handleToggleMenu = () => {
@@ -195,6 +205,7 @@ export function Header() {
     setMobileMenuOpen(false);
     setIsMenuMounted(false);
     setIsMenuClosing(false);
+    setExpandedSectionId(null);
     setNavVisible(true);
   }, [location.pathname, location.search]);
 
@@ -268,7 +279,11 @@ export function Header() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        handleCloseMenu();
+        if (expandedSectionId) {
+          setExpandedSectionId(null);
+        } else {
+          handleCloseMenu();
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -277,7 +292,7 @@ export function Header() {
       document.body.style.touchAction = originalTouchAction;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, expandedSectionId]);
 
   // Subtle active route matching
   const isItemActive = (item: GlobalNavItem) => {
@@ -368,17 +383,64 @@ export function Header() {
         >
           <div className="global-curtain-inner">
             <nav className="global-curtain-nav" aria-label="Main Navigation">
-              {MOBILE_NAV_SECTIONS.map((section, idx) => (
-                <Link
-                  key={section.id}
-                  to={section.to}
-                  onClick={handleLinkClick}
-                  className="global-curtain-link global-mobile-section-btn"
-                  style={{ "--item-idx": idx } as React.CSSProperties}
-                >
-                  <span>{section.label}</span>
-                </Link>
-              ))}
+              {MOBILE_NAV_SECTIONS.map((section, idx) => {
+                const isExpanded = expandedSectionId === section.id;
+                const hasSubitems = Boolean(section.subitems && section.subitems.length > 0);
+                return (
+                  <div
+                    key={section.id}
+                    className={`global-curtain-item ${isExpanded ? "is-expanded" : ""}`}
+                    style={{ "--item-idx": idx } as React.CSSProperties}
+                  >
+                    {hasSubitems ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section.id)}
+                        className={`global-curtain-heading-btn ${isExpanded ? "is-expanded" : ""}`}
+                        aria-expanded={isExpanded}
+                        aria-controls={`curtain-sub-${section.id}`}
+                      >
+                        <span>{section.label}</span>
+                        <ChevronDown
+                          size={18}
+                          className={`global-curtain-chevron ${isExpanded ? "is-rotated" : ""}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    ) : (
+                      <Link
+                        to={section.to}
+                        onClick={handleLinkClick}
+                        className="global-curtain-link global-mobile-section-btn"
+                      >
+                        <span>{section.label}</span>
+                      </Link>
+                    )}
+
+                    {hasSubitems && (
+                      <div
+                        id={`curtain-sub-${section.id}`}
+                        className={`global-curtain-submenu ${isExpanded ? "is-open" : ""}`}
+                        role="region"
+                        aria-label={`${section.label} submenu`}
+                      >
+                        <div className="global-curtain-submenu-inner">
+                          {section.subitems.map((subitem) => (
+                            <Link
+                              key={subitem.label}
+                              to={subitem.to}
+                              onClick={handleLinkClick}
+                              className={`global-curtain-sublink ${subitem.isExplore ? "is-explore-link" : ""}`}
+                            >
+                              <span>{subitem.label}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
 
             <div className="global-curtain-footer">

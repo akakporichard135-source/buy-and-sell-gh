@@ -1,384 +1,1339 @@
-import { ArrowDown, ArrowUp, Eye, Plus, Save, Send, Trash2, Upload } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { editorialStories } from "../../catalog/editorialStories";
-import { useProductCatalog } from "../../catalog/ProductCatalogContext";
-import { familyMatchesProduct, productFamilies, productStories, type ProductFamilyKey } from "../../catalog/productExperience";
 import {
-  fetchDraftLearnMore, fetchPublishedLearnMore, listLearnMoreMedia,
-  publishLearnMore, saveDraftLearnMore, uploadLearnMoreMedia,
-  type LearnMoreContent, type LearnMoreSection, type LearnMoreSectionType,
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Clock,
+  Copy,
+  Eye,
+  EyeOff,
+  GripVertical,
+  History,
+  Image,
+  Layers,
+  Laptop,
+  Maximize2,
+  Monitor,
+  Plus,
+  RotateCcw,
+  Save,
+  Search,
+  Send,
+  Smartphone,
+  Tablet,
+  Trash2,
+  Tv,
+  Upload,
+  Video,
+  X,
+  Sparkles,
+} from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { editorialStories, type EditorialStory } from "../../catalog/editorialStories";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { productFamilies, productStories, type ProductFamilyKey } from "../../catalog/productExperience";
+import {
+  fetchDraftLearnMore,
+  fetchLearnMoreRevisions,
+  fetchPublishedLearnMore,
+  listLearnMoreMedia,
+  publishLearnMore,
+  rollbackLearnMoreRevision,
+  saveDraftLearnMore,
+  unpublishLearnMore,
+  uploadLearnMoreMedia,
+  type LearnMoreContent,
+  type LearnMoreRevision,
+  type LearnMoreSection,
+  type LearnMoreSectionType,
 } from "../../cms/learnMoreRepository";
-import { useCms } from "../../cms/CmsContext";
 import { iphone18ProEducation } from "../../data/iphone18ProEducation";
 import { macStudioStory } from "../../data/macStudioStory";
 import { EditorialProductStory } from "../../components/EditorialProductStory";
-import { CatalogProductStory, storyFromProduct } from "../ProductStoryPage";
+import { CatalogProductStory } from "../ProductStoryPage";
 import { MacLaunchPage } from "../MacLaunchPage";
 import "../../styles/admin-learn-more.css";
 
-const configuredChoices: LearnMoreContent[] = [
-  ...Object.values(editorialStories).map((story) => ({
-    kind: "editorial" as const, story, sections: [],
-    ...(story.slug === "iphone-18-pro" ? { education: iphone18ProEducation } : {}),
-  })),
-  ...productStories.filter((story) => !editorialStories[story.slug])
-    .map((story) => ({ kind: "catalog" as const, story, sections: [] })),
-  { kind: "mac-studio", story: macStudioStory, sections: [] },
-];
-
-const sectionTypes: LearnMoreSectionType[] = [
-  "text-image", "large-image", "gallery", "video", "highlights", "finishes",
-  "camera", "performance", "battery", "specifications", "comparison", "cta",
-];
-
 const clone = <T,>(value: T): T => structuredClone(value);
-const titleCase = (key: string) => key.replace(/([A-Z])/g, " $1").replace(/[-_]/g, " ").replace(/^./, (c) => c.toUpperCase());
-const isMediaField = (key: string) => ["src", "mobileSrc", "poster", "image", "mobileImage", "video", "mobileVideo"].includes(key);
 
-function placementsFor(content: LearnMoreContent): { value: string; label: string }[] {
-  const choices = [{ value: "after-hero", label: "After hero" }];
-  if (content.kind === "mac-studio") return [...choices,
-    { value: "after-panels", label: "After feature panels" }, { value: "end", label: "Before pre-order" }];
-  if (content.kind === "catalog") return [...choices,
-    { value: "after-intro", label: "After introduction" },
-    { value: "after-highlights", label: "After highlights" },
-    { value: "after-film", label: "After film" },
-    { value: "after-design", label: "After design" },
-    { value: "after-colors", label: "After colours" },
-    { value: "end", label: "Before final action" }];
-  if (content.story.slug === "iphone-18-pro") return [...choices,
-    { value: "after-overview", label: "After overview" },
-    ...(content.education?.chapters || iphone18ProEducation.chapters).map((chapter) => ({
-      value: `after-chapter:${chapter.id}`, label: `After ${chapter.label.toLowerCase()}`,
-    })),
-    { value: "end", label: "Before final product view" }];
-  return [...choices, { value: "after-highlights", label: "After highlights" },
-    { value: "after-hardware", label: "After hardware" },
-    ...content.story.chapters.map((chapter) => ({ value: `after-chapter:${chapter.id}`, label: `After ${chapter.label.toLowerCase()}` })),
-    { value: "after-information", label: "After information" },
-    { value: "end", label: "Before final product view" }];
-}
+const SECTION_TYPE_PRESETS: { type: LearnMoreSectionType; label: string; icon: string; desc: string }[] = [
+  { type: "text-image", label: "Feature Spotlight", icon: "Layers", desc: "Balanced copy alongside a high-res beauty visual." },
+  { type: "large-image", label: "Full-Width Showcase", icon: "Image", desc: "Expansive edge-to-edge product presentation." },
+  { type: "gallery", label: "Multi-Angle Gallery", icon: "Image", desc: "Interactive angle carousel on pure white." },
+  { type: "video", label: "Cinematic Film", icon: "Video", desc: "Autoplaying muted video highlight with poster." },
+  { type: "highlights", label: "Hardware Highlights", icon: "Sparkles", desc: "Horizontal scrolling rail of key features." },
+  { type: "finishes", label: "Materials & Finishes", icon: "Layers", desc: "Precision anodized chassis colors & swatches." },
+  { type: "performance", label: "Apple Silicon", icon: "Cpu", desc: "M-series / A-series compute benchmarks & neural engine." },
+  { type: "battery", label: "All-Day Battery", icon: "Battery", desc: "Endurance metrics and power efficiency." },
+  { type: "specifications", label: "Technical Specs", icon: "Monitor", desc: "Detailed hardware grid and verified Accra fulfillment." },
+  { type: "comparison", label: "Model Comparison", icon: "Layers", desc: "Side-by-side canvas size & capacity contrast." },
+  { type: "cta", label: "Direct Buy CTA", icon: "ShoppingBag", desc: "Seamless transition into live Store purchasing." },
+];
 
-function StoryFields({ value, path, onChange, assets }: {
-  value: unknown;
-  path: (string | number)[];
-  onChange: (path: (string | number)[], value: unknown) => void;
-  assets: string[];
-}) {
-  if (Array.isArray(value)) return <div className="learn-editor-array">
-    {value.map((item, index) => <details key={index} className="learn-editor-group">
-      <summary>{typeof item === "object" ? `${titleCase(String(path[path.length - 1] || "Item"))} ${index + 1}` : String(item).slice(0, 60)}</summary>
-      <div className="learn-editor-row-actions">
-        <button type="button" disabled={index === 0} onClick={() => {
-          const next = clone(value); [next[index - 1], next[index]] = [next[index], next[index - 1]]; onChange(path, next);
-        }} aria-label="Move up"><ArrowUp size={16} /></button>
-        <button type="button" disabled={index === value.length - 1} onClick={() => {
-          const next = clone(value); [next[index + 1], next[index]] = [next[index], next[index + 1]]; onChange(path, next);
-        }} aria-label="Move down"><ArrowDown size={16} /></button>
-        <button type="button" onClick={() => {
-          if (window.confirm("Delete this item from the draft?")) onChange(path, value.filter((_, i) => i !== index));
-        }} aria-label="Delete item"><Trash2 size={16} /></button>
-      </div>
-      <StoryFields value={item} path={[...path, index]} onChange={onChange} assets={assets} />
-    </details>)}
-    <button type="button" className="learn-editor-small-button" onClick={() => {
-      if (!value.length) {
-        const list = String(path[path.length - 1]);
-        const item = list === "imagesBefore" || list === "imagesAfter"
-          ? { src: "", mobileSrc: "", alt: "", caption: "", className: "display" }
-          : list === "lessons" || list === "audience"
-            ? { title: "", explanation: "" }
-            : list === "chapters"
-              ? { ...clone(iphone18ProEducation.chapters[0]), id: crypto.randomUUID(), title: "New chapter", imagesBefore: [], imagesAfter: [], lessons: [], audience: [] }
-              : "";
-        onChange(path, [item]); return;
-      }
-      const added = clone(value[value.length - 1]);
-      if (added && typeof added === "object" && "id" in added) added.id = crypto.randomUUID();
-      onChange(path, [...value, added]);
-    }}><Plus size={16} /> Add item</button>
-  </div>;
-
-  if (value && typeof value === "object") return <div className="learn-editor-fields">
-    {Object.entries(value).map(([key, field]) => {
-      const nextPath = [...path, key];
-      if (field && typeof field === "object") return <details className="learn-editor-group" key={key}>
-        <summary>{titleCase(key)}</summary>
-        <StoryFields value={field} path={nextPath} onChange={onChange} assets={assets} />
-      </details>;
-      if (typeof field === "boolean") return <label className="learn-editor-checkbox" key={key}>
-        <input type="checkbox" checked={field} onChange={(e) => onChange(nextPath, e.target.checked)} />{titleCase(key)}
-      </label>;
-      if (typeof field === "number") return <label key={key}>{titleCase(key)}
-        <input type="number" value={field} onChange={(e) => onChange(nextPath, Number(e.target.value))} />
-      </label>;
-      const text = String(field ?? "");
-      return <label key={key}>{titleCase(key)}
-        {text.length > 100 || ["copy", "description", "intro"].includes(key)
-          ? <textarea value={text} rows={3} onChange={(e) => onChange(nextPath, e.target.value)} />
-          : <input value={text} disabled={key === "slug" || key === "family" || key === "id"}
-            onChange={(e) => onChange(nextPath, e.target.value)} />}
-        {isMediaField(key) && <select value="" onChange={(e) => e.target.value && onChange(nextPath, e.target.value)}>
-          <option value="">Choose uploaded media...</option>
-          {assets.map((url) => <option value={url} key={url}>{url.split("/").pop()}</option>)}
-        </select>}
-      </label>;
-    })}
-  </div>;
-
-  return <input value={String(value ?? "")} onChange={(e) => onChange(path, e.target.value)} />;
-}
-
-function MediaField({ label, value, assets, onChange }: {
-  label: string; value?: string; assets: string[]; onChange: (value: string) => void;
-}) {
-  return <label>{label}
-    <input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder="Media URL" />
-    <select value="" onChange={(e) => e.target.value && onChange(e.target.value)}>
-      <option value="">Choose from Media Library...</option>
-      {assets.map((url) => <option key={url} value={url}>{url.split("/").pop()}</option>)}
-    </select>
-  </label>;
-}
-
-function SectionEditor({ section, index, count, assets, placements, onChange, onMove, onDelete }: {
-  section: LearnMoreSection; index: number; count: number; assets: string[]; placements: { value: string; label: string }[];
-  onChange: (section: LearnMoreSection) => void; onMove: (direction: -1 | 1) => void; onDelete: () => void;
-}) {
-  const change = (field: keyof LearnMoreSection, value: unknown) => onChange({ ...section, [field]: value });
-  return <details className="learn-editor-group learn-editor-section">
-    <summary>{index + 1}. {section.title || titleCase(section.type)}{!section.enabled ? " (hidden)" : ""}</summary>
-    <div className="learn-editor-row-actions">
-      <button type="button" disabled={index === 0} onClick={() => onMove(-1)} aria-label="Move section up"><ArrowUp size={16} /></button>
-      <button type="button" disabled={index === count - 1} onClick={() => onMove(1)} aria-label="Move section down"><ArrowDown size={16} /></button>
-      <label className="learn-editor-checkbox"><input type="checkbox" checked={section.enabled} onChange={(e) => change("enabled", e.target.checked)} />Visible</label>
-      <button type="button" onClick={onDelete} aria-label="Delete section"><Trash2 size={16} /></button>
-    </div>
-    <div className="learn-editor-fields">
-      <label>Place section<select value={section.placement || "end"} onChange={(e) => change("placement", e.target.value)}>
-        {placements.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
-      </select></label>
-      <label>Section type<select value={section.type} onChange={(e) => change("type", e.target.value)}>
-        {sectionTypes.map((type) => <option value={type} key={type}>{titleCase(type)}</option>)}
-      </select></label>
-      <label>Eyebrow<input value={section.eyebrow} onChange={(e) => change("eyebrow", e.target.value)} /></label>
-      <label>Heading<input value={section.title} onChange={(e) => change("title", e.target.value)} /></label>
-      <label>Description<textarea rows={4} value={section.body} onChange={(e) => change("body", e.target.value)} /></label>
-      {section.type !== "video" && section.type !== "cta" && <>
-        <MediaField label="Desktop image" value={section.image} assets={assets} onChange={(v) => change("image", v)} />
-        <MediaField label="Mobile image" value={section.mobileImage} assets={assets} onChange={(v) => change("mobileImage", v)} />
-        <label>Image description<input value={section.alt || ""} onChange={(e) => change("alt", e.target.value)} /></label>
-        <label>Image fit<select value={section.fit || "contain"} onChange={(e) => change("fit", e.target.value)}><option value="contain">Contain</option><option value="cover">Cover</option></select></label>
-        <label>Image position<input value={section.position || "center"} onChange={(e) => change("position", e.target.value)} /></label>
-      </>}
-      {section.type === "gallery" && <label>Gallery image URLs (one per line)<textarea rows={5}
-        value={(section.images || []).join("\n")} onChange={(e) => change("images", e.target.value.split("\n").map((v) => v.trim()).filter(Boolean))} /></label>}
-      {section.type === "video" && <>
-        <MediaField label="Desktop video" value={section.video} assets={assets} onChange={(v) => change("video", v)} />
-        <MediaField label="Mobile video" value={section.mobileVideo} assets={assets} onChange={(v) => change("mobileVideo", v)} />
-        <MediaField label="Poster image" value={section.poster} assets={assets} onChange={(v) => change("poster", v)} />
-        {(["autoplay", "muted", "loop", "controls"] as const).map((key) => <label className="learn-editor-checkbox" key={key}>
-          <input type="checkbox" checked={Boolean(section[key])} disabled={key === "muted" && section.autoplay}
-            onChange={(e) => change(key, e.target.checked)} />{titleCase(key)}
-        </label>)}
-      </>}
-      {section.type === "cta" && <>
-        <label>Button label<input value={section.buttonLabel || ""} onChange={(e) => change("buttonLabel", e.target.value)} /></label>
-        <label>Button destination<input value={section.buttonTo || ""} onChange={(e) => change("buttonTo", e.target.value)} /></label>
-      </>}
-    </div>
-  </details>;
-}
-
-function toErrorMessage(cause: unknown): string {
-  if (!cause) return "Unknown error";
-  if (cause instanceof Error) return cause.message;
-  if (typeof cause === "string") return cause;
-  if (typeof cause === "object") {
-    const obj = cause as Record<string, unknown>;
-    if (typeof obj.message === "string" && obj.message) {
-      const parts = [obj.message];
-      if (typeof obj.details === "string" && obj.details) parts.push(obj.details);
-      if (typeof obj.hint === "string" && obj.hint) parts.push(obj.hint);
-      return parts.join(" — ");
-    }
-    if (typeof obj.error_description === "string") return obj.error_description;
-    if (typeof obj.error === "string") return obj.error;
-    try {
-      return JSON.stringify(cause);
-    } catch {
-      return String(cause);
-    }
+function getStoryTagline(content: LearnMoreContent | null): string {
+  if (!content) return "";
+  if (content.kind === "editorial" || content.kind === "catalog") {
+    return content.story.tagline || "";
   }
-  return String(cause);
+  if (content.kind === "mac-studio") {
+    return content.story.chips || "";
+  }
+  return "";
+}
+
+function setStoryTagline(content: LearnMoreContent, val: string) {
+  if (content.kind === "editorial" || content.kind === "catalog") {
+    content.story.tagline = val;
+  } else if (content.kind === "mac-studio") {
+    content.story.chips = val;
+  }
+}
+
+function getStoryBuyPath(content: LearnMoreContent | null): string {
+  if (!content) return "";
+  if (content.kind === "editorial" || content.kind === "catalog") {
+    return content.story.buyPath || "";
+  }
+  if (content.kind === "mac-studio") {
+    return content.story.preorderTo || "";
+  }
+  return "";
+}
+
+function setStoryBuyPath(content: LearnMoreContent, val: string) {
+  if (content.kind === "editorial" || content.kind === "catalog") {
+    content.story.buyPath = val;
+  } else if (content.kind === "mac-studio") {
+    content.story.preorderTo = val;
+  }
+}
+
+function getStoryBuyLabel(content: LearnMoreContent | null): string {
+  if (!content) return "Buy";
+  if (content.kind === "editorial") {
+    return content.story.buyLabel || "Buy";
+  }
+  if (content.kind === "catalog") {
+    return "Buy";
+  }
+  if (content.kind === "mac-studio") {
+    return content.story.preorderLabel || "Pre-order";
+  }
+  return "Buy";
+}
+
+function setStoryBuyLabel(content: LearnMoreContent, val: string) {
+  if (content.kind === "editorial") {
+    content.story.buyLabel = val;
+  } else if (content.kind === "mac-studio") {
+    content.story.preorderLabel = val;
+  }
 }
 
 export function AdminLearnMorePages() {
-  const { media } = useCms();
   const { activeProducts } = useProductCatalog();
-  const storyChoices = useMemo(() => {
-    const configuredSlugs = new Set(configuredChoices.map((choice) => choice.story.slug));
-    const generated = activeProducts.flatMap((product) => {
-      if (configuredSlugs.has(product.slug)) return [];
-      const family = (Object.keys(productFamilies) as ProductFamilyKey[])
-        .find((key) => familyMatchesProduct(product, key));
-      return family ? [{ kind: "catalog" as const, story: storyFromProduct(product, family), sections: [] }] : [];
-    });
-    return [...configuredChoices, ...generated];
-  }, [activeProducts]);
-  const [selected, setSelected] = useState(configuredChoices[0]?.story.slug || "");
-  const [document, setDocument] = useState<LearnMoreContent | null>(null);
-  const [uploadedAssets, setUploadedAssets] = useState<string[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [preview, setPreview] = useState(false);
-  const assets = useMemo(() => [...new Set([...media.map((item) => item.url), ...uploadedAssets])], [media, uploadedAssets]);
 
+  // Combine editorial and catalogue stories
+  const allChoices: LearnMoreContent[] = useMemo(() => {
+    return [
+      ...Object.values(editorialStories).map((story) => ({
+        kind: "editorial" as const,
+        story,
+        sections: [],
+        ...(story.slug === "iphone-18-pro" ? { education: iphone18ProEducation } : {}),
+      })),
+      ...productStories
+        .filter((story) => !editorialStories[story.slug])
+        .map((story) => ({ kind: "catalog" as const, story, sections: [] })),
+      { kind: "mac-studio" as const, story: macStudioStory, sections: [] },
+    ];
+  }, []);
+
+  const [selectedSlug, setSelectedSlug] = useState<string>("iphone-18-pro");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [workingContent, setWorkingContent] = useState<LearnMoreContent | null>(null);
+  const [publishedContent, setPublishedContent] = useState<LearnMoreContent | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  const [activeItemKey, setActiveItemKey] = useState<string>("hero"); // "hero", "video", or section ID
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Revisions State
+  const [showRevisionsModal, setShowRevisionsModal] = useState(false);
+  const [revisions, setRevisions] = useState<LearnMoreRevision[]>([]);
+  const [loadingRevisions, setLoadingRevisions] = useState(false);
+
+  // Media Library State
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [mediaLibrary, setMediaLibrary] = useState<string[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<"all" | "images" | "videos">("all");
+  const [mediaTarget, setMediaTarget] = useState<{ sectionId?: string; field: string } | null>(null);
+
+  // Upload state
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
+
+  // 1. Load active product story on selection change
   useEffect(() => {
     let active = true;
-    const fallback = storyChoices.find((choice) => choice.story.slug === selected);
-    setDocument(fallback ? clone(fallback) : null);
-    setMessage(""); setError(""); setPreview(false);
+    const baseChoice = allChoices.find((c) => c.story.slug === selectedSlug) || allChoices[0];
+    if (!baseChoice) return;
 
-    const loadData = async () => {
+    setStatusMsg(null);
+    setWorkingContent(clone(baseChoice));
+    setActiveItemKey("hero");
+
+    async function loadData() {
       try {
-        const published = await fetchPublishedLearnMore(selected).catch(() => null);
-        let draft: LearnMoreContent | null = null;
-        let storedAssets: string[] = [];
-
-        try {
-          draft = await fetchDraftLearnMore(selected);
-        } catch (draftErr) {
-          const draftErrMsg = toErrorMessage(draftErr);
-          if (active) {
-            if (draftErrMsg.includes("Authenticator verification")) {
-              setError("Authenticator verification (MFA AAL2) is required to save or edit drafts.");
-            } else if (draftErrMsg.includes("learn_more_drafts") || draftErrMsg.includes("42P01") || draftErrMsg.includes("PGRST205")) {
-              setError(`CMS unavailable: ${draftErrMsg}. Apply migration 018 before saving.`);
-            } else {
-              setError(`CMS notice: ${draftErrMsg}`);
-            }
-          }
-        }
-
-        try {
-          storedAssets = await listLearnMoreMedia();
-        } catch {
-          // Non-blocking asset listing
-        }
-
+        const [published, draft] = await Promise.all([
+          fetchPublishedLearnMore(selectedSlug).catch(() => null),
+          fetchDraftLearnMore(selectedSlug).catch(() => null),
+        ]);
         if (!active) return;
-        const loaded = clone(draft || published || fallback || null);
-        if (loaded?.kind === "editorial" && loaded.story.slug === "iphone-18-pro" && !loaded.education) {
-          loaded.education = clone(iphone18ProEducation);
+        setPublishedContent(published);
+        if (draft) {
+          setHasDraft(true);
+          setWorkingContent(draft);
+        } else if (published) {
+          setHasDraft(false);
+          setWorkingContent(published);
+        } else {
+          setHasDraft(false);
+          setWorkingContent(clone(baseChoice));
         }
-        setDocument(loaded);
-        setUploadedAssets(storedAssets);
-      } catch (cause) {
-        if (active) {
-          const msg = toErrorMessage(cause);
-          setError(`CMS unavailable: ${msg}.`);
-        }
+      } catch (err) {
+        console.warn("Could not load published/draft data:", err);
       }
+    }
+
+    loadData();
+    return () => {
+      active = false;
     };
+  }, [selectedSlug, allChoices]);
 
-    void loadData();
-    return () => { active = false; };
-  }, [selected, storyChoices]);
+  // Filtered product choices
+  const filteredChoices = useMemo(() => {
+    return allChoices.filter((item) => {
+      const matchesSearch =
+        item.story.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.story.slug.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchesSearch) return false;
 
-  const updateField = (root: "story" | "education", path: (string | number)[], value: unknown) => {
-    setDocument((current) => {
-      if (!current) return current;
-      const next = clone(current) as unknown as Record<string, unknown>;
-      let cursor = next[root] as Record<string, unknown>;
-      for (const step of path.slice(0, -1)) cursor = cursor[step] as Record<string, unknown>;
-      cursor[path[path.length - 1]] = value;
-      return next as unknown as LearnMoreContent;
+      if (categoryFilter === "all") return true;
+      if (categoryFilter === "mac") return item.story.slug.includes("mac");
+      if (categoryFilter === "ipad") return item.story.slug.includes("ipad");
+      if (categoryFilter === "iphone") return item.story.slug.includes("iphone");
+      if (categoryFilter === "watch") return item.story.slug.includes("watch");
+      if (categoryFilter === "airpods") return item.story.slug.includes("airpods");
+      if (categoryFilter === "accessories") return item.story.slug.includes("charger") || item.story.slug.includes("access");
+      return true;
     });
-  };
+  }, [allChoices, searchQuery, categoryFilter]);
 
-  const updateSection = (index: number, section: LearnMoreSection) => setDocument((current) => current ? {
-    ...current, sections: current.sections.map((item, i) => i === index ? section : item),
-  } : current);
-
-  const save = async (publish: boolean) => {
-    if (!document) return;
-    if (publish && !window.confirm(`Publish changes to ${document.story.name} now?`)) return;
-    setBusy(true); setError(""); setMessage("");
+  // Load Revisions
+  const handleOpenRevisions = async () => {
+    setShowRevisionsModal(true);
+    setLoadingRevisions(true);
     try {
-      if (publish) {
-        await publishLearnMore(document);
-        const verified = await fetchPublishedLearnMore(document.story.slug);
-        if (!verified || JSON.stringify(verified) !== JSON.stringify(document)) throw new Error("Publish verification failed. Check Supabase before editing further.");
-      } else await saveDraftLearnMore(document);
-      setMessage(publish ? "Published. Refresh the public Learn More page to see the update." : "Draft saved privately.");
-    } catch (cause) { setError(toErrorMessage(cause)); }
-    finally { setBusy(false); }
+      const list = await fetchLearnMoreRevisions(selectedSlug);
+      setRevisions(list);
+    } catch (err: any) {
+      setStatusMsg({ text: `Failed to load revisions: ${err.message}`, type: "error" });
+    } finally {
+      setLoadingRevisions(false);
+    }
   };
 
-  const upload = async (file?: File) => {
+  // Rollback to specific revision
+  const handleRollback = async (revNum: number) => {
+    if (!window.confirm(`Are you sure you want to rollback to Revision #${revNum}? This will publish it immediately.`)) return;
+    try {
+      setIsPublishing(true);
+      await rollbackLearnMoreRevision(selectedSlug, revNum);
+      const updated = await fetchPublishedLearnMore(selectedSlug);
+      setPublishedContent(updated);
+      setWorkingContent(updated ? clone(updated) : workingContent);
+      setHasDraft(false);
+      setShowRevisionsModal(false);
+      setStatusMsg({ text: `Successfully rolled back to Revision #${revNum}!`, type: "success" });
+    } catch (err: any) {
+      setStatusMsg({ text: `Rollback failed: ${err.message}`, type: "error" });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Load Media Library
+  const handleOpenMediaLibrary = async (target: { sectionId?: string; field: string }) => {
+    setMediaTarget(target);
+    setShowMediaModal(true);
+    setLoadingMedia(true);
+    try {
+      const files = await listLearnMoreMedia();
+      setMediaLibrary(files);
+    } catch (err: any) {
+      setStatusMsg({ text: `Failed to list media: ${err.message}`, type: "error" });
+    } finally {
+      setLoadingMedia(false);
+    }
+  };
+
+  // Select media from modal
+  const handleSelectMedia = (url: string) => {
+    if (!mediaTarget || !workingContent) return;
+    const { sectionId, field } = mediaTarget;
+
+    const next = clone(workingContent);
+    if (!sectionId) {
+      // Core hero/video
+      if (field === "heroImage" && next.kind === "editorial") {
+        next.story.hero.src = url;
+      } else if (field === "videoSrc" && next.kind === "editorial" && next.story.cinematicVideo) {
+        next.story.cinematicVideo.src = url;
+      } else if (field === "videoPoster" && next.kind === "editorial" && next.story.cinematicVideo) {
+        next.story.cinematicVideo.poster = url;
+      }
+    } else {
+      // Specific section
+      const sec = next.sections.find((s) => s.id === sectionId);
+      if (sec) {
+        (sec as any)[field] = url;
+      }
+    }
+
+    setWorkingContent(next);
+    setShowMediaModal(false);
+    setMediaTarget(null);
+  };
+
+  // Upload file directly
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: { sectionId?: string; field: string }) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    setBusy(true); setUploadProgress(0); setError("");
+
     try {
-      const url = await uploadLearnMoreMedia(file, setUploadProgress);
-      setUploadedAssets((current) => [url, ...current]);
-      setMessage("Media uploaded. Select it in a field, then save your draft.");
-    } catch (cause) { setError(toErrorMessage(cause)); }
-    finally { setBusy(false); }
+      setUploadProgress(0);
+      const url = await uploadLearnMoreMedia(file, (pct) => setUploadProgress(pct));
+      setUploadProgress(null);
+
+      // Apply uploaded URL
+      setMediaTarget(target);
+      handleSelectMedia(url);
+      setStatusMsg({ text: "Media uploaded and applied successfully!", type: "success" });
+    } catch (err: any) {
+      setUploadProgress(null);
+      setStatusMsg({ text: `Upload failed: ${err.message}`, type: "error" });
+    }
   };
 
-  return <div className="learn-editor">
-    <header className="learn-editor-header"><div><h1>Learn More Pages</h1><p>Edit an existing product story, add media sections, preview, then publish.</p></div></header>
-    <div className="learn-editor-toolbar">
-      <label>Product page<select value={selected} onChange={(e) => setSelected(e.target.value)}>
-        {storyChoices.map((choice) => <option key={`${choice.kind}-${choice.story.slug}`} value={choice.story.slug}>{choice.story.name}</option>)}
-      </select></label>
-      <label className="learn-editor-upload"><Upload size={17} /> Upload image or video
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm" disabled={busy}
-          onChange={(e) => { void upload(e.target.files?.[0]); e.target.value = ""; }} />
-      </label>
-      {busy && uploadProgress > 0 && <span>Uploading {uploadProgress}%</span>}
-    </div>
-    {error && <p className="learn-editor-error" role="alert">{error}</p>}
-    {message && <p className="learn-editor-message" role="status">{message}</p>}
-    {document && <>
-      <div className="learn-editor-actions">
-        <button type="button" onClick={() => setPreview((current) => !current)}><Eye size={17} /> {preview ? "Edit" : "Preview"}</button>
-        <button type="button" disabled={busy} onClick={() => void save(false)}><Save size={17} /> Save draft</button>
-        <button type="button" disabled={busy} onClick={() => void save(true)}><Send size={17} /> Publish</button>
-      </div>
-      {preview ? <div className="learn-editor-preview">
-        {document.kind === "editorial"
-          ? <EditorialProductStory story={document.story} sections={document.sections} education={document.education} />
-          : document.kind === "mac-studio"
-            ? <MacLaunchPage product="mac-studio" preview={document} />
-            : <CatalogProductStory family={document.story.family} slug={document.story.slug} published={document} />}
-      </div> : <div className="learn-editor-panels">
-        <section><h2>Existing page content</h2><StoryFields value={document.story} path={[]} onChange={(path, value) => updateField("story", path, value)} assets={assets} />
-          {document.kind === "editorial" && document.education && <><h2>iPhone 18 Pro education</h2>
-            <StoryFields value={document.education} path={[]} onChange={(path, value) => updateField("education", path, value)} assets={assets} /></>}
-        </section>
-        <section><h2>Additional sections</h2>
-          {document.sections.map((section, index) => <SectionEditor key={section.id} section={section} index={index}
-            count={document.sections.length} assets={assets} placements={placementsFor(document)} onChange={(next) => updateSection(index, next)}
-            onMove={(direction) => setDocument((current) => {
-              if (!current) return current;
-              const sections = [...current.sections];
-              [sections[index], sections[index + direction]] = [sections[index + direction], sections[index]];
-              return { ...current, sections };
+  // Save Draft
+  const handleSaveDraft = async () => {
+    if (!workingContent) return;
+    try {
+      setIsSaving(true);
+      await saveDraftLearnMore(workingContent);
+      setHasDraft(true);
+      setStatusMsg({ text: "Draft saved securely in Supabase.", type: "success" });
+    } catch (err: any) {
+      setStatusMsg({ text: `Failed to save draft: ${err.message}`, type: "error" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Publish
+  const handlePublish = async () => {
+    if (!workingContent) return;
+    if (!window.confirm(`Publish changes to "${workingContent.story.name}"? This makes them live on buyandsellgh.com immediately.`)) return;
+
+    try {
+      setIsPublishing(true);
+      const revNum = await publishLearnMore(workingContent, `Published from Visual Editor on ${new Date().toLocaleDateString()}`);
+      setPublishedContent(clone(workingContent));
+      setHasDraft(false);
+      setStatusMsg({ text: `Published successfully as Revision #${revNum}! Live at https://buyandsellgh.com`, type: "success" });
+    } catch (err: any) {
+      setStatusMsg({ text: `Publish failed: ${err.message}`, type: "error" });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Unpublish / Revert to Bundled
+  const handleUnpublish = async () => {
+    if (!window.confirm(`Unpublish custom CMS content for "${selectedSlug}" and revert to default design?`)) return;
+    try {
+      setIsPublishing(true);
+      await unpublishLearnMore(selectedSlug);
+      setPublishedContent(null);
+      const base = allChoices.find((c) => c.story.slug === selectedSlug) || allChoices[0];
+      setWorkingContent(clone(base));
+      setHasDraft(false);
+      setStatusMsg({ text: "Page reverted to default bundled configuration.", type: "info" });
+    } catch (err: any) {
+      setStatusMsg({ text: `Unpublish failed: ${err.message}`, type: "error" });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Section Ordering and Management
+  const handleMoveSection = (index: number, direction: "up" | "down") => {
+    if (!workingContent) return;
+    const next = clone(workingContent);
+    const targetIdx = direction === "up" ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= next.sections.length) return;
+
+    const [moved] = next.sections.splice(index, 1);
+    next.sections.splice(targetIdx, 0, moved);
+    setWorkingContent(next);
+  };
+
+  const handleToggleSectionEnabled = (sectionId: string) => {
+    if (!workingContent) return;
+    const next = clone(workingContent);
+    const sec = next.sections.find((s) => s.id === sectionId);
+    if (sec) {
+      sec.enabled = !sec.enabled;
+      setWorkingContent(next);
+    }
+  };
+
+  const handleDuplicateSection = (index: number) => {
+    if (!workingContent) return;
+    const next = clone(workingContent);
+    const target = clone(next.sections[index]);
+    target.id = crypto.randomUUID();
+    target.title = `${target.title} (Copy)`;
+    next.sections.splice(index + 1, 0, target);
+    setWorkingContent(next);
+    setActiveItemKey(target.id);
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    if (!workingContent) return;
+    if (!window.confirm("Remove this section from the page?")) return;
+    const next = clone(workingContent);
+    next.sections = next.sections.filter((s) => s.id !== sectionId);
+    setWorkingContent(next);
+    if (activeItemKey === sectionId) setActiveItemKey("hero");
+  };
+
+  const handleAddSection = (type: LearnMoreSectionType) => {
+    if (!workingContent) return;
+    const preset = SECTION_TYPE_PRESETS.find((p) => p.type === type);
+    const newSection: LearnMoreSection = {
+      id: crypto.randomUUID(),
+      type,
+      enabled: true,
+      eyebrow: preset?.label || "Highlight",
+      title: "New Section Headline",
+      body: "Describe the key craftsmanship, display innovation, or Apple Silicon feature here in compelling detail.",
+      placement: "end",
+      fit: "contain",
+    };
+    const next = clone(workingContent);
+    next.sections.push(newSection);
+    setWorkingContent(next);
+    setActiveItemKey(newSection.id);
+  };
+
+  // Active section helper
+  const activeSection = workingContent?.sections.find((s) => s.id === activeItemKey);
+
+  return (
+    <div className="vlearn-container">
+      {/* 1. Sticky Action Toolbar */}
+      <header className="vlearn-topbar">
+        <div className="vlearn-topbar-left">
+          <h1 className="vlearn-topbar-title">{workingContent?.story.name || "Learn More CMS"}</h1>
+          {publishedContent ? (
+            <span className="vlearn-badge vlearn-badge-published">● Published</span>
+          ) : (
+            <span className="vlearn-badge" style={{ background: "#eee", color: "#666" }}>Default</span>
+          )}
+          {hasDraft && <span className="vlearn-badge vlearn-badge-draft">Unsaved Draft</span>}
+        </div>
+
+        <div className="vlearn-topbar-center">
+          <button
+            type="button"
+            className={`vlearn-device-btn ${previewDevice === "desktop" ? "is-active" : ""}`}
+            onClick={() => setPreviewDevice("desktop")}
+            title="Desktop View (1280px)"
+          >
+            <Monitor size={14} style={{ marginRight: 4 }} /> Desktop
+          </button>
+          <button
+            type="button"
+            className={`vlearn-device-btn ${previewDevice === "tablet" ? "is-active" : ""}`}
+            onClick={() => setPreviewDevice("tablet")}
+            title="Tablet View (768px)"
+          >
+            <Tablet size={14} style={{ marginRight: 4 }} /> Tablet
+          </button>
+          <button
+            type="button"
+            className={`vlearn-device-btn ${previewDevice === "mobile" ? "is-active" : ""}`}
+            onClick={() => setPreviewDevice("mobile")}
+            title="Mobile View (375px)"
+          >
+            <Smartphone size={14} style={{ marginRight: 4 }} /> Mobile
+          </button>
+        </div>
+
+        <div className="vlearn-topbar-right">
+          <button
+            type="button"
+            className="vlearn-btn vlearn-btn-ghost"
+            onClick={handleOpenRevisions}
+            title="View revision history and rollback"
+          >
+            <History size={16} /> Revisions
+          </button>
+
+          <button
+            type="button"
+            className="vlearn-btn"
+            onClick={() => setShowPreviewModal(true)}
+            title="Live device preview"
+          >
+            <Eye size={16} /> Preview
+          </button>
+
+          <button
+            type="button"
+            className="vlearn-btn"
+            onClick={handleSaveDraft}
+            disabled={isSaving}
+          >
+            <Save size={16} /> {isSaving ? "Saving..." : "Save Draft"}
+          </button>
+
+          <button
+            type="button"
+            className="vlearn-btn vlearn-btn-primary"
+            onClick={handlePublish}
+            disabled={isPublishing}
+          >
+            <Send size={16} /> {isPublishing ? "Publishing..." : "Publish Live"}
+          </button>
+
+          {publishedContent && (
+            <button
+              type="button"
+              className="vlearn-btn vlearn-btn-ghost"
+              onClick={handleUnpublish}
+              title="Revert to bundled defaults"
+            >
+              <RotateCcw size={14} /> Revert
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Status Notice */}
+      {statusMsg && (
+        <div className={`vlearn-banner vlearn-banner-${statusMsg.type}`}>
+          <span>{statusMsg.text}</span>
+          <button type="button" onClick={() => setStatusMsg(null)} className="vlearn-icon-btn">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* 2. Main Three-Panel Workspace */}
+      <div className="vlearn-workspace">
+        {/* PANEL 1: Product Selection (Left) */}
+        <aside className="vlearn-left-panel">
+          <div className="vlearn-panel-header">
+            <h3>Products ({filteredChoices.length})</h3>
+            <input
+              type="search"
+              placeholder="Filter product story..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="vlearn-search-input"
+            />
+          </div>
+
+          <div className="vlearn-category-chips">
+            {["all", "iphone", "mac", "ipad", "watch", "airpods", "accessories"].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className={`vlearn-cat-chip ${categoryFilter === cat ? "is-active" : ""}`}
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
+          <div className="vlearn-product-list">
+            {filteredChoices.map((choice) => {
+              const isSelected = choice.story.slug === selectedSlug;
+              return (
+                <button
+                  key={choice.story.slug}
+                  type="button"
+                  className={`vlearn-product-item ${isSelected ? "is-selected" : ""}`}
+                  onClick={() => setSelectedSlug(choice.story.slug)}
+                >
+                  <div className="vlearn-prod-info">
+                    <span className="vlearn-prod-name">{choice.story.name}</span>
+                    <span className="vlearn-prod-slug">/{choice.story.slug}</span>
+                  </div>
+                  <span
+                    className={`vlearn-status-dot ${
+                      choice.story.slug === selectedSlug && publishedContent
+                        ? "is-published"
+                        : choice.story.slug === selectedSlug && hasDraft
+                        ? "is-draft"
+                        : ""
+                    }`}
+                  />
+                </button>
+              );
             })}
-            onDelete={() => window.confirm("Delete this section from the draft?") && setDocument((current) =>
-              current ? { ...current, sections: current.sections.filter((_, i) => i !== index) } : current)} />)}
-          <button type="button" className="learn-editor-add" onClick={() => setDocument((current) => current ? {
-            ...current, sections: [...current.sections, {
-              id: crypto.randomUUID(), type: "text-image", enabled: true,
-              eyebrow: "", title: "New section", body: "", fit: "contain",
-            }],
-          } : current)}><Plus size={17} /> Add section</button>
+          </div>
+        </aside>
+
+        {/* PANEL 2: Visual Page Section Outline (Middle) */}
+        <section className="vlearn-mid-panel">
+          <div className="vlearn-panel-header">
+            <h3>Page Outline &amp; Sections</h3>
+          </div>
+
+          <div className="vlearn-section-cards-list">
+            {/* Core Hero Section */}
+            <div
+              className={`vlearn-section-card ${activeItemKey === "hero" ? "is-selected" : ""}`}
+              onClick={() => setActiveItemKey("hero")}
+            >
+              <div className="vlearn-card-drag" style={{ cursor: "default" }}>
+                <Laptop size={16} />
+              </div>
+              <div className="vlearn-card-body">
+                <div className="vlearn-card-header">
+                  <span className="vlearn-card-type">HERO STAGE</span>
+                </div>
+                <h4 className="vlearn-card-title">{workingContent?.story.name}</h4>
+                <p className="vlearn-card-desc">{getStoryTagline(workingContent)}</p>
+              </div>
+            </div>
+
+            {/* Cinematic Film (if present) */}
+            {workingContent?.kind === "editorial" && workingContent.story.cinematicVideo && (
+              <div
+                className={`vlearn-section-card ${activeItemKey === "video" ? "is-selected" : ""}`}
+                onClick={() => setActiveItemKey("video")}
+              >
+                <div className="vlearn-card-drag" style={{ cursor: "default" }}>
+                  <Video size={16} />
+                </div>
+                <div className="vlearn-card-body">
+                  <div className="vlearn-card-header">
+                    <span className="vlearn-card-type">CINEMATIC FILM</span>
+                  </div>
+                  <h4 className="vlearn-card-title">{workingContent.story.cinematicVideo.headline || "Product Film"}</h4>
+                  <p className="vlearn-card-desc">{workingContent.story.cinematicVideo.subheadline || "4K high-resolution showcase"}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Dynamic Custom Sections */}
+            {workingContent?.sections.map((section, idx) => {
+              const isSelected = activeItemKey === section.id;
+              return (
+                <div
+                  key={section.id}
+                  className={`vlearn-section-card ${isSelected ? "is-selected" : ""} ${
+                    !section.enabled ? "is-disabled" : ""
+                  }`}
+                  onClick={() => setActiveItemKey(section.id)}
+                >
+                  <div className="vlearn-card-drag">
+                    <GripVertical size={16} />
+                  </div>
+                  <div className="vlearn-card-body">
+                    <div className="vlearn-card-header">
+                      <span className="vlearn-card-type">{section.type}</span>
+                      <div className="vlearn-card-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="vlearn-icon-btn"
+                          disabled={idx === 0}
+                          onClick={() => handleMoveSection(idx, "up")}
+                          title="Move section up"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="vlearn-icon-btn"
+                          disabled={idx === (workingContent?.sections.length || 0) - 1}
+                          onClick={() => handleMoveSection(idx, "down")}
+                          title="Move section down"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="vlearn-icon-btn"
+                          onClick={() => handleToggleSectionEnabled(section.id)}
+                          title={section.enabled ? "Hide section" : "Show section"}
+                        >
+                          {section.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
+                        </button>
+                        <button
+                          type="button"
+                          className="vlearn-icon-btn"
+                          onClick={() => handleDuplicateSection(idx)}
+                          title="Duplicate section"
+                        >
+                          <Copy size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="vlearn-icon-btn vlearn-icon-btn-danger"
+                          onClick={() => handleDeleteSection(section.id)}
+                          title="Delete section"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <h4 className="vlearn-card-title">{section.title || "Untitled Section"}</h4>
+                    <p className="vlearn-card-desc">{section.body}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add Section Preset Controls */}
+          <div className="vlearn-add-section-box">
+            <h4 style={{ margin: "0 0 10px", fontSize: "12px", textTransform: "uppercase", color: "#86868b" }}>
+              + Add Section Preset
+            </h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+              {SECTION_TYPE_PRESETS.map((preset) => (
+                <button
+                  key={preset.type}
+                  type="button"
+                  className="vlearn-btn"
+                  style={{ justifyContent: "flex-start", fontSize: "11px", padding: "6px 8px" }}
+                  onClick={() => handleAddSection(preset.type)}
+                >
+                  <Plus size={12} /> {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
-      </div>}
-    </>}
-  </div>;
+
+        {/* PANEL 3: Section Inspector & Settings (Right) */}
+        <main className="vlearn-right-panel">
+          {activeItemKey === "hero" ? (
+            <div>
+              <div style={{ borderBottom: "1px solid rgba(0,0,0,0.08)", paddingBottom: 14, marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700 }}>Hero Stage Settings</h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#86868b" }}>
+                  Configure the primary title, tagline, hero beauty photography, and buy destination.
+                </p>
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Product Name</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={workingContent?.story.name || ""}
+                    onChange={(e) => {
+                      if (!workingContent) return;
+                      const next = clone(workingContent);
+                      next.story.name = e.target.value;
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Hero Eyebrow</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={workingContent?.story.eyebrow || ""}
+                    onChange={(e) => {
+                      if (!workingContent) return;
+                      const next = clone(workingContent);
+                      next.story.eyebrow = e.target.value;
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Tagline Statement</label>
+                <textarea
+                  className="vlearn-textarea"
+                  value={getStoryTagline(workingContent)}
+                  onChange={(e) => {
+                    if (!workingContent) return;
+                    const next = clone(workingContent);
+                    setStoryTagline(next, e.target.value);
+                    setWorkingContent(next);
+                  }}
+                />
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Buy Button Destination</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={getStoryBuyPath(workingContent)}
+                    onChange={(e) => {
+                      if (!workingContent) return;
+                      const next = clone(workingContent);
+                      setStoryBuyPath(next, e.target.value);
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Button Action Label</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={getStoryBuyLabel(workingContent)}
+                    onChange={(e) => {
+                      if (!workingContent) return;
+                      const next = clone(workingContent);
+                      setStoryBuyLabel(next, e.target.value);
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Hero Image Settings */}
+              {workingContent?.kind === "editorial" && (
+                <div className="vlearn-media-picker-card">
+                  <label className="vlearn-form-label">
+                    <span>Hero Cinematic Image</span>
+                    <span className="vlearn-form-hint">Displayed on pure white background (#ffffff)</span>
+                  </label>
+                  <div className="vlearn-media-preview-box">
+                    {workingContent.story.hero.src ? (
+                      <img src={workingContent.story.hero.src} alt={workingContent.story.hero.alt} />
+                    ) : (
+                      <span style={{ color: "#86868b" }}>No image selected</span>
+                    )}
+                  </div>
+
+                  <div className="vlearn-media-actions">
+                    <button
+                      type="button"
+                      className="vlearn-btn"
+                      onClick={() => handleOpenMediaLibrary({ field: "heroImage" })}
+                    >
+                      <Image size={14} /> Choose from Media Library
+                    </button>
+                    <label className="vlearn-btn">
+                      <Upload size={14} /> Upload New Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileUpload(e, { field: "heroImage" })}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="vlearn-form-group" style={{ marginTop: 10 }}>
+                    <label className="vlearn-form-label">Accessible Image Alt Text</label>
+                    <input
+                      type="text"
+                      className="vlearn-input"
+                      value={workingContent.story.hero.alt || ""}
+                      onChange={(e) => {
+                        const next = clone(workingContent);
+                        if (next.kind === "editorial") {
+                          next.story.hero.alt = e.target.value;
+                          setWorkingContent(next);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : activeItemKey === "video" && workingContent?.kind === "editorial" && workingContent.story.cinematicVideo ? (
+            <div>
+              <div style={{ borderBottom: "1px solid rgba(0,0,0,0.08)", paddingBottom: 14, marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700 }}>Cinematic Video Settings</h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#86868b" }}>
+                  Manage 4K cinematic product showcase video, poster fallback, and autoplay loop.
+                </p>
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Video Headline</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={workingContent.story.cinematicVideo.headline || ""}
+                    onChange={(e) => {
+                      const next = clone(workingContent);
+                      if (next.kind === "editorial" && next.story.cinematicVideo) {
+                        next.story.cinematicVideo.headline = e.target.value;
+                        setWorkingContent(next);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Subheadline</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={workingContent.story.cinematicVideo.subheadline || ""}
+                    onChange={(e) => {
+                      const next = clone(workingContent);
+                      if (next.kind === "editorial" && next.story.cinematicVideo) {
+                        next.story.cinematicVideo.subheadline = e.target.value;
+                        setWorkingContent(next);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="vlearn-media-picker-card">
+                <label className="vlearn-form-label">Cinematic Video Asset</label>
+                <div className="vlearn-media-preview-box">
+                  <video
+                    src={workingContent.story.cinematicVideo.src}
+                    poster={workingContent.story.cinematicVideo.poster}
+                    controls
+                    muted
+                  />
+                </div>
+                <div className="vlearn-media-actions">
+                  <button
+                    type="button"
+                    className="vlearn-btn"
+                    onClick={() => handleOpenMediaLibrary({ field: "videoSrc" })}
+                  >
+                    <Video size={14} /> Select Video from Library
+                  </button>
+                  <label className="vlearn-btn">
+                    <Upload size={14} /> Upload Video (MP4/WebM)
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileUpload(e, { field: "videoSrc" })}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="vlearn-btn"
+                    onClick={() => handleOpenMediaLibrary({ field: "videoPoster" })}
+                  >
+                    <Image size={14} /> Change Poster Image
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : activeSection ? (
+            <div>
+              <div style={{ borderBottom: "1px solid rgba(0,0,0,0.08)", paddingBottom: 14, marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700 }}>
+                  Edit {SECTION_TYPE_PRESETS.find((p) => p.type === activeSection.type)?.label || "Section"}
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#86868b" }}>
+                  Customize copy, imagery, layout presets, and responsive behavior.
+                </p>
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Section Eyebrow</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    value={activeSection.eyebrow}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.eyebrow = e.target.value;
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Section Type</label>
+                  <select
+                    className="vlearn-select"
+                    value={activeSection.type}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.type = e.target.value as LearnMoreSectionType;
+                      setWorkingContent(next);
+                    }}
+                  >
+                    {SECTION_TYPE_PRESETS.map((p) => (
+                      <option key={p.type} value={p.type}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Headline</label>
+                <input
+                  type="text"
+                  className="vlearn-input"
+                  value={activeSection.title}
+                  onChange={(e) => {
+                    const next = clone(workingContent!);
+                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                    if (s) s.title = e.target.value;
+                    setWorkingContent(next);
+                  }}
+                />
+              </div>
+
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Body Story Copy</label>
+                <textarea
+                  className="vlearn-textarea"
+                  value={activeSection.body}
+                  onChange={(e) => {
+                    const next = clone(workingContent!);
+                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                    if (s) s.body = e.target.value;
+                    setWorkingContent(next);
+                  }}
+                />
+              </div>
+
+              {/* Media Picker for Section */}
+              <div className="vlearn-media-picker-card">
+                <label className="vlearn-form-label">
+                  <span>Desktop Media Asset</span>
+                  <span className="vlearn-form-hint">JPG, PNG, WebP, AVIF, or MP4</span>
+                </label>
+                <div className="vlearn-media-preview-box">
+                  {activeSection.video ? (
+                    <video src={activeSection.video} controls />
+                  ) : activeSection.image ? (
+                    <img src={activeSection.image} alt={activeSection.alt || ""} />
+                  ) : (
+                    <span style={{ color: "#86868b" }}>No media attached</span>
+                  )}
+                </div>
+
+                <div className="vlearn-media-actions">
+                  <button
+                    type="button"
+                    className="vlearn-btn"
+                    onClick={() => handleOpenMediaLibrary({ sectionId: activeSection.id, field: "image" })}
+                  >
+                    <Image size={14} /> Library Image
+                  </button>
+                  <button
+                    type="button"
+                    className="vlearn-btn"
+                    onClick={() => handleOpenMediaLibrary({ sectionId: activeSection.id, field: "video" })}
+                  >
+                    <Video size={14} /> Library Video
+                  </button>
+                  <label className="vlearn-btn">
+                    <Upload size={14} /> Upload Media
+                    <input
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFileUpload(e, { sectionId: activeSection.id, field: "image" })}
+                    />
+                  </label>
+                  {(activeSection.image || activeSection.video) && (
+                    <button
+                      type="button"
+                      className="vlearn-btn"
+                      onClick={() => {
+                        const next = clone(workingContent!);
+                        const s = next.sections.find((sec) => sec.id === activeSection.id);
+                        if (s) {
+                          s.image = undefined;
+                          s.video = undefined;
+                        }
+                        setWorkingContent(next);
+                      }}
+                    >
+                      <Trash2 size={14} /> Remove Media
+                    </button>
+                  )}
+                </div>
+
+                <div className="vlearn-grid-2" style={{ marginTop: 10 }}>
+                  <div className="vlearn-form-group">
+                    <label className="vlearn-form-label">Mobile Asset (Optional)</label>
+                    <input
+                      type="text"
+                      className="vlearn-input"
+                      placeholder="Separate mobile URL if needed"
+                      value={activeSection.mobileImage || ""}
+                      onChange={(e) => {
+                        const next = clone(workingContent!);
+                        const s = next.sections.find((sec) => sec.id === activeSection.id);
+                        if (s) s.mobileImage = e.target.value;
+                        setWorkingContent(next);
+                      }}
+                    />
+                  </div>
+
+                  <div className="vlearn-form-group">
+                    <label className="vlearn-form-label">Image Alt Text</label>
+                    <input
+                      type="text"
+                      className="vlearn-input"
+                      value={activeSection.alt || ""}
+                      onChange={(e) => {
+                        const next = clone(workingContent!);
+                        const s = next.sections.find((sec) => sec.id === activeSection.id);
+                        if (s) s.alt = e.target.value;
+                        setWorkingContent(next);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Call to action buttons */}
+              <div className="vlearn-grid-2" style={{ marginTop: 14 }}>
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Button Label (Optional)</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    placeholder="e.g. Buy Now, Learn More"
+                    value={activeSection.buttonLabel || ""}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.buttonLabel = e.target.value;
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Button Destination URL</label>
+                  <input
+                    type="text"
+                    className="vlearn-input"
+                    placeholder="e.g. /shop/buy-mac/macbook-pro"
+                    value={activeSection.buttonTo || ""}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.buttonTo = e.target.value;
+                      setWorkingContent(next);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="vlearn-inspector-empty">
+              <Layers size={40} strokeWidth={1.5} style={{ marginBottom: 12, opacity: 0.4 }} />
+              <h3>Select a Section to Edit</h3>
+              <p>Click on any section card in the middle panel or add a new one.</p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* 3. Media Library Modal */}
+      {showMediaModal && (
+        <div className="vlearn-modal-backdrop" onClick={() => setShowMediaModal(false)}>
+          <div className="vlearn-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="vlearn-modal-header">
+              <h3>Media Library ({mediaLibrary.length} assets)</h3>
+              <button type="button" className="vlearn-icon-btn" onClick={() => setShowMediaModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="vlearn-modal-content">
+              {loadingMedia ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#86868b" }}>Loading assets from Supabase...</div>
+              ) : mediaLibrary.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#86868b" }}>
+                  No media in the Supabase <code>learn-more-media</code> bucket yet. Upload images or videos above.
+                </div>
+              ) : (
+                <div className="vlearn-media-grid">
+                  {mediaLibrary.map((url) => {
+                    const isVid = url.endsWith(".mp4") || url.endsWith(".webm");
+                    return (
+                      <div
+                        key={url}
+                        className="vlearn-media-thumb-card"
+                        onClick={() => handleSelectMedia(url)}
+                        title="Click to select this asset"
+                      >
+                        {isVid ? <video src={url} muted /> : <img src={url} alt="" loading="lazy" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Revision History Modal */}
+      {showRevisionsModal && (
+        <div className="vlearn-modal-backdrop" onClick={() => setShowRevisionsModal(false)}>
+          <div className="vlearn-modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="vlearn-modal-header">
+              <h3>Revision History — {workingContent?.story.name}</h3>
+              <button type="button" className="vlearn-icon-btn" onClick={() => setShowRevisionsModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="vlearn-modal-content">
+              {loadingRevisions ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#86868b" }}>Loading revisions...</div>
+              ) : revisions.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#86868b" }}>
+                  No historical revisions recorded for this page yet. Revisions are created automatically whenever you publish changes.
+                </div>
+              ) : (
+                <table className="vlearn-revisions-table">
+                  <thead>
+                    <tr>
+                      <th>Revision #</th>
+                      <th>Date &amp; Time</th>
+                      <th>Author</th>
+                      <th>Notes</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {revisions.map((rev) => (
+                      <tr key={rev.id}>
+                        <td>
+                          <strong>Rev #{rev.revision_number}</strong>
+                        </td>
+                        <td>{new Date(rev.created_at).toLocaleString()}</td>
+                        <td>{rev.author_email || "Admin"}</td>
+                        <td>{rev.notes || "Published version"}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="vlearn-btn"
+                            style={{ fontSize: "12px", padding: "4px 8px" }}
+                            onClick={() => handleRollback(rev.revision_number)}
+                          >
+                            <RotateCcw size={12} /> Restore
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Live Device Preview Modal */}
+      {showPreviewModal && workingContent && (
+        <div className="vlearn-modal-backdrop" onClick={() => setShowPreviewModal(false)}>
+          <div
+            className="vlearn-modal-dialog"
+            style={{ width: "95vw", height: "92vh", maxHeight: "92vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="vlearn-modal-header">
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <h3 style={{ margin: 0 }}>Preview: {workingContent.story.name}</h3>
+                <div className="vlearn-topbar-center">
+                  <button
+                    type="button"
+                    className={`vlearn-device-btn ${previewDevice === "desktop" ? "is-active" : ""}`}
+                    onClick={() => setPreviewDevice("desktop")}
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    className={`vlearn-device-btn ${previewDevice === "tablet" ? "is-active" : ""}`}
+                    onClick={() => setPreviewDevice("tablet")}
+                  >
+                    Tablet
+                  </button>
+                  <button
+                    type="button"
+                    className={`vlearn-device-btn ${previewDevice === "mobile" ? "is-active" : ""}`}
+                    onClick={() => setPreviewDevice("mobile")}
+                  >
+                    Mobile
+                  </button>
+                </div>
+              </div>
+              <button type="button" className="vlearn-icon-btn" onClick={() => setShowPreviewModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="vlearn-preview-viewport">
+              <div className={`vlearn-device-bezel is-${previewDevice}`}>
+                {workingContent.kind === "editorial" ? (
+                  <EditorialProductStory
+                    story={workingContent.story}
+                    sections={workingContent.sections}
+                    education={workingContent.education}
+                  />
+                ) : workingContent.kind === "mac-studio" ? (
+                  <MacLaunchPage product="mac-studio" />
+                ) : (
+                  <CatalogProductStory
+                    family={workingContent.story.family}
+                    slug={workingContent.story.slug}
+                    published={workingContent}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
