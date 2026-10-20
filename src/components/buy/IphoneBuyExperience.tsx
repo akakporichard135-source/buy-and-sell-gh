@@ -50,8 +50,8 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
 
   const thumbnails = [
     { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
-    { src: "/products/story/iphone-18-pro-supplied-silver-front.jpg", alt: `${model} Super Retina display` },
-    { src: "/products/buy/iphone-18-pro-colors-white.png", alt: `${model} color lineup on white` },
+    { src: "/products/buy/iphone-18-pro-gallery-2-silver.jpg", alt: `${model} Silver / Natural Titanium dual view` },
+    { src: "/products/buy/iphone-18-pro-gallery-3-blue.jpg", alt: `${model} Light Blue dual view` },
   ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImage;

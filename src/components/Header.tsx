@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
@@ -146,20 +146,64 @@ export const GLOBAL_NAV_ITEMS: GlobalNavItem[] = MOBILE_NAV_SECTIONS.map((sec) =
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSubmenuId, setActiveSubmenuId] = useState<string | null>(null);
+  const [isMenuMounted, setIsMenuMounted] = useState(false);
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const { totalItems } = useCart();
   const location = useLocation();
   const drawerRef = useRef<HTMLDivElement>(null);
   const lastScrollYRef = useRef(0);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Close mobile menu and reset submenu on route change
-  useEffect(() => {
+  const handleOpenMenu = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setIsMenuClosing(false);
+    setIsMenuMounted(true);
+    setMobileMenuOpen(true);
+  };
+
+  const handleCloseMenu = () => {
+    if (!mobileMenuOpen && !isMenuMounted) return;
     setMobileMenuOpen(false);
-    setActiveSubmenuId(null);
+    setIsMenuClosing(true);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setIsMenuMounted(false);
+      setIsMenuClosing(false);
+    }, 380);
+  };
+
+  const handleLinkClick = () => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setMobileMenuOpen(false);
+    setIsMenuMounted(false);
+    setIsMenuClosing(false);
+  };
+
+  const handleToggleMenu = () => {
+    if (mobileMenuOpen) {
+      handleCloseMenu();
+    } else {
+      handleOpenMenu();
+    }
+  };
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setMobileMenuOpen(false);
+    setIsMenuMounted(false);
+    setIsMenuClosing(false);
     setNavVisible(true);
   }, [location.pathname, location.search]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
 
   // Apple-inspired smooth mobile scroll navigation
   useEffect(() => {
@@ -179,8 +223,8 @@ export function Header() {
           return;
         }
 
-        // Never hide while mobile menu drawer or search modal is open
-        if (mobileMenuOpen || searchOpen) {
+        // Never hide while mobile menu curtain or search modal is open
+        if (mobileMenuOpen || isMenuMounted || searchOpen) {
           setNavVisible(true);
           return;
         }
@@ -212,7 +256,7 @@ export function Header() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [mobileMenuOpen, searchOpen]);
+  }, [mobileMenuOpen, isMenuMounted, searchOpen]);
 
   // Lock body scroll and handle Escape key when mobile menu is active
   useEffect(() => {
@@ -224,11 +268,7 @@ export function Header() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (activeSubmenuId) {
-          setActiveSubmenuId(null);
-        } else {
-          setMobileMenuOpen(false);
-        }
+        handleCloseMenu();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -237,7 +277,7 @@ export function Header() {
       document.body.style.touchAction = originalTouchAction;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileMenuOpen, activeSubmenuId]);
+  }, [mobileMenuOpen]);
 
   // Subtle active route matching
   const isItemActive = (item: GlobalNavItem) => {
@@ -251,24 +291,7 @@ export function Header() {
     });
   };
 
-  const activeSection = MOBILE_NAV_SECTIONS.find((sec) => sec.id === activeSubmenuId) || null;
-
-  const handleToggleMenu = () => {
-    setMobileMenuOpen((prev) => {
-      if (prev) {
-        setActiveSubmenuId(null);
-        return false;
-      }
-      return true;
-    });
-  };
-
-  const handleCloseMenu = () => {
-    setMobileMenuOpen(false);
-    setActiveSubmenuId(null);
-  };
-
-  const isNavHidden = !navVisible && !mobileMenuOpen && !searchOpen;
+  const isNavHidden = !navVisible && !mobileMenuOpen && !isMenuMounted && !searchOpen;
 
   return (
     <header
@@ -332,103 +355,70 @@ export function Header() {
         </div>
       </div>
 
-      {/* Apple-style hierarchical mobile navigation drawer */}
-      {mobileMenuOpen && (
+      {/* Apple-style smooth curtain mobile navigation */}
+      {isMenuMounted && (
         <div
           ref={drawerRef}
-          className="global-mobile-drawer"
+          className={`global-mobile-drawer global-mobile-curtain ${
+            isMenuClosing ? "is-closing" : "is-open"
+          }`}
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
         >
-          <div className={`global-mobile-panels ${activeSubmenuId ? "is-submenu-active" : ""}`}>
-            {/* Panel 1: Main Menu Categories */}
-            <div
-              className="global-mobile-panel global-mobile-main-panel"
-              aria-hidden={activeSubmenuId !== null}
-            >
-              <nav className="global-mobile-nav" aria-label="Mobile Main Categories">
-                {MOBILE_NAV_SECTIONS.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    className="global-mobile-section-btn"
-                    onClick={() => setActiveSubmenuId(section.id)}
-                    aria-haspopup="true"
-                    aria-expanded={activeSubmenuId === section.id}
-                  >
-                    <span>{section.label}</span>
-                    <ChevronRight size={18} className="global-mobile-chevron" aria-hidden="true" />
-                  </button>
-                ))}
-              </nav>
+          <div className="global-curtain-inner">
+            <nav className="global-curtain-nav" aria-label="Main Navigation">
+              {MOBILE_NAV_SECTIONS.map((section, idx) => (
+                <Link
+                  key={section.id}
+                  to={section.to}
+                  onClick={handleLinkClick}
+                  className="global-curtain-link global-mobile-section-btn"
+                  style={{ "--item-idx": idx } as React.CSSProperties}
+                >
+                  <span>{section.label}</span>
+                </Link>
+              ))}
+            </nav>
 
-              {/* Quick utility links below main categories */}
-              <div className="global-mobile-quick-links">
+            <div className="global-curtain-footer">
+              <div className="global-curtain-quick-links">
                 <Link
                   to="/sell-or-trade"
-                  onClick={handleCloseMenu}
-                  className="global-mobile-quick-link"
+                  onClick={handleLinkClick}
+                  className="global-curtain-quick-link"
                 >
-                  Trade In & Upgrade
+                  Trade In &amp; Upgrade
                 </Link>
+                <span className="global-curtain-dot" aria-hidden="true">•</span>
                 <Link
                   to="/installment"
-                  onClick={handleCloseMenu}
-                  className="global-mobile-quick-link"
+                  onClick={handleLinkClick}
+                  className="global-curtain-quick-link"
                 >
-                  Installment Plans
+                  Installments
                 </Link>
+                <span className="global-curtain-dot" aria-hidden="true">•</span>
                 <Link
                   to="/repairs"
-                  onClick={handleCloseMenu}
-                  className="global-mobile-quick-link"
+                  onClick={handleLinkClick}
+                  className="global-curtain-quick-link"
                 >
-                  Repairs & Service
+                  Repairs
+                </Link>
+                <span className="global-curtain-dot" aria-hidden="true">•</span>
+                <Link
+                  to="/faq"
+                  onClick={handleLinkClick}
+                  className="global-curtain-quick-link"
+                >
+                  FAQs
                 </Link>
               </div>
-            </div>
-
-            {/* Panel 2: Hierarchical Submenu */}
-            <div
-              className="global-mobile-panel global-mobile-submenu-panel"
-              aria-hidden={activeSubmenuId === null}
-            >
-              {activeSection && (
-                <div className="global-mobile-submenu-inner">
-                  <div className="global-mobile-submenu-header">
-                    <button
-                      type="button"
-                      className="global-mobile-back-btn"
-                      onClick={() => setActiveSubmenuId(null)}
-                      aria-label="Back to main navigation"
-                    >
-                      <ChevronLeft size={18} strokeWidth={2.4} aria-hidden="true" />
-                      <span>Back</span>
-                    </button>
-                  </div>
-
-                  <h2 className="global-mobile-submenu-title">{activeSection.label}</h2>
-
-                  <nav
-                    className="global-mobile-subitems-nav"
-                    aria-label={`${activeSection.label} Submenu`}
-                  >
-                    {activeSection.subitems.map((subitem) => (
-                      <Link
-                        key={subitem.label}
-                        to={subitem.to}
-                        className={`global-mobile-subitem-link ${
-                          subitem.isExplore ? "is-explore-link" : ""
-                        }`}
-                        onClick={handleCloseMenu}
-                      >
-                        <span>{subitem.label}</span>
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              )}
+              <div className="global-curtain-contact">
+                <span className="global-curtain-badge">Buy &amp; Sell GH</span>
+                <span className="global-curtain-meta">Accra, Dome Pillar 2 • Mon–Sat 8:30am–7:00pm</span>
+              </div>
             </div>
           </div>
         </div>

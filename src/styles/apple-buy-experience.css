@@ -162,6 +162,29 @@
   will-change: opacity, transform;
 }
 
+/* MacBook Air Buy Page Showcase Presentation */
+.apple-buy-stage:has(img[src*="macbook-air"]) {
+  padding: clamp(14px, 2.5vw, 24px);
+  max-height: 560px;
+}
+
+.apple-buy-stage:has(img[src*="macbook-air"]) .apple-buy-stage-img {
+  max-width: 98%;
+  max-height: 98%;
+  transform: scale(1.06);
+  transform-origin: center center;
+}
+
+@media (max-width: 1024px) {
+  .apple-buy-stage:has(img[src*="macbook-air"]) {
+    padding: 12px;
+    max-height: 420px;
+  }
+  .apple-buy-stage:has(img[src*="macbook-air"]) .apple-buy-stage-img {
+    transform: scale(1.04);
+  }
+}
+
 .apple-buy-stage-placeholder {
   display: flex;
   flex-direction: column;

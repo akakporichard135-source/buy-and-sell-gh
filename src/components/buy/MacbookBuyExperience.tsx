@@ -52,10 +52,18 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
+  const MACBOOK_AIR_SHOWCASE_IMAGE = "/products/buy/macbook-air-buy-showcase.jpg";
   const finishImageSlug = FINISH_IMAGE_SLUGS[screenSize][finish];
-  const currentFinishImg = finishImageSlug ? localCatalogueImageBySlug[finishImageSlug] : undefined;
+  const currentFinishImg = finish === "Midnight"
+    ? MACBOOK_AIR_SHOWCASE_IMAGE
+    : (finishImageSlug ? (localCatalogueImageBySlug[finishImageSlug] || MACBOOK_AIR_SHOWCASE_IMAGE) : MACBOOK_AIR_SHOWCASE_IMAGE);
 
-  const thumbnails = currentFinishImg ? [{ src: currentFinishImg, alt: `MacBook Air in ${finish}` }] : [];
+  const thumbnails = [
+    { src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` },
+    ...(currentFinishImg !== MACBOOK_AIR_SHOWCASE_IMAGE
+      ? [{ src: MACBOOK_AIR_SHOWCASE_IMAGE, alt: `MacBook Air ${screenSize} Midnight front view` }]
+      : []),
+  ];
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
