@@ -8,6 +8,7 @@ import { LearnMoreSections } from "./LearnMoreSections";
 import { SEO } from "./SEO";
 import { CinematicVideo } from "./CinematicVideo";
 import { Iphone18ProEducation } from "./Iphone18ProEducation";
+import { useCinematicScrollAnimation } from "../hooks/useCinematicScrollAnimation";
 import "../styles/editorial-product-story.css";
 
 function ProductImage({ image, eager = false, className = "" }: { image: EditorialImage; eager?: boolean; className?: string }) {
@@ -26,7 +27,11 @@ function ProductImage({ image, eager = false, className = "" }: { image: Editori
 }
 
 export function EditorialProductStory({ story, sections = [], education }: { story: EditorialStory; sections?: LearnMoreSection[]; education?: IphoneEducationContent }) {
+  const containerRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
+
+  // Initialize cinematic GSAP + ScrollTrigger animations
+  useCinematicScrollAnimation(containerRef);
 
   useEffect(() => {
     if (railRef.current) {
@@ -45,7 +50,7 @@ export function EditorialProductStory({ story, sections = [], education }: { sto
   };
 
   return (
-    <main className={`editorial-story editorial-story-${story.slug}`}>
+    <main className={`editorial-story editorial-story-${story.slug}`} ref={containerRef}>
       <SEO title={`${story.name} | Learn More`} description={`${story.name}. ${story.tagline} Explore the product and shop with Buy & Sell GH.`} />
       <section className={`editorial-hero ${story.cinematicVideo ? "editorial-hero-cinematic" : ""} editorial-tone-${story.heroTone}`} id="overview" aria-labelledby="editorial-title">
         <div className="editorial-hero-copy">

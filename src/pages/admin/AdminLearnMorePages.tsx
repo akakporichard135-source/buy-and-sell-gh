@@ -49,7 +49,7 @@ import {
 import { iphone18ProEducation } from "../../data/iphone18ProEducation";
 import { macStudioStory } from "../../data/macStudioStory";
 import { EditorialProductStory } from "../../components/EditorialProductStory";
-import { CatalogProductStory } from "../ProductStoryPage";
+import { CatalogProductStory, storyFromProduct } from "../ProductStoryPage";
 import { MacLaunchPage } from "../MacLaunchPage";
 import "../../styles/admin-learn-more.css";
 
@@ -139,7 +139,7 @@ export function AdminLearnMorePages() {
 
   // Combine editorial and catalogue stories
   const allChoices: LearnMoreContent[] = useMemo(() => {
-    return [
+    const directChoices: LearnMoreContent[] = [
       ...Object.values(editorialStories).map((story) => ({
         kind: "editorial" as const,
         story,
@@ -151,7 +151,29 @@ export function AdminLearnMorePages() {
         .map((story) => ({ kind: "catalog" as const, story, sections: [] })),
       { kind: "mac-studio" as const, story: macStudioStory, sections: [] },
     ];
-  }, []);
+
+    const existingSlugs = new Set(directChoices.map((c) => c.story.slug));
+    const extraCatalogChoices: LearnMoreContent[] = activeProducts
+      .filter((p) => !existingSlugs.has(p.slug) && !existingSlugs.has(p.id))
+      .map((p) => {
+        const cat = (p.category || "").toLowerCase();
+        const family: ProductFamilyKey =
+          cat.includes("phone") ? "iphone"
+          : cat.includes("laptop") || cat.includes("mac") ? "mac"
+          : cat.includes("tablet") || cat.includes("ipad") ? "ipad"
+          : cat.includes("watch") ? "watch"
+          : cat.includes("audio") || cat.includes("airpod") ? "airpods"
+          : "accessories";
+
+        return {
+          kind: "catalog" as const,
+          story: storyFromProduct(p, family),
+          sections: [],
+        };
+      });
+
+    return [...directChoices, ...extraCatalogChoices];
+  }, [activeProducts]);
 
   const [selectedSlug, setSelectedSlug] = useState<string>("iphone-18-pro");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -231,12 +253,17 @@ export function AdminLearnMorePages() {
       if (!matchesSearch) return false;
 
       if (categoryFilter === "all") return true;
-      if (categoryFilter === "mac") return item.story.slug.includes("mac");
-      if (categoryFilter === "ipad") return item.story.slug.includes("ipad");
-      if (categoryFilter === "iphone") return item.story.slug.includes("iphone");
-      if (categoryFilter === "watch") return item.story.slug.includes("watch");
-      if (categoryFilter === "airpods") return item.story.slug.includes("airpods");
-      if (categoryFilter === "accessories") return item.story.slug.includes("charger") || item.story.slug.includes("access");
+      const s = item.story.slug.toLowerCase();
+      const fam = item.kind === "catalog" ? item.story.family : undefined;
+
+      if (categoryFilter === "mac") return fam === "mac" || s.includes("mac");
+      if (categoryFilter === "ipad") return fam === "ipad" || s.includes("ipad");
+      if (categoryFilter === "iphone") return fam === "iphone" || s.includes("iphone") || s.includes("phone");
+      if (categoryFilter === "watch") return fam === "watch" || s.includes("watch");
+      if (categoryFilter === "airpods") return fam === "airpods" || s.includes("airpod") || s.includes("audio");
+      if (categoryFilter === "accessories") {
+        return fam === "accessories" || s.includes("charger") || s.includes("cable") || s.includes("access") || s.includes("case") || s.includes("keyboard") || s.includes("adapter") || s.includes("power");
+      }
       return true;
     });
   }, [allChoices, searchQuery, categoryFilter]);
@@ -568,7 +595,7 @@ export function AdminLearnMorePages() {
               onClick={handleUnpublish}
               title="Revert to bundled defaults"
             >
-              <RotateCcw size={14} /> Revert
+              <RotateCcw size={14} /> Unpublish
             </button>
           )}
         </div>
@@ -764,7 +791,7 @@ export function AdminLearnMorePages() {
                 <button
                   key={preset.type}
                   type="button"
-                  className="vlearn-btn"
+                  className="vlearn-btn vlearn-preset-btn"
                   style={{ justifyContent: "flex-start", fontSize: "11px", padding: "6px 8px" }}
                   onClick={() => handleAddSection(preset.type)}
                 >
@@ -1512,7 +1539,7 @@ export function AdminLearnMorePages() {
 
       {/* 5. Live Device Preview Modal */}
       {showPreviewModal && workingContent && (
-        <div className="vlearn-modal-backdrop" onClick={() => setShowPreviewModal(false)}>
+        <div className="vlearn-modal-backdrop vlearn-modal-overlay" onClick={() => setShowPreviewModal(false)}>
           <div
             className="vlearn-modal-dialog"
             style={{ width: "95vw", height: "92vh", maxHeight: "92vh" }}

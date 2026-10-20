@@ -17,28 +17,61 @@ import { EditorialProductStory } from "../components/EditorialProductStory";
 import { LearnMoreSections } from "../components/LearnMoreSections";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
+import { useCinematicScrollAnimation } from "../hooks/useCinematicScrollAnimation";
 import "../styles/product-experience.css";
+
+export const STORY_SLUG_ALIASES: Record<string, string> = {
+  // Mac aliases
+  "macbook-air-15-m4": "macbook-air",
+  "macbook-air-13-m3": "macbook-air",
+  "macbook-air-15-inch-m4": "macbook-air",
+  "macbook-air-13-inch-m3": "macbook-air",
+  "macbook-pro-16-m4-pro-max": "macbook-pro",
+  "macbook-pro-14-m4": "macbook-pro",
+  "macbook-pro-16-inch-m4-pro-max": "macbook-pro",
+  "macbook-pro-14-inch-m4": "macbook-pro",
+  // iPad aliases
+  "ipad-pro-13-inch-m4": "ipad-pro",
+  "ipad-pro-11-inch-m4": "ipad-pro",
+  // Watch aliases
+  "apple-watch-ultra-2": "apple-watch-ultra-4",
+  "apple-watch-series-10": "apple-watch-series-12",
+  // AirPods aliases
+  "airpods-pro-2": "airpods-pro-3",
+  // Accessories aliases
+  "apple-magsafe-charger": "charging-and-power",
+};
+
+export function resolveStorySlug(slug: string): string {
+  if (editorialStories[slug]) return slug;
+  if (STORY_SLUG_ALIASES[slug]) return STORY_SLUG_ALIASES[slug];
+  return slug;
+}
 
 export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
+  const resolvedSlug = resolveStorySlug(slug);
   const [published, setPublished] = useState<LearnMoreContent | null>(null);
 
   useEffect(() => {
     let active = true;
-    void fetchPublishedLearnMore(slug).catch(() => null).then((content) => {
-      if (active) setPublished(content);
-    });
+    void fetchPublishedLearnMore(slug)
+      .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug) : null))
+      .catch(() => null)
+      .then((content) => {
+        if (active) setPublished(content);
+      });
     return () => { active = false; };
-  }, [slug]);
+  }, [slug, resolvedSlug]);
 
-  const editorialStory = editorialStories[slug];
+  const editorialStory = editorialStories[resolvedSlug] || editorialStories[slug];
   if (editorialStory) return <EditorialProductStory
-    story={published?.kind === "editorial" && published.story.slug === slug
+    story={published?.kind === "editorial" && (published.story.slug === slug || published.story.slug === resolvedSlug)
       ? refreshBundledStoryAssets(published.story, editorialStory) : editorialStory}
-    sections={published?.story.slug === slug ? published.sections : undefined}
-    education={published?.kind === "editorial" && published.story.slug === slug ? published.education : undefined} />;
-  return <CatalogProductStory family={family} slug={slug}
-    published={published?.story.slug === slug ? published : null} />;
+    sections={(published?.story.slug === slug || published?.story.slug === resolvedSlug) ? published.sections : undefined}
+    education={published?.kind === "editorial" && (published.story.slug === slug || published.story.slug === resolvedSlug) ? published.education : undefined} />;
+  return <CatalogProductStory family={family} slug={resolvedSlug || slug}
+    published={(published?.story.slug === slug || published?.story.slug === resolvedSlug) ? published : null} />;
 }
 
 export function CatalogProductStory({ family, slug, published }: { family: ProductFamilyKey; slug: string; published: LearnMoreContent | null }) {
@@ -52,6 +85,8 @@ export function CatalogProductStory({ family, slug, published }: { family: Produ
       : published?.kind === "catalog" ? published.story : current;
   }, [configuredStory, family, product, published]);
   const sections = published?.sections || [];
+  const containerRef = useRef<HTMLDivElement>(null);
+  useCinematicScrollAnimation(containerRef);
   const [filmOpen, setFilmOpen] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +115,7 @@ export function CatalogProductStory({ family, slug, published }: { family: Produ
   }
 
   return (
-    <div className={`product-story-page product-story-${story.theme} product-story-${family}`}>
+    <div className={`product-story-page product-story-${story.theme} product-story-${family}`} ref={containerRef}>
       <SEO title={`${story.name} | Overview`} description={`${story.tagline} Explore the ${story.name} product story and current Buy & Sell GH availability.`} />
 
       <section className="story-hero" id="overview">

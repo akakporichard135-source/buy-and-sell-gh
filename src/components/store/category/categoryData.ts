@@ -254,8 +254,8 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         alt: "MacBook Pro 16-inch (M4 Pro / M4 Max)",
         buyPath: "/shop/buy-mac/macbook-pro-16-m4-pro-max",
         buyLabel: "Buy",
-        storyPath: "/shop/buy-mac/macbook-pro-16-m4-pro-max",
-        storyLabel: "Details",
+        storyPath: "/mac/macbook-pro",
+        storyLabel: "Learn more",
         isDark: false,
       },
       {
@@ -269,8 +269,8 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         alt: "MacBook Pro 14 inch",
         buyPath: "/shop/buy-mac/macbook-pro-14-m4",
         buyLabel: "Buy",
-        storyPath: "/shop/buy-mac/macbook-pro-14-m4",
-        storyLabel: "Details",
+        storyPath: "/mac/macbook-pro",
+        storyLabel: "Learn more",
         isDark: false,
       },
       {
@@ -366,8 +366,8 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         alt: "iPad Pro 13 Space Black",
         buyPath: "/shop/buy-ipad/ipad-pro-13-inch-m4",
         buyLabel: "Buy",
-        storyPath: "/shop/buy-ipad/ipad-pro-13-inch-m4",
-        storyLabel: "Details",
+        storyPath: "/ipad/ipad-pro",
+        storyLabel: "Learn more",
         isDark: false,
       },
       {
@@ -550,8 +550,8 @@ export const CATEGORY_DEPARTMENTS: Record<ProductFamilyKey, CategoryDepartmentCo
         alt: "AirPods Pro charging case and earbuds",
         buyPath: "/shop/buy-airpods/airpods-pro-2",
         buyLabel: "Buy",
-        storyPath: "/shop/buy-airpods/airpods-pro-2",
-        storyLabel: "Details",
+        storyPath: "/airpods/airpods-pro-3",
+        storyLabel: "Learn more",
         isDark: false,
       },
       {
