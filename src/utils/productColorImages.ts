@@ -151,10 +151,26 @@ export function resolveProductColorImage(
   const slug = product?.slug || "";
   const normColor = (color || "").trim().toLowerCase();
 
-  // If product has owner uploaded images, respect those first unless color is explicitly switched
-  if (product && hasOwnerUploadedProductImages(product)) {
-    const ownerImg = product.images?.[0]?.src;
-    if (ownerImg) return ownerImg;
+  // 0. Check admin-configured colorImages mapping first
+  if (product?.colorImages) {
+    if (color && product.colorImages[color]) {
+      return product.colorImages[color];
+    }
+    if (normColor && product.colorImages[normColor]) {
+      return product.colorImages[normColor];
+    }
+    // Case-insensitive key match
+    for (const [k, v] of Object.entries(product.colorImages)) {
+      if (k.toLowerCase() === normColor && v) return v;
+    }
+  }
+
+  // 0.1 Check if any custom uploaded image has alt text containing this finish
+  if (normColor && product?.images && product.images.length > 0) {
+    const matchingAltImg = product.images.find(
+      (img) => img.alt && img.alt.toLowerCase().includes(normColor)
+    );
+    if (matchingAltImg) return matchingAltImg.src;
   }
 
   // 1. iPhone 18 Pro / 18 Pro Max

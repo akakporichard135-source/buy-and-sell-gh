@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag, ImageOff } from "lucide-react";
+import { SwipeableProductGallery } from "./SwipeableProductGallery";
 import "../../styles/apple-buy-experience.css";
 
 // --------------------------------------------------------------------------
@@ -39,6 +40,13 @@ export function BuyLayout({
   mobileActionLabel = "Add to Bag",
   onMobileAction,
 }: BuyLayoutProps) {
+  const galleryImages =
+    thumbnails && thumbnails.length > 0
+      ? thumbnails
+      : activeImageSrc
+      ? [{ src: activeImageSrc, alt: activeImageAlt }]
+      : [];
+
   return (
     <div className="apple-buy-root">
       <div className="apple-buy-header">
@@ -60,41 +68,19 @@ export function BuyLayout({
       </nav>
 
       <main className="apple-buy-container">
-        {/* Left Column: Sticky Product Showcase */}
+        {/* Left Column: Sticky Product Showcase with Swipeable Gallery & Dots */}
         <div className="apple-buy-gallery-col">
-          <div className={`apple-buy-stage ${darkStage ? "apple-buy-stage-dark" : ""}`}>
-            {activeImageSrc ? (
-              <img
-                src={activeImageSrc}
-                alt={activeImageAlt}
-                className="apple-buy-stage-img"
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-                draggable={false}
-              />
-            ) : (
-              <div className="apple-buy-stage-placeholder" role="img" aria-label={`${name} image coming soon`}>
-                <ImageOff size={40} strokeWidth={1.5} aria-hidden="true" />
-                <span>Image coming soon</span>
-              </div>
-            )}
-          </div>
-          {thumbnails.length > 1 && (
-            <div className="apple-buy-thumbnails" aria-label={`${name} viewing angles`}>
-              {thumbnails.map((thumb, idx) => (
-                <button
-                  type="button"
-                  key={`${thumb.src}-${idx}`}
-                  className={`apple-buy-thumb ${idx === activeThumbnailIndex ? "is-selected" : ""}`}
-                  onClick={() => onSelectThumbnail && onSelectThumbnail(idx)}
-                  aria-label={`View ${thumb.alt || `angle ${idx + 1}`}`}
-                >
-                  <img src={thumb.src} alt="" />
-                </button>
-              ))}
-            </div>
-          )}
+          <SwipeableProductGallery
+            images={galleryImages}
+            activeIndex={activeThumbnailIndex}
+            onSelectIndex={(newIndex) => {
+              if (onSelectThumbnail) {
+                onSelectThumbnail(newIndex);
+              }
+            }}
+            productName={name}
+            darkStage={darkStage}
+          />
           <p className="apple-buy-stage-caption">
             100% genuine Apple hardware verified directly with Buy &amp; Sell GH in Accra.
           </p>
@@ -165,6 +151,8 @@ export interface BuyColorSwatchesProps {
   selectedColor: string;
   onSelect: (color: string) => void;
   labelPrefix?: string;
+  previewImageSrc?: string;
+  previewImageAlt?: string;
 }
 
 export function BuyColorSwatches({
@@ -172,6 +160,8 @@ export function BuyColorSwatches({
   selectedColor,
   onSelect,
   labelPrefix = "Finish",
+  previewImageSrc,
+  previewImageAlt,
 }: BuyColorSwatchesProps) {
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     let nextIndex = -1;
@@ -196,6 +186,23 @@ export function BuyColorSwatches({
 
   return (
     <div className="apple-buy-swatches">
+      {/* Dedicated Large Product Image representing the currently selected finish on Pure White */}
+      {previewImageSrc && (
+        <div className="apple-buy-finish-preview-card" aria-hidden="true">
+          <div className="apple-buy-finish-preview-stage">
+            <img
+              key={previewImageSrc}
+              src={previewImageSrc}
+              alt={previewImageAlt || `${selectedColor} finish preview`}
+              className="apple-buy-finish-preview-img"
+              loading="eager"
+              decoding="async"
+              draggable={false}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="apple-buy-swatch-label">
         {labelPrefix} — <strong>{selectedColor}</strong>
       </div>

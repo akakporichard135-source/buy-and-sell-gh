@@ -205,6 +205,8 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
         <BuyColorSwatches
           colors={IPHONE_18_COLORS}
           selectedColor={finish}
+          previewImageSrc={currentFinishImage}
+          previewImageAlt={`${model} in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);

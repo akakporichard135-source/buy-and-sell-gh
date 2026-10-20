@@ -148,94 +148,115 @@ export const rowToProduct = (row: ProductRow): Product => {
     }
   }
 
-  return normalizeProduct({
-    id: row.id,
-    slug: row.slug,
-    name: effectiveName,
-    brand: row.brand,
-    category: row.category,
-    subcategory: row.subcategory ?? "",
-    model: row.model,
-    generation: row.generation ?? "",
-    description: row.description,
-    shortDescription: row.short_description ?? row.description,
-    price: effectivePrice,
-    previousPrice: row.previous_price ?? undefined,
-    oldPrice: row.previous_price ?? undefined,
-    priceOnRequest: row.price_on_request,
-    condition: row.condition,
-    storage: row.storage_options ?? [],
-    colors: row.colour_options ?? [],
-    defaultColor: row.default_colour ?? row.colour_options?.[0] ?? "",
-    batteryHealth: row.battery_health ?? "",
-    warranty: row.warranty ?? "",
-    warrantyInfo: row.warranty ?? "",
-    stockQuantity: row.stock_quantity,
-    stockStatus: row.stock_status,
-    featured: row.featured,
-    isFeatured: row.featured,
-    newArrival: row.new_arrival,
-    isNewArrival: row.new_arrival,
-    popular: row.popular,
-    isPopular: row.popular,
-    available: row.available,
-    images: row.images ?? [],
-    primaryImageIndex: row.primary_image ?? 0,
-    thumbnail: row.images?.[row.primary_image ?? 0]?.src ?? row.images?.[0]?.src,
-    specifications: row.specifications ?? [],
-    specs: row.specifications ?? [],
-    includedItems: row.included_items ?? [],
-    box: row.included_items ?? [],
-    deliveryInfo: row.delivery_information ?? "",
-    deliveryNote: row.delivery_information ?? "",
-    imageTone: "from-white via-zinc-100 to-yellow-100",
-    badges: [row.new_arrival ? "New Arrival" : "", row.condition, row.stock_status === "Sold" ? "Sold" : ""].filter(Boolean),
-    tags: row.tags ?? [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    archived: row.archived,
-    variants,
-  });
-};
+    const colorImages: Record<string, string> = {};
+    if (row.tags) {
+      for (const t of row.tags) {
+        if (t.startsWith("finish-img:")) {
+          const eqIdx = t.indexOf("=");
+          if (eqIdx > 11) {
+            const cName = t.slice(11, eqIdx);
+            const cUrl = decodeURIComponent(t.slice(eqIdx + 1));
+            colorImages[cName] = cUrl;
+          }
+        }
+      }
+    }
 
-export const productToRow = (product: Product): Partial<ProductRow> => {
-  const normalized = normalizeProduct(product);
-  return {
-    id: normalized.id,
-    slug: normalized.slug,
-    name: normalized.name,
-    brand: normalized.brand,
-    category: normalized.category,
-    subcategory: normalized.subcategory || null,
-    model: normalized.model,
-    generation: normalized.generation || null,
-    description: normalized.description,
-    short_description: normalized.shortDescription || normalized.description,
-    price: normalized.price,
-    previous_price: normalized.previousPrice ?? null,
-    price_on_request: normalized.priceOnRequest ?? false,
-    condition: normalized.condition,
-    storage_options: normalized.storage,
-    colour_options: normalized.colors,
-    default_colour: normalized.defaultColor || normalized.colors[0] || null,
-    battery_health: normalized.batteryHealth || null,
-    warranty: normalized.warranty ?? normalized.warrantyInfo ?? null,
-    stock_quantity: normalized.stockQuantity,
-    stock_status: normalized.stockStatus,
-    featured: normalized.featured ?? normalized.isFeatured ?? false,
-    new_arrival: normalized.newArrival ?? normalized.isNewArrival ?? false,
-    popular: normalized.popular ?? normalized.isPopular ?? false,
-    available: normalized.available ?? true,
-    images: normalized.images,
-    primary_image: normalized.primaryImageIndex ?? 0,
-    specifications: normalized.specifications ?? normalized.specs,
-    included_items: normalized.includedItems ?? normalized.box,
-    delivery_information: normalized.deliveryInfo ?? normalized.deliveryNote ?? null,
-    archived: normalized.archived ?? false,
-    tags: normalized.tags ?? [],
-    updated_at: new Date().toISOString(),
+    return normalizeProduct({
+      id: row.id,
+      slug: row.slug,
+      name: effectiveName,
+      brand: row.brand,
+      category: row.category,
+      subcategory: row.subcategory ?? "",
+      model: row.model,
+      generation: row.generation ?? "",
+      description: row.description,
+      shortDescription: row.short_description ?? row.description,
+      price: effectivePrice,
+      previousPrice: row.previous_price ?? undefined,
+      oldPrice: row.previous_price ?? undefined,
+      priceOnRequest: row.price_on_request,
+      condition: row.condition,
+      storage: row.storage_options ?? [],
+      colors: row.colour_options ?? [],
+      defaultColor: row.default_colour ?? row.colour_options?.[0] ?? "",
+      colorImages: Object.keys(colorImages).length > 0 ? colorImages : undefined,
+      batteryHealth: row.battery_health ?? "",
+      warranty: row.warranty ?? "",
+      warrantyInfo: row.warranty ?? "",
+      stockQuantity: row.stock_quantity,
+      stockStatus: row.stock_status,
+      featured: row.featured,
+      isFeatured: row.featured,
+      newArrival: row.new_arrival,
+      isNewArrival: row.new_arrival,
+      popular: row.popular,
+      isPopular: row.popular,
+      available: row.available,
+      images: row.images ?? [],
+      primaryImageIndex: row.primary_image ?? 0,
+      thumbnail: row.images?.[row.primary_image ?? 0]?.src ?? row.images?.[0]?.src,
+      specifications: row.specifications ?? [],
+      specs: row.specifications ?? [],
+      includedItems: row.included_items ?? [],
+      box: row.included_items ?? [],
+      deliveryInfo: row.delivery_information ?? "",
+      deliveryNote: row.delivery_information ?? "",
+      imageTone: "from-white via-zinc-100 to-yellow-100",
+      badges: [row.new_arrival ? "New Arrival" : "", row.condition, row.stock_status === "Sold" ? "Sold" : ""].filter(Boolean),
+      tags: row.tags ?? [],
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      archived: row.archived,
+      variants,
+    });
   };
-};
+
+  export const productToRow = (product: Product): Partial<ProductRow> => {
+    const normalized = normalizeProduct(product);
+    const baseTags = (normalized.tags || []).filter((t) => !t.startsWith("finish-img:"));
+    const finishTags = Object.entries(normalized.colorImages || {}).map(
+      ([cName, cUrl]) => `finish-img:${cName}=${encodeURIComponent(cUrl)}`
+    );
+    const combinedTags = [...baseTags, ...finishTags];
+
+    return {
+      id: normalized.id,
+      slug: normalized.slug,
+      name: normalized.name,
+      brand: normalized.brand,
+      category: normalized.category,
+      subcategory: normalized.subcategory || null,
+      model: normalized.model,
+      generation: normalized.generation || null,
+      description: normalized.description,
+      short_description: normalized.shortDescription || normalized.description,
+      price: normalized.price,
+      previous_price: normalized.previousPrice ?? null,
+      price_on_request: normalized.priceOnRequest ?? false,
+      condition: normalized.condition,
+      storage_options: normalized.storage,
+      colour_options: normalized.colors,
+      default_colour: normalized.defaultColor || normalized.colors[0] || null,
+      battery_health: normalized.batteryHealth || null,
+      warranty: normalized.warranty ?? normalized.warrantyInfo ?? null,
+      stock_quantity: normalized.stockQuantity,
+      stock_status: normalized.stockStatus,
+      featured: normalized.featured ?? normalized.isFeatured ?? false,
+      new_arrival: normalized.newArrival ?? normalized.isNewArrival ?? false,
+      popular: normalized.popular ?? normalized.isPopular ?? false,
+      available: normalized.available ?? true,
+      images: normalized.images,
+      primary_image: normalized.primaryImageIndex ?? 0,
+      specifications: normalized.specifications ?? normalized.specs,
+      included_items: normalized.includedItems ?? normalized.box,
+      delivery_information: normalized.deliveryInfo ?? normalized.deliveryNote ?? null,
+      archived: normalized.archived ?? false,
+      tags: combinedTags,
+      updated_at: new Date().toISOString(),
+    };
+  };
 
 export const fetchProducts = async () => {
   const client = getSupabaseOrThrow();

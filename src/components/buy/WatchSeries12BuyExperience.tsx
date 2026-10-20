@@ -187,6 +187,8 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
         <BuyColorSwatches
           colors={WATCH_12_FINISHES}
           selectedColor={finish}
+          previewImageSrc={currentFinishImg}
+          previewImageAlt={`Apple Watch Series 12 in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);

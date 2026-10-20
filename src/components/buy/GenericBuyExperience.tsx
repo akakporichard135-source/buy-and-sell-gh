@@ -173,6 +173,8 @@ export function GenericBuyExperience({
           <BuyColorSwatches
             colors={colorOptions}
             selectedColor={color}
+            previewImageSrc={matchedFinishImage}
+            previewImageAlt={`${name} in ${color}`}
             onSelect={(selectedFinish) => {
               setColor(selectedFinish);
               setActiveThumb(0);

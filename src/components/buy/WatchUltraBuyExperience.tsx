@@ -172,7 +172,12 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
         <BuyColorSwatches
           colors={ULTRA_FINISHES}
           selectedColor={finish}
-          onSelect={setFinish}
+          previewImageSrc={currentFinishImg}
+          previewImageAlt={`Apple Watch Ultra in ${finish}`}
+          onSelect={(c) => {
+            setFinish(c);
+            setActiveThumb(0);
+          }}
         />
       </section>
 

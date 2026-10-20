@@ -229,6 +229,8 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
         <BuyColorSwatches
           colors={MACBOOK_PRO_FINISHES}
           selectedColor={finish}
+          previewImageSrc={currentDisplayImg}
+          previewImageAlt={`MacBook Pro in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);

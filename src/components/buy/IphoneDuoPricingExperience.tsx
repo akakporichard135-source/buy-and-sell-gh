@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MessageCircle, ShieldCheck, Sparkles, Truck, Store, ArrowRight } from "lucide-react";
 import { SEO } from "../SEO";
 import { whatsappUrl } from "../../utils/whatsapp";
+import { SwipeableProductGallery } from "./SwipeableProductGallery";
 import "../../styles/apple-buy-experience.css";
 
 export function IphoneDuoPricingExperience() {
@@ -48,30 +49,12 @@ export function IphoneDuoPricingExperience() {
       <main className="apple-buy-container">
         {/* Left Column: Visual Showcase */}
         <div className="apple-buy-gallery-col">
-          <div className="apple-buy-stage">
-            <img
-              src={currentImage.src}
-              alt={currentImage.alt}
-              className="apple-buy-stage-img"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              draggable={false}
-            />
-          </div>
-          <div className="apple-buy-thumbnails" aria-label="iPhone Duo viewing angles">
-            {gallery.map((item, idx) => (
-              <button
-                type="button"
-                key={item.label}
-                className={`apple-buy-thumb ${idx === selectedAngle ? "is-selected" : ""}`}
-                onClick={() => setSelectedAngle(idx)}
-                aria-label={`View ${item.label}`}
-              >
-                <img src={item.src} alt="" />
-              </button>
-            ))}
-          </div>
+          <SwipeableProductGallery
+            images={gallery}
+            activeIndex={selectedAngle}
+            onSelectIndex={setSelectedAngle}
+            productName="iPhone Duo"
+          />
           <p className="apple-buy-stage-caption">
             Precision dual-display articulation with zero-crease seamless hinge engineering.
           </p>

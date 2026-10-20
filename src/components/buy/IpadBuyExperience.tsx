@@ -230,6 +230,8 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
         <BuyColorSwatches
           colors={IPAD_AIR_COLORS}
           selectedColor={finish}
+          previewImageSrc={currentFinishImg}
+          previewImageAlt={`iPad Air in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);

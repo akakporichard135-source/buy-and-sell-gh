@@ -198,6 +198,8 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         <BuyColorSwatches
           colors={MACBOOK_FINISHES}
           selectedColor={finish}
+          previewImageSrc={currentFinishImg}
+          previewImageAlt={`MacBook Air in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);

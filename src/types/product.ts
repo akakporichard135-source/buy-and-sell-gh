@@ -69,6 +69,7 @@ export interface Product {
   condition: ProductCondition;
   colors: string[];
   defaultColor?: string;
+  colorImages?: Record<string, string>;
   stockStatus: StockStatus;
   stockQuantity: number;
   imageTone: string;

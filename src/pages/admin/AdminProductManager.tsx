@@ -74,6 +74,7 @@ interface ProductFormState {
   ram: string;
   colors: string;
   defaultColor: string;
+  colorImages: Record<string, string>;
   batteryHealth: string;
   warranty: string;
   shortDescription: string;
@@ -113,6 +114,7 @@ export const productToForm = (product: Product): ProductFormState => ({
   ram: getProductRam(product),
   colors: listToText(product.colors),
   defaultColor: product.defaultColor ?? product.colors[0] ?? "",
+  colorImages: product.colorImages ?? {},
   batteryHealth: product.batteryHealth ?? "",
   warranty: product.warranty ?? product.warrantyInfo ?? "",
   shortDescription: product.shortDescription ?? "",
@@ -1199,10 +1201,20 @@ function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
   const [showMediaLibraryPicker, setShowMediaLibraryPicker] = useState(false);
+  const [pickingColorFinish, setPickingColorFinish] = useState<string | null>(null);
   const existingProduct = products.find((p) => p.id === form.id);
   const existingVariants = existingProduct?.variants ?? [];
 
   const handleMediaPickerSelect = (item: MediaItem) => {
+    if (pickingColorFinish) {
+      update("colorImages", {
+        ...form.colorImages,
+        [pickingColorFinish]: item.url,
+      });
+      setPickingColorFinish(null);
+      setShowMediaLibraryPicker(false);
+      return;
+    }
     const nextImages = [
       ...form.images,
       { src: item.url, alt: item.alt || item.title || `${form.name || "Product"} image` },
@@ -1721,6 +1733,130 @@ function ProductForm({
                 })}
               </div>
             </div>
+
+            {/* Dedicated Finish Images & Default Selection Controls */}
+            {textToList(form.colors).length > 0 && (
+              <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider block">
+                    Dedicated Finish Images &amp; Default Selection
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Displayed above swatches &amp; syncs with main gallery
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {textToList(form.colors).map((cName) => {
+                    const option = resolveColorOption(cName);
+                    const isDefault =
+                      (form.defaultColor || textToList(form.colors)[0] || "").toLowerCase() ===
+                      cName.toLowerCase();
+                    const customImg = form.colorImages[cName] || "";
+
+                    return (
+                      <div
+                        key={cName}
+                        className="p-2.5 rounded-lg border border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-[140px]">
+                          <span
+                            className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
+                            style={{
+                              backgroundColor: option.hex,
+                              boxShadow: option.border
+                                ? "0 0 0 1px rgba(0,0,0,0.2)"
+                                : "0 0 0 1px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                          <span className="font-semibold text-slate-900">{cName}</span>
+                          {isDefault ? (
+                            <span className="px-1.5 py-0.5 text-[10px] bg-[#d4af37]/15 text-[#916b08] font-bold rounded">
+                              Default
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => update("defaultColor", cName)}
+                              className="text-[10px] text-slate-400 hover:text-slate-700 underline"
+                              title="Set this finish as the initial selection on product buy page"
+                            >
+                              Make Default
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Image Preview & Selection */}
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          {customImg ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-10 h-10 rounded border border-slate-200 bg-white p-1 flex items-center justify-center shrink-0">
+                                <img
+                                  src={customImg}
+                                  alt={`${cName} preview`}
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = { ...form.colorImages };
+                                  delete next[cName];
+                                  update("colorImages", next);
+                                }}
+                                className="text-[11px] text-rose-500 hover:text-rose-700 font-medium"
+                              >
+                                Revert
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">
+                              Verified Apple System Baseline
+                            </span>
+                          )}
+
+                          {/* Quick assign from gallery photos */}
+                          {form.images.length > 0 && (
+                            <select
+                              value={customImg}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const next = { ...form.colorImages };
+                                if (!val) {
+                                  delete next[cName];
+                                } else {
+                                  next[cName] = val;
+                                }
+                                update("colorImages", next);
+                              }}
+                              className="text-[11px] py-1 px-2 border border-slate-200 rounded bg-white text-slate-700 max-w-[150px]"
+                            >
+                              <option value="">Choose Gallery Photo</option>
+                              {form.images.map((img, i) => (
+                                <option key={i} value={img.src}>
+                                  Gallery #{i + 1} ({img.alt?.slice(0, 16) || "Photo"})
+                                </option>
+                              ))}
+                            </select>
+                          )}
+
+                          {/* Media library button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPickingColorFinish(cName);
+                              setShowMediaLibraryPicker(true);
+                            }}
+                            className="px-2 py-1 text-[11px] bg-white border border-slate-200 hover:bg-slate-100 rounded text-slate-700 font-medium"
+                          >
+                            Media Library
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -2050,6 +2186,7 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     storage,
     colors,
     defaultColor: form.defaultColor || colors[0] || "",
+    colorImages: form.colorImages,
     batteryHealth: form.batteryHealth,
     warranty: form.warranty,
     warrantyInfo: form.warranty,
