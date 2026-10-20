@@ -252,7 +252,7 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         <BuyColorSwatches
           colors={IPAD_PRO_FINISHES}
           selectedColor={finish}
-          previewImageSrc={finish === "Space Black" ? ipadProBlackWhite : ipadProSilverWhite}
+          previewImageSrc={currentFinishImg}
           previewImageAlt={`iPad Pro in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
