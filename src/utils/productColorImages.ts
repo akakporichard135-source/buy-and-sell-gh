@@ -27,13 +27,14 @@ export function preloadProductImages(urls: (string | undefined | null)[]): void 
 }
 
 // --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 // iPhone 18 Pro & Pro Max Special Visual Assets
 // --------------------------------------------------------------------------
 const IPHONE_18_PRO_COLOR_MAP: Record<string, string> = {
   "deep burgundy": "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
   burgundy: "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-  "space black": "/products/buy/iphone-18-pro-colors-white.png",
-  black: "/products/buy/iphone-18-pro-colors-white.png",
+  "space black": "/products/colors/iphone-18-pro-space-black.png",
+  black: "/products/colors/iphone-18-pro-space-black.png",
   "natural titanium": "/products/campaigns/iphone-18-pro-silver.webp",
   natural: "/products/campaigns/iphone-18-pro-silver.webp",
   silver: "/products/campaigns/iphone-18-pro-silver.webp",
@@ -42,42 +43,140 @@ const IPHONE_18_PRO_COLOR_MAP: Record<string, string> = {
 };
 
 // --------------------------------------------------------------------------
-// MacBook Air Special Visual Assets
+// iPhone 16 / 16 Pro Specific Finish Images
 // --------------------------------------------------------------------------
-const MACBOOK_AIR_COLOR_MAP: Record<string, string> = {
+const IPHONE_16_PRO_COLOR_MAP: Record<string, string> = {
+  "desert titanium": "/products/colors/iphone-16-pro-desert-titanium.png",
+  desert: "/products/colors/iphone-16-pro-desert-titanium.png",
+  "natural titanium": "/products/colors/iphone-16-pro-natural-titanium.png",
+  natural: "/products/colors/iphone-16-pro-natural-titanium.png",
+  "black titanium": localCatalogueImageBySlug["iphone-16-pro"] || "/products/colors/iphone-16-pro-natural-titanium.png",
+  black: localCatalogueImageBySlug["iphone-16-pro"] || "/products/colors/iphone-16-pro-natural-titanium.png",
+  "white titanium": localCatalogueImageBySlug["iphone-16-pro-max"] || "/products/colors/iphone-16-pro-natural-titanium.png",
+  white: localCatalogueImageBySlug["iphone-16-pro-max"] || "/products/colors/iphone-16-pro-natural-titanium.png",
+};
+
+const IPHONE_16_BASE_COLOR_MAP: Record<string, string> = {
+  black: localCatalogueImageBySlug["iphone-16"] || localCatalogueImageBySlug["iphone-16e"],
+  white: localCatalogueImageBySlug["iphone-16e"] || localCatalogueImageBySlug["iphone-16"],
+  ultramarine: localCatalogueImageBySlug["iphone-16-plus"] || localCatalogueImageBySlug["iphone-16"],
+  teal: localCatalogueImageBySlug["iphone-16-plus"] || localCatalogueImageBySlug["iphone-16"],
+  pink: localCatalogueImageBySlug["iphone-15"] || localCatalogueImageBySlug["iphone-16"],
+};
+
+const IPHONE_15_PRO_COLOR_MAP: Record<string, string> = {
+  "natural titanium": localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-15-pro"],
+  natural: localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-15-pro"],
+  "white titanium": localCatalogueImageBySlug["iphone-15-pro"] || localCatalogueImageBySlug["iphone-15-pro-max"],
+  white: localCatalogueImageBySlug["iphone-15-pro"] || localCatalogueImageBySlug["iphone-15-pro-max"],
+  "black titanium": localCatalogueImageBySlug["iphone-15-pro"] || localCatalogueImageBySlug["iphone-15-pro-max"],
+  black: localCatalogueImageBySlug["iphone-15-pro"] || localCatalogueImageBySlug["iphone-15-pro-max"],
+  "blue titanium": localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-15-pro"],
+  blue: localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-15-pro"],
+};
+
+// --------------------------------------------------------------------------
+// Apple Watch Ultra 4 & Series 12 Visual Assets
+// --------------------------------------------------------------------------
+const WATCH_ULTRA_4_COLOR_MAP: Record<string, string> = {
+  "natural titanium": "/products/campaigns/watch-ultra-4-rugged.webp",
+  natural: "/products/campaigns/watch-ultra-4-rugged.webp",
+  titanium: "/products/campaigns/watch-ultra-4-rugged.webp",
+  "black titanium": "/products/campaigns/watch-ultra-4-hero.webp",
+  black: "/products/campaigns/watch-ultra-4-hero.webp",
+  orange: "/products/campaigns/watch-ultra-4-orange.webp",
+  "safety orange": "/products/campaigns/watch-ultra-4-orange.webp",
+};
+
+const WATCH_SERIES_12_COLOR_MAP: Record<string, string> = {
+  "jet black": "/products/campaigns/watch-series-12-hero.webp",
+  black: "/products/campaigns/watch-series-12-hero.webp",
+  silver: "/products/campaigns/watch-series-12-product.webp",
+  "rose gold": "/products/campaigns/watch-series-12-angle.webp",
+  "natural titanium": "/products/buy/watch-series-12-angle-white.png",
+  natural: "/products/buy/watch-series-12-angle-white.png",
+  slate: "/products/campaigns/watch-series-12-cinematic.webp",
+};
+
+// --------------------------------------------------------------------------
+// AirPods Max Visual Assets
+// --------------------------------------------------------------------------
+const AIRPODS_MAX_COLOR_MAP: Record<string, string> = {
+  midnight: "/products/colors/airpods-max-midnight.png",
+  starlight: localCatalogueImageBySlug["airpods-max-usb-c"],
+  blue: localCatalogueImageBySlug["airpods-max-2"],
+  purple: localCatalogueImageBySlug["airpods-max-usb-c"],
+  orange: localCatalogueImageBySlug["airpods-max-2"],
+  silver: localCatalogueImageBySlug["airpods-max-usb-c"],
+  "space gray": localCatalogueImageBySlug["airpods-max-lightning"],
+  "space grey": localCatalogueImageBySlug["airpods-max-lightning"],
+  pink: localCatalogueImageBySlug["airpods-max-lightning"],
+  green: localCatalogueImageBySlug["airpods-max-lightning"],
+  "sky blue": localCatalogueImageBySlug["airpods-max-lightning"],
+};
+
+// --------------------------------------------------------------------------
+// MacBook Air Size-Specific Finish Mappings
+// --------------------------------------------------------------------------
+const MACBOOK_AIR_13_COLOR_MAP: Record<string, string> = {
   midnight: "/products/buy/macbook-air-buy-showcase.jpg",
   starlight: "/products/campaigns/macbook-air-starlight-studio.jpg",
   "space gray": localCatalogueImageBySlug["macbook-air-13-m3"] || "/products/campaigns/macbook-air-floating.webp",
   "space grey": localCatalogueImageBySlug["macbook-air-13-m3"] || "/products/campaigns/macbook-air-floating.webp",
   silver: localCatalogueImageBySlug["macbook-air-13-m4"] || "/products/campaigns/macbook-air-lineup.webp",
-  "sky blue": localCatalogueImageBySlug["macbook-air-15-m5"] || "/products/campaigns/macbook-air-cinematic.webp",
+  "sky blue": localCatalogueImageBySlug["macbook-air-13-m5"] || "/products/campaigns/macbook-air-cinematic.webp",
   gold: localCatalogueImageBySlug["macbook-air-13-m1"] || "/products/campaigns/macbook-air-floating.webp",
 };
 
+const MACBOOK_AIR_15_COLOR_MAP: Record<string, string> = {
+  midnight: localCatalogueImageBySlug["macbook-air-15-m2"] || "/products/buy/macbook-air-buy-showcase.jpg",
+  starlight: localCatalogueImageBySlug["macbook-air-15-m4"] || "/products/campaigns/macbook-air-starlight-studio.jpg",
+  "space gray": localCatalogueImageBySlug["macbook-air-15-m3"] || "/products/campaigns/macbook-air-floating.webp",
+  "space grey": localCatalogueImageBySlug["macbook-air-15-m3"] || "/products/campaigns/macbook-air-floating.webp",
+  silver: localCatalogueImageBySlug["macbook-air-15-m5"] || "/products/campaigns/macbook-air-lineup.webp",
+  "sky blue": localCatalogueImageBySlug["macbook-air-15-m5"] || "/products/campaigns/macbook-air-cinematic.webp",
+};
+
 // --------------------------------------------------------------------------
-// MacBook Pro Special Visual Assets
+// MacBook Pro Size-Specific Finish Mappings
 // --------------------------------------------------------------------------
-const MACBOOK_PRO_COLOR_MAP: Record<string, string> = {
+const MACBOOK_PRO_14_COLOR_MAP: Record<string, string> = {
   "space black": localCatalogueImageBySlug["macbook-pro-14-m4"] || "/products/campaigns/macbook-pro-cutout.webp",
   black: localCatalogueImageBySlug["macbook-pro-14-m4"] || "/products/campaigns/macbook-pro-cutout.webp",
-  silver: localCatalogueImageBySlug["macbook-pro-14-m4-pro-max"] || localCatalogueImageBySlug["macbook-pro-14-m3"] || "/products/campaigns/macbook-pro-cinematic.webp",
-  "space gray": localCatalogueImageBySlug["macbook-pro-14-m1-pro-max"] || localCatalogueImageBySlug["macbook-pro-16-m2-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
-  "space grey": localCatalogueImageBySlug["macbook-pro-14-m1-pro-max"] || localCatalogueImageBySlug["macbook-pro-16-m2-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+  silver: localCatalogueImageBySlug["macbook-pro-14-m4-pro-max"] || "/products/campaigns/macbook-pro-cinematic.webp",
+  "space gray": localCatalogueImageBySlug["macbook-pro-14-m3"] || localCatalogueImageBySlug["macbook-pro-14-m1-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+  "space grey": localCatalogueImageBySlug["macbook-pro-14-m3"] || localCatalogueImageBySlug["macbook-pro-14-m1-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+};
+
+const MACBOOK_PRO_16_COLOR_MAP: Record<string, string> = {
+  "space black": localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+  black: localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+  silver: localCatalogueImageBySlug["macbook-pro-16-m5-pro-max"] || "/products/campaigns/macbook-pro-cinematic.webp",
+  "space gray": localCatalogueImageBySlug["macbook-pro-16-m2-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
+  "space grey": localCatalogueImageBySlug["macbook-pro-16-m2-pro-max"] || "/products/campaigns/macbook-pro-cutout.webp",
 };
 
 // --------------------------------------------------------------------------
-// iPad Pro Special Visual Assets
+// iPad Pro Size-Specific Finish Mappings
 // --------------------------------------------------------------------------
-const IPAD_PRO_COLOR_MAP: Record<string, string> = {
+const IPAD_PRO_11_COLOR_MAP: Record<string, string> = {
   "space black": localCatalogueImageBySlug["ipad-pro-11-inch-m4"] || "/products/campaigns/ipad-pro-11.webp",
   black: localCatalogueImageBySlug["ipad-pro-11-inch-m4"] || "/products/campaigns/ipad-pro-11.webp",
+  silver: localCatalogueImageBySlug["ipad-pro-11-inch-m5"] || "/products/campaigns/ipad-pro-11.webp",
+  "space gray": localCatalogueImageBySlug["ipad-pro-11-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
+  "space grey": localCatalogueImageBySlug["ipad-pro-11-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
+};
+
+const IPAD_PRO_13_COLOR_MAP: Record<string, string> = {
+  "space black": localCatalogueImageBySlug["ipad-pro-13-inch-m5"] || "/products/campaigns/ipad-pro-13.webp",
+  black: localCatalogueImageBySlug["ipad-pro-13-inch-m5"] || "/products/campaigns/ipad-pro-13.webp",
   silver: localCatalogueImageBySlug["ipad-pro-13-inch-m4"] || "/products/campaigns/ipad-pro-13.webp",
-  "space gray": localCatalogueImageBySlug["ipad-pro-11-inch-m2"] || localCatalogueImageBySlug["ipad-pro-12-9-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
-  "space grey": localCatalogueImageBySlug["ipad-pro-11-inch-m2"] || localCatalogueImageBySlug["ipad-pro-12-9-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
+  "space gray": localCatalogueImageBySlug["ipad-pro-12-9-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
+  "space grey": localCatalogueImageBySlug["ipad-pro-12-9-inch-m2"] || "/products/campaigns/ipad-pro-cinematic.webp",
 };
 
 // --------------------------------------------------------------------------
-// iPad Air Special Visual Assets
+// iPad Air Finish Assets
 // --------------------------------------------------------------------------
 const IPAD_AIR_COLOR_MAP: Record<string, string> = {
   blue: "/products/campaigns/ipad-air-blue.webp",
@@ -86,57 +185,6 @@ const IPAD_AIR_COLOR_MAP: Record<string, string> = {
   starlight: "/products/campaigns/ipad-air-editorial-pure-white.png",
   purple: localCatalogueImageBySlug["ipad-air-13-inch-m3"] || "/products/campaigns/ipad-air-colors.webp",
   pink: localCatalogueImageBySlug["ipad-air-5"] || "/products/campaigns/ipad-air-colors.webp",
-};
-
-// --------------------------------------------------------------------------
-// Apple Watch Ultra Special Visual Assets
-// --------------------------------------------------------------------------
-const WATCH_ULTRA_COLOR_MAP: Record<string, string> = {
-  "natural titanium": "/products/campaigns/watch-ultra-4-rugged.webp",
-  natural: "/products/campaigns/watch-ultra-4-rugged.webp",
-  titanium: "/products/campaigns/watch-ultra-4-rugged.webp",
-  "black titanium": localCatalogueImageBySlug["apple-watch-ultra-3"] || "/products/campaigns/watch-ultra-4-hero.webp",
-  black: localCatalogueImageBySlug["apple-watch-ultra-3"] || "/products/campaigns/watch-ultra-4-hero.webp",
-  orange: "/products/campaigns/watch-ultra-4-orange.webp",
-  "safety orange": "/products/campaigns/watch-ultra-4-orange.webp",
-};
-
-// --------------------------------------------------------------------------
-// Apple Watch Series 10 / 11 / 12 Special Visual Assets
-// --------------------------------------------------------------------------
-const WATCH_SERIES_COLOR_MAP: Record<string, string> = {
-  "jet black": "/products/campaigns/watch-series-12-hero.webp",
-  black: "/products/campaigns/watch-series-12-hero.webp",
-  silver: localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-product.webp",
-  "rose gold": localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-angle.webp",
-  gold: localCatalogueImageBySlug["apple-watch-series-9"] || "/products/campaigns/watch-series-12-product.webp",
-  "natural titanium": "/products/buy/watch-series-12-angle-white.png",
-  natural: "/products/buy/watch-series-12-angle-white.png",
-  slate: localCatalogueImageBySlug["apple-watch-series-10"] || "/products/campaigns/watch-series-12-cinematic.webp",
-  midnight: localCatalogueImageBySlug["apple-watch-series-8"] || "/products/campaigns/watch-generic-product.webp",
-  starlight: localCatalogueImageBySlug["apple-watch-se-3"] || "/products/campaigns/watch-series-12-angle.webp",
-};
-
-// --------------------------------------------------------------------------
-// iPhone 16 / 16 Pro Specific Finish Images
-// --------------------------------------------------------------------------
-const IPHONE_16_PRO_COLOR_MAP: Record<string, string> = {
-  "desert titanium": localCatalogueImageBySlug["iphone-16-pro-max"] || "/products/colors/iphone-16-pro-natural-titanium.png",
-  desert: localCatalogueImageBySlug["iphone-16-pro-max"] || "/products/colors/iphone-16-pro-natural-titanium.png",
-  "natural titanium": "/products/colors/iphone-16-pro-natural-titanium.png",
-  natural: "/products/colors/iphone-16-pro-natural-titanium.png",
-  "black titanium": localCatalogueImageBySlug["iphone-16-pro"] || localCatalogueImageBySlug["iphone-15-pro"],
-  black: localCatalogueImageBySlug["iphone-16-pro"] || localCatalogueImageBySlug["iphone-15-pro"],
-  "white titanium": localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-16-pro"],
-  white: localCatalogueImageBySlug["iphone-15-pro-max"] || localCatalogueImageBySlug["iphone-16-pro"],
-};
-
-const IPHONE_16_BASE_COLOR_MAP: Record<string, string> = {
-  black: localCatalogueImageBySlug["iphone-16"] || localCatalogueImageBySlug["iphone-16e"],
-  white: localCatalogueImageBySlug["iphone-16e"] || localCatalogueImageBySlug["iphone-16"],
-  ultramarine: localCatalogueImageBySlug["iphone-16"] || localCatalogueImageBySlug["iphone-16-plus"],
-  teal: localCatalogueImageBySlug["iphone-16-plus"] || localCatalogueImageBySlug["iphone-16"],
-  pink: localCatalogueImageBySlug["iphone-15"] || localCatalogueImageBySlug["iphone-16-plus"],
 };
 
 // --------------------------------------------------------------------------
@@ -181,55 +229,7 @@ export function resolveProductColorImage(
     return IPHONE_18_PRO_COLOR_MAP["deep burgundy"];
   }
 
-  // 2. MacBook Air
-  if (slug.includes("macbook-air") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("air"))) {
-    if (normColor && MACBOOK_AIR_COLOR_MAP[normColor]) {
-      return MACBOOK_AIR_COLOR_MAP[normColor];
-    }
-    return MACBOOK_AIR_COLOR_MAP.midnight;
-  }
-
-  // 3. MacBook Pro
-  if (slug.includes("macbook-pro") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("pro"))) {
-    if (normColor && MACBOOK_PRO_COLOR_MAP[normColor]) {
-      return MACBOOK_PRO_COLOR_MAP[normColor];
-    }
-    return MACBOOK_PRO_COLOR_MAP["space black"];
-  }
-
-  // 4. iPad Pro
-  if (slug.includes("ipad-pro") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("pro"))) {
-    if (normColor && IPAD_PRO_COLOR_MAP[normColor]) {
-      return IPAD_PRO_COLOR_MAP[normColor];
-    }
-    return IPAD_PRO_COLOR_MAP["space black"];
-  }
-
-  // 5. iPad Air
-  if (slug.includes("ipad-air") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("air"))) {
-    if (normColor && IPAD_AIR_COLOR_MAP[normColor]) {
-      return IPAD_AIR_COLOR_MAP[normColor];
-    }
-    return IPAD_AIR_COLOR_MAP.blue;
-  }
-
-  // 6. Apple Watch Ultra
-  if (slug.includes("ultra") || (product?.category === "Apple Watches" && product?.name?.toLowerCase().includes("ultra"))) {
-    if (normColor && WATCH_ULTRA_COLOR_MAP[normColor]) {
-      return WATCH_ULTRA_COLOR_MAP[normColor];
-    }
-    return WATCH_ULTRA_COLOR_MAP["natural titanium"];
-  }
-
-  // 7. Apple Watch Series (Series 12, 11, 10, etc.)
-  if (slug.includes("series") || slug.includes("apple-watch") || product?.category === "Apple Watches") {
-    if (normColor && WATCH_SERIES_COLOR_MAP[normColor]) {
-      return WATCH_SERIES_COLOR_MAP[normColor];
-    }
-    return WATCH_SERIES_COLOR_MAP["jet black"];
-  }
-
-  // 8. iPhone 16 Pro / 16 Pro Max
+  // 2. iPhone 16 Pro / 16 Pro Max
   if (slug === "iphone-16-pro" || slug === "iphone-16-pro-max") {
     if (normColor && IPHONE_16_PRO_COLOR_MAP[normColor]) {
       return IPHONE_16_PRO_COLOR_MAP[normColor];
@@ -237,7 +237,7 @@ export function resolveProductColorImage(
     return IPHONE_16_PRO_COLOR_MAP["desert titanium"];
   }
 
-  // 9. iPhone 16 / 16 Plus
+  // 3. iPhone 16 / 16 Plus
   if (slug === "iphone-16" || slug === "iphone-16-plus") {
     if (normColor && IPHONE_16_BASE_COLOR_MAP[normColor]) {
       return IPHONE_16_BASE_COLOR_MAP[normColor];
@@ -245,7 +245,90 @@ export function resolveProductColorImage(
     return IPHONE_16_BASE_COLOR_MAP.black;
   }
 
-  // 10. Accessories with finishes (Magic Keyboard, Magic Mouse, Trackpad)
+  // 4. iPhone 15 Pro / 15 Pro Max
+  if (slug === "iphone-15-pro" || slug === "iphone-15-pro-max") {
+    if (normColor && IPHONE_15_PRO_COLOR_MAP[normColor]) {
+      return IPHONE_15_PRO_COLOR_MAP[normColor];
+    }
+    return IPHONE_15_PRO_COLOR_MAP["natural titanium"];
+  }
+
+  // 5. Apple Watch Ultra 4
+  if (slug === "apple-watch-ultra-4" || slug.includes("ultra-4")) {
+    if (normColor && WATCH_ULTRA_4_COLOR_MAP[normColor]) {
+      return WATCH_ULTRA_4_COLOR_MAP[normColor];
+    }
+    return WATCH_ULTRA_4_COLOR_MAP["natural titanium"];
+  }
+
+  // 5.1 Other Apple Watch Ultra models
+  if (slug.includes("ultra") || (product?.category === "Apple Watches" && product?.name?.toLowerCase().includes("ultra"))) {
+    if (normColor.includes("black")) {
+      return localCatalogueImageBySlug["apple-watch-ultra-3"] || WATCH_ULTRA_4_COLOR_MAP["black titanium"];
+    }
+    return localCatalogueImageBySlug[slug] || WATCH_ULTRA_4_COLOR_MAP["natural titanium"];
+  }
+
+  // 6. Apple Watch Series 12
+  if (slug === "apple-watch-series-12" || slug.includes("series-12")) {
+    if (normColor && WATCH_SERIES_12_COLOR_MAP[normColor]) {
+      return WATCH_SERIES_12_COLOR_MAP[normColor];
+    }
+    return WATCH_SERIES_12_COLOR_MAP["jet black"];
+  }
+
+  // 6.1 Other specific Apple Watch models (Series 11, 10, 9, 8, 7, SE)
+  if (slug && localCatalogueImageBySlug[slug] && (slug.includes("series") || slug.includes("apple-watch") || product?.category === "Apple Watches")) {
+    return localCatalogueImageBySlug[slug];
+  }
+
+  // 7. AirPods Max (USB-C, 2, Lightning)
+  if (slug.includes("airpods-max")) {
+    if (normColor && AIRPODS_MAX_COLOR_MAP[normColor]) {
+      return AIRPODS_MAX_COLOR_MAP[normColor];
+    }
+    return localCatalogueImageBySlug[slug] || AIRPODS_MAX_COLOR_MAP.midnight;
+  }
+
+  // 8. iPad Pro (Size & Generation aware)
+  if (slug.includes("ipad-pro") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("pro"))) {
+    if (slug.includes("13") || slug.includes("12-9")) {
+      if (normColor && IPAD_PRO_13_COLOR_MAP[normColor]) return IPAD_PRO_13_COLOR_MAP[normColor];
+      return localCatalogueImageBySlug[slug] || IPAD_PRO_13_COLOR_MAP["space black"];
+    }
+    if (normColor && IPAD_PRO_11_COLOR_MAP[normColor]) return IPAD_PRO_11_COLOR_MAP[normColor];
+    return localCatalogueImageBySlug[slug] || IPAD_PRO_11_COLOR_MAP["space black"];
+  }
+
+  // 9. iPad Air
+  if (slug.includes("ipad-air") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("air"))) {
+    if (normColor && IPAD_AIR_COLOR_MAP[normColor]) {
+      return IPAD_AIR_COLOR_MAP[normColor];
+    }
+    return localCatalogueImageBySlug[slug] || IPAD_AIR_COLOR_MAP.blue;
+  }
+
+  // 10. MacBook Air (15-inch vs 13-inch)
+  if (slug.includes("macbook-air") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("air"))) {
+    if (slug.includes("15")) {
+      if (normColor && MACBOOK_AIR_15_COLOR_MAP[normColor]) return MACBOOK_AIR_15_COLOR_MAP[normColor];
+      return localCatalogueImageBySlug[slug] || MACBOOK_AIR_15_COLOR_MAP.midnight;
+    }
+    if (normColor && MACBOOK_AIR_13_COLOR_MAP[normColor]) return MACBOOK_AIR_13_COLOR_MAP[normColor];
+    return localCatalogueImageBySlug[slug] || MACBOOK_AIR_13_COLOR_MAP.midnight;
+  }
+
+  // 11. MacBook Pro (16-inch vs 14-inch)
+  if (slug.includes("macbook-pro") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("pro"))) {
+    if (slug.includes("16")) {
+      if (normColor && MACBOOK_PRO_16_COLOR_MAP[normColor]) return MACBOOK_PRO_16_COLOR_MAP[normColor];
+      return localCatalogueImageBySlug[slug] || MACBOOK_PRO_16_COLOR_MAP["space black"];
+    }
+    if (normColor && MACBOOK_PRO_14_COLOR_MAP[normColor]) return MACBOOK_PRO_14_COLOR_MAP[normColor];
+    return localCatalogueImageBySlug[slug] || MACBOOK_PRO_14_COLOR_MAP["space black"];
+  }
+
+  // 12. Accessories with finishes (Magic Keyboard, Magic Mouse, Trackpad)
   if (slug.includes("magic-mouse") || slug.includes("magic-trackpad")) {
     if (normColor.includes("black")) {
       return localCatalogueImageBySlug["apple-magic-mouse"];
@@ -259,12 +342,12 @@ export function resolveProductColorImage(
     return localCatalogueImageBySlug["apple-magic-keyboard-touch-id"] || localCatalogueImageBySlug["apple-magic-keyboard-ipad"];
   }
 
-  // 11. Generic Catalogue Match
+  // 13. Exact Catalogue Match for any specific Apple device
   if (slug && localCatalogueImageBySlug[slug]) {
     return localCatalogueImageBySlug[slug];
   }
 
-  // 12. Fallback to product images or provided fallback
+  // 14. Fallback to product images or provided fallback
   if (product && product.images && product.images.length > 0) {
     return product.images[0].src;
   }

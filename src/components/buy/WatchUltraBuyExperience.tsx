@@ -26,7 +26,7 @@ const ULTRA_FINISHES: ColorOption[] = [
 
 const ULTRA_FINISH_IMAGE_MAP: Record<string, string> = {
   "Natural Titanium": "/products/campaigns/watch-ultra-4-rugged.webp",
-  "Black Titanium": localCatalogueImageBySlug["apple-watch-ultra-3"] || "/products/campaigns/watch-ultra-4-hero.webp",
+  "Black Titanium": "/products/campaigns/watch-ultra-4-hero.webp",
 };
 
 const ULTRA_BANDS = [

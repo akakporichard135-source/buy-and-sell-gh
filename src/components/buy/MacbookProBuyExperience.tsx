@@ -67,8 +67,8 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   }, [screenSize, chip, memory, storage]);
 
   const imageSlug = finish === "Silver"
-    ? "macbook-pro-14-m4-pro-max"
-    : screenSize === "16-inch" ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4";
+    ? (screenSize === "16-inch" ? "macbook-pro-16-m5-pro-max" : "macbook-pro-14-m4-pro-max")
+    : (screenSize === "16-inch" ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4");
   const currentDisplayImg = imageSlug ? localCatalogueImageBySlug[imageSlug] : undefined;
 
   useEffect(() => {
@@ -76,6 +76,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       localCatalogueImageBySlug["macbook-pro-14-m4"],
       localCatalogueImageBySlug["macbook-pro-14-m4-pro-max"],
       localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"],
+      localCatalogueImageBySlug["macbook-pro-16-m5-pro-max"],
       "/products/campaigns/macbook-pro-cutout.webp",
     ];
     preloadProductImages(urls);

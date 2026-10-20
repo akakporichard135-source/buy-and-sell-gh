@@ -38,7 +38,7 @@ const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | 
     Midnight: "macbook-air-15-m2",
     Starlight: "macbook-air-15-m4",
     "Space Gray": "macbook-air-15-m3",
-    Silver: "macbook-air-13-m4",
+    Silver: "macbook-air-15-m5",
   },
 };
 

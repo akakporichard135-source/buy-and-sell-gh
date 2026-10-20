@@ -29,7 +29,7 @@ const IPHONE_18_COLORS: ColorOption[] = [
 
 const FINISH_IMAGE_MAP: Record<string, string> = {
   "Deep Burgundy": "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-  "Space Black": "/products/buy/iphone-18-pro-colors-white.png",
+  "Space Black": "/products/colors/iphone-18-pro-space-black.png",
   "Natural Titanium": "/products/campaigns/iphone-18-pro-silver.webp",
   "Light Blue": "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
   Burgundy: "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
@@ -55,7 +55,7 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   useEffect(() => {
     preloadProductImages([
       "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-      "/products/buy/iphone-18-pro-colors-white.png",
+      "/products/colors/iphone-18-pro-space-black.png",
       "/products/campaigns/iphone-18-pro-silver.webp",
       "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
       "/products/buy/iphone-18-pro-gallery-2-silver.jpg",

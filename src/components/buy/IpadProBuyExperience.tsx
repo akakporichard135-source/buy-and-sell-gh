@@ -15,8 +15,10 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-import ipadProBlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
-import ipadProSilverWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m4-premium.webp";
+import ipadPro11BlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
+import ipadPro11SilverWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m5-premium.webp";
+import ipadPro13BlackWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m5-premium.webp";
+import ipadPro13SilverWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m4-premium.webp";
 
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
@@ -52,8 +54,10 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   // Preload finish images
   useEffect(() => {
     preloadProductImages([
-      ipadProBlackWhite,
-      ipadProSilverWhite,
+      ipadPro11BlackWhite,
+      ipadPro11SilverWhite,
+      ipadPro13BlackWhite,
+      ipadPro13SilverWhite,
       "/products/campaigns/ipad-pro-cinematic.webp",
     ]);
   }, []);
@@ -65,15 +69,18 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     }
   }, [storage, glass]);
 
+  const currentFinishImg = screenSize === "13-inch"
+    ? (finish === "Space Black" ? ipadPro13BlackWhite : ipadPro13SilverWhite)
+    : (finish === "Space Black" ? ipadPro11BlackWhite : ipadPro11SilverWhite);
+
   const thumbnails = useMemo(() => {
-    const primarySrc = finish === "Space Black" ? ipadProBlackWhite : ipadProSilverWhite;
     return [
-      { src: primarySrc, alt: `${finish} ${screenSize} iPad Pro on white` },
+      { src: currentFinishImg, alt: `${finish} ${screenSize} iPad Pro on pure white` },
       { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro Ultra Retina XDR display` },
     ];
-  }, [screenSize, finish]);
+  }, [screenSize, finish, currentFinishImg]);
 
-  const activeImage = thumbnails[activeThumb]?.src || (finish === "Space Black" ? ipadProBlackWhite : ipadProSilverWhite);
+  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 
   const fallbackProduct: Product = useMemo(() => {
     const is13 = screenSize === "13-inch";

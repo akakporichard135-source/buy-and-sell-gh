@@ -29,10 +29,10 @@ const WATCH_12_FINISHES: ColorOption[] = [
 
 const WATCH_12_FINISH_IMAGE_MAP: Record<string, string> = {
   "Jet Black": "/products/campaigns/watch-series-12-hero.webp",
-  Silver: localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-product.webp",
-  "Rose Gold": localCatalogueImageBySlug["apple-watch-series-11"] || "/products/campaigns/watch-series-12-angle.webp",
+  Silver: "/products/campaigns/watch-series-12-product.webp",
+  "Rose Gold": "/products/campaigns/watch-series-12-angle.webp",
   "Natural Titanium": "/products/buy/watch-series-12-angle-white.png",
-  Slate: localCatalogueImageBySlug["apple-watch-series-10"] || "/products/campaigns/watch-series-12-cinematic.webp",
+  Slate: "/products/campaigns/watch-series-12-cinematic.webp",
 };
 
 const BAND_STYLES = [
