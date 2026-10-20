@@ -227,6 +227,23 @@ async function run() {
     const presetButtons = await page.$$eval('.vlearn-add-section-box button', (btns) => btns.length);
     console.log(`Add Section Preset buttons available: ${presetButtons}`);
 
+    // Test adding a preset section
+    console.log('Adding "Product Feature Cards" preset section...');
+    const clickedPreset = await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('.vlearn-add-section-box button'));
+      const cardPreset = btns.find((b) => b.textContent && b.textContent.includes('Feature Cards'));
+      if (cardPreset) {
+        cardPreset.click();
+        return true;
+      }
+      return false;
+    });
+    console.log(`Clicked Feature Cards preset: ${clickedPreset}`);
+    await new Promise((r) => setTimeout(r, 600));
+
+    const updatedCardsCount = await page.$$eval('.vlearn-section-card', (cards) => cards.length);
+    console.log(`Section outline cards after adding preset: ${updatedCardsCount}`);
+
     await page.screenshot({
       path: path.join(ARTIFACTS_DIR, 'qa-admin-visual-learn-more-cms.png'),
       fullPage: false,

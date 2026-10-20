@@ -60,13 +60,18 @@ const SECTION_TYPE_PRESETS: { type: LearnMoreSectionType; label: string; icon: s
   { type: "large-image", label: "Full-Width Showcase", icon: "Image", desc: "Expansive edge-to-edge product presentation." },
   { type: "gallery", label: "Multi-Angle Gallery", icon: "Image", desc: "Interactive angle carousel on pure white." },
   { type: "video", label: "Cinematic Film", icon: "Video", desc: "Autoplaying muted video highlight with poster." },
+  { type: "feature-cards", label: "Product Feature Cards", icon: "Layers", desc: "Rounded feature cards grid with icons & copy." },
   { type: "highlights", label: "Hardware Highlights", icon: "Sparkles", desc: "Horizontal scrolling rail of key features." },
+  { type: "hardware-close-up", label: "Hardware Close-Up", icon: "Image", desc: "Detailed close-up beauty shot with tactile highlights." },
   { type: "finishes", label: "Materials & Finishes", icon: "Layers", desc: "Precision anodized chassis colors & swatches." },
-  { type: "performance", label: "Apple Silicon", icon: "Cpu", desc: "M-series / A-series compute benchmarks & neural engine." },
-  { type: "battery", label: "All-Day Battery", icon: "Battery", desc: "Endurance metrics and power efficiency." },
+  { type: "performance", label: "Apple Silicon", icon: "Laptop", desc: "M-series / A-series compute benchmarks & neural engine." },
+  { type: "battery", label: "All-Day Battery", icon: "Sparkles", desc: "Endurance metrics and power efficiency." },
   { type: "specifications", label: "Technical Specs", icon: "Monitor", desc: "Detailed hardware grid and verified Accra fulfillment." },
   { type: "comparison", label: "Model Comparison", icon: "Layers", desc: "Side-by-side canvas size & capacity contrast." },
-  { type: "cta", label: "Direct Buy CTA", icon: "ShoppingBag", desc: "Seamless transition into live Store purchasing." },
+  { type: "scroll-reveal", label: "Scroll-Reveal Story", icon: "Eye", desc: "Immersive storytelling revealed progressively." },
+  { type: "sticky-story", label: "Sticky Storytelling", icon: "Layers", desc: "Pinned copy alongside scrolling product visuals." },
+  { type: "full-bleed", label: "Full-Bleed Media", icon: "Maximize2", desc: "Edge-to-edge cinematic banner with centered copy." },
+  { type: "cta", label: "Direct Buy CTA", icon: "Send", desc: "Seamless transition into live Store purchasing." },
 ];
 
 function getStoryTagline(content: LearnMoreContent | null): string {
@@ -428,15 +433,46 @@ export function AdminLearnMorePages() {
   const handleAddSection = (type: LearnMoreSectionType) => {
     if (!workingContent) return;
     const preset = SECTION_TYPE_PRESETS.find((p) => p.type === type);
+
+    const initialItems =
+      type === "feature-cards"
+        ? [
+            { label: "Craftsmanship", value: "Precision Enclosure", description: "Aerospace-grade thermal and structural durability." },
+            { label: "Silicon", value: "Neural Acceleration", description: "Dedicated compute blocks for responsive workflows." },
+          ]
+        : type === "specifications"
+        ? [
+            { label: "Processor", value: "Apple Silicon", description: "Configurable unified memory architecture." },
+            { label: "Display", value: "High-DPI Retina", description: "P3 wide color and extreme dynamic range." },
+            { label: "Battery", value: "All-Day Endurance", description: "Optimized efficiency across daily workflows." },
+          ]
+        : type === "comparison"
+        ? [
+            { label: "Air Series", value: "Ultraportable", description: "Thin, fanless, light everyday powerhouse." },
+            { label: "Pro Series", value: "Maximum Throughput", description: "Active cooling with extreme sustained performance." },
+          ]
+        : type === "finishes"
+        ? [
+            { label: "Midnight", value: "#1f242b", description: "Deep anodized finish." },
+            { label: "Starlight", value: "#e5ded4", description: "Warm metallic sheen." },
+            { label: "Silver", value: "#e3e4e5", description: "Classic clean silver." },
+          ]
+        : undefined;
+
     const newSection: LearnMoreSection = {
       id: crypto.randomUUID(),
       type,
       enabled: true,
       eyebrow: preset?.label || "Highlight",
-      title: "New Section Headline",
+      title: `${preset?.label || "New Section"} Headline`,
       body: "Describe the key craftsmanship, display innovation, or Apple Silicon feature here in compelling detail.",
+      backgroundColor: type === "video" || type === "full-bleed" ? "dark" : type === "feature-cards" ? "soft-gray" : "white",
+      textAlignment: "center",
+      layout: type === "text-image" ? "split-right" : type === "feature-cards" ? "grid-2" : "stacked",
+      animationPreset: "slide-up",
       placement: "end",
       fit: "contain",
+      items: initialItems,
     };
     const next = clone(workingContent);
     next.sections.push(newSection);
@@ -1037,6 +1073,102 @@ export function AdminLearnMorePages() {
                 />
               </div>
 
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Supporting / Subtitle Text (Optional)</label>
+                <input
+                  type="text"
+                  className="vlearn-input"
+                  placeholder="Secondary editorial detail or qualification"
+                  value={activeSection.supportingText || ""}
+                  onChange={(e) => {
+                    const next = clone(workingContent!);
+                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                    if (s) s.supportingText = e.target.value;
+                    setWorkingContent(next);
+                  }}
+                />
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Background Theme</label>
+                  <select
+                    className="vlearn-select"
+                    value={activeSection.backgroundColor || "white"}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.backgroundColor = e.target.value as any;
+                      setWorkingContent(next);
+                    }}
+                  >
+                    <option value="white">Pure White (#ffffff)</option>
+                    <option value="soft-gray">Soft Gray (#f5f5f7)</option>
+                    <option value="dark">Cinematic Dark (#000000)</option>
+                  </select>
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Text Alignment</label>
+                  <select
+                    className="vlearn-select"
+                    value={activeSection.textAlignment || "center"}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.textAlignment = e.target.value as any;
+                      setWorkingContent(next);
+                    }}
+                  >
+                    <option value="center">Center</option>
+                    <option value="left">Left Aligned</option>
+                    <option value="right">Right Aligned</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Layout Arrangement</label>
+                  <select
+                    className="vlearn-select"
+                    value={activeSection.layout || "stacked"}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.layout = e.target.value as any;
+                      setWorkingContent(next);
+                    }}
+                  >
+                    <option value="stacked">Stacked (Centered copy over media)</option>
+                    <option value="split-left">Split Left (Media Left, Copy Right)</option>
+                    <option value="split-right">Split Right (Copy Left, Media Right)</option>
+                    <option value="grid-2">2-Column Grid</option>
+                    <option value="grid-3">3-Column Grid</option>
+                    <option value="carousel">Horizontal Carousel Rail</option>
+                  </select>
+                </div>
+
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Scroll Animation Preset</label>
+                  <select
+                    className="vlearn-select"
+                    value={activeSection.animationPreset || "none"}
+                    onChange={(e) => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) s.animationPreset = e.target.value as any;
+                      setWorkingContent(next);
+                    }}
+                  >
+                    <option value="none">None (Immediate render)</option>
+                    <option value="fade">Fade In</option>
+                    <option value="slide-up">Smooth Slide Up</option>
+                    <option value="zoom">Subtle Scale / Zoom</option>
+                  </select>
+                </div>
+              </div>
+
               {/* Media Picker for Section */}
               <div className="vlearn-media-picker-card">
                 <label className="vlearn-form-label">
@@ -1162,6 +1294,112 @@ export function AdminLearnMorePages() {
                     }}
                   />
                 </div>
+              </div>
+
+              {/* Section Sub-items Manager (Cards, Specs, Comparisons, Finishes) */}
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <label className="vlearn-form-label" style={{ margin: 0 }}>
+                    Section Data Items ({activeSection.items?.length || 0})
+                  </label>
+                  <button
+                    type="button"
+                    className="vlearn-btn"
+                    style={{ fontSize: "11px", padding: "4px 8px" }}
+                    onClick={() => {
+                      const next = clone(workingContent!);
+                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                      if (s) {
+                        s.items = s.items || [];
+                        s.items.push({
+                          label: "Feature / Spec",
+                          value: "Highlight Title",
+                          description: "Detailed specification or feature description.",
+                        });
+                      }
+                      setWorkingContent(next);
+                    }}
+                  >
+                    <Plus size={12} /> Add Item
+                  </button>
+                </div>
+
+                {activeSection.items && activeSection.items.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {activeSection.items.map((item, itemIdx) => (
+                      <div
+                        key={itemIdx}
+                        style={{
+                          background: "#f9f9fa",
+                          border: "1px solid rgba(0,0,0,0.08)",
+                          borderRadius: 10,
+                          padding: 12,
+                        }}
+                      >
+                        <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                          <input
+                            type="text"
+                            className="vlearn-input"
+                            style={{ flex: 1, fontSize: "12px", padding: "6px 8px" }}
+                            placeholder="Label (e.g. Finish, Display, M4)"
+                            value={item.label}
+                            onChange={(e) => {
+                              const next = clone(workingContent!);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s?.items?.[itemIdx]) s.items[itemIdx].label = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          />
+                          <input
+                            type="text"
+                            className="vlearn-input"
+                            style={{ flex: 1, fontSize: "12px", padding: "6px 8px" }}
+                            placeholder="Value / Title (e.g. Space Black, 120Hz)"
+                            value={item.value}
+                            onChange={(e) => {
+                              const next = clone(workingContent!);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s?.items?.[itemIdx]) s.items[itemIdx].value = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="vlearn-icon-btn vlearn-icon-btn-danger"
+                            title="Remove item"
+                            onClick={() => {
+                              const next = clone(workingContent!);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s?.items) {
+                                s.items.splice(itemIdx, 1);
+                                setWorkingContent(next);
+                              }
+                            }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="vlearn-input"
+                          style={{ fontSize: "11px", padding: "5px 8px" }}
+                          placeholder="Description or notes (optional)"
+                          value={item.description || ""}
+                          onChange={(e) => {
+                            const next = clone(workingContent!);
+                            const s = next.sections.find((sec) => sec.id === activeSection.id);
+                            if (s?.items?.[itemIdx]) s.items[itemIdx].description = e.target.value;
+                            setWorkingContent(next);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: "12px", color: "#86868b" }}>
+                    No custom items added yet. Click "+ Add Item" to define feature cards, specs, comparisons, or swatches.
+                  </p>
+                )}
               </div>
             </div>
           ) : (

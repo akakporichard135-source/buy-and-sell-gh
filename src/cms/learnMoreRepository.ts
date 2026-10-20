@@ -7,9 +7,30 @@ import type { MacStudioStory } from "../data/macStudioStory";
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
 
 export type LearnMoreSectionType =
-  | "text-image" | "large-image" | "gallery" | "video" | "highlights"
-  | "finishes" | "camera" | "performance" | "battery" | "specifications"
-  | "comparison" | "cta";
+  | "text-image"
+  | "large-image"
+  | "gallery"
+  | "video"
+  | "highlights"
+  | "finishes"
+  | "camera"
+  | "performance"
+  | "battery"
+  | "specifications"
+  | "comparison"
+  | "cta"
+  | "feature-cards"
+  | "hardware-close-up"
+  | "scroll-reveal"
+  | "sticky-story"
+  | "full-bleed";
+
+export interface LearnMoreSectionItem {
+  label: string;
+  value: string;
+  description?: string;
+  image?: string;
+}
 
 export interface LearnMoreSection {
   id: string;
@@ -19,6 +40,11 @@ export interface LearnMoreSection {
   eyebrow: string;
   title: string;
   body: string;
+  supportingText?: string;
+  backgroundColor?: "white" | "soft-gray" | "dark" | string;
+  textAlignment?: "left" | "center" | "right";
+  layout?: "split-left" | "split-right" | "stacked" | "grid-2" | "grid-3" | "carousel";
+  animationPreset?: "fade" | "slide-up" | "zoom" | "none";
   image?: string;
   mobileImage?: string;
   images?: string[];
@@ -34,6 +60,7 @@ export interface LearnMoreSection {
   controls?: boolean;
   buttonLabel?: string;
   buttonTo?: string;
+  items?: LearnMoreSectionItem[];
 }
 
 export function sectionsAt(sections: LearnMoreSection[], placement: string): LearnMoreSection[] {
