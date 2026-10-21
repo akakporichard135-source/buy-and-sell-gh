@@ -3,7 +3,7 @@ import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -45,7 +45,8 @@ const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | 
 export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addItem } = useCart();
 
-  const [screenSize, setScreenSize] = useState<"13-inch" | "15-inch">("13-inch");
+  const is15Initial = Boolean(catalogProduct?.slug?.includes("15") || catalogProduct?.name?.includes("15"));
+  const [screenSize, setScreenSize] = useState<"13-inch" | "15-inch">(is15Initial ? "15-inch" : "13-inch");
   const [finish, setFinish] = useState("Midnight");
   const [memory, setMemory] = useState("16GB");
   const [storage, setStorage] = useState("512GB");
@@ -54,6 +55,14 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (catalogProduct?.slug?.includes("15") || catalogProduct?.name?.includes("15")) {
+      setScreenSize("15-inch");
+    } else if (catalogProduct?.slug?.includes("13") || catalogProduct?.name?.includes("13")) {
+      setScreenSize("13-inch");
+    }
+  }, [catalogProduct?.slug, catalogProduct?.name]);
 
   const MACBOOK_AIR_SHOWCASE_IMAGE = "/products/buy/macbook-air-buy-showcase.jpg";
   const finishImageSlug = FINISH_IMAGE_SLUGS[screenSize][finish];
@@ -90,7 +99,35 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fallbackProduct: Product = useMemo(() => {
     const is15 = screenSize === "15-inch";
     const basePrice = is15 ? 18500 : 13500;
-    const slug = is15 ? "macbook-air-15-m4" : "macbook-air-13-m4";
+    const slug = is15 ? "macbook-air-15-inch-m4" : "macbook-air-13-inch-m4";
+    const memoryPriceAdd: Record<string, number> = {
+      "16GB": 0,
+      "24GB": 2000,
+      "32GB": 4000,
+    };
+    const storagePriceAdd: Record<string, number> = {
+      "256GB": 0,
+      "512GB": 2500,
+      "1TB": 5500,
+      "2TB": 9500,
+    };
+    const variants = (["16GB", "24GB", "32GB"] as const).flatMap((mem, memIdx) =>
+      (["256GB", "512GB", "1TB", "2TB"] as const).map((cap, capIdx) => ({
+        id: `mba-${is15 ? "15" : "13"}-${mem.toLowerCase()}-${cap.toLowerCase()}`,
+        productId: slug,
+        title: `MacBook Air ${screenSize} (${mem} / ${cap})`,
+        screenSize,
+        memory: mem,
+        storage: cap,
+        price: basePrice + (memoryPriceAdd[mem] ?? 0) + (storagePriceAdd[cap] ?? 0),
+        condition: "Brand New" as const,
+        stockQuantity: 10,
+        position: memIdx * 4 + capIdx + 1,
+        available: true,
+        isSale: false,
+        stockStatus: "In Stock" as const,
+      }))
+    );
     return {
       id: slug,
       slug,
@@ -107,12 +144,7 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       box: ["MacBook Air", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
       imageTone: "light",
       images: currentFinishImg ? [{ src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` }] : [],
-      variants: [
-        { id: `mba-${is15 ? "15" : "13"}-256`, productId: slug, title: `${screenSize} 16GB / 256GB`, storage: "256GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mba-${is15 ? "15" : "13"}-512`, productId: slug, title: `${screenSize} 16GB / 512GB`, storage: "512GB", price: basePrice + 2500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mba-${is15 ? "15" : "13"}-1tb`, productId: slug, title: `${screenSize} 16GB / 1TB`, storage: "1TB", price: basePrice + 5500, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mba-${is15 ? "15" : "13"}-2tb`, productId: slug, title: `${screenSize} 16GB / 2TB`, storage: "2TB", price: basePrice + 9500, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
-      ],
+      variants,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
@@ -120,7 +152,26 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     };
   }, [screenSize, storageOptions, currentFinishImg, finish]);
 
-  const activeProduct = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const activeProduct: Product = useMemo(() => {
+    const is15 = screenSize === "15-inch";
+    const matchesCatalogSize = Boolean(
+      catalogProduct &&
+        (is15
+          ? catalogProduct.slug.includes("15") || catalogProduct.name.includes("15")
+          : catalogProduct.slug.includes("13") || catalogProduct.name.includes("13"))
+    );
+    if (matchesCatalogSize && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
+      const hasFullVariants = Boolean(
+        catalogProduct.variants && catalogProduct.variants.some((v) => Boolean(v.memory))
+      );
+      return {
+        ...catalogProduct,
+        variants: hasFullVariants ? catalogProduct.variants : fallbackProduct.variants,
+      };
+    }
+    return fallbackProduct;
+  }, [screenSize, catalogProduct, fallbackProduct]);
+
   const configured = resolveConfiguredPrice(activeProduct, { screenSize, memory, storage });
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
@@ -129,11 +180,11 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `MacBook Air ${screenSize} (${memory} / ${storage}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant, activeImage);
+    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant, currentFinishImg);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }

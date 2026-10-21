@@ -190,6 +190,19 @@ const IPAD_AIR_COLOR_MAP: Record<string, string> = {
 // --------------------------------------------------------------------------
 // Universal Resolution Function
 // --------------------------------------------------------------------------
+function matchColorMap(map: Record<string, string>, normColor: string): string | undefined {
+  if (!normColor) return undefined;
+  if (map[normColor]) return map[normColor];
+  const segments = normColor.split(/[\/|]/).map((s) => s.trim()).filter(Boolean);
+  for (const seg of segments) {
+    if (map[seg]) return map[seg];
+  }
+  for (const [key, val] of Object.entries(map)) {
+    if (normColor.includes(key)) return val;
+  }
+  return undefined;
+}
+
 export function resolveProductColorImage(
   product?: Product,
   color?: string,
@@ -223,42 +236,27 @@ export function resolveProductColorImage(
 
   // 1. iPhone 18 Pro / 18 Pro Max
   if (slug.includes("iphone-18-pro")) {
-    if (normColor && IPHONE_18_PRO_COLOR_MAP[normColor]) {
-      return IPHONE_18_PRO_COLOR_MAP[normColor];
-    }
-    return IPHONE_18_PRO_COLOR_MAP["deep burgundy"];
+    return matchColorMap(IPHONE_18_PRO_COLOR_MAP, normColor) || IPHONE_18_PRO_COLOR_MAP["deep burgundy"];
   }
 
   // 2. iPhone 16 Pro / 16 Pro Max
   if (slug === "iphone-16-pro" || slug === "iphone-16-pro-max") {
-    if (normColor && IPHONE_16_PRO_COLOR_MAP[normColor]) {
-      return IPHONE_16_PRO_COLOR_MAP[normColor];
-    }
-    return IPHONE_16_PRO_COLOR_MAP["desert titanium"];
+    return matchColorMap(IPHONE_16_PRO_COLOR_MAP, normColor) || IPHONE_16_PRO_COLOR_MAP["desert titanium"];
   }
 
   // 3. iPhone 16 / 16 Plus
   if (slug === "iphone-16" || slug === "iphone-16-plus") {
-    if (normColor && IPHONE_16_BASE_COLOR_MAP[normColor]) {
-      return IPHONE_16_BASE_COLOR_MAP[normColor];
-    }
-    return IPHONE_16_BASE_COLOR_MAP.black;
+    return matchColorMap(IPHONE_16_BASE_COLOR_MAP, normColor) || IPHONE_16_BASE_COLOR_MAP.black;
   }
 
   // 4. iPhone 15 Pro / 15 Pro Max
   if (slug === "iphone-15-pro" || slug === "iphone-15-pro-max") {
-    if (normColor && IPHONE_15_PRO_COLOR_MAP[normColor]) {
-      return IPHONE_15_PRO_COLOR_MAP[normColor];
-    }
-    return IPHONE_15_PRO_COLOR_MAP["natural titanium"];
+    return matchColorMap(IPHONE_15_PRO_COLOR_MAP, normColor) || IPHONE_15_PRO_COLOR_MAP["natural titanium"];
   }
 
   // 5. Apple Watch Ultra 4
   if (slug === "apple-watch-ultra-4" || slug.includes("ultra-4")) {
-    if (normColor && WATCH_ULTRA_4_COLOR_MAP[normColor]) {
-      return WATCH_ULTRA_4_COLOR_MAP[normColor];
-    }
-    return WATCH_ULTRA_4_COLOR_MAP["natural titanium"];
+    return matchColorMap(WATCH_ULTRA_4_COLOR_MAP, normColor) || WATCH_ULTRA_4_COLOR_MAP["natural titanium"];
   }
 
   // 5.1 Other Apple Watch Ultra models
@@ -271,10 +269,7 @@ export function resolveProductColorImage(
 
   // 6. Apple Watch Series 12
   if (slug === "apple-watch-series-12" || slug.includes("series-12")) {
-    if (normColor && WATCH_SERIES_12_COLOR_MAP[normColor]) {
-      return WATCH_SERIES_12_COLOR_MAP[normColor];
-    }
-    return WATCH_SERIES_12_COLOR_MAP["jet black"];
+    return matchColorMap(WATCH_SERIES_12_COLOR_MAP, normColor) || WATCH_SERIES_12_COLOR_MAP["jet black"];
   }
 
   // 6.1 Other specific Apple Watch models (Series 11, 10, 9, 8, 7, SE)
@@ -282,50 +277,44 @@ export function resolveProductColorImage(
     return localCatalogueImageBySlug[slug];
   }
 
-  // 7. AirPods Max (USB-C, 2, Lightning)
+  // 7. AirPods Max & AirPods 5 / Pro 3
+  if (slug === "airpods-5" || slug.includes("airpods-5")) {
+    return "/products/campaigns/airpods-5-product.webp";
+  }
+  if (slug === "airpods-pro-3" || slug.includes("airpods-pro-3")) {
+    return localCatalogueImageBySlug["airpods-pro-3"] || "/products/story/airpods-pro-3-apple.jpg";
+  }
   if (slug.includes("airpods-max")) {
-    if (normColor && AIRPODS_MAX_COLOR_MAP[normColor]) {
-      return AIRPODS_MAX_COLOR_MAP[normColor];
-    }
-    return localCatalogueImageBySlug[slug] || AIRPODS_MAX_COLOR_MAP.midnight;
+    return matchColorMap(AIRPODS_MAX_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || AIRPODS_MAX_COLOR_MAP.midnight;
   }
 
   // 8. iPad Pro (Size & Generation aware)
   if (slug.includes("ipad-pro") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("pro"))) {
-    if (slug.includes("13") || slug.includes("12-9")) {
-      if (normColor && IPAD_PRO_13_COLOR_MAP[normColor]) return IPAD_PRO_13_COLOR_MAP[normColor];
-      return localCatalogueImageBySlug[slug] || IPAD_PRO_13_COLOR_MAP["space black"];
+    if (slug.includes("13") || slug.includes("12-9") || normColor.includes("13-inch")) {
+      return matchColorMap(IPAD_PRO_13_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || IPAD_PRO_13_COLOR_MAP["space black"];
     }
-    if (normColor && IPAD_PRO_11_COLOR_MAP[normColor]) return IPAD_PRO_11_COLOR_MAP[normColor];
-    return localCatalogueImageBySlug[slug] || IPAD_PRO_11_COLOR_MAP["space black"];
+    return matchColorMap(IPAD_PRO_11_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || IPAD_PRO_11_COLOR_MAP["space black"];
   }
 
   // 9. iPad Air
   if (slug.includes("ipad-air") || (product?.category === "iPads" && product?.name?.toLowerCase().includes("air"))) {
-    if (normColor && IPAD_AIR_COLOR_MAP[normColor]) {
-      return IPAD_AIR_COLOR_MAP[normColor];
-    }
-    return localCatalogueImageBySlug[slug] || IPAD_AIR_COLOR_MAP.blue;
+    return matchColorMap(IPAD_AIR_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || IPAD_AIR_COLOR_MAP.blue;
   }
 
   // 10. MacBook Air (15-inch vs 13-inch)
   if (slug.includes("macbook-air") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("air"))) {
-    if (slug.includes("15")) {
-      if (normColor && MACBOOK_AIR_15_COLOR_MAP[normColor]) return MACBOOK_AIR_15_COLOR_MAP[normColor];
-      return localCatalogueImageBySlug[slug] || MACBOOK_AIR_15_COLOR_MAP.midnight;
+    if (slug.includes("15") || normColor.includes("15-inch")) {
+      return matchColorMap(MACBOOK_AIR_15_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || MACBOOK_AIR_15_COLOR_MAP.midnight;
     }
-    if (normColor && MACBOOK_AIR_13_COLOR_MAP[normColor]) return MACBOOK_AIR_13_COLOR_MAP[normColor];
-    return localCatalogueImageBySlug[slug] || MACBOOK_AIR_13_COLOR_MAP.midnight;
+    return matchColorMap(MACBOOK_AIR_13_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || MACBOOK_AIR_13_COLOR_MAP.midnight;
   }
 
   // 11. MacBook Pro (16-inch vs 14-inch)
   if (slug.includes("macbook-pro") || (product?.category === "MacBooks" && product?.name?.toLowerCase().includes("pro"))) {
-    if (slug.includes("16")) {
-      if (normColor && MACBOOK_PRO_16_COLOR_MAP[normColor]) return MACBOOK_PRO_16_COLOR_MAP[normColor];
-      return localCatalogueImageBySlug[slug] || MACBOOK_PRO_16_COLOR_MAP["space black"];
+    if (slug.includes("16") || normColor.includes("16-inch")) {
+      return matchColorMap(MACBOOK_PRO_16_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || MACBOOK_PRO_16_COLOR_MAP["space black"];
     }
-    if (normColor && MACBOOK_PRO_14_COLOR_MAP[normColor]) return MACBOOK_PRO_14_COLOR_MAP[normColor];
-    return localCatalogueImageBySlug[slug] || MACBOOK_PRO_14_COLOR_MAP["space black"];
+    return matchColorMap(MACBOOK_PRO_14_COLOR_MAP, normColor) || localCatalogueImageBySlug[slug] || MACBOOK_PRO_14_COLOR_MAP["space black"];
   }
 
   // 12. Accessories with finishes (Magic Keyboard, Magic Mouse, Trackpad)

@@ -4,7 +4,7 @@ import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -40,7 +40,12 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const navigate = useNavigate();
   const { addItem } = useCart();
 
-  const [model, setModel] = useState<"iPhone 18 Pro" | "iPhone 18 Pro Max">("iPhone 18 Pro");
+  const isMaxInitial = Boolean(
+    catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name?.includes("Max")
+  );
+  const [model, setModel] = useState<"iPhone 18 Pro" | "iPhone 18 Pro Max">(
+    isMaxInitial ? "iPhone 18 Pro Max" : "iPhone 18 Pro"
+  );
   const [finish, setFinish] = useState("Deep Burgundy");
   const [storage, setStorage] = useState("256GB");
   const [tradeIn, setTradeIn] = useState(false);
@@ -48,6 +53,14 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name?.includes("Max")) {
+      setModel("iPhone 18 Pro Max");
+    } else if (catalogProduct?.slug === "iphone-18-pro") {
+      setModel("iPhone 18 Pro");
+    }
+  }, [catalogProduct?.slug, catalogProduct?.name]);
 
   const currentFinishImage = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Silver;
 
@@ -133,11 +146,11 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImage)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, finish, 1, configured.variant, activeImage);
+    const added = addItem(activeProduct, storage, finish, 1, configured.variant, currentFinishImage);
     if (added) {
       setNotice(`${model} (${storage}, ${finish}) - ${priceLabel} added to your bag.`);
     }

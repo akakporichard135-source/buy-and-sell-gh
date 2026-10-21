@@ -150,8 +150,68 @@ export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise
 };
 
 // 2. HOMEPAGE CONTENT
+const APPROVED_IPHONE_18_PRO_DESKTOP_HERO = "/products/homepage/iphone-18-pro-hero-2x.webp";
+const APPROVED_IPHONE_18_PRO_MOBILE_HERO = "/products/homepage/iphone-18-pro-hero-mobile.jpg";
+
+export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent> | null): HomepageContent => {
+  const source = savedContent || defaultHomepageContent;
+  const normalizeSecondary = <T extends { id: string; secondary?: { label: string; to: string } }>(item: T): T => {
+    if (item.id === "iphone-duo") return item;
+    if (item.secondary && item.secondary.label === "View pricing") {
+      return {
+        ...item,
+        secondary: {
+          ...item.secondary,
+          label: "Buy",
+        },
+      };
+    }
+    return item;
+  };
+
+  const mergedHeroes = (source.heroes || defaultHomepageContent.heroes).map((h) => {
+    const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
+    const rawImage = h.image || def?.image || "";
+    const rawMobileImage = h.mobileImage || def?.mobileImage;
+    const isDefaultIphone18ProDesktop =
+      h.id === "iphone-18-pro" &&
+      (!rawImage ||
+        rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
+        rawImage.includes("/products/homepage/iphone-18-pro-hero"));
+    const isDefaultIphone18ProMobile =
+      h.id === "iphone-18-pro" &&
+      (!rawMobileImage ||
+        rawMobileImage.includes("1792004900948-iphone-18-promax-1.jpg") ||
+        rawMobileImage.includes("/products/homepage/iphone-18-pro-hero-mobile"));
+
+    const combined = {
+      ...def,
+      ...h,
+      image: isDefaultIphone18ProDesktop ? APPROVED_IPHONE_18_PRO_DESKTOP_HERO : rawImage,
+      mobileImage: isDefaultIphone18ProMobile ? APPROVED_IPHONE_18_PRO_MOBILE_HERO : rawMobileImage,
+    };
+    return normalizeSecondary(combined);
+  });
+
+  const mergedTiles = (source.tiles || defaultHomepageContent.tiles).map((t) => {
+    const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
+    const combined = { ...def, ...t };
+    return normalizeSecondary(combined);
+  });
+
+  return {
+    ...defaultHomepageContent,
+    ...source,
+    heroes: mergedHeroes,
+    tiles: mergedTiles,
+  };
+};
+
+export const getInitialHomepageContent = (): HomepageContent =>
+  normalizeHomepageContent(readLocal<HomepageContent>(CMS_STORAGE_KEY_HOMEPAGE, defaultHomepageContent));
+
 export const fetchHomepageContent = async (): Promise<HomepageContent> => {
-  const local = readLocal<HomepageContent>(CMS_STORAGE_KEY_HOMEPAGE, defaultHomepageContent);
+  const local = getInitialHomepageContent();
   if (!supabase) return local;
 
   try {
@@ -162,43 +222,7 @@ export const fetchHomepageContent = async (): Promise<HomepageContent> => {
       .maybeSingle();
 
     if (!error && data?.content) {
-      const savedContent = data.content as Partial<HomepageContent>;
-      const normalizeSecondary = <T extends { id: string; secondary?: { label: string; to: string } }>(item: T): T => {
-        if (item.id === "iphone-duo") return item;
-        if (item.secondary && item.secondary.label === "View pricing") {
-          return {
-            ...item,
-            secondary: {
-              ...item.secondary,
-              label: "Buy",
-            },
-          };
-        }
-        return item;
-      };
-
-      const mergedHeroes = (savedContent.heroes || defaultHomepageContent.heroes).map((h) => {
-        const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
-        const combined = {
-          ...def,
-          ...h,
-          mobileImage: h.mobileImage || def?.mobileImage,
-        };
-        return normalizeSecondary(combined);
-      });
-
-      const mergedTiles = (savedContent.tiles || defaultHomepageContent.tiles).map((t) => {
-        const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
-        const combined = { ...def, ...t };
-        return normalizeSecondary(combined);
-      });
-
-      const merged: HomepageContent = {
-        ...defaultHomepageContent,
-        ...savedContent,
-        heroes: mergedHeroes,
-        tiles: mergedTiles,
-      };
+      const merged = normalizeHomepageContent(data.content as Partial<HomepageContent>);
       writeLocal(CMS_STORAGE_KEY_HOMEPAGE, merged);
       return merged;
     }

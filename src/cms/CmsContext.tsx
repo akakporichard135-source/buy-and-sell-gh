@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useTransition } 
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import {
   defaultFaqs,
-  defaultHomepageContent,
   defaultMainStoreConfig,
   defaultMediaItems,
   defaultPageContent,
@@ -18,6 +17,7 @@ import {
   fetchPageContent,
   fetchSiteSettings,
   fetchStorefrontContent,
+  getInitialHomepageContent,
   removeMediaItemFromLibrary,
   saveFaqs,
   saveHomepageContent,
@@ -85,7 +85,7 @@ const CmsContext = createContext<CmsContextValue | null>(null);
 
 export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
-  const [homepage, setHomepage] = useState<HomepageContent>(defaultHomepageContent);
+  const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
   const [mainStore, setMainStore] = useState<MainStoreConfig>(defaultMainStoreConfig);
   const [media, setMedia] = useState<MediaItem[]>(defaultMediaItems);
   const [faqs, setFaqs] = useState<FaqItem[]>(defaultFaqs);

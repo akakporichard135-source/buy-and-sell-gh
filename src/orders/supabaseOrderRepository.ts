@@ -1,6 +1,9 @@
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
 import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
+import { products } from "../data/products";
 import type { OrderCustomerDetails, OrderRequestItem, OrderSubmissionInput, StoredOrderRequest } from "../types/order";
+import { resolveProductColorImage } from "../utils/productColorImages";
+import { resolveProductImage } from "../utils/productImages";
 
 interface OrderRpcItem {
   product_id: string;
@@ -141,11 +144,23 @@ const customerFromResponse = (row: OrderRpcResponse | OrderRow): OrderCustomerDe
   preferredPaymentMethod: row.payment_method as OrderCustomerDetails["preferredPaymentMethod"],
 });
 
+const resolveOrderItemImage = (item: OrderRpcItem): string => {
+  const matchedProduct = products.find((p) => p.slug === item.product_slug || p.id === item.product_id);
+  if (matchedProduct) {
+    const colorImage = resolveProductColorImage(matchedProduct, item.selected_colour);
+    if (colorImage) return colorImage;
+    if (!item.product_image) {
+      return resolveProductImage(matchedProduct)?.src ?? "";
+    }
+  }
+  return item.product_image || "";
+};
+
 const itemFromResponse = (item: OrderRpcItem): OrderRequestItem => ({
   productId: item.product_id,
   productSlug: item.product_slug,
   productName: item.product_name,
-  productImage: item.product_image,
+  productImage: resolveOrderItemImage(item),
   storage: item.selected_storage,
   colour: item.selected_colour,
   condition: item.selected_condition,
@@ -180,6 +195,20 @@ export const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrder
 
 export const isOrderDatabaseConfigured = () => Boolean(supabase);
 
+const CATALOG_SLUG_ALIASES: Record<string, string> = {
+  "apple-watch-ultra-4": "apple-watch-ultra-3",
+  "apple-watch-series-12": "apple-watch-series-11",
+  "airpods-5": "airpods-4",
+  "ipad-air": "ipad-air-m3",
+  "macbook-air": "macbook-air-13-inch-m4",
+  "macbook-air-13-m4": "macbook-air-13-inch-m4",
+  "macbook-air-15-m4": "macbook-air-15-inch-m4",
+  "macbook-pro": "macbook-pro-14-inch-m5",
+  "macbook-pro-14-m4": "macbook-pro-14-inch-m5",
+  "macbook-pro-16-m4-pro-max": "macbook-pro-16-inch-m5-pro-m5-max",
+  "charging-and-power": "apple-magsafe-charger",
+};
+
 export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
   const client = getSupabaseOrThrow();
 
@@ -187,25 +216,35 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
   const resolvedItems = await Promise.all(
     input.items.map(async (item) => {
       let resolvedProductId = item.productId;
+      let resolvedProductSlug = item.productSlug;
       let resolvedVariantId = item.variantId ?? null;
 
       try {
         // 1. Verify if product_id exists directly
         const { data: exactProduct } = await client
           .from("products")
-          .select("id, slug")
+          .select("id, slug, stock_status, stock_quantity")
           .eq("id", resolvedProductId)
           .maybeSingle();
 
         if (!exactProduct && item.productSlug) {
-          // Resolve by slug if id was synthetic/fallback
-          const { data: slugProduct } = await client
-            .from("products")
-            .select("id, slug")
-            .eq("slug", item.productSlug)
-            .maybeSingle();
-          if (slugProduct?.id) {
-            resolvedProductId = slugProduct.id;
+          // Resolve by slug or canonical alias if id was synthetic/fallback
+          const candidateSlugs = [
+            item.productSlug,
+            CATALOG_SLUG_ALIASES[item.productSlug],
+          ].filter(Boolean) as string[];
+
+          for (const candidateSlug of candidateSlugs) {
+            const { data: slugProduct } = await client
+              .from("products")
+              .select("id, slug, stock_status, stock_quantity")
+              .eq("slug", candidateSlug)
+              .maybeSingle();
+            if (slugProduct?.id && slugProduct.stock_status !== "Out of Stock" && (slugProduct.stock_quantity ?? 0) > 0) {
+              resolvedProductId = slugProduct.id;
+              resolvedProductSlug = slugProduct.slug;
+              break;
+            }
           }
         }
 
@@ -243,7 +282,7 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
 
       return {
         product_id: resolvedProductId,
-        product_slug: item.productSlug,
+        product_slug: resolvedProductSlug,
         selected_storage: item.selectedStorage,
         selected_colour: item.selectedColour,
         quantity: item.quantity,

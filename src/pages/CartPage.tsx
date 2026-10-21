@@ -11,7 +11,8 @@ import type { FulfilmentType, OrderCustomerDetails, PaymentMethod, StoredOrderRe
 import { PAYMENT_METHODS } from "../types/order";
 import { formatGhs } from "../utils/format";
 import { buildOrderRequestPayload, buildOrderSubmissionInput, generateSubmissionToken, submitOrderRequest } from "../utils/orders";
-import { resolveProductImage } from "../utils/productImages";
+import { resolveProductColorImage } from "../utils/productColorImages";
+import { hasOwnerUploadedProductImages, isProductImageEligible, resolveProductImage } from "../utils/productImages";
 
 interface OrderFormState {
   fullName: string;
@@ -99,7 +100,11 @@ export function CartPage() {
         next.cart = "Choose a quantity between 1 and 999 for each product.";
         break;
       }
-      const currentProduct = getProductBySlug(item.product.slug);
+      const catalogCandidate = getProductBySlug(item.product.slug);
+      const currentProduct =
+        catalogCandidate && !isProductUnavailable(catalogCandidate) && isProductImageEligible(catalogCandidate)
+          ? catalogCandidate
+          : item.product;
       if (!currentProduct || isProductUnavailable(currentProduct)) {
         next.cart = `${item.product.name} is no longer available. Remove it from cart before submitting.`;
         break;
@@ -160,7 +165,15 @@ export function CartPage() {
               return (
                 <article className="cart-item grid min-w-0 gap-4 rounded-lg border border-black/7 bg-white p-4 shadow-card sm:grid-cols-[150px_1fr_auto]" key={itemKey}>
                   <Link to={`/product/${item.product.slug}`} aria-label={`View ${displayName}`}>
-                    <ProductVisual product={item.product} overrideImageSrc={item.colorImageSrc} />
+                    <ProductVisual
+                      product={item.product}
+                      overrideImageSrc={
+                        item.colorImageSrc ||
+                        (!hasOwnerUploadedProductImages(item.product)
+                          ? resolveProductColorImage(item.product, item.color)
+                          : undefined)
+                      }
+                    />
                   </Link>
                   <div className="min-w-0">
                     <Link to={`/product/${item.product.slug}`} className="text-xl font-black text-ink hover:text-gold-dark">{displayName}</Link>
@@ -206,7 +219,12 @@ export function CartPage() {
                 const displayName = item.variantTitle ?? item.product.name;
                 const summaryKey = `summary-${item.product.id}-${item.storage}-${item.color}-${item.variantId ?? "def"}`;
 
-                const imageSrc = item.colorImageSrc || resolveProductImage(item.product)?.src;
+                const ownerOrPrimary = resolveProductImage(item.product)?.src;
+                const imageSrc =
+                  item.colorImageSrc ||
+                  (hasOwnerUploadedProductImages(item.product) ? ownerOrPrimary : undefined) ||
+                  resolveProductColorImage(item.product, item.color) ||
+                  ownerOrPrimary;
                 return (
                   <div className="order-summary-line" key={summaryKey}>
                     {imageSrc ? (

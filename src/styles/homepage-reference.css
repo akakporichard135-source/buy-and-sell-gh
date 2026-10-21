@@ -161,7 +161,8 @@
 }
 
 .home-ref-iphone-18-pro .home-ref-hero-image {
-  width: min(1120px, 88vw);
+  width: min(734px, 86vw);
+  aspect-ratio: 734 / 413;
   height: auto;
   bottom: 10px;
   left: 50%;
@@ -692,6 +693,8 @@ body:has(.home-reference) .store-footer {
   .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro .home-ref-hero-image,
   .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro picture img {
     width: auto !important;
+    aspect-ratio: 680 / 880;
+    height: min(325px, 46svh) !important;
     max-width: min(84vw, 320px) !important;
     max-height: min(325px, 46svh) !important;
     object-fit: contain !important;
@@ -982,8 +985,62 @@ body:has(.home-reference) .store-footer {
   }
 }
 
-/* Desktop Hero Spacing: iPhone 18 Pro & iPhone Duo (min-width: 801px) */
-@media (min-width: 801px) {
+@media (max-width: 768px) {
+  .home-ref-hero.has-mobile-hero {
+    height: clamp(510px, 76svh, 570px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-copy {
+    position: relative;
+    z-index: 2;
+    padding: 24px 16px 0;
+    max-width: 440px;
+    width: 100%;
+    order: 1;
+  }
+
+  .home-ref-hero.has-mobile-hero .home-ref-hero-picture {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+    padding-bottom: 8px;
+    position: relative;
+    inset: auto;
+    margin-top: clamp(48px, 8vw, 60px);
+    order: 2;
+  }
+
+  .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro .home-ref-hero-image,
+  .home-ref-hero.has-mobile-hero.home-ref-iphone-18-pro picture img {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    aspect-ratio: 680 / 880;
+    height: min(325px, 46svh) !important;
+    max-width: min(84vw, 320px) !important;
+    max-height: min(325px, 46svh) !important;
+    object-fit: contain !important;
+    object-position: center top !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Desktop Hero Spacing: iPhone 18 Pro & iPhone Duo (min-width: 769px) */
+@media (min-width: 769px) {
   /* iPhone 18 Pro Desktop: Clean visual separation between buttons and metallic PRO artwork */
   .home-ref-hero.home-ref-iphone-18-pro {
     height: clamp(660px, 80vh, 750px);
@@ -1020,7 +1077,8 @@ body:has(.home-reference) .store-footer {
     left: auto !important;
     transform: none !important;
     display: block !important;
-    width: auto !important;
+    width: min(734px, 86vw) !important;
+    aspect-ratio: 734 / 413;
     max-width: min(1120px, 86vw) !important;
     height: auto !important;
     max-height: min(450px, 52vh) !important;

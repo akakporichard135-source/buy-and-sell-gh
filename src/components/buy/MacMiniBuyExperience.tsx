@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { SEO } from "../SEO";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -51,7 +51,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `Mac mini (${chipConfig === "M6" ? "Apple M6 chip" : "Apple M5 Pro chip"}, ${memory} / ${storage})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to place a Pre-order for ${fullConfigurationTitle}. Price: ${priceLabel}, Payment preference: ${paymentMethod}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Please confirm my pre-order registration and current arrival schedule.`
+    `Hello Buy & Sell GH, I would like to place a Pre-order for ${fullConfigurationTitle}. Price: ${priceLabel}, Payment preference: ${paymentMethod}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Product photo: ${toAbsoluteProductImageUrl(activeImage)} Please confirm my pre-order registration and current arrival schedule.`
   );
 
   const handlePreorder = () => {

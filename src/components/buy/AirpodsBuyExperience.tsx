@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -117,11 +117,18 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `${edition} (White)`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Product photo: ${toAbsoluteProductImageUrl("/products/campaigns/airpods-5-product.webp")} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, edition, "White", 1, configured.variant);
+    const added = addItem(
+      activeProduct,
+      edition,
+      "White",
+      1,
+      configured.variant,
+      "/products/campaigns/airpods-5-product.webp"
+    );
     if (added) {
       setNotice(`${edition} (${priceLabel}) added to your bag.`);
     } else {

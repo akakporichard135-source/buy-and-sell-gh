@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -151,7 +151,7 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
   const fullConfigurationTitle = `iPad Air ${screenSize} (${storage}, ${finish}, ${connectivity})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
@@ -160,8 +160,10 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       storage,
       `${screenSize} / ${finish} / ${connectivity}`,
       1,
-      configured.variant,
-      activeImage
+      configured.variant
+        ? { ...configured.variant, title: `iPad Air ${screenSize} (${storage}, ${connectivity})` }
+        : undefined,
+      currentFinishImg
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);

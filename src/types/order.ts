@@ -1,5 +1,6 @@
 import type { CartItem } from "./product";
-import { resolveProductImage } from "../utils/productImages";
+import { resolveProductColorImage } from "../utils/productColorImages";
+import { hasOwnerUploadedProductImages, resolveProductImage } from "../utils/productImages";
 
 export const ORDER_STATUSES = [
   "Pending",
@@ -88,12 +89,18 @@ export interface OrderSubmissionInput {
 export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
   items.map((item) => {
     const image = resolveProductImage(item.product);
+    const resolvedImageSrc =
+      item.colorImageSrc ||
+      (hasOwnerUploadedProductImages(item.product) ? image?.src : undefined) ||
+      resolveProductColorImage(item.product, item.color) ||
+      image?.src ||
+      "";
     const unitPrice = typeof item.configuredPrice === "number" && item.configuredPrice > 0 ? item.configuredPrice : item.product.price;
     return {
       productId: item.product.id,
       productSlug: item.product.slug,
       productName: item.variantTitle ?? item.product.name,
-      productImage: image?.src ?? "",
+      productImage: resolvedImageSrc,
       storage: item.storage,
       colour: item.color,
       condition: item.product.condition,

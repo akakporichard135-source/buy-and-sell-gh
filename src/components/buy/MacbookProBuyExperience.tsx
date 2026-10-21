@@ -3,7 +3,7 @@ import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
 import {
   BuyLayout,
@@ -92,7 +92,50 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fallbackProduct: Product = useMemo(() => {
     const is16 = screenSize === "16-inch";
     const basePrice = is16 ? 32000 : 22000;
-    const slug = is16 ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4";
+    const slug = is16 ? "macbook-pro-16-inch-m5-pro-m5-max" : "macbook-pro-14-inch-m5";
+    const chipPriceAdd: Record<string, number> = {
+      M4: 0,
+      "M4 Pro": is16 ? 0 : 4000,
+      "M4 Max": is16 ? 8000 : 11000,
+    };
+    const memoryPriceAdd: Record<string, number> = {
+      "16GB": 0,
+      "24GB": 2000,
+      "36GB": 4500,
+      "48GB": 7000,
+      "64GB": 10000,
+      "128GB": 18000,
+    };
+    const storagePriceAdd: Record<string, number> = {
+      "512GB": 0,
+      "1TB": 3500,
+      "2TB": 7500,
+      "4TB": 14000,
+    };
+    const chipsForSize = is16 ? (["M4 Pro", "M4 Max"] as const) : (["M4", "M4 Pro", "M4 Max"] as const);
+    const memories = ["16GB", "24GB", "36GB", "48GB", "64GB", "128GB"] as const;
+    const storages = ["512GB", "1TB", "2TB", "4TB"] as const;
+    let pos = 1;
+    const variants = chipsForSize.flatMap((c) =>
+      memories.flatMap((mem) =>
+        storages.map((cap) => ({
+          id: `mbp-${is16 ? "16" : "14"}-${c.toLowerCase().replace(/\s+/g, "-")}-${mem.toLowerCase()}-${cap.toLowerCase()}`,
+          productId: slug,
+          title: `MacBook Pro ${screenSize} (${c}, ${mem} / ${cap})`,
+          screenSize,
+          chip: c,
+          memory: mem,
+          storage: cap,
+          price: basePrice + (chipPriceAdd[c] ?? 0) + (memoryPriceAdd[mem] ?? 0) + (storagePriceAdd[cap] ?? 0),
+          condition: "Brand New" as const,
+          stockQuantity: 10,
+          position: pos++,
+          available: true,
+          isSale: false,
+          stockStatus: "In Stock" as const,
+        }))
+      )
+    );
     return {
       id: slug,
       slug,
@@ -109,12 +152,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       box: ["MacBook Pro", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
       imageTone: "dark",
       images: currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : [],
-      variants: [
-        { id: `mbp-${is16 ? "16" : "14"}-512`, productId: slug, title: `${screenSize} 512GB`, storage: "512GB", price: basePrice, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mbp-${is16 ? "16" : "14"}-1tb`, productId: slug, title: `${screenSize} 1TB`, storage: "1TB", price: basePrice + 3500, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mbp-${is16 ? "16" : "14"}-2tb`, productId: slug, title: `${screenSize} 2TB`, storage: "2TB", price: basePrice + 7500, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
-        { id: `mbp-${is16 ? "16" : "14"}-4tb`, productId: slug, title: `${screenSize} 4TB`, storage: "4TB", price: basePrice + 14000, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
-      ],
+      variants,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
@@ -122,7 +160,26 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     };
   }, [screenSize, currentDisplayImg, finish]);
 
-  const activeProduct = catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const activeProduct: Product = useMemo(() => {
+    const is16 = screenSize === "16-inch";
+    const matchesCatalogSize = Boolean(
+      catalogProduct &&
+        (is16
+          ? catalogProduct.slug.includes("16") || catalogProduct.name.includes("16")
+          : catalogProduct.slug.includes("14") || catalogProduct.name.includes("14"))
+    );
+    if (matchesCatalogSize && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
+      const hasFullVariants = Boolean(
+        catalogProduct.variants && catalogProduct.variants.some((v) => Boolean(v.chip && v.memory))
+      );
+      return {
+        ...catalogProduct,
+        variants: hasFullVariants ? catalogProduct.variants : fallbackProduct.variants,
+      };
+    }
+    return fallbackProduct;
+  }, [screenSize, catalogProduct, fallbackProduct]);
+
   const configured = resolveConfiguredPrice(activeProduct, { screenSize, chip, memory, storage });
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
@@ -131,11 +188,11 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fullConfigurationTitle = `MacBook Pro ${screenSize} (${chip}, ${memory} RAM, ${storage} SSD, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentDisplayImg || activeImage)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant, activeImage);
+    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant, currentDisplayImg || activeImage);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }

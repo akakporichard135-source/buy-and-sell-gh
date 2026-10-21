@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -133,7 +133,7 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const fullConfigurationTitle = `Apple Watch Series 12 (${caseSize}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
@@ -142,8 +142,8 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       `${caseSize} / ${connectivity}`,
       `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
       1,
-      configured.variant,
-      activeImage
+      configured.variant ? { ...configured.variant, title: `Apple Watch Series 12 (${caseSize} ${connectivity})` } : undefined,
+      currentFinishImg
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);

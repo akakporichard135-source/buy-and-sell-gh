@@ -21,7 +21,7 @@ const CategoryPage = lazy(() => import("./pages/CategoryPage").then((module) => 
 const ContactPage = lazy(() => import("./pages/ContactPage").then((module) => ({ default: module.ContactPage })));
 const DeviceRequestPage = lazy(() => import("./pages/DeviceRequestPage").then((module) => ({ default: module.DeviceRequestPage })));
 const FAQPage = lazy(() => import("./pages/FAQPage").then((module) => ({ default: module.FAQPage })));
-const HomePage = lazy(() => import("./pages/HomePage").then((module) => ({ default: module.HomePage })));
+import { HomePage } from "./pages/HomePage";
 const InstallmentPage = lazy(() => import("./pages/InstallmentPage").then((module) => ({ default: module.InstallmentPage })));
 const MobilePhonesPage = lazy(() => import("./pages/MobilePhonesPage").then((module) => ({ default: module.MobilePhonesPage })));
 const ElectronicsPage = lazy(() => import("./pages/ElectronicsPage").then((module) => ({ default: module.ElectronicsPage })));

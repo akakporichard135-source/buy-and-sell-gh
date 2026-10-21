@@ -120,6 +120,12 @@ function resolveCandidates(products: Product[], family: ProductFamilyKey, slug: 
   if (family === "ipad" && slug === "ipad-pro") return familyProducts.filter((product) => getIpadFamily(product) === "iPad Pro");
   if (family === "watch" && slug.includes("ultra")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Ultra");
   if (family === "watch" && slug.includes("series")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Series");
+  if (family === "accessories" && slug === "charging-and-power") {
+    const magsafe = familyProducts.find((product) => product.slug === "apple-magsafe-charger");
+    if (magsafe) return [magsafe];
+    const adapter30 = familyProducts.find((product) => product.slug === "apple-30w-usb-c-power-adapter");
+    if (adapter30) return [adapter30];
+  }
 
   // 4. Substring candidate match within family
   const partial = familyProducts.filter((product) => product.slug.includes(normSlug) || normSlug.includes(product.slug.replace(/-inch-/g, "-")));

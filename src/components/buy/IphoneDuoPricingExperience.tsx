@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { MessageCircle, ShieldCheck, Sparkles, Truck, Store, ArrowRight } from "lucide-react";
 import { SEO } from "../SEO";
-import { whatsappUrl } from "../../utils/whatsapp";
+import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import { SwipeableProductGallery } from "./SwipeableProductGallery";
 import "../../styles/apple-buy-experience.css";
 
@@ -18,7 +18,7 @@ export function IphoneDuoPricingExperience() {
   const currentImage = gallery[selectedAngle];
 
   const whatsAppEnquiry = whatsappUrl(
-    "Hello Buy & Sell GH, I would like to enquire about iPhone Duo pricing, availability schedule, and early customer reservation in Ghana. Please share current allocation details."
+    `Hello Buy & Sell GH, I would like to enquire about iPhone Duo pricing, availability schedule, and early customer reservation in Ghana. Product photo: ${toAbsoluteProductImageUrl(currentImage?.src || gallery[0].src)} Please share current allocation details.`
   );
 
   return (

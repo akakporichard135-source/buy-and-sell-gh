@@ -480,6 +480,28 @@ try {
   const cartWithColor = cart.addCartItem([], mbaTestProd, "512GB", "Midnight", 1, undefined, mbaMidnightImg);
   assert.equal(cartWithColor[0].colorImageSrc, mbaMidnightImg, "CartItem preserves selected color finish image");
 
+  // Compound color resolution & WhatsApp product photo handoff verification
+  const ipadCompoundImg = productColorImages.resolveProductColorImage(
+    { id: "ia", slug: "ipad-air", name: "iPad Air", category: "iPads", price: 9800, available: true, stockStatus: "In Stock", stockQuantity: 5, storage: ["128GB"], colors: ["Blue", "Space Gray"] },
+    "11-inch / Space Gray / Wi-Fi"
+  );
+  assert.equal(ipadCompoundImg, "/products/campaigns/ipad-air-space-gray.webp", "iPad Air compound color string resolves Space Gray finish image");
+  const watchCompoundImg = productColorImages.resolveProductColorImage(
+    { id: "aws12", slug: "apple-watch-series-12", name: "Apple Watch Series 12", category: "Watches", price: 8400, available: true, stockStatus: "In Stock", stockQuantity: 5, storage: ["46mm"], colors: ["Jet Black", "Silver"] },
+    "Silver / Sport Band (Midnight, M/L)"
+  );
+  assert.equal(watchCompoundImg, "/products/campaigns/watch-series-12-product.webp", "Watch Series 12 compound color string resolves Silver finish image");
+  assert.ok(decodeURIComponent(productUrl).includes("Product photo: https://"), "Product WhatsApp link includes absolute product photo URL");
+  assert.ok(decodedOrderRequest.includes("Photo: https://"), "Order request WhatsApp handoff includes absolute product photo URL");
+
+  // Homepage iPhone 18 Pro hero stability verification
+  const indexHtmlSource = await readFile(path.join(projectRoot, "index.html"), "utf8");
+  assert.match(indexHtmlSource, /rel="preload"[\s\S]*href="\/products\/homepage\/iphone-18-pro-hero-2x\.webp"/, "index.html preloads the desktop iPhone 18 Pro hero");
+  assert.match(indexHtmlSource, /rel="preload"[\s\S]*href="\/products\/homepage\/iphone-18-pro-hero-mobile\.jpg"/, "index.html preloads the mobile iPhone 18 Pro hero");
+  assert.match(homepageSource, /width=\{campaign\.id === "iphone-18-pro" \? 734[\s\S]*height=\{campaign\.id === "iphone-18-pro" \? 413/, "HomePage reserves 734x413 dimensions for iPhone 18 Pro hero");
+  const cmsRepoSource = await readFile(path.join(projectRoot, "src/cms/supabaseCmsRepository.ts"), "utf8");
+  assert.match(cmsRepoSource, /1792586241422-iphone-18-pro-the-new-features-you-should-try-1\.jpg/, "Supabase CMS normalizes the iPhone 18 Pro hero URL to local preloaded asset");
+
   // Admin MFA Handover & Secret Protection Verification
   const adminAuthSource = await readFile(path.join(projectRoot, "src/admin/AdminAuth.tsx"), "utf8");
   const adminMfaPageSource = await readFile(path.join(projectRoot, "src/pages/admin/AdminMfaPage.tsx"), "utf8");

@@ -12,6 +12,7 @@ import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { resolveConfiguredPrice } from "../utils/productPricing";
 import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
+import { resolveProductColorImage } from "../utils/productColorImages";
 import { hasOwnerUploadedProductImages, requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 
@@ -88,11 +89,20 @@ export function ProductDetailsPage() {
     );
   }
 
-  const gallery = resolveProductGallery(product);
+  const hasOwnerImages = hasOwnerUploadedProductImages(product);
+  const matchedFinishImage = !hasOwnerImages ? resolveProductColorImage(product, color) : undefined;
+  const baseGallery = resolveProductGallery(product);
+  const gallery = matchedFinishImage
+    ? [
+        { src: matchedFinishImage, alt: `${product.name} in ${color}` },
+        ...baseGallery.filter((img) => img.src !== matchedFinishImage),
+      ]
+    : baseGallery;
   const active = gallery[activeImage] ?? resolveProductImage(product);
+  const selectedColorImage = matchedFinishImage ?? active?.src;
   const realPhotosPending = requiresRealProductPhotos(product);
   const configured = resolveConfiguredPrice(product, { storage });
-  const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl, configured.price);
+  const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl, configured.price, selectedColorImage);
   const studioFamily = getProductFamilyKey(product);
   const studioBuyPath = studioFamily ? productBuyPath(studioFamily, product.slug) : null;
   const stockLabel = normalizeDisplayBadge(product.stockStatus);
@@ -132,7 +142,7 @@ export function ProductDetailsPage() {
       setVariantError(`Only ${product.stockQuantity} available right now.`);
       return;
     }
-    if (addItem(product, storage, color, quantity, configured.variant)) setVariantError("");
+    if (addItem(product, storage, color, quantity, configured.variant, selectedColorImage)) setVariantError("");
   };
 
   const handleBuyNow = () => {
@@ -148,7 +158,7 @@ export function ProductDetailsPage() {
       setVariantError(`Only ${product.stockQuantity} available right now.`);
       return;
     }
-    const added = addItem(product, storage, color, quantity, configured.variant);
+    const added = addItem(product, storage, color, quantity, configured.variant, selectedColorImage);
     if (added) navigate("/cart");
   };
 
@@ -252,7 +262,16 @@ export function ProductDetailsPage() {
               <select value={storage} required onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
             </label>
             <label className="choice-label">Colour
-              <select value={color} required onChange={(e) => setColor(e.target.value)}>{product.colors.map((item) => <option key={item}>{item}</option>)}</select>
+              <select
+                value={color}
+                required
+                onChange={(e) => {
+                  setColor(e.target.value);
+                  setActiveImage(0);
+                }}
+              >
+                {product.colors.map((item) => <option key={item}>{item}</option>)}
+              </select>
             </label>
           </div>
           {variantError && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{variantError}</p>}

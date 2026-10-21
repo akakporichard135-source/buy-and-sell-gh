@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import type { CartItem, Product, ProductVariant } from "../types/product";
+import { isProductImageEligible } from "../utils/productImages";
 import { addCartItem, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
@@ -64,7 +65,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       let changed = false;
       const nextItems = currentItems.map((item) => {
         const catalogProd = getProductBySlug(item.product.slug);
-        if (catalogProd && catalogProd.id !== item.product.id) {
+        if (
+          catalogProd &&
+          catalogProd.id !== item.product.id &&
+          !isSoldOut(catalogProd) &&
+          isProductImageEligible(catalogProd)
+        ) {
           changed = true;
           return {
             ...item,
@@ -88,7 +94,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     variant?: ProductVariant,
     colorImageSrc?: string
   ) => {
-    const currentProduct = getProductBySlug(product.slug) ?? product;
+    const catalogCandidate = getProductBySlug(product.slug);
+    const useCatalogCandidate =
+      catalogCandidate &&
+      !isSoldOut(catalogCandidate) &&
+      isProductImageEligible(catalogCandidate);
+    const currentProduct = useCatalogCandidate
+      ? {
+          ...catalogCandidate,
+          price: product.price > 0 ? product.price : catalogCandidate.price,
+          condition: product.condition === "Brand New" ? "Brand New" : catalogCandidate.condition,
+        }
+      : product;
     if (!currentProduct) {
       setToast(`${product.name} is not available for cart right now.`);
       return false;

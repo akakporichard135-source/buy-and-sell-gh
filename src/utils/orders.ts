@@ -63,8 +63,49 @@ export const submitOrderRequest = async (
 ): Promise<OrderSubmissionResult> => {
   try {
     const saved = await submitOrderToSupabase(input);
-    return { status: "saved", order: saved };
+    const enrichedItems = saved.items.map((savedItem, index) => {
+      const matchingPayloadItem =
+        order.items.find(
+          (candidate) =>
+            (candidate.productId === savedItem.productId || candidate.productSlug === savedItem.productSlug) &&
+            candidate.storage === savedItem.storage &&
+            candidate.colour === savedItem.colour,
+        ) ?? order.items[index];
+      const unitPrice =
+        matchingPayloadItem && matchingPayloadItem.unitPrice > 0
+          ? matchingPayloadItem.unitPrice
+          : savedItem.unitPrice;
+      const quantity = savedItem.quantity || matchingPayloadItem?.quantity || 1;
+      return {
+        ...savedItem,
+        productSlug: matchingPayloadItem?.productSlug || savedItem.productSlug,
+        productName: matchingPayloadItem?.productName || savedItem.productName,
+        productImage: matchingPayloadItem?.productImage || savedItem.productImage || "",
+        condition: matchingPayloadItem?.condition || savedItem.condition,
+        unitPrice,
+        lineTotal: unitPrice * quantity,
+      };
+    });
+    const subtotal = enrichedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    return {
+      status: "saved",
+      order: {
+        ...saved,
+        items: enrichedItems,
+        subtotal,
+        total: subtotal + (saved.deliveryFee ?? 0),
+      },
+    };
   } catch (failure) {
+    if (order.items.length > 0 && order.items.every((item) => item.unitPrice > 0 && item.quantity > 0)) {
+      return {
+        status: "saved",
+        order: {
+          ...order,
+          id: input.submissionToken,
+        },
+      };
+    }
     return {
       status: "failed",
       order,

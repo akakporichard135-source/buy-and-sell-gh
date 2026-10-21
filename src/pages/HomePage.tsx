@@ -25,6 +25,7 @@ const heroes: Campaign[] = [
     title: "iPhone 18 Pro",
     subtitle: "Pro further.",
     image: "/products/homepage/iphone-18-pro-hero-2x.webp",
+    mobileImage: "/products/homepage/iphone-18-pro-hero-mobile.jpg",
     alt: "Burgundy iPhone 18 Pro in front of a metallic PRO composition",
     tone: "dark",
     primary: { label: "Learn more", to: "/iphone/iphone-18-pro" },
@@ -122,17 +123,35 @@ const tileRows: Campaign[][] = [
 ];
 
 function normalizeHomepageCampaign(campaign: Campaign): Campaign {
-  if (campaign.id === "iphone-duo") return campaign;
-  if (campaign.secondary && campaign.secondary.label === "View pricing") {
-    return {
+  let normalized = campaign;
+  if (campaign.id === "iphone-18-pro") {
+    const rawImage = campaign.image || "";
+    const rawMobile = campaign.mobileImage || "";
+    const useApprovedDesktop =
+      !rawImage ||
+      rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
+      rawImage.includes("/products/homepage/iphone-18-pro-hero");
+    const useApprovedMobile =
+      !rawMobile ||
+      rawMobile.includes("1792004900948-iphone-18-promax-1.jpg") ||
+      rawMobile.includes("/products/homepage/iphone-18-pro-hero-mobile");
+    normalized = {
       ...campaign,
+      image: useApprovedDesktop ? "/products/homepage/iphone-18-pro-hero-2x.webp" : rawImage,
+      mobileImage: useApprovedMobile ? "/products/homepage/iphone-18-pro-hero-mobile.jpg" : rawMobile,
+    };
+  }
+  if (normalized.id === "iphone-duo") return normalized;
+  if (normalized.secondary && normalized.secondary.label === "View pricing") {
+    return {
+      ...normalized,
       secondary: {
-        ...campaign.secondary,
+        ...normalized.secondary,
         label: "Buy",
       },
     };
   }
-  return campaign;
+  return normalized;
 }
 
 const serviceFlyers = [
@@ -255,14 +274,21 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
       </div>
       {mobileImg ? (
         <picture className="home-ref-hero-picture">
-          <source media="(max-width: 768px)" srcSet={mobileImg} />
+          <source
+            media="(max-width: 768px)"
+            srcSet={mobileImg}
+            width={campaign.id === "iphone-18-pro" ? 680 : undefined}
+            height={campaign.id === "iphone-18-pro" ? 880 : undefined}
+          />
           <img
             className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
             src={campaign.image}
             alt={campaign.alt}
+            width={campaign.id === "iphone-18-pro" ? 734 : undefined}
+            height={campaign.id === "iphone-18-pro" ? 413 : undefined}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : undefined}
-            decoding="async"
+            decoding={priority ? "sync" : "async"}
           />
         </picture>
       ) : (
@@ -270,9 +296,11 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
           className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
           src={campaign.image}
           alt={campaign.alt}
+          width={campaign.id === "iphone-18-pro" ? 734 : undefined}
+          height={campaign.id === "iphone-18-pro" ? 413 : undefined}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : undefined}
-          decoding="async"
+          decoding={priority ? "sync" : "async"}
         />
       )}
     </section>

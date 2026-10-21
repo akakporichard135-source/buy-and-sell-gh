@@ -3,7 +3,7 @@ import { SEO } from "../SEO";
 import { useCart } from "../../context/CartContext";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
-import { whatsappUrl, productWhatsAppUrl } from "../../utils/whatsapp";
+import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
 import { isProductPurchasable } from "../../catalog/productCatalog";
 import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
@@ -31,76 +31,150 @@ export function GenericBuyExperience({
   slug: string;
 }) {
   const { addItem } = useCart();
-  const [storage, setStorage] = useState(product?.storage[0] ?? "");
-  const [color, setColor] = useState(product?.colors[0] ?? "");
+
+  const effectiveProduct: Product | undefined = useMemo(() => {
+    if (slug === "airpods-pro-3") {
+      return {
+        ...(product ?? {
+          id: "airpods-pro-3",
+          slug: "airpods-pro-3",
+          name: "AirPods Pro 3",
+          model: "AirPods Pro 3",
+          brand: "Apple",
+          category: "AirPods",
+          description: "AirPods Pro 3 with H3 chip, 2x Active Noise Cancellation, heart-rate sensing, and USB-C MagSafe Charging Case.",
+          specs: ["H3 Headphone Chip", "Active Noise Cancellation", "Adaptive Audio", "Heart-Rate Sensing", "MagSafe Charging Case (USB-C)"],
+          box: ["AirPods Pro 3", "MagSafe Charging Case (USB-C)", "Silicone Ear Tips (4 sizes)", "USB-C Charge Cable"],
+          imageTone: "light",
+        }),
+        price: product && product.price > 0 ? product.price : 3600,
+        condition: "Brand New",
+        storage: product?.storage?.length ? product.storage : ["USB-C MagSafe Case"],
+        colors: product?.colors?.length ? product.colors : ["White"],
+        images: [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }],
+        available: true,
+        stockStatus: "In Stock",
+        stockQuantity: Math.max(product?.stockQuantity ?? 0, 10),
+        priceOnRequest: false,
+      };
+    }
+    if (slug === "charging-and-power" && !product) {
+      return {
+        id: "apple-magsafe-charger",
+        slug: "apple-magsafe-charger",
+        name: "Apple MagSafe Charger",
+        model: "Apple MagSafe Charger",
+        brand: "Apple",
+        category: "Accessories",
+        subcategory: "Charging & Power",
+        description: "Apple MagSafe Charger with integrated 1m braided USB-C cable for fast magnetic wireless charging.",
+        specs: ["Connector: USB-C", "Cable length: 1 metre", "Fast wireless charging up to 25W"],
+        box: ["MagSafe Charger with integrated 1m USB-C cable"],
+        imageTone: "light",
+        price: 650,
+        condition: "Brand New",
+        storage: ["USB-C / 1m"],
+        colors: ["White"],
+        images: [{ src: "/products/campaigns/accessory-magsafe-puck.webp", alt: "Apple MagSafe Charger" }],
+        available: true,
+        stockStatus: "In Stock",
+        stockQuantity: 10,
+        priceOnRequest: false,
+      };
+    }
+    if (
+      product &&
+      !isUsedProductCondition(product.condition) &&
+      !missingCleanAccessoryImageSlugs.has(product.slug) &&
+      product.price > 0 &&
+      product.available !== false &&
+      product.stockStatus !== "Sold" &&
+      (product.stockQuantity === 0 || product.priceOnRequest) &&
+      product.variants?.some((v) => v.available !== false && v.price > 0)
+    ) {
+      return {
+        ...product,
+        condition: product.condition === "To Confirm" ? "Brand New" : product.condition,
+        priceOnRequest: false,
+        stockStatus: "In Stock",
+        stockQuantity: Math.max(product.stockQuantity, 10),
+      };
+    }
+    return product;
+  }, [product, slug]);
+
+  const [storage, setStorage] = useState(effectiveProduct?.storage[0] ?? "");
+  const [color, setColor] = useState(effectiveProduct?.colors[0] ?? "");
   const [tradeIn, setTradeIn] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const colorOptions = useMemo(() => resolveColorOptions(product?.colors ?? []), [product?.colors]);
+  const colorOptions = useMemo(() => resolveColorOptions(effectiveProduct?.colors ?? []), [effectiveProduct?.colors]);
 
   useEffect(() => {
-    if (product) {
-      if (product.storage && product.storage.length > 0 && (!storage || !product.storage.includes(storage))) {
-        setStorage(product.storage[0]);
+    if (effectiveProduct) {
+      if (effectiveProduct.storage && effectiveProduct.storage.length > 0 && (!storage || !effectiveProduct.storage.includes(storage))) {
+        setStorage(effectiveProduct.storage[0]);
       }
-      if (product.colors && product.colors.length > 0 && (!color || !product.colors.includes(color))) {
-        setColor(product.colors[0]);
+      if (effectiveProduct.colors && effectiveProduct.colors.length > 0 && (!color || !effectiveProduct.colors.includes(color))) {
+        setColor(effectiveProduct.colors[0]);
       }
     }
-  }, [product]);
+  }, [effectiveProduct]);
 
   // Preload all available finish images so clicking swatches has 0 latency
   useEffect(() => {
-    if (product && colorOptions.length > 0) {
-      const urls = colorOptions.map((c) => resolveProductColorImage(product, c.name));
+    if (effectiveProduct && colorOptions.length > 0) {
+      const urls = colorOptions.map((c) => resolveProductColorImage(effectiveProduct, c.name));
       preloadProductImages(urls);
     }
-  }, [product, colorOptions]);
+  }, [effectiveProduct, colorOptions]);
 
-  const name = product?.name ?? slug.split("-").map((s) => (s ? `${s[0].toUpperCase()}${s.slice(1)}` : s)).join(" ");
-  const rawGallery = product ? resolveProductGallery(product) : [];
-  const missingCleanImage = missingCleanAccessoryImageSlugs.has(product?.slug ?? slug);
-  const canUseCatalogueImage = (!product || !isUsedProductCondition(product.condition)) && !missingCleanImage;
-  const fallbackAsset = canUseCatalogueImage ? localCatalogueImageBySlug[product?.slug ?? slug] : undefined;
-  const hasOwnerImages = Boolean(product && hasOwnerUploadedProductImages(product));
+  const name = effectiveProduct?.name ?? slug.split("-").map((s) => (s ? `${s[0].toUpperCase()}${s.slice(1)}` : s)).join(" ");
+  const rawGallery = effectiveProduct ? resolveProductGallery(effectiveProduct) : [];
+  const missingCleanImage = missingCleanAccessoryImageSlugs.has(effectiveProduct?.slug ?? slug);
+  const canUseCatalogueImage = (!effectiveProduct || !isUsedProductCondition(effectiveProduct.condition)) && !missingCleanImage;
+  const fallbackAsset = canUseCatalogueImage ? localCatalogueImageBySlug[effectiveProduct?.slug ?? slug] : undefined;
+  const hasOwnerImages = Boolean(effectiveProduct && hasOwnerUploadedProductImages(effectiveProduct));
 
   // Determine active finish image & angle thumbnails
-  const matchedFinishImage = resolveProductColorImage(product, color, fallbackAsset);
+  const matchedFinishImage = resolveProductColorImage(effectiveProduct, color, fallbackAsset);
   const gallery = useMemo(() => {
     if (hasOwnerImages) {
       return rawGallery;
     }
-    return resolveProductColorGallery(product, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
-  }, [product, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
+    return resolveProductColorGallery(effectiveProduct, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
+  }, [effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
 
   const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
 
-  const configured = resolveConfiguredPrice(product, { storage });
-  const purchasable = product ? configured.price > 0 && !product.priceOnRequest : false;
+  const configured = resolveConfiguredPrice(effectiveProduct, { storage });
+  const purchasable = effectiveProduct ? isProductPurchasable(effectiveProduct) && configured.price > 0 : false;
   const priceLabel = configured.price > 0
     ? configured.formattedPrice
-    : product && !product.priceOnRequest && product.price > 0
-    ? formatGhs(product.price)
+    : effectiveProduct && !effectiveProduct.priceOnRequest && effectiveProduct.price > 0
+    ? formatGhs(effectiveProduct.price)
     : "Price confirmed on enquiry";
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
-  const whatsAppEnquiry = product
-    ? productWhatsAppUrl(product, storage, color)
+  const selectedFinishImage = matchedFinishImage || activeImage;
+
+  const whatsAppEnquiry = effectiveProduct
+    ? productWhatsAppUrl(effectiveProduct, storage || "Standard", color || "Standard", undefined, configured.price, selectedFinishImage)
     : whatsappUrl(
         `Hello Buy & Sell GH, I would like to enquire about ${name}. Storage: ${storage}, Finish: ${color}, Payment: ${paymentMethod}, Fulfillment: ${
           fulfillment === "pickup" ? "Pickup (Dome)" : "Delivery"
-        }. Please confirm availability and price.`
+        }.${selectedFinishImage ? ` Product photo: ${toAbsoluteProductImageUrl(selectedFinishImage)}` : ""} Please confirm availability and price.`
       );
 
   const handleAddToBag = () => {
-    if (product && purchasable) {
-      const added = addItem(product, storage || "Standard", color || "Standard", 1, configured.variant, activeImage);
+    if (effectiveProduct && purchasable) {
+      const added = addItem(effectiveProduct, storage || "Standard", color || "Standard", 1, configured.variant, selectedFinishImage);
       if (added) {
-        setNotice(`${product.name}${storage ? ` (${storage})` : ""}${color ? ` - ${color}` : ""} added to your bag.`);
+        setNotice(`${effectiveProduct.name}${storage ? ` (${storage})` : ""}${color ? ` - ${color}` : ""} added to your bag.`);
       }
     } else {
       setNotice(`Connecting to WhatsApp to confirm ${name} availability...`);
@@ -125,7 +199,7 @@ export function GenericBuyExperience({
       activeImageSrc={activeImage}
       activeImageAlt={`${name}${color ? ` in ${color}` : ""}`}
       priceLabel={priceLabel}
-      badge={product?.condition}
+      badge={effectiveProduct?.condition}
       thumbnails={gallery}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
@@ -141,18 +215,18 @@ export function GenericBuyExperience({
         <p className="apple-buy-intro-eyebrow">Buy {familyLabels[family]?.label}</p>
         <h2 className="apple-buy-intro-title">Buy {name}</h2>
         <p className="apple-buy-intro-lede">
-          {product?.shortDescription || product?.description || "Original Apple device verified and backed by Buy & Sell GH."}
+          {effectiveProduct?.shortDescription || effectiveProduct?.description || "Original Apple device verified and backed by Buy & Sell GH."}
         </p>
       </div>
 
       {/* Storage / Capacity Option */}
-      {product && product.storage && product.storage.length > 0 && (
+      {effectiveProduct && effectiveProduct.storage && effectiveProduct.storage.length > 0 && (
         <section className="apple-buy-step">
           <div className="apple-buy-step-header">
             <h3 className="apple-buy-step-title">Configuration. <span>Choose capacity or specification.</span></h3>
           </div>
           <div className="apple-buy-cards-grid">
-            {product.storage.map((opt) => (
+            {effectiveProduct.storage.map((opt) => (
               <BuyOptionCard
                 key={opt}
                 title={opt}
@@ -201,7 +275,7 @@ export function GenericBuyExperience({
           { label: "Product", value: name },
           ...(storage ? [{ label: "Configuration", value: storage }] : []),
           ...(color ? [{ label: "Finish", value: color }] : []),
-          { label: "Condition", value: product?.condition ?? "Verified Unit" },
+          { label: "Condition", value: effectiveProduct?.condition ?? "Verified Unit" },
           { label: "Payment", value: paymentMethod },
           { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
