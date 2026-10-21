@@ -51,7 +51,7 @@ async function runTests() {
       { name: 'MacBook Air', url: `${BASE_URL}/shop/buy-mac/macbook-air` },
       { name: 'Apple Watch Ultra 4', url: `${BASE_URL}/shop/buy-watch/apple-watch-ultra-4` },
       { name: 'AirPods Pro 3', url: `${BASE_URL}/shop/buy-airpods/airpods-pro-3` },
-      { name: 'Magic Keyboard', url: `${BASE_URL}/shop/buy-accessory/magic-keyboard-with-touch-id` }
+      { name: 'Magic Keyboard', url: `${BASE_URL}/shop/buy-accessory/apple-magic-keyboard-touch-id` }
     ];
 
     const page = await browser.newPage();
@@ -91,16 +91,16 @@ async function runTests() {
       let updatedLabel = '';
 
       if (swatchesInfo.count > 1) {
-        // Click the second swatch
-        const secondSwatch = (await page.$$('.apple-buy-swatch-btn'))[1];
-        if (secondSwatch) {
-          await secondSwatch.click();
-          await new Promise((r) => setTimeout(r, 300));
-          updatedLabel = await page.evaluate(() => {
-            return document.querySelector('.apple-buy-swatch-label')?.textContent?.trim() || '';
-          });
-          colorSwitchPassed = updatedLabel !== '' && updatedLabel !== initialLabel;
-        }
+        // Click the second swatch reliably via DOM click
+        await page.evaluate(() => {
+          const buttons = document.querySelectorAll('.apple-buy-swatch-btn');
+          if (buttons[1]) buttons[1].click();
+        });
+        await new Promise((r) => setTimeout(r, 300));
+        updatedLabel = await page.evaluate(() => {
+          return document.querySelector('.apple-buy-swatch-label')?.textContent?.trim() || '';
+        });
+        colorSwitchPassed = updatedLabel !== '' && updatedLabel !== initialLabel;
       } else {
         colorSwitchPassed = true; // Single color or custom
       }
