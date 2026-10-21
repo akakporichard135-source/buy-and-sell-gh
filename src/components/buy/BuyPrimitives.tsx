@@ -160,8 +160,7 @@ export function BuyColorSwatches({
   selectedColor,
   onSelect,
   labelPrefix = "Finish",
-  previewImageSrc,
-  previewImageAlt,
+  // previewImageSrc and previewImageAlt retained in props interface for backward-compatibility, but separate preview image is removed per design instruction
 }: BuyColorSwatchesProps) {
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     let nextIndex = -1;
@@ -186,23 +185,6 @@ export function BuyColorSwatches({
 
   return (
     <div className="apple-buy-swatches">
-      {/* Dedicated Large Product Image representing the currently selected finish on Pure White */}
-      {previewImageSrc && (
-        <div className="apple-buy-finish-preview-card" aria-hidden="true">
-          <div className="apple-buy-finish-preview-stage">
-            <img
-              key={previewImageSrc}
-              src={previewImageSrc}
-              alt={previewImageAlt || `${selectedColor} finish preview`}
-              className="apple-buy-finish-preview-img"
-              loading="eager"
-              decoding="async"
-              draggable={false}
-            />
-          </div>
-        </div>
-      )}
-
       <div className="apple-buy-swatch-label">
         {labelPrefix} — <strong>{selectedColor}</strong>
       </div>

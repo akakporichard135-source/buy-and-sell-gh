@@ -1,5 +1,6 @@
 import { ChevronDown, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { Logo } from "./Logo";
@@ -158,6 +159,8 @@ export function Header() {
   const location = useLocation();
   const drawerRef = useRef<HTMLDivElement>(null);
   const lastScrollYRef = useRef(0);
+  const savedScrollYRef = useRef(0);
+  const navigatingRef = useRef(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleOpenMenu = () => {
@@ -176,10 +179,11 @@ export function Header() {
     closeTimerRef.current = setTimeout(() => {
       setIsMenuMounted(false);
       setIsMenuClosing(false);
-    }, 380);
+    }, 350);
   };
 
   const handleLinkClick = () => {
+    navigatingRef.current = true;
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     setMobileMenuOpen(false);
     setIsMenuMounted(false);
@@ -269,14 +273,71 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [mobileMenuOpen, isMenuMounted, searchOpen]);
 
-  // Lock body scroll and handle Escape key when mobile menu is active
+  // Lock background scroll and preserve exact page position when mobile menu is active
+  useEffect(() => {
+    const isCurtainActive = mobileMenuOpen || isMenuClosing;
+    if (!isCurtainActive) return;
+
+    // Capture the current scroll position before locking
+    if (mobileMenuOpen && !isMenuClosing) {
+      const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+      savedScrollYRef.current = scrollY;
+    }
+
+    const lockedScrollY = savedScrollYRef.current;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverscroll = document.body.style.overscrollBehavior;
+    const originalHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+
+    // Lock page scrolling
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+    document.documentElement.style.overscrollBehavior = "none";
+
+    // Prevent background touch scrolling on iOS & Android while allowing menu to scroll freely
+    const handleTouchMove = (e: TouchEvent) => {
+      if (drawerRef.current && drawerRef.current.contains(e.target as Node)) {
+        return; // Allow free scrolling inside mobile menu
+      }
+      e.preventDefault(); // Block background page scrolling
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (drawerRef.current && drawerRef.current.contains(e.target as Node)) {
+        return; // Allow mouse/trackpad scrolling inside mobile menu
+      }
+      e.preventDefault(); // Block background wheel scrolling
+    };
+
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overscrollBehavior = originalBodyOverscroll;
+      document.documentElement.style.overscrollBehavior = originalHtmlOverscroll;
+
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("wheel", handleWheel);
+
+      // Restore exact scroll position if not navigating away
+      if (!navigatingRef.current) {
+        window.scrollTo(0, lockedScrollY);
+        lastScrollYRef.current = lockedScrollY;
+      } else {
+        navigatingRef.current = false;
+        window.scrollTo(0, 0);
+        lastScrollYRef.current = 0;
+      }
+    };
+  }, [mobileMenuOpen, isMenuClosing]);
+
+  // Handle Escape key
   useEffect(() => {
     if (!mobileMenuOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (expandedSectionId) {
@@ -287,11 +348,7 @@ export function Header() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.touchAction = originalTouchAction;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen, expandedSectionId]);
 
   // Subtle active route matching
@@ -370,121 +427,124 @@ export function Header() {
         </div>
       </div>
 
-      {/* Apple-style smooth curtain mobile navigation */}
-      {isMenuMounted && (
-        <div
-          ref={drawerRef}
-          className={`global-mobile-drawer global-mobile-curtain ${
-            isMenuClosing ? "is-closing" : "is-open"
-          }`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation menu"
-        >
-          <div className="global-curtain-inner">
-            <nav className="global-curtain-nav" aria-label="Main Navigation">
-              {MOBILE_NAV_SECTIONS.map((section, idx) => {
-                const isExpanded = expandedSectionId === section.id;
-                const hasSubitems = Boolean(section.subitems && section.subitems.length > 0);
-                return (
-                  <div
-                    key={section.id}
-                    className={`global-curtain-item ${isExpanded ? "is-expanded" : ""}`}
-                    style={{ "--item-idx": idx } as React.CSSProperties}
-                  >
-                    {hasSubitems ? (
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(section.id)}
-                        className={`global-curtain-heading-btn ${isExpanded ? "is-expanded" : ""}`}
-                        aria-expanded={isExpanded}
-                        aria-controls={`curtain-sub-${section.id}`}
-                      >
-                        <span>{section.label}</span>
-                        <ChevronDown
-                          size={18}
-                          className={`global-curtain-chevron ${isExpanded ? "is-rotated" : ""}`}
-                          aria-hidden="true"
-                        />
-                      </button>
-                    ) : (
-                      <Link
-                        to={section.to}
-                        onClick={handleLinkClick}
-                        className="global-curtain-link global-mobile-section-btn"
-                      >
-                        <span>{section.label}</span>
-                      </Link>
-                    )}
+      {/* Apple-style smooth curtain mobile navigation portaled to body to ensure true viewport anchoring */}
+      {isMenuMounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={drawerRef}
+            className={`global-mobile-drawer global-mobile-curtain ${
+              isMenuClosing ? "is-closing" : "is-open"
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation menu"
+          >
+            <div className="global-curtain-inner">
+              <nav className="global-curtain-nav" aria-label="Main Navigation">
+                {MOBILE_NAV_SECTIONS.map((section, idx) => {
+                  const isExpanded = expandedSectionId === section.id;
+                  const hasSubitems = Boolean(section.subitems && section.subitems.length > 0);
+                  return (
+                    <div
+                      key={section.id}
+                      className={`global-curtain-item ${isExpanded ? "is-expanded" : ""}`}
+                      style={{ "--item-idx": idx } as React.CSSProperties}
+                    >
+                      {hasSubitems ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleSection(section.id)}
+                          className={`global-curtain-heading-btn ${isExpanded ? "is-expanded" : ""}`}
+                          aria-expanded={isExpanded}
+                          aria-controls={`curtain-sub-${section.id}`}
+                        >
+                          <span>{section.label}</span>
+                          <ChevronDown
+                            size={18}
+                            className={`global-curtain-chevron ${isExpanded ? "is-rotated" : ""}`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      ) : (
+                        <Link
+                          to={section.to}
+                          onClick={handleLinkClick}
+                          className="global-curtain-link global-mobile-section-btn"
+                        >
+                          <span>{section.label}</span>
+                        </Link>
+                      )}
 
-                    {hasSubitems && (
-                      <div
-                        id={`curtain-sub-${section.id}`}
-                        className={`global-curtain-submenu ${isExpanded ? "is-open" : ""}`}
-                        role="region"
-                        aria-label={`${section.label} submenu`}
-                      >
-                        <div className="global-curtain-submenu-inner">
-                          {section.subitems.map((subitem) => (
-                            <Link
-                              key={subitem.label}
-                              to={subitem.to}
-                              onClick={handleLinkClick}
-                              className={`global-curtain-sublink ${subitem.isExplore ? "is-explore-link" : ""}`}
-                            >
-                              <span>{subitem.label}</span>
-                            </Link>
-                          ))}
+                      {hasSubitems && (
+                        <div
+                          id={`curtain-sub-${section.id}`}
+                          className={`global-curtain-submenu ${isExpanded ? "is-open" : ""}`}
+                          role="region"
+                          aria-label={`${section.label} submenu`}
+                        >
+                          <div className="global-curtain-submenu-inner">
+                            {section.subitems.map((subitem) => (
+                              <Link
+                                key={subitem.label}
+                                to={subitem.to}
+                                onClick={handleLinkClick}
+                                className={`global-curtain-sublink ${subitem.isExplore ? "is-explore-link" : ""}`}
+                              >
+                                <span>{subitem.label}</span>
+                              </Link>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
+                      )}
+                    </div>
+                  );
+                })}
+              </nav>
 
-            <div className="global-curtain-footer">
-              <div className="global-curtain-quick-links">
-                <Link
-                  to="/sell-or-trade"
-                  onClick={handleLinkClick}
-                  className="global-curtain-quick-link"
-                >
-                  Trade In &amp; Upgrade
-                </Link>
-                <span className="global-curtain-dot" aria-hidden="true">•</span>
-                <Link
-                  to="/installment"
-                  onClick={handleLinkClick}
-                  className="global-curtain-quick-link"
-                >
-                  Installments
-                </Link>
-                <span className="global-curtain-dot" aria-hidden="true">•</span>
-                <Link
-                  to="/repairs"
-                  onClick={handleLinkClick}
-                  className="global-curtain-quick-link"
-                >
-                  Repairs
-                </Link>
-                <span className="global-curtain-dot" aria-hidden="true">•</span>
-                <Link
-                  to="/faq"
-                  onClick={handleLinkClick}
-                  className="global-curtain-quick-link"
-                >
-                  FAQs
-                </Link>
-              </div>
-              <div className="global-curtain-contact">
-                <span className="global-curtain-badge">Buy &amp; Sell GH</span>
-                <span className="global-curtain-meta">Accra, Dome Pillar 2 • Mon–Sat 8:30am–7:00pm</span>
+              <div className="global-curtain-footer">
+                <div className="global-curtain-quick-links">
+                  <Link
+                    to="/sell-or-trade"
+                    onClick={handleLinkClick}
+                    className="global-curtain-quick-link"
+                  >
+                    Trade In &amp; Upgrade
+                  </Link>
+                  <span className="global-curtain-dot" aria-hidden="true">•</span>
+                  <Link
+                    to="/installment"
+                    onClick={handleLinkClick}
+                    className="global-curtain-quick-link"
+                  >
+                    Installments
+                  </Link>
+                  <span className="global-curtain-dot" aria-hidden="true">•</span>
+                  <Link
+                    to="/repairs"
+                    onClick={handleLinkClick}
+                    className="global-curtain-quick-link"
+                  >
+                    Repairs
+                  </Link>
+                  <span className="global-curtain-dot" aria-hidden="true">•</span>
+                  <Link
+                    to="/faq"
+                    onClick={handleLinkClick}
+                    className="global-curtain-quick-link"
+                  >
+                    FAQs
+                  </Link>
+                </div>
+                <div className="global-curtain-contact">
+                  <span className="global-curtain-badge">Buy &amp; Sell GH</span>
+                  <span className="global-curtain-meta">Accra, Dome Pillar 2 • Mon–Sat 8:30am–7:00pm</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* Global Instant Search modal */}
       <InstantSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

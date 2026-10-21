@@ -228,7 +228,7 @@
 @keyframes globalCurtainDrop {
   0% {
     transform: translate3d(0, -100%, 0);
-    opacity: 0.8;
+    opacity: 0.9;
   }
   100% {
     transform: translate3d(0, 0, 0);
@@ -243,7 +243,7 @@
   }
   100% {
     transform: translate3d(0, -100%, 0);
-    opacity: 0;
+    opacity: 0.9;
   }
 }
 
@@ -255,18 +255,21 @@
     top: var(--global-header-height);
     left: 0;
     right: 0;
+    bottom: 0;
     width: 100vw;
+    height: calc(100vh - var(--global-header-height));
     height: calc(100dvh - var(--global-header-height));
     background: #ffffff !important;
-    z-index: 45; /* Sits cleanly beneath header (z-index: 50) */
+    z-index: 999; /* Sits cleanly beneath header (z-index: 1000) */
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    touch-action: pan-y;
     scrollbar-width: none;
-    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-bottom: env(safe-area-inset-bottom, 24px);
   }
 
   .global-mobile-drawer.global-mobile-curtain::-webkit-scrollbar {
@@ -274,11 +277,11 @@
   }
 
   .global-mobile-drawer.global-mobile-curtain.is-open {
-    animation: globalCurtainDrop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: globalCurtainDrop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .global-mobile-drawer.global-mobile-curtain.is-closing {
-    animation: globalCurtainRetract 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: globalCurtainRetract 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     pointer-events: none;
   }
 
