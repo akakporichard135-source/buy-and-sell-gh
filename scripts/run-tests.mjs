@@ -480,6 +480,16 @@ try {
   const cartWithColor = cart.addCartItem([], mbaTestProd, "512GB", "Midnight", 1, undefined, mbaMidnightImg);
   assert.equal(cartWithColor[0].colorImageSrc, mbaMidnightImg, "CartItem preserves selected color finish image");
 
+  // Admin MFA Handover & Secret Protection Verification
+  const adminAuthSource = await readFile(path.join(projectRoot, "src/admin/AdminAuth.tsx"), "utf8");
+  const adminMfaPageSource = await readFile(path.join(projectRoot, "src/pages/admin/AdminMfaPage.tsx"), "utf8");
+  const adminAccountPageSource = await readFile(path.join(projectRoot, "src/pages/admin/AdminAccountPage.tsx"), "utf8");
+  assert.doesNotMatch(adminMfaPageSource, /showSecret|admin-mfa-secret|\.secret\b/, "AdminMfaPage never displays or logs MFA secrets");
+  assert.doesNotMatch(adminAccountPageSource, /showSecret|admin-mfa-secret|\.secret\b/, "AdminAccountPage never displays or logs MFA secrets");
+  assert.doesNotMatch(adminAuthSource, /totp\.secret/, "AdminAuth never returns raw TOTP secret to UI state");
+  assert.match(adminAuthSource, /resolvedFriendlyName/, "AdminAuth deduplicates TOTP friendly names during enrollment");
+  assert.match(adminAuthSource, /verifiedTotp\.length < 2/, "AdminAuth prevents removing the last remaining verified MFA factor");
+
   console.log("All tests passed");
 } finally {
   await rm(outdir, { recursive: true, force: true });

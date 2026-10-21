@@ -9,6 +9,7 @@ export type AdminAssuranceLevel = "aal1" | "aal2" | null;
 export interface AdminMfaFactor {
   id: string;
   friendlyName: string;
+  createdAt?: string;
 }
 
 export interface AdminSession {
@@ -23,7 +24,7 @@ export interface AdminSession {
 export interface TotpEnrollment {
   factorId: string;
   qrCode: string;
-  secret: string;
+  friendlyName: string;
 }
 
 type AdminAuthResult = { ok: true } | { ok: false; message: string };
@@ -35,9 +36,10 @@ interface AdminAuthValue {
   login: (email: string, password: string) => Promise<AdminAuthResult>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<AdminSession | null>;
-  beginTotpEnrollment: () => Promise<TotpEnrollment>;
+  beginTotpEnrollment: (preferredFriendlyName?: string) => Promise<TotpEnrollment>;
   cancelTotpEnrollment: (factorId: string) => Promise<void>;
   verifyTotp: (factorId: string, code: string) => Promise<AdminAuthResult>;
+  removeVerifiedTotpFactor: (factorIdToRemove: string, activeFactorId: string, code: string) => Promise<AdminAuthResult>;
   requestPasswordReset: (email: string) => Promise<AdminAuthResult>;
   requestEmailChange: (email: string) => Promise<AdminAuthResult>;
   updatePassword: (password: string) => Promise<AdminAuthResult>;
@@ -105,6 +107,7 @@ const validateSupabaseSession = async (candidate: Session | null): Promise<Admin
       verifiedTotpFactors: (factors?.totp ?? []).map((factor) => ({
         id: factor.id,
         friendlyName: factor.friendly_name || "Authenticator app",
+        createdAt: factor.created_at,
       })),
     },
   };
@@ -273,11 +276,42 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       notifyAdminSessionCleared();
     },
     refreshSession,
-    beginTotpEnrollment: async () => {
+    beginTotpEnrollment: async (preferredFriendlyName?: string) => {
       if (!supabase || !session || session.mode !== "supabase") throw new Error("A verified admin session is required.");
-      const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Buy & Sell GH Admin" });
+      const { data: existingFactors, error: listError } = await supabase.auth.mfa.listFactors();
+      if (listError) throw new Error("Could not inspect existing authenticator factors.");
+
+      // Clean up any leftover unverified TOTP factors so their friendly names do not collide
+      const unverifiedTotp = (existingFactors?.all ?? []).filter(
+        (factor) => factor.factor_type === "totp" && factor.status === "unverified"
+      );
+      for (const staleFactor of unverifiedTotp) {
+        await supabase.auth.mfa.unenroll({ factorId: staleFactor.id });
+      }
+
+      const usedNames = new Set(
+        (existingFactors?.totp ?? []).map((factor) => (factor.friendly_name || "").trim().toLowerCase())
+      );
+      const baseName = (preferredFriendlyName || "Buy & Sell GH Admin").trim() || "Buy & Sell GH Admin";
+      let resolvedFriendlyName = baseName;
+      if (usedNames.has(resolvedFriendlyName.toLowerCase())) {
+        let suffix = 2;
+        while (usedNames.has(`${baseName} (${suffix})`.toLowerCase())) {
+          suffix += 1;
+        }
+        resolvedFriendlyName = `${baseName} (${suffix})`;
+      }
+
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: "totp",
+        friendlyName: resolvedFriendlyName,
+      });
       if (error || !data || data.type !== "totp") throw new Error("Authenticator enrollment could not be started.");
-      return { factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };
+      return {
+        factorId: data.id,
+        qrCode: data.totp.qr_code,
+        friendlyName: resolvedFriendlyName,
+      };
     },
     cancelTotpEnrollment: async (factorId) => {
       if (!supabase) return;
@@ -290,6 +324,45 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       if (error) return { ok: false, message: "The verification code is invalid or expired." };
       const nextSession = await refreshSession();
       if (!nextSession || nextSession.assuranceLevel !== "aal2") return { ok: false, message: "MFA verification could not be confirmed." };
+      return { ok: true };
+    },
+    removeVerifiedTotpFactor: async (factorIdToRemove, activeFactorId, code) => {
+      if (!supabase || !session || session.mode !== "supabase") {
+        return { ok: false, message: "A verified admin session is required." };
+      }
+      if (!factorIdToRemove || !activeFactorId || factorIdToRemove === activeFactorId) {
+        return { ok: false, message: "Select a separate active authenticator factor to verify before removing the old factor." };
+      }
+      try {
+        await assertAdminAal2("owner");
+      } catch {
+        return { ok: false, message: "Owner AAL2 verification is required to remove an authenticator." };
+      }
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+      const verifiedTotp = factors?.totp ?? [];
+      if (factorsError || verifiedTotp.length < 2) {
+        return { ok: false, message: "Enroll and verify the new administrator's authenticator before removing the existing factor." };
+      }
+      const hasTarget = verifiedTotp.some((f) => f.id === factorIdToRemove);
+      const hasActive = verifiedTotp.some((f) => f.id === activeFactorId);
+      if (!hasTarget || !hasActive) {
+        return { ok: false, message: "Could not confirm both authenticator factors on this account." };
+      }
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
+        factorId: activeFactorId,
+        code,
+      });
+      if (verifyError) {
+        return { ok: false, message: "Enter a valid 6-digit code from the new administrator's authenticator to confirm removal." };
+      }
+      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: factorIdToRemove });
+      if (unenrollError) {
+        return { ok: false, message: "Could not remove the old authenticator factor. Try again." };
+      }
+      const nextSession = await refreshSession();
+      if (!nextSession || nextSession.assuranceLevel !== "aal2" || nextSession.verifiedTotpFactors.length < 1) {
+        return { ok: false, message: "Authenticator removal completed, please verify session state." };
+      }
       return { ok: true };
     },
     requestPasswordReset: async (email) => {
@@ -321,7 +394,10 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           userData.user.email?.toLowerCase() !== session.email.toLowerCase()) {
         return { ok: false, message: "The administrator session could not be verified. Sign in again." };
       }
-      const { error } = await supabase.auth.updateUser({ email: nextEmail });
+      const { error } = await supabase.auth.updateUser(
+        { email: nextEmail },
+        { emailRedirectTo: `${window.location.origin}/admin/account` }
+      );
       if (error) return { ok: false, message: "Supabase could not start email verification. Try again later." };
       return { ok: true };
     },

@@ -1,5 +1,5 @@
-import { KeyRound, LockKeyhole, LogOut, QrCode, ShieldCheck } from "lucide-react";
-import { type FormEvent, useMemo, useState } from "react";
+import { LockKeyhole, LogOut, QrCode, ShieldCheck } from "lucide-react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuth, type TotpEnrollment } from "../../admin/AdminAuth";
 import { isValidTotpCode, normalizeTotpCode, safeAdminRedirect } from "../../admin/adminSecurity";
@@ -8,15 +8,25 @@ import { Logo } from "../../components/Logo";
 export function AdminMfaPage() {
   const { beginTotpEnrollment, cancelTotpEnrollment, loading, logout, session, verifyTotp } = useAdminAuth();
   const [enrollment, setEnrollment] = useState<TotpEnrollment | null>(null);
+  const [selectedFactorId, setSelectedFactorId] = useState<string>("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showSecret, setShowSecret] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = safeAdminRedirect((location.state as { from?: string } | null)?.from);
   const manageMode = new URLSearchParams(location.search).get("manage") === "1";
-  const verifiedFactor = useMemo(() => session?.verifiedTotpFactors[0] ?? null, [session]);
+  const verifiedFactors = useMemo(() => session?.verifiedTotpFactors ?? [], [session]);
+  const verifiedFactor = useMemo(
+    () => verifiedFactors.find((f) => f.id === selectedFactorId) ?? verifiedFactors[verifiedFactors.length - 1] ?? null,
+    [selectedFactorId, verifiedFactors]
+  );
+
+  useEffect(() => {
+    if (verifiedFactors.length > 0 && ! verifyFactorExists(verifiedFactors, selectedFactorId)) {
+      setSelectedFactorId(verifiedFactors[verifiedFactors.length - 1].id);
+    }
+  }, [verifiedFactors, selectedFactorId]);
 
   if (loading) return <div className="admin-loading" role="status">Validating secure session...</div>;
   if (!session) return <Navigate to="/admin/login" replace state={{ from }} />;
@@ -27,9 +37,9 @@ export function AdminMfaPage() {
     setSubmitting(true);
     setError("");
     try {
-      setEnrollment(await beginTotpEnrollment());
+      const preferredName = verifiedFactors.length > 0 ? "Buy & Sell GH Admin (Primary)" : "Buy & Sell GH Admin";
+      setEnrollment(await beginTotpEnrollment(preferredName));
       setCode("");
-      setShowSecret(false);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Authenticator enrollment could not be started.");
     } finally {
@@ -45,7 +55,6 @@ export function AdminMfaPage() {
       await cancelTotpEnrollment(enrollment.factorId);
       setEnrollment(null);
       setCode("");
-      setShowSecret(false);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Authenticator enrollment could not be cancelled.");
     } finally {
@@ -62,7 +71,18 @@ export function AdminMfaPage() {
     }
     setSubmitting(true);
     setError("");
-    const result = await verifyTotp(factorId, normalizeTotpCode(code));
+    const normalized = normalizeTotpCode(code);
+    let result = await verifyTotp(factorId, normalized);
+    if (!result.ok && !enrollment && verifiedFactors.length > 1) {
+      for (const candidate of verifiedFactors) {
+        if (candidate.id === factorId) continue;
+        const fallbackResult = await verifyTotp(candidate.id, normalized);
+        if (fallbackResult.ok) {
+          result = fallbackResult;
+          break;
+        }
+      }
+    }
     setSubmitting(false);
     if (!result.ok) {
       setError(result.message);
@@ -101,25 +121,38 @@ export function AdminMfaPage() {
         {session.assuranceLevel === "aal2" && manageMode && verifiedFactor && !enrollment && (
           <div className="admin-security-summary">
             <ShieldCheck size={20} />
-            <div><strong>MFA is active</strong><span>{verifiedFactor.friendlyName} is verified for this account.</span></div>
+            <div><strong>MFA is active ({verifiedFactors.length} verified)</strong><span>{verifiedFactor.friendlyName} is verified for this account.</span></div>
           </div>
         )}
 
         {session.assuranceLevel === "aal2" && manageMode && verifiedFactor && !enrollment && (
           <button className="btn-secondary w-full" type="button" onClick={() => void startEnrollment()} disabled={submitting}>
-            <QrCode size={18} /> Add Another Authenticator
+            <QrCode size={18} /> Enroll New Administrator Authenticator
           </button>
         )}
 
         {enrollment && (
           <div className="admin-mfa-enrollment">
             <img className="admin-mfa-qr" src={enrollment.qrCode} alt="Authenticator enrollment QR code" />
-            <p>Scan this QR code with Google Authenticator, Microsoft Authenticator, Authy, or another compatible TOTP app.</p>
-            <button className="btn-ghost w-full" type="button" onClick={() => setShowSecret((current) => !current)}>
-              <KeyRound size={17} /> {showSecret ? "Hide Manual Setup Key" : "Show Manual Setup Key"}
-            </button>
-            {showSecret && <code className="admin-mfa-secret">{enrollment.secret}</code>}
+            <p>Scan this QR code with Google Authenticator, Microsoft Authenticator, Authy, or another compatible TOTP app ({enrollment.friendlyName}).</p>
           </div>
+        )}
+
+        {!enrollment && verifiedFactors.length > 1 && (
+          <label className="block text-xs font-semibold text-slate-700">
+            Active Authenticator
+            <select
+              value={verifiedFactor?.id ?? ""}
+              onChange={(e) => setSelectedFactorId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs"
+            >
+              {verifiedFactors.map((factor) => (
+                <option key={factor.id} value={factor.id}>
+                  {factor.friendlyName}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
 
         {(verifiedFactor || enrollment) && (
@@ -144,4 +177,8 @@ export function AdminMfaPage() {
       </section>
     </main>
   );
+}
+
+function verifyFactorExists(factors: { id: string }[], id: string) {
+  return Boolean(id && factors.some((f) => f.id === id));
 }
