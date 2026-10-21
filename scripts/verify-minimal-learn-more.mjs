@@ -45,17 +45,14 @@ try {
           const images = root ? [...root.querySelectorAll("img")] : [];
           for (const img of images) {
             img.scrollIntoView({ block: "center" });
-            if (!img.complete) {
-              await new Promise((r) => {
-                img.addEventListener("load", r, { once: true });
-                img.addEventListener("error", r, { once: true });
-                setTimeout(r, 6000);
-              });
-            }
             await img.decode().catch(() => {});
           }
-          window.scrollTo(0, 0);
         }, rootSelector);
+        await page.waitForFunction((sel) => {
+          const root = document.querySelector(sel);
+          const images = root ? [...root.querySelectorAll("img")] : [];
+          return images.length === 0 || images.every((img) => img.complete && img.naturalWidth > 0);
+        }, { timeout: 20000 }, rootSelector).catch(() => {});
         const result = await page.evaluate((sel, bSel) => {
           const main = document.querySelector(sel);
           const images = main ? [...main.querySelectorAll("img")] : [];
