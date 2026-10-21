@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { editorialStories, type EditorialStory } from "../../catalog/editorialStories";
+import { defaultEditorialShowcases } from "../../catalog/minimalEditorialSections";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { productFamilies, productStories, type ProductFamilyKey } from "../../catalog/productExperience";
 import {
@@ -48,7 +49,7 @@ import {
 } from "../../cms/learnMoreRepository";
 import { iphone18ProEducation } from "../../data/iphone18ProEducation";
 import { macStudioStory } from "../../data/macStudioStory";
-import { EditorialProductStory } from "../../components/EditorialProductStory";
+import { MinimalEditorialProductStory } from "../../components/MinimalEditorialProductStory";
 import { CatalogProductStory, storyFromProduct } from "../ProductStoryPage";
 import { MacLaunchPage } from "../MacLaunchPage";
 import "../../styles/admin-learn-more.css";
@@ -143,7 +144,7 @@ export function AdminLearnMorePages() {
       ...Object.values(editorialStories).map((story) => ({
         kind: "editorial" as const,
         story,
-        sections: [],
+        sections: defaultEditorialShowcases(story),
         ...(story.slug === "iphone-18-pro" ? { education: iphone18ProEducation } : {}),
       })),
       ...productStories
@@ -317,10 +318,9 @@ export function AdminLearnMorePages() {
   };
 
   // Select media from modal
-  const handleSelectMedia = (url: string) => {
-    if (!mediaTarget || !workingContent) return;
-    const { sectionId, field } = mediaTarget;
-
+  const applyMedia = (url: string, target: { sectionId?: string; field: string }) => {
+    if (!workingContent) return;
+    const { sectionId, field } = target;
     const next = clone(workingContent);
     if (!sectionId) {
       // Core hero/video
@@ -328,6 +328,8 @@ export function AdminLearnMorePages() {
         next.story.hero.src = url;
       } else if (field === "videoSrc" && next.kind === "editorial" && next.story.cinematicVideo) {
         next.story.cinematicVideo.src = url;
+      } else if (field === "mobileVideoSrc" && next.kind === "editorial" && next.story.cinematicVideo) {
+        next.story.cinematicVideo.mobileSrc = url;
       } else if (field === "videoPoster" && next.kind === "editorial" && next.story.cinematicVideo) {
         next.story.cinematicVideo.poster = url;
       }
@@ -340,6 +342,11 @@ export function AdminLearnMorePages() {
     }
 
     setWorkingContent(next);
+  };
+
+  const handleSelectMedia = (url: string) => {
+    if (!mediaTarget) return;
+    applyMedia(url, mediaTarget);
     setShowMediaModal(false);
     setMediaTarget(null);
   };
@@ -355,8 +362,7 @@ export function AdminLearnMorePages() {
       setUploadProgress(null);
 
       // Apply uploaded URL
-      setMediaTarget(target);
-      handleSelectMedia(url);
+      applyMedia(url, target);
       setStatusMsg({ text: "Media uploaded and applied successfully!", type: "success" });
     } catch (err: any) {
       setUploadProgress(null);
@@ -1021,6 +1027,30 @@ export function AdminLearnMorePages() {
                     <Image size={14} /> Change Poster Image
                   </button>
                 </div>
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Mobile Video (Optional)</label>
+                  <input
+                    className="vlearn-input"
+                    type="url"
+                    value={workingContent.story.cinematicVideo.mobileSrc || ""}
+                    onChange={(e) => {
+                      const next = clone(workingContent);
+                      if (next.kind === "editorial" && next.story.cinematicVideo) {
+                        next.story.cinematicVideo.mobileSrc = e.target.value || undefined;
+                        setWorkingContent(next);
+                      }
+                    }}
+                  />
+                  <div className="vlearn-media-actions">
+                    <button type="button" className="vlearn-btn" onClick={() => handleOpenMediaLibrary({ field: "mobileVideoSrc" })}>
+                      <Video size={14} /> Select Mobile Video
+                    </button>
+                    <label className="vlearn-btn">
+                      <Upload size={14} /> Upload Mobile Video
+                      <input type="file" accept="video/mp4,video/webm" style={{ display: "none" }} onChange={(e) => handleFileUpload(e, { field: "mobileVideoSrc" })} />
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           ) : activeSection ? (
@@ -1580,10 +1610,9 @@ export function AdminLearnMorePages() {
             <div className="vlearn-preview-viewport">
               <div className={`vlearn-device-bezel is-${previewDevice}`}>
                 {workingContent.kind === "editorial" ? (
-                  <EditorialProductStory
+                  <MinimalEditorialProductStory
                     story={workingContent.story}
                     sections={workingContent.sections}
-                    education={workingContent.education}
                   />
                 ) : workingContent.kind === "mac-studio" ? (
                   <MacLaunchPage product="mac-studio" />

@@ -1,0 +1,11 @@
+product,path,width,height,bytes
+iPhone 18 Pro,public/products/story/iphone-18-pro-supplied-burgundy-front-back.jpg,736,710,19273
+iPhone Duo,public/products/campaigns/iphone-duo-open.webp,736,620,40460
+Watch Series 12,public/products/campaigns/watch-series-12-hero.webp,1254,1254,67580
+Watch Ultra 4,public/products/campaigns/watch-ultra-4-hero.webp,736,520,30408
+AirPods Pro 3,public/products/story/airpods-pro-3-apple.jpg,735,690,19813
+MacBook Air,public/products/campaigns/macbook-air-cinematic.webp,1536,1024,67986
+MacBook Pro,public/products/campaigns/macbook-pro-cinematic.webp,1536,1024,62790
+Mac mini,src/assets/homepage/homepage-mac-mini-white.webp,1536,844,16780
+iPad Air,src/assets/catalogue-products/ipad-air-11-inch-m3-premium.webp,1200,900,107182
+iPad Pro,public/products/campaigns/ipad-pro-cinematic.webp,1536,1024,63430

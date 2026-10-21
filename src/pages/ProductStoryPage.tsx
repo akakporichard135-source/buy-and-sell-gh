@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { editorialStories } from "../catalog/editorialStories";
+import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
 import { fetchPublishedLearnMore, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
 import {
   familyMatchesProduct,
@@ -13,7 +14,7 @@ import {
   type ProductStoryDefinition,
 } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
-import { EditorialProductStory } from "../components/EditorialProductStory";
+import { MinimalEditorialProductStory } from "../components/MinimalEditorialProductStory";
 import { LearnMoreSections } from "../components/LearnMoreSections";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
@@ -65,11 +66,11 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   }, [slug, resolvedSlug]);
 
   const editorialStory = editorialStories[resolvedSlug] || editorialStories[slug];
-  if (editorialStory) return <EditorialProductStory
+  if (editorialStory) return <MinimalEditorialProductStory
     story={published?.kind === "editorial" && (published.story.slug === slug || published.story.slug === resolvedSlug)
       ? refreshBundledStoryAssets(published.story, editorialStory) : editorialStory}
-    sections={(published?.story.slug === slug || published?.story.slug === resolvedSlug) ? published.sections : undefined}
-    education={published?.kind === "editorial" && (published.story.slug === slug || published.story.slug === resolvedSlug) ? published.education : undefined} />;
+    sections={(published?.story.slug === slug || published?.story.slug === resolvedSlug)
+      ? published.sections : defaultEditorialShowcases(editorialStory)} />;
   return <CatalogProductStory family={family} slug={resolvedSlug || slug}
     published={(published?.story.slug === slug || published?.story.slug === resolvedSlug) ? published : null} />;
 }

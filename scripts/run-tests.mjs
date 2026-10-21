@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, readFile, rm } from "node:fs/promises";
+import { access, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -46,6 +46,16 @@ try {
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
   const editorialStories = await bundle(path.join(projectRoot, "src/catalog/editorialStories.ts"), path.join(outdir, "editorialStories.mjs"));
+  const minimalEditorial = await bundle(path.join(projectRoot, "src/catalog/minimalEditorialSections.ts"), path.join(outdir, "minimalEditorialSections.mjs"));
+  for (const story of Object.values(editorialStories.editorialStories)) {
+    const sections = minimalEditorial.defaultEditorialShowcases(story);
+    assert.ok(sections.length <= 2, `${story.slug} has too many default showcases`);
+    assert.equal(new Set(sections.map((section) => section.image)).size, sections.length);
+    assert.ok(sections.every((section) => section.enabled && section.alt && section.image));
+    if (story.cinematicVideo?.src.startsWith("/videos/")) {
+      await access(path.join(projectRoot, "public", story.cinematicVideo.src));
+    }
+  }
   const iphoneEducation = await bundle(path.join(projectRoot, "src/data/iphone18ProEducation.ts"), path.join(outdir, "iphone18ProEducation.mjs"));
   const macStudio = await bundle(path.join(projectRoot, "src/data/macStudioStory.ts"), path.join(outdir, "macStudioStory.mjs"));
   const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
