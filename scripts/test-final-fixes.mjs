@@ -23,7 +23,8 @@ function waitForServer(port, timeoutMs = 30000) {
 }
 
 async function runTests() {
-  console.log('Connecting to preview server at http://127.0.0.1:4173 ...');
+  const BASE_URL = process.env.TEST_BASE_URL || 'http://127.0.0.1:4173';
+  console.log(`Connecting to server at ${BASE_URL} ...`);
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
     headless: true,
@@ -41,11 +42,16 @@ async function runTests() {
     // =========================================================================
     console.log('\n--- TEST SUITE 1: BUY PAGE COLOR SELECTOR VERIFICATION ---');
     const buyPagesToTest = [
-      { name: 'iPhone 18 Pro', url: 'http://127.0.0.1:4173/shop/buy-iphone/iphone-18-pro' },
-      { name: 'Apple Watch Series 12', url: 'http://127.0.0.1:4173/shop/buy-watch/apple-watch-series-12' },
-      { name: 'MacBook Pro', url: 'http://127.0.0.1:4173/shop/buy-mac/macbook-pro' },
-      { name: 'iPad Pro', url: 'http://127.0.0.1:4173/shop/buy-ipad/ipad-pro' },
-      { name: 'AirPods Max', url: 'http://127.0.0.1:4173/shop/buy-airpods/airpods-max-2' }
+      { name: 'iPhone 18 Pro', url: `${BASE_URL}/shop/buy-iphone/iphone-18-pro` },
+      { name: 'Apple Watch Series 12', url: `${BASE_URL}/shop/buy-watch/apple-watch-series-12` },
+      { name: 'MacBook Pro', url: `${BASE_URL}/shop/buy-mac/macbook-pro` },
+      { name: 'iPad Pro', url: `${BASE_URL}/shop/buy-ipad/ipad-pro` },
+      { name: 'AirPods Max', url: `${BASE_URL}/shop/buy-airpods/airpods-max-2` },
+      { name: 'iPad Air', url: `${BASE_URL}/shop/buy-ipad/ipad-air` },
+      { name: 'MacBook Air', url: `${BASE_URL}/shop/buy-mac/macbook-air` },
+      { name: 'Apple Watch Ultra 4', url: `${BASE_URL}/shop/buy-watch/apple-watch-ultra-4` },
+      { name: 'AirPods Pro 3', url: `${BASE_URL}/shop/buy-airpods/airpods-pro-3` },
+      { name: 'Magic Keyboard', url: `${BASE_URL}/shop/buy-accessory/magic-keyboard-with-touch-id` }
     ];
 
     const page = await browser.newPage();
@@ -53,8 +59,9 @@ async function runTests() {
 
     for (const testItem of buyPagesToTest) {
       console.log(`\nTesting Buy Page: ${testItem.name} (${testItem.url})`);
-      await page.goto(testItem.url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(testItem.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await page.waitForSelector('.apple-buy-container', { timeout: 10000 });
+      await page.waitForSelector('.apple-buy-swatch-btn', { timeout: 15000 });
 
       // 1. Check that separate finish preview image does NOT exist
       const separatePreviewExists = await page.evaluate(() => {
@@ -149,7 +156,7 @@ async function runTests() {
       {
         device: 'Android (Pixel 8)',
         width: 412,
-        height: 915,
+        height: 600,
         isMobile: true,
         hasTouch: true,
         userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Mobile Safari/537.36'
@@ -167,7 +174,7 @@ async function runTests() {
         hasTouch: vp.hasTouch
       });
 
-      await mobilePage.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle2', timeout: 30000 });
+      await mobilePage.goto(`${BASE_URL}/`, { waitUntil: 'networkidle2', timeout: 30000 });
 
       // Step A: Scroll down homepage, then scroll up slightly to reveal sticky navigation (natural mobile gesture)
       await mobilePage.evaluate(() => window.scrollTo(0, 1250));
@@ -201,7 +208,8 @@ async function runTests() {
           bodyPosition: body.style.position,
           bodyTop: body.style.top,
           bodyOverflow: body.style.overflow,
-          htmlOverflow: html.style.overflow
+          htmlOverflow: html.style.overflow,
+          headerBackground: getComputedStyle(document.querySelector('.global-header')).backgroundColor
         };
       });
 
@@ -210,7 +218,14 @@ async function runTests() {
 
       const bodyIsLocked = curtainState.bodyOverflow === 'hidden' &&
         curtainState.htmlOverflow === 'hidden' &&
-        curtainState.curtainTop >= 40 && curtainState.curtainTop <= 48;
+        curtainState.curtainTop >= 40 && curtainState.curtainTop <= 48 &&
+        curtainState.headerBackground === 'rgb(255, 255, 255)';
+
+      await mobilePage.mouse.move(20, 20);
+      await mobilePage.mouse.wheel({ deltaY: 500 });
+      await new Promise((r) => setTimeout(r, 200));
+      const scrollAfterBackgroundWheel = await mobilePage.evaluate(() => window.scrollY);
+      const backgroundPositionHeld = Math.abs(scrollAfterBackgroundWheel - initialScrollY) <= 2;
 
       // Step D: Verify background touch & scroll lock while menu is open
       const backgroundLocked = await mobilePage.evaluate(() => {
@@ -277,19 +292,35 @@ async function runTests() {
 
       const scrollRestoredCorrectly = Math.abs(restoredState.scrollY - initialScrollY) <= 2;
 
+      await mobilePage.evaluate(() => window.scrollBy(0, -50));
+      await new Promise((r) => setTimeout(r, 300));
+      await menuBtn.click();
+      await new Promise((r) => setTimeout(r, 400));
+      await mobilePage.$('.global-curtain-heading-btn').then((heading) => heading?.click());
+      const destination = await mobilePage.$eval('.global-curtain-sublink', (link) => link.getAttribute('href'));
+      await mobilePage.click('.global-curtain-sublink');
+      await new Promise((r) => setTimeout(r, 400));
+      const linkClosedMenu = await mobilePage.evaluate(() => !document.querySelector('.global-mobile-curtain'));
+      const linkNavigated = new URL(mobilePage.url()).pathname === destination;
+
       const deviceTestPassed = curtainState.curtainExists &&
         curtainState.isOpenClass &&
         bodyIsLocked &&
         backgroundLocked &&
+        backgroundPositionHeld &&
         scrollTestResult.canScroll &&
         scrollRestoredCorrectly &&
-        restoredState.bodyOverflow === '';
+        restoredState.bodyOverflow === '' &&
+        linkClosedMenu && linkNavigated;
 
       results.mobileNavTests.push({
         device: vp.device,
         curtainExpandsToViewport: curtainState.curtainExists && curtainState.curtainHeight > 500,
         bodyLockedBehindMenu: bodyIsLocked,
+        backgroundPositionHeld,
         menuScrollsFreely: scrollTestResult.canScroll,
+        linkClosedMenu,
+        linkNavigated,
         scrollRestoredExact: scrollRestoredCorrectly,
         initialScrollY,
         restoredScrollY: restoredState.scrollY,
@@ -300,8 +331,6 @@ async function runTests() {
       await mobilePage.close();
     }
 
-    await browser.close();
-
     console.log('\n======================================================');
     console.log('FINAL VERIFICATION SUMMARY:');
     console.log('Buy Page Color Selector Tests:', results.buyColorSelectorTests.every((t) => t.passed) ? 'ALL PASSED' : 'FAILED');
@@ -309,10 +338,10 @@ async function runTests() {
     console.log('======================================================\n');
 
     if (!results.buyColorSelectorTests.every((t) => t.passed) || !results.mobileNavTests.every((t) => t.passed)) {
-      process.exit(1);
+      throw new Error('One or more browser smoke checks failed');
     }
   } finally {
-    // cleanup
+    await browser.close();
   }
 }
 

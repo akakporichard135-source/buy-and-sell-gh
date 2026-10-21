@@ -367,7 +367,7 @@ export function Header() {
 
   return (
     <header
-      className={`site-header global-header sticky top-0 z-50 ${isNavHidden ? "nav-hidden" : ""}`}
+      className={`site-header global-header sticky top-0 z-50 ${isNavHidden ? "nav-hidden" : ""} ${isMenuMounted ? "menu-is-active" : ""}`}
       onFocusCapture={() => setNavVisible(true)}
     >
       <div className="global-header-inner">

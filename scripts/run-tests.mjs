@@ -125,6 +125,7 @@ try {
   const productUrl = whatsapp.productWhatsAppUrl(product, "256GB", "Natural Titanium", "https://example.com/product");
   assert.ok(productUrl.startsWith("https://wa.me/233551975451?text="), "Product WhatsApp link uses primary number");
   assert.ok(decodeURIComponent(productUrl).includes("iPhone 15 Pro Max"), "Product WhatsApp link includes product name");
+  assert.ok(decodeURIComponent(productUrl).includes("Natural Titanium"), "Product WhatsApp link keeps the selected finish");
 
   const order = orders.buildOrderRequestPayload(items, {
     fullName: "Test Customer",
@@ -137,12 +138,16 @@ try {
   assert.equal(order.referenceNumber, "BSGH-TEST-0001", "Order request keeps generated reference");
   assert.equal(order.status, "Pending", "Order request starts in Pending status");
   assert.equal(order.total, 14500, "Order request total is calculated from cart items");
+  assert.equal(order.items[0].colour, "Natural Titanium", "Order request keeps the selected finish");
+  const submission = orders.buildOrderSubmissionInput(items, order.customer, "test-submission");
+  assert.equal(submission.items[0].selectedColour, "Natural Titanium", "Supabase submission keeps the selected finish");
 
   const orderRequestUrl = whatsapp.orderRequestWhatsAppUrl(order);
   const decodedOrderRequest = decodeURIComponent(orderRequestUrl);
   assert.ok(orderRequestUrl.startsWith("https://wa.me/233551975451?text="), "Order request WhatsApp link uses primary number");
   assert.ok(decodedOrderRequest.includes("Reference: BSGH-TEST-0001"), "Order request WhatsApp link includes reference");
   assert.ok(decodedOrderRequest.includes("Order total: GHS 14,500"), "Order request WhatsApp link includes total");
+  assert.ok(decodedOrderRequest.includes("Natural Titanium"), "Order request WhatsApp handoff keeps the selected finish");
 
   const mixedProducts = [
     { ...product, id: "iphone", slug: "iphone", category: "iPhones", createdAt: "2026-01-06" },
