@@ -20,11 +20,20 @@ import { IpadProBuyExperience } from "../components/buy/IpadProBuyExperience";
 import { IphoneDuoPricingExperience } from "../components/buy/IphoneDuoPricingExperience";
 import { GenericBuyExperience } from "../components/buy/GenericBuyExperience";
 
+import { getProductBySlug } from "../data/products";
+
 export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
-  const { activeProducts, loading } = useProductCatalog();
+  const { activeProducts, products: allProducts } = useProductCatalog();
 
-  const candidates = useMemo(() => resolveCandidates(activeProducts, family, slug), [activeProducts, family, slug]);
+  const candidates = useMemo(() => {
+    const active = resolveCandidates(activeProducts, family, slug);
+    if (active.length > 0) return active;
+    const all = resolveCandidates(allProducts, family, slug);
+    if (all.length > 0) return all;
+    const staticItem = getProductBySlug(slug);
+    return staticItem ? [staticItem] : [];
+  }, [activeProducts, allProducts, family, slug]);
   const primaryProduct = candidates[0];
 
   // 1. iPhone Duo: Special VIEW PRICING Experience
