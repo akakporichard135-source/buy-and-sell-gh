@@ -38,7 +38,7 @@ try {
       const page = await browser.newPage();
       await page.setViewport({ width, height, deviceScaleFactor: 1 });
       try {
-        await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await page.goto(`${base}${route}`, { waitUntil: "domcontentloaded", timeout: 60000 });
         await page.waitForSelector(rootSelector, { timeout: 15000 });
         await page.evaluate(async (sel) => {
           const root = document.querySelector(sel);

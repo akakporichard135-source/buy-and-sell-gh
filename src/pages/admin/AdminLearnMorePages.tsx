@@ -57,21 +57,21 @@ import "../../styles/admin-learn-more.css";
 const clone = <T,>(value: T): T => structuredClone(value);
 
 const SECTION_TYPE_PRESETS: { type: LearnMoreSectionType; label: string; icon: string; desc: string }[] = [
-  { type: "text-image", label: "Feature Spotlight", icon: "Layers", desc: "Balanced copy alongside a high-res beauty visual." },
-  { type: "large-image", label: "Full-Width Showcase", icon: "Image", desc: "Expansive edge-to-edge product presentation." },
-  { type: "gallery", label: "Multi-Angle Gallery", icon: "Image", desc: "Interactive angle carousel on pure white." },
-  { type: "video", label: "Cinematic Film", icon: "Video", desc: "Autoplaying muted video highlight with poster." },
+  { type: "large-image", label: "Hero Image Showcase", icon: "Image", desc: "Centered beauty product render with bold headline and tagline." },
+  { type: "full-bleed", label: "Full-Width Product Image", icon: "Maximize2", desc: "Expansive edge-to-edge product presentation canvas." },
+  { type: "text-image", label: "Split Image and Text", icon: "Layers", desc: "Balanced copy alongside a high-res beauty visual." },
+  { type: "video", label: "Cinematic Film", icon: "Video", desc: "Autoplaying muted video highlight with poster and responsive mobile video." },
+  { type: "gallery", label: "Multi-Angle Gallery", icon: "Image", desc: "Interactive angle carousel of product views on pure white." },
+  { type: "hardware-close-up", label: "Hardware Close-Up", icon: "Sparkles", desc: "Detailed close-up beauty shot with tactile highlights." },
+  { type: "finishes", label: "Materials & Finishes", icon: "Layers", desc: "Precision anodized chassis colors & swatches." },
   { type: "feature-cards", label: "Product Feature Cards", icon: "Layers", desc: "Rounded feature cards grid with icons & copy." },
   { type: "highlights", label: "Hardware Highlights", icon: "Sparkles", desc: "Horizontal scrolling rail of key features." },
-  { type: "hardware-close-up", label: "Hardware Close-Up", icon: "Image", desc: "Detailed close-up beauty shot with tactile highlights." },
-  { type: "finishes", label: "Materials & Finishes", icon: "Layers", desc: "Precision anodized chassis colors & swatches." },
-  { type: "performance", label: "Apple Silicon", icon: "Laptop", desc: "M-series / A-series compute benchmarks & neural engine." },
+  { type: "performance", label: "Apple Silicon Performance", icon: "Laptop", desc: "M-series / A-series compute benchmarks & neural engine." },
   { type: "battery", label: "All-Day Battery", icon: "Sparkles", desc: "Endurance metrics and power efficiency." },
-  { type: "specifications", label: "Technical Specs", icon: "Monitor", desc: "Detailed hardware grid and verified Accra fulfillment." },
+  { type: "specifications", label: "Technical Specifications", icon: "Monitor", desc: "Detailed hardware grid and verified Accra fulfillment." },
   { type: "comparison", label: "Model Comparison", icon: "Layers", desc: "Side-by-side canvas size & capacity contrast." },
   { type: "scroll-reveal", label: "Scroll-Reveal Story", icon: "Eye", desc: "Immersive storytelling revealed progressively." },
   { type: "sticky-story", label: "Sticky Storytelling", icon: "Layers", desc: "Pinned copy alongside scrolling product visuals." },
-  { type: "full-bleed", label: "Full-Bleed Media", icon: "Maximize2", desc: "Edge-to-edge cinematic banner with centered copy." },
   { type: "cta", label: "Direct Buy CTA", icon: "Send", desc: "Seamless transition into live Store purchasing." },
 ];
 
@@ -190,6 +190,7 @@ export function AdminLearnMorePages() {
 
   // Revisions State
   const [showRevisionsModal, setShowRevisionsModal] = useState(false);
+  const [showAddSectionModal, setShowAddSectionModal] = useState(false);
   const [revisions, setRevisions] = useState<LearnMoreRevision[]>([]);
   const [loadingRevisions, setLoadingRevisions] = useState(false);
 
@@ -676,8 +677,16 @@ export function AdminLearnMorePages() {
 
         {/* PANEL 2: Visual Page Section Outline (Middle) */}
         <section className="vlearn-mid-panel">
-          <div className="vlearn-panel-header">
-            <h3>Page Outline &amp; Sections</h3>
+          <div className="vlearn-panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0 }}>Page Outline &amp; Sections</h3>
+            <button
+              type="button"
+              className="vlearn-btn vlearn-btn-primary"
+              style={{ padding: "6px 12px", fontSize: "12px", fontWeight: 700 }}
+              onClick={() => setShowAddSectionModal(true)}
+            >
+              <Plus size={14} /> Add Section
+            </button>
           </div>
 
           <div className="vlearn-section-cards-list">
@@ -787,13 +796,21 @@ export function AdminLearnMorePages() {
             })}
           </div>
 
-          {/* Add Section Preset Controls */}
+          {/* Add Section Controls */}
           <div className="vlearn-add-section-box">
+            <button
+              type="button"
+              className="vlearn-btn vlearn-btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: "13px", fontWeight: 700, marginBottom: 14 }}
+              onClick={() => setShowAddSectionModal(true)}
+            >
+              <Plus size={16} /> + Add Section
+            </button>
             <h4 style={{ margin: "0 0 10px", fontSize: "12px", textTransform: "uppercase", color: "#86868b" }}>
-              + Add Section Preset
+              Quick Templates
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-              {SECTION_TYPE_PRESETS.map((preset) => (
+              {SECTION_TYPE_PRESETS.slice(0, 4).map((preset) => (
                 <button
                   key={preset.type}
                   type="button"
@@ -1567,7 +1584,67 @@ export function AdminLearnMorePages() {
         </div>
       )}
 
-      {/* 5. Live Device Preview Modal */}
+      {/* 5. Section Library Modal */}
+      {showAddSectionModal && (
+        <div className="vlearn-modal-backdrop" onClick={() => setShowAddSectionModal(false)}>
+          <div className="vlearn-modal-dialog vlearn-section-library-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="vlearn-modal-header">
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Section Library — Add Section</h3>
+                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#86868b" }}>
+                  Choose a layout template to add to {workingContent?.story.name}.
+                </p>
+              </div>
+              <button type="button" className="vlearn-icon-btn" onClick={() => setShowAddSectionModal(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="vlearn-modal-content">
+              <div className="vlearn-section-library-grid">
+                {SECTION_TYPE_PRESETS.map((preset) => {
+                  const IconComp =
+                    preset.icon === "Image" ? Image :
+                    preset.icon === "Video" ? Video :
+                    preset.icon === "Maximize2" ? Maximize2 :
+                    preset.icon === "Laptop" ? Laptop :
+                    preset.icon === "Monitor" ? Monitor :
+                    preset.icon === "Sparkles" ? Sparkles :
+                    preset.icon === "Send" ? Send : Layers;
+
+                  return (
+                    <div
+                      key={preset.type}
+                      className="vlearn-template-card"
+                      onClick={() => {
+                        handleAddSection(preset.type);
+                        setShowAddSectionModal(false);
+                      }}
+                    >
+                      <div className="vlearn-template-icon">
+                        <IconComp size={20} />
+                      </div>
+                      <div className="vlearn-template-body">
+                        <h4>{preset.label}</h4>
+                        <p>{preset.desc}</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="vlearn-btn vlearn-btn-secondary"
+                        style={{ fontSize: "11px", padding: "4px 10px", marginTop: "auto", width: "fit-content" }}
+                      >
+                        <Plus size={12} /> Add to Page
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Live Device Preview Modal */}
       {showPreviewModal && workingContent && (
         <div className="vlearn-modal-backdrop vlearn-modal-overlay" onClick={() => setShowPreviewModal(false)}>
           <div
