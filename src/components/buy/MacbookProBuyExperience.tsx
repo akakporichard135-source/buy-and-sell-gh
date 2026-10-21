@@ -169,16 +169,17 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
           : catalogProduct.slug.includes("14") || catalogProduct.name.includes("14"))
     );
     if (matchesCatalogSize && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const hasFullVariants = Boolean(
-        catalogProduct.variants && catalogProduct.variants.some((v) => Boolean(v.chip && v.memory))
+      const hasMatchingVariant = Boolean(
+        catalogProduct.variants &&
+          catalogProduct.variants.some((v) => v.chip === chip && v.memory === memory && v.storage === storage)
       );
       return {
         ...catalogProduct,
-        variants: hasFullVariants ? catalogProduct.variants : fallbackProduct.variants,
+        variants: hasMatchingVariant ? catalogProduct.variants : fallbackProduct.variants,
       };
     }
     return fallbackProduct;
-  }, [screenSize, catalogProduct, fallbackProduct]);
+  }, [screenSize, chip, memory, storage, catalogProduct, fallbackProduct]);
 
   const configured = resolveConfiguredPrice(activeProduct, { screenSize, chip, memory, storage });
   const priceLabel = configured.formattedPrice;
@@ -192,7 +193,13 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, configured.variant, currentDisplayImg || activeImage);
+    const effectiveVariant = configured.variant
+      ? {
+          ...configured.variant,
+          title: `MacBook Pro ${screenSize} (${chip}, ${memory} / ${storage})`,
+        }
+      : undefined;
+    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, effectiveVariant, currentDisplayImg || activeImage);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }

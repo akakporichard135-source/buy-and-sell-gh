@@ -161,16 +161,17 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           : catalogProduct.slug.includes("13") || catalogProduct.name.includes("13"))
     );
     if (matchesCatalogSize && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const hasFullVariants = Boolean(
-        catalogProduct.variants && catalogProduct.variants.some((v) => Boolean(v.memory))
+      const hasMatchingVariant = Boolean(
+        catalogProduct.variants &&
+          catalogProduct.variants.some((v) => v.memory === memory && v.storage === storage)
       );
       return {
         ...catalogProduct,
-        variants: hasFullVariants ? catalogProduct.variants : fallbackProduct.variants,
+        variants: hasMatchingVariant ? catalogProduct.variants : fallbackProduct.variants,
       };
     }
     return fallbackProduct;
-  }, [screenSize, catalogProduct, fallbackProduct]);
+  }, [screenSize, memory, storage, catalogProduct, fallbackProduct]);
 
   const configured = resolveConfiguredPrice(activeProduct, { screenSize, memory, storage });
   const priceLabel = configured.formattedPrice;
@@ -184,7 +185,13 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, configured.variant, currentFinishImg);
+    const effectiveVariant = configured.variant
+      ? {
+          ...configured.variant,
+          title: `MacBook Air ${screenSize} (${memory} / ${storage})`,
+        }
+      : undefined;
+    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, effectiveVariant, currentFinishImg);
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }
