@@ -3,6 +3,7 @@ import { ArrowRight, Braces, Cpu, Sparkles, Workflow, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { editorialStories } from "../catalog/editorialStories";
+import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
 import { fetchPublishedLearnMore, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
 import { EditorialProductStory } from "../components/EditorialProductStory";
 import { LearnMoreSections } from "../components/LearnMoreSections";
@@ -27,7 +28,7 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
     const current = editorialStories["mac-mini"];
     return <EditorialProductStory
       story={content?.kind === "editorial" ? refreshBundledStoryAssets(content.story, current) : current}
-      sections={content?.sections} />;
+      sections={content?.sections ?? defaultEditorialShowcases(current)} />;
   }
 
   const launch = newMacLaunches[product];
@@ -50,7 +51,8 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
             </div>
           </div>
           <picture>{story.image.mobileSrc && <source media="(max-width: 600px)" srcSet={story.image.mobileSrc} />}
-            <img src={story.image.src} alt={story.image.alt} fetchPriority="high" decoding="async" /></picture>
+            <img src={story.image.src} alt={story.image.alt} fetchPriority="high" decoding="async"
+              style={{ objectFit: story.image.fit, objectPosition: story.image.position }} /></picture>
         </section>
         <LearnMoreSections sections={sectionsAt(content?.sections || [], "after-hero")} />
 
@@ -59,6 +61,7 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
         </div>
 
         <LearnMoreSections sections={sectionsAt(content?.sections || [], "after-panels")} />
+        <LearnMoreSections sections={sectionsAt(content?.sections || [], "after-film")} />
         <LearnMoreSections sections={sectionsAt(content?.sections || [], "end")} />
 
         <section className="mac-story-preorder" aria-labelledby="mac-story-preorder-title">

@@ -39,7 +39,7 @@ export interface ProductStoryDefinition {
   introduction: string;
   introductionLead?: string;
   introductionSub?: string;
-  media: { type: "image" | "video"; src: string; alt: string };
+  media: { type: "image" | "video"; src: string; alt: string; cmsAssetOverride?: boolean; fit?: "contain" | "cover"; position?: string };
   designMedia?: { type: "image"; src: string; alt: string };
   galleryMedia?: Array<{ src: string; alt: string }>;
   colorStory?: {

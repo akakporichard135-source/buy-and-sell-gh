@@ -1,9 +1,10 @@
 import * as tus from "tus-js-client";
 import { assertAdminAal2 } from "../admin/adminAuthorization";
-import type { EditorialStory } from "../catalog/editorialStories";
-import type { ProductStoryDefinition } from "../catalog/productExperience";
-import type { IphoneEducationContent } from "../data/iphone18ProEducation";
-import type { MacStudioStory } from "../data/macStudioStory";
+import { editorialStories, type EditorialStory } from "../catalog/editorialStories";
+import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
+import { productStories, type ProductFamilyKey, type ProductStoryDefinition } from "../catalog/productExperience";
+import { iphone18ProEducation, type IphoneEducationContent } from "../data/iphone18ProEducation";
+import { macStudioStory, type MacStudioStory } from "../data/macStudioStory";
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
 
 export type LearnMoreSectionType =
@@ -51,6 +52,7 @@ export interface LearnMoreSection {
   alt?: string;
   fit?: "contain" | "cover";
   position?: string;
+  frameAspectRatio?: number;
   video?: string;
   mobileVideo?: string;
   poster?: string;
@@ -92,7 +94,8 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
   }
   if (published && current && typeof published === "object" && typeof current === "object") {
     return Object.fromEntries(Object.entries(published).map(([key, value]) => [
-      key, refreshBundledStoryAssets(value, (current as Record<string, unknown>)[key]),
+      key, key === "src" && (published as Record<string, unknown>).cmsAssetOverride === true
+        ? value : refreshBundledStoryAssets(value, (current as Record<string, unknown>)[key]),
     ])) as T;
   }
   if (typeof published === "string" && published.startsWith("/assets/") && typeof current === "string" && current.startsWith("/assets/")) {
@@ -344,4 +347,138 @@ export async function listLearnMoreMedia(): Promise<string[]> {
       client.storage.from("learn-more-media").getPublicUrl(`${folder}/${file.name}`).data.publicUrl);
   }));
   return folders.flat();
+}
+
+export interface LearnMorePageStatus {
+  published: boolean;
+  hasDraft: boolean;
+  updatedAt?: string;
+}
+
+export async function fetchLearnMoreStatusMap(): Promise<Record<string, LearnMorePageStatus>> {
+  if (!supabase) return {};
+  try {
+    const [pubRes, draftRes] = await Promise.all([
+      supabase.from("learn_more_published").select("id, updated_at"),
+      supabase.from("learn_more_drafts").select("id, updated_at"),
+    ]);
+    const map: Record<string, LearnMorePageStatus> = {};
+    for (const row of pubRes.data || []) {
+      map[row.id] = {
+        published: true,
+        hasDraft: false,
+        updatedAt: row.updated_at,
+      };
+    }
+    for (const row of draftRes.data || []) {
+      map[row.id] = {
+        published: map[row.id]?.published ?? false,
+        hasDraft: true,
+        updatedAt: row.updated_at || map[row.id]?.updatedAt,
+      };
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export function getLearnMoreFamily(content: LearnMoreContent): ProductFamilyKey {
+  if (content.kind === "catalog") {
+    return content.story.family;
+  }
+  if (content.kind === "mac-studio") {
+    return "mac";
+  }
+  const slug = content.story.slug.toLowerCase();
+  const buyPath = (content.story.buyPath || "").toLowerCase();
+  if (buyPath.includes("/buy-iphone/") || slug.includes("iphone")) return "iphone";
+  if (buyPath.includes("/buy-mac/") || slug.includes("mac")) return "mac";
+  if (buyPath.includes("/buy-ipad/") || slug.includes("ipad")) return "ipad";
+  if (buyPath.includes("/buy-watch/") || slug.includes("watch")) return "watch";
+  if (buyPath.includes("/buy-airpods/") || slug.includes("airpod")) return "airpods";
+  return "accessories";
+}
+
+export function getLearnMorePublicPath(content: LearnMoreContent): string {
+  const slug = content.story.slug;
+  if (slug === "mac-mini") return "/mac-mini";
+  if (slug === "mac-studio") return "/mac-studio";
+  const family = getLearnMoreFamily(content);
+  return `/${family}/${slug}`;
+}
+
+export function getLearnMoreHeroThumbnail(content: LearnMoreContent): string {
+  if (content.kind === "editorial") {
+    return content.story.hero.src || content.story.cinematicVideo?.poster || "";
+  }
+  if (content.kind === "mac-studio") {
+    return content.story.image.src || "";
+  }
+  if (content.story.media.type === "image") {
+    return content.story.media.src || "";
+  }
+  return content.story.designMedia?.src || content.story.galleryMedia?.[0]?.src || "";
+}
+
+/**
+ * Automatically returns only devices and products that have an existing
+ * Learn More page on the public website (`editorialStories`, `productStories`,
+ * `macStudioStory`, and any additional valid Learn More pages registered in future).
+ * Unrelated store/marketplace catalog products without a Learn More page are excluded.
+ */
+export function getEligibleLearnMoreProducts(extraRegistered: LearnMoreContent[] = []): LearnMoreContent[] {
+  const choices: LearnMoreContent[] = [
+    ...Object.values(editorialStories).map((story) => ({
+      kind: "editorial" as const,
+      story,
+      sections: defaultEditorialShowcases(story),
+      ...(story.slug === "iphone-18-pro" ? { education: iphone18ProEducation } : {}),
+    })),
+    ...productStories
+      .filter((story) => !editorialStories[story.slug])
+      .map((story) => ({
+        kind: "catalog" as const,
+        story,
+        sections: [],
+      })),
+    ...(!editorialStories[macStudioStory.slug]
+      ? [{ kind: "mac-studio" as const, story: macStudioStory, sections: [] }]
+      : []),
+  ];
+
+  const seenSlugs = new Set(choices.map((item) => item.story.slug));
+  for (const extra of extraRegistered) {
+    if (extra?.story?.slug && !seenSlugs.has(extra.story.slug)) {
+      seenSlugs.add(extra.story.slug);
+      choices.push(extra);
+    }
+  }
+
+  return choices;
+}
+
+export function getBuiltInLearnMoreMedia(): string[] {
+  const urls = new Set<string>();
+  for (const story of Object.values(editorialStories)) {
+    if (story.hero?.src) urls.add(story.hero.src);
+    if (story.cinematicVideo?.src) urls.add(story.cinematicVideo.src);
+    if (story.cinematicVideo?.poster) urls.add(story.cinematicVideo.poster);
+    for (const h of story.highlights || []) {
+      if (h.image?.src) urls.add(h.image.src);
+    }
+    for (const ch of story.chapters || []) {
+      if (ch.image?.src) urls.add(ch.image.src);
+    }
+    if (story.finalImage?.src) urls.add(story.finalImage.src);
+  }
+  for (const story of productStories) {
+    if (story.media?.src) urls.add(story.media.src);
+    if (story.designMedia?.src) urls.add(story.designMedia.src);
+    for (const g of story.galleryMedia || []) {
+      if (g.src) urls.add(g.src);
+    }
+  }
+  if (macStudioStory.image?.src) urls.add(macStudioStory.image.src);
+  return Array.from(urls);
 }

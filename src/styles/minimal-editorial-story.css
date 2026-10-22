@@ -81,6 +81,10 @@
   object-fit: contain;
 }
 
+.minimal-editorial-story-apple-watch-ultra-4 .minimal-editorial-hero-image {
+  transform: translateY(-20px);
+}
+
 .minimal-editorial-film {
   display: grid;
   justify-items: center;
@@ -151,6 +155,10 @@
 
   .minimal-editorial-hero-image {
     height: clamp(245px, 42vh, 370px);
+  }
+
+  .minimal-editorial-story-apple-watch-ultra-4 .minimal-editorial-hero-image {
+    transform: translateY(-10px);
   }
 
   .minimal-editorial-film {

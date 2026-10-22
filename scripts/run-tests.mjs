@@ -12,7 +12,7 @@ const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
 await mkdir(outdir, { recursive: true });
 
-const bundle = async (entry, outfile) => {
+const bundle = async (entry, outfile, platform = "node") => {
   await build({
     bundle: true,
     entryPoints: [entry],
@@ -27,7 +27,7 @@ const bundle = async (entry, outfile) => {
     format: "esm",
     loader: { ".webp": "file", ".png": "file", ".jpg": "file", ".jpeg": "file", ".svg": "file" },
     outfile,
-    platform: "node",
+    platform,
   });
   return import(pathToFileURL(outfile).href);
 };
@@ -47,6 +47,50 @@ try {
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
   const editorialStories = await bundle(path.join(projectRoot, "src/catalog/editorialStories.ts"), path.join(outdir, "editorialStories.mjs"));
   const minimalEditorial = await bundle(path.join(projectRoot, "src/catalog/minimalEditorialSections.ts"), path.join(outdir, "minimalEditorialSections.mjs"));
+  const learnMoreRepository = await bundle(path.join(projectRoot, "src/cms/learnMoreRepository.ts"), path.join(outdir, "learnMoreRepository.mjs"), "browser");
+  const learnMoreMedia = await bundle(path.join(projectRoot, "src/cms/learnMoreMedia.ts"), path.join(outdir, "learnMoreMedia.mjs"));
+  const eligibleLearnMore = learnMoreRepository.getEligibleLearnMoreProducts();
+  const eligibleSlugs = eligibleLearnMore.map((content) => content.story.slug);
+  assert.equal(eligibleSlugs.length, new Set(eligibleSlugs).size, "Learn More editor must not show duplicate CMS records");
+  const expectedLearnMoreSlugs = [
+    ...Object.keys(editorialStories.editorialStories),
+    ...productExperience.productStories.filter((story) => !editorialStories.editorialStories[story.slug]).map((story) => story.slug),
+    "mac-studio",
+  ];
+  assert.deepEqual([...eligibleSlugs].sort(), expectedLearnMoreSlugs.sort(), "Learn More editor must show only registered public stories");
+  assert.ok(eligibleSlugs.includes("mac-studio") && eligibleSlugs.includes("charging-and-power"), "Dedicated Learn More templates must be eligible");
+  assert.ok(eligibleLearnMore.every((content) => learnMoreRepository.getLearnMorePublicPath(content).startsWith("/")), "Every eligible CMS record needs a public route");
+  assert.equal(learnMoreRepository.getLearnMorePublicPath(eligibleLearnMore.find((content) => content.story.slug === "mac-mini")), "/mac-mini");
+  assert.equal(learnMoreRepository.getLearnMorePublicPath(eligibleLearnMore.find((content) => content.story.slug === "mac-studio")), "/mac-studio");
+  const originalWatch = structuredClone(eligibleLearnMore.find((content) => content.story.slug === "apple-watch-ultra-4"));
+  const originalIphone = structuredClone(eligibleLearnMore.find((content) => content.story.slug === "iphone-18-pro"));
+  const heroUpdated = learnMoreMedia.replaceLearnMoreMedia(originalWatch, { field: "heroImage" }, "/assets/owner-selected.webp");
+  assert.equal(heroUpdated.story.hero.src, "/assets/owner-selected.webp");
+  assert.equal(heroUpdated.story.hero.cmsAssetOverride, true);
+  assert.deepEqual({ ...heroUpdated.story.hero, src: originalWatch.story.hero.src, cmsAssetOverride: undefined },
+    { ...originalWatch.story.hero, cmsAssetOverride: undefined }, "Replacing a hero must preserve its fit, position and other settings");
+  assert.equal(learnMoreRepository.refreshBundledStoryAssets(heroUpdated.story, originalWatch.story).hero.src,
+    "/assets/owner-selected.webp", "Publishing must not undo an explicitly selected bundled hero image");
+  assert.equal(originalWatch.story.hero.src, eligibleLearnMore.find((content) => content.story.slug === "apple-watch-ultra-4").story.hero.src);
+  assert.equal(originalIphone.story.slug, "iphone-18-pro", "Another product stays independent");
+  const mediaPage = structuredClone(originalWatch);
+  mediaPage.sections = [
+    { id: "showcase", type: "full-bleed", enabled: true, placement: "end", eyebrow: "", title: "", body: "", image: "/old.webp", fit: "cover", position: "75% 25%", layout: "stacked" },
+    { id: "gallery", type: "gallery", enabled: true, placement: "end", eyebrow: "", title: "", body: "", image: "/legacy.webp", images: ["/one.webp", "/two.webp"], layout: "grid-2" },
+    { id: "cards", type: "feature-cards", enabled: true, placement: "end", eyebrow: "", title: "", body: "", items: [{ label: "Detail", value: "", image: "/card.webp" }] },
+  ];
+  const showcaseUpdated = learnMoreMedia.replaceLearnMoreMedia(mediaPage, { sectionId: "showcase", field: "image" }, "/new.webp", 16 / 9);
+  assert.deepEqual(showcaseUpdated.sections.map((section) => section.id), ["showcase", "gallery", "cards"], "Replacement must preserve section order");
+  assert.equal(showcaseUpdated.sections[0].frameAspectRatio, 16 / 9, "Replacement must retain the original image frame");
+  assert.equal(showcaseUpdated.sections[0].fit, "cover");
+  assert.equal(showcaseUpdated.sections[0].position, "75% 25%");
+  assert.equal(showcaseUpdated.sections[0].layout, "stacked");
+  const galleryUpdated = learnMoreMedia.replaceLearnMoreMedia(mediaPage, { sectionId: "gallery", field: "image", galleryIndex: 0 }, "/gallery-new.webp");
+  assert.deepEqual(galleryUpdated.sections[1].images, ["/gallery-new.webp", "/two.webp"]);
+  assert.equal(galleryUpdated.sections[1].image, "/legacy.webp", "Gallery replacement must not change its separate section image");
+  const cardUpdated = learnMoreMedia.replaceLearnMoreMedia(mediaPage, { sectionId: "cards", field: "image", itemIndex: 0 }, "/card-new.webp");
+  assert.equal(cardUpdated.sections[2].items[0].image, "/card-new.webp");
+  assert.equal(mediaPage.sections[0].image, "/old.webp", "Media edits must not mutate the original or another product");
   for (const story of Object.values(editorialStories.editorialStories)) {
     const sections = minimalEditorial.defaultEditorialShowcases(story);
     assert.ok(sections.length <= 2, `${story.slug} has too many default showcases`);

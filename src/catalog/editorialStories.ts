@@ -11,6 +11,7 @@ export type EditorialImage = {
   alt: string;
   fit?: "contain" | "cover";
   position?: string;
+  cmsAssetOverride?: boolean;
 };
 
 export type EditorialInfoItem = {

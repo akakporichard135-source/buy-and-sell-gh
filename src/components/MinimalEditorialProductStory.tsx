@@ -30,7 +30,7 @@ export function MinimalEditorialProductStory({ story, sections }: { story: Edito
           loading="eager"
           fetchPriority="high"
           decoding="async"
-          style={story.hero.position ? { objectPosition: story.hero.position } : undefined}
+          style={{ objectPosition: story.hero.position || "center", objectFit: story.hero.fit || "contain" }}
         />
       </section>
 

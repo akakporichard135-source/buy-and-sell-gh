@@ -17,7 +17,7 @@ export interface MacStudioStory {
   eyebrow: string;
   chips: string;
   availability: string;
-  image: { src: string; alt: string; mobileSrc: string };
+  image: { src: string; alt: string; mobileSrc: string; cmsAssetOverride?: boolean; fit?: "contain" | "cover"; position?: string };
   preorderLabel: string;
   preorderTo: string;
   exploreLabel: string;

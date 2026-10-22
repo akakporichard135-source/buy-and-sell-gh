@@ -184,6 +184,7 @@ export function EditorialProductStory({ story, sections = [], education }: { sto
         </section>
       )}
       <LearnMoreSections sections={sectionsAt(sections, "after-information")} />
+      <LearnMoreSections sections={sectionsAt(sections, "after-film")} />
 
       <LearnMoreSections sections={sectionsAt(sections, "end")} />
 

@@ -16,6 +16,7 @@ function SectionImage({ section, src, alt }: { section: LearnMoreSection; src: s
         style={{
           objectFit: section.fit || "contain",
           objectPosition: section.position || "center",
+          aspectRatio: section.frameAspectRatio,
         }}
       />
     </picture>

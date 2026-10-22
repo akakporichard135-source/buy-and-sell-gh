@@ -25,15 +25,18 @@ export const STORY_SLUG_ALIASES: Record<string, string> = {
   // Mac aliases
   "macbook-air-15-m4": "macbook-air",
   "macbook-air-13-m3": "macbook-air",
+  "macbook-air-13-m5": "macbook-air",
   "macbook-air-15-inch-m4": "macbook-air",
   "macbook-air-13-inch-m3": "macbook-air",
   "macbook-pro-16-m4-pro-max": "macbook-pro",
   "macbook-pro-14-m4": "macbook-pro",
+  "macbook-pro-14-m5": "macbook-pro",
   "macbook-pro-16-inch-m4-pro-max": "macbook-pro",
   "macbook-pro-14-inch-m4": "macbook-pro",
   // iPad aliases
   "ipad-pro-13-inch-m4": "ipad-pro",
   "ipad-pro-11-inch-m4": "ipad-pro",
+  "ipad-air-11-inch-m4": "ipad-air",
   // Watch aliases
   "apple-watch-ultra-2": "apple-watch-ultra-4",
   "apple-watch-series-10": "apple-watch-series-12",
@@ -318,7 +321,8 @@ function StoryMedia({ media, priority = false }: { media: ProductStoryDefinition
   if (media.type === "image") {
     return (
       <div className="story-hero-media story-hero-image">
-        <img src={media.src} alt={media.alt} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" />
+        <img src={media.src} alt={media.alt} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async"
+          style={{ objectFit: media.fit, objectPosition: media.position }} />
       </div>
     );
   }
