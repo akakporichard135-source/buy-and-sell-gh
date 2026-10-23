@@ -1,10 +1,9 @@
 import { CheckCircle2, MessageCircle, ShoppingBag, Store } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { SEO } from "../components/SEO";
-import type { StoredOrderRequest } from "../types/order";
+import { ORDER_SUCCESS_STORAGE_KEY, type StoredOrderRequest } from "../types/order";
 import { formatGhs } from "../utils/format";
 import { orderRequestWhatsAppUrl, whatsappUrl } from "../utils/whatsapp";
-import { ORDER_SUCCESS_STORAGE_KEY } from "./CartPage";
 
 export function OrderSuccessPage() {
   const { reference } = useParams();
@@ -14,16 +13,16 @@ export function OrderSuccessPage() {
   if (!order) {
     const referenceLabel = reference ?? "Reference saved";
     const fallbackWhatsAppHref = reference
-      ? whatsappUrl(`Hello Buy & Sell GH, I submitted an order request on your website. My reference is ${reference}. Please confirm availability and payment details.`)
-      : whatsappUrl("Hello Buy & Sell GH, I submitted an order request on your website. Please help me confirm the details.");
+      ? whatsappUrl(`Hello Buy & Sell GH, I have an order reference ${reference} but cannot verify its details in my browser. Can you confirm whether it was saved?`)
+      : whatsappUrl("Hello Buy & Sell GH, I could not verify an order request in my browser. Please help me check its status.");
 
     return (
       <>
-        <SEO title="Order Received" description="Buy & Sell GH order request confirmation." />
+        <SEO title="Order Not Verified" description="Buy & Sell GH order request verification." />
         <section className="page-hero">
-          <p className="eyebrow-dark">Order received</p>
+          <p className="eyebrow-dark">Order status</p>
           <h1>{referenceLabel}</h1>
-          <p>Your order request was submitted. Buy & Sell GH will confirm availability, final delivery details and payment instructions before any payment is completed.</p>
+          <p>This browser cannot verify the saved order details. Please contact Buy & Sell GH with your reference before assuming the request was received. No payment has been collected.</p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <a className="btn-primary" href={fallbackWhatsAppHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
             <Link className="btn-secondary" to="/shop">View Store</Link>
@@ -80,7 +79,6 @@ export function OrderSuccessPage() {
             <SummaryDetail label="Phone" value={order.customer.phone} />
             <SummaryDetail label="Fulfilment" value={order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"} />
             <SummaryDetail label="Location" value={fulfilment || "To confirm"} />
-            <SummaryDetail label="Payment" value={order.customer.preferredPaymentMethod} />
             <SummaryDetail label="Subtotal" value={formatGhs(order.subtotal)} />
             <SummaryDetail label="Delivery" value={order.deliveryFee === null ? "To confirm" : formatGhs(order.deliveryFee)} />
             <SummaryDetail label="Total" value={formatGhs(order.total)} />

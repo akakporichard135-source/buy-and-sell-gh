@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -10,9 +10,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -26,7 +25,8 @@ const MACBOOK_PRO_FINISHES: ColorOption[] = [
 ];
 
 export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const is16Initial = catalogProduct?.slug?.includes("16") ?? false;
   const isMaxInitial = catalogProduct?.slug?.includes("max") ?? false;
@@ -37,10 +37,24 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   const [memory, setMemory] = useState(is16Initial || isMaxInitial ? "36GB" : "24GB");
   const [storage, setStorage] = useState(is16Initial ? "1TB" : "512GB");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage) setStorage(entryStorage);
+    if (entryColor && MACBOOK_PRO_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryStorage, entryColor]);
+
+  useEffect(() => {
+    if (!editingItem?.product.slug.startsWith("macbook-pro")) return;
+    const options = editingItem.options;
+    if (options?.screenSize === "14-inch" || options?.screenSize === "16-inch") setScreenSize(options.screenSize);
+    if (options?.chip === "M4" || options?.chip === "M4 Pro" || options?.chip === "M4 Max") setChip(options.chip);
+    setStorage(editingItem.storage);
+    if (options?.finish) setFinish(options.finish);
+    if (options?.memory) setMemory(options.memory);
+    setTradeIn(options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   // Sync state if catalogProduct arrives or updates
   useEffect(() => {
@@ -189,7 +203,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fullConfigurationTitle = `MacBook Pro ${screenSize} (${chip}, ${memory} RAM, ${storage} SSD, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentDisplayImg || activeImage)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentDisplayImg || activeImage)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
@@ -199,7 +213,9 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
           title: `MacBook Pro ${screenSize} (${chip}, ${memory} / ${storage})`,
         }
       : undefined;
-    const added = addItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, 1, effectiveVariant, currentDisplayImg || activeImage);
+    const added = addConfiguredItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, effectiveVariant, currentDisplayImg || activeImage, {
+      screenSize, chip, storage, finish, memory, tradeIn: tradeIn ? "Yes" : "No",
+    });
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }
@@ -398,12 +414,6 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       {/* Step 6: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 7: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 8: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 9: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your MacBook Pro"
@@ -415,8 +425,6 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
           { label: "Storage", value: `${storage} SSD Storage` },
           { label: "Display", value: "Liquid Retina XDR with ProMotion" },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

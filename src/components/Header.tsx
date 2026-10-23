@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useBuyJourney } from "../context/BuyJourneyContext";
 import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
 import "../styles/global-header.css";
@@ -156,6 +157,7 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
   const { totalItems } = useCart();
+  const { openBag } = useBuyJourney();
   const location = useLocation();
   const drawerRef = useRef<HTMLDivElement>(null);
   const lastScrollYRef = useRef(0);
@@ -402,10 +404,11 @@ export function Header() {
             <Search size={16} strokeWidth={2} />
           </button>
 
-          <NavLink
-            to="/cart"
+          <button
+            type="button"
             className="global-header-icon-btn relative"
             aria-label={totalItems > 0 ? `Shopping Bag with ${totalItems} items` : "Shopping Bag"}
+            onClick={openBag}
           >
             <ShoppingBag size={16} strokeWidth={2} />
             {totalItems > 0 && (
@@ -413,7 +416,7 @@ export function Header() {
                 {totalItems > 99 ? "99+" : totalItems}
               </span>
             )}
-          </NavLink>
+          </button>
 
           <button
             type="button"

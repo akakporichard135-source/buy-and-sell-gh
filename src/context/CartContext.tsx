@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import type { CartItem, Product, ProductVariant } from "../types/product";
 import { isProductImageEligible } from "../utils/productImages";
-import { addCartItem, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
+import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
   items: CartItem[];
@@ -12,7 +12,18 @@ interface CartContextValue {
     color?: string,
     quantity?: number,
     variant?: ProductVariant,
-    colorImageSrc?: string
+    colorImageSrc?: string,
+    options?: Record<string, string>,
+  ) => boolean;
+  replaceItem: (
+    originalKey: string,
+    product: Product,
+    storage: string,
+    color: string,
+    quantity: number,
+    variant?: ProductVariant,
+    colorImageSrc?: string,
+    options?: Record<string, string>,
   ) => boolean;
   removeItem: (productId: string, storage: string, color: string, variantId?: string) => void;
   updateQuantity: (
@@ -92,7 +103,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     color = product.colors[0],
     quantity = 1,
     variant?: ProductVariant,
-    colorImageSrc?: string
+    colorImageSrc?: string,
+    options?: Record<string, string>,
   ) => {
     const catalogCandidate = getProductBySlug(product.slug);
     const useCatalogCandidate =
@@ -115,12 +127,40 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     const effectiveStock = variant?.stockQuantity ?? currentProduct.stockQuantity;
-    if (quantity > effectiveStock) {
+    const existingQuantity = items
+      .filter((item) => item.product.id === currentProduct.id && item.storage === storage && item.color === color &&
+        (!variant?.id || item.variantId === variant.id))
+      .reduce((sum, item) => sum + item.quantity, 0);
+    if (variant?.available === false || existingQuantity + quantity > effectiveStock) {
       setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant, colorImageSrc));
+    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant, colorImageSrc, options));
     setToast(`${currentProduct.name} added to cart.`);
+    return true;
+  };
+
+  const replaceItem: CartContextValue["replaceItem"] = (
+    originalKey, product, storage, color, quantity, variant, colorImageSrc, options,
+  ) => {
+    if (!items.some((item) => cartItemKey(item) === originalKey)) {
+      setToast("This item is no longer in your bag. Review your bag before adding it again.");
+      return false;
+    }
+    const currentProduct = getProductBySlug(product.slug) ?? product;
+    const effectiveStock = variant?.stockQuantity ?? currentProduct.stockQuantity;
+    const existingQuantity = items
+      .filter((item) => cartItemKey(item) !== originalKey && item.product.id === currentProduct.id &&
+        item.storage === storage && item.color === color && (!variant?.id || item.variantId === variant.id))
+      .reduce((sum, item) => sum + item.quantity, 0);
+    if (isSoldOut(currentProduct) || variant?.available === false || existingQuantity + quantity > effectiveStock) {
+      setToast(`${currentProduct.name} is not available in the selected quantity.`);
+      return false;
+    }
+    setItems((current) => replaceCartItem(
+      current, originalKey, currentProduct, storage, color, quantity, variant, colorImageSrc, options,
+    ));
+    setToast(`${currentProduct.name} updated in your bag.`);
     return true;
   };
 
@@ -142,6 +182,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       items,
       addItem,
+      replaceItem,
       removeItem,
       updateQuantity,
       clearCart: () => setItems([]),

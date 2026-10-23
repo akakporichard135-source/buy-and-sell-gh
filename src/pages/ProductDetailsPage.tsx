@@ -7,7 +7,7 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isProductImageEligible, isProductUnavailable } from "../catalog/productCatalog";
 import { productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { business } from "../config/business";
-import { useCart } from "../context/CartContext";
+import { useBuyJourney } from "../context/BuyJourneyContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { resolveConfiguredPrice } from "../utils/productPricing";
@@ -23,7 +23,7 @@ export function ProductDetailsPage() {
   const navigate = useNavigate();
   const { activeProducts: products, getProductBySlug, loading, error, refreshProducts } = useProductCatalog();
   const product = getProductBySlug(slug ?? "");
-  const { addItem } = useCart();
+  const { setQuantity: setBuyQuantity } = useBuyJourney();
   const [storage, setStorage] = useState(product?.storage[0] ?? "");
   const [color, setColor] = useState(product?.colors[0] ?? "");
   const [quantity, setQuantity] = useState(1);
@@ -142,25 +142,11 @@ export function ProductDetailsPage() {
       setVariantError(`Only ${product.stockQuantity} available right now.`);
       return;
     }
-    if (addItem(product, storage, color, quantity, configured.variant, selectedColorImage)) setVariantError("");
+    setBuyQuantity(quantity);
+    navigate(studioBuyPath ?? productBuyPath("accessories", product.slug), { state: { storage, color } });
   };
 
-  const handleBuyNow = () => {
-    if (product.storage.length > 0 && !storage) {
-      setVariantError("Choose a storage option before checkout.");
-      return;
-    }
-    if (product.colors.length > 0 && !color) {
-      setVariantError("Choose a colour option before checkout.");
-      return;
-    }
-    if (quantity > product.stockQuantity) {
-      setVariantError(`Only ${product.stockQuantity} available right now.`);
-      return;
-    }
-    const added = addItem(product, storage, color, quantity, configured.variant, selectedColorImage);
-    if (added) navigate("/cart");
-  };
+  const handleBuyNow = handleAddToCart;
 
   const handleShare = async () => {
     try {
@@ -282,7 +268,7 @@ export function ProductDetailsPage() {
               <span>{quantity}</span>
               <button type="button" aria-label="Increase quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}><Plus size={17} /></button>
             </div>
-            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Add to Cart unavailable" : "Add to Cart"}</button>
+            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Configure unavailable" : "Configure & Buy"}</button>
             <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Buy Now unavailable" : "Buy Now"}</button>
             <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
           </div>
@@ -352,7 +338,7 @@ export function ProductDetailsPage() {
             onClick={handleAddToCart}
           >
             <ShoppingBag size={15} />
-            <span>Add to Cart</span>
+            <span>Configure & Buy</span>
           </button>
           <a
             className="btn-ghost !py-2.5 !px-3 text-sm flex items-center gap-1.5 whitespace-nowrap"

@@ -6,7 +6,6 @@ import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
-  BuyPaymentStep,
   BuySummaryCard,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -15,7 +14,6 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [chipConfig, setChipConfig] = useState<"M6" | "M5 Pro">("M6");
   const [memory, setMemory] = useState("16GB");
   const [storage, setStorage] = useState("512GB");
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
@@ -51,7 +49,7 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `Mac mini (${chipConfig === "M6" ? "Apple M6 chip" : "Apple M5 Pro chip"}, ${memory} / ${storage})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to place a Pre-order for ${fullConfigurationTitle}. Price: ${priceLabel}, Payment preference: ${paymentMethod}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Product photo: ${toAbsoluteProductImageUrl(activeImage)} Please confirm my pre-order registration and current arrival schedule.`
+    `Hello Buy & Sell GH, I would like to enquire about a pre-order for ${fullConfigurationTitle}. Price: ${priceLabel}, Pre-order Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival"}. Product photo: ${toAbsoluteProductImageUrl(activeImage)} Please confirm availability and arrival schedule. No payment has been collected.`
   );
 
   const handlePreorder = () => {
@@ -155,9 +153,6 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         </div>
       </section>
 
-      {/* Step 4: Payment Preference */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
       {/* Step 5: Pre-order Fulfillment */}
       <section className="apple-buy-step">
         <div className="apple-buy-step-header">
@@ -188,7 +183,6 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Chip", value: chipConfig === "M6" ? "Apple M6 (12-core CPU / 12-core GPU)" : "Apple M5 Pro (15-core CPU / 16-core GPU)" },
           { label: "Unified Memory", value: `${memory} Unified Memory` },
           { label: "Storage", value: `${storage} SSD Storage` },
-          { label: "Payment Preference", value: paymentMethod },
           { label: "Fulfillment", value: fulfillment === "pickup" ? "In-Store Pickup (Dome Pillar 2 upon arrival)" : "Priority Delivery on Arrival" },
         ]}
         priceLabel={priceLabel}

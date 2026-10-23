@@ -34,6 +34,7 @@ const bundle = async (entry, outfile, platform = "node") => {
 
 try {
   const cart = await bundle(path.join(projectRoot, "src/context/cartOperations.ts"), path.join(outdir, "cartOperations.mjs"));
+  const buyJourney = await bundle(path.join(projectRoot, "src/context/BuyJourneyContext.tsx"), path.join(outdir, "buyJourney.mjs"));
   const whatsapp = await bundle(path.join(projectRoot, "src/utils/whatsapp.ts"), path.join(outdir, "whatsapp.mjs"));
   const orders = await bundle(path.join(projectRoot, "src/utils/orders.ts"), path.join(outdir, "orders.mjs"));
   const shopOrdering = await bundle(path.join(projectRoot, "src/utils/shopOrdering.ts"), path.join(outdir, "shopOrdering.mjs"));
@@ -134,6 +135,24 @@ try {
   assert.equal(items.length, 1, "Add to Cart creates a cart item");
   assert.equal(items[0].quantity, 1, "New cart item starts at quantity 1");
 
+  const customerDraft = {
+    fullName: "Ama Mensah", whatsapp: "0240000000", fulfilmentType: "delivery",
+    region: "Greater Accra", city: "Accra", deliveryAddress: "Dome", additionalNote: "Call on arrival",
+  };
+  assert.deepEqual(buyJourney.validateCustomerDraft(customerDraft, 2), {}, "Buy-page customer and quantity details validate together");
+  assert.ok(buyJourney.validateCustomerDraft({ ...customerDraft, deliveryAddress: "" }, 2).deliveryAddress,
+    "Delivery requires an address before Add to Bag");
+  assert.ok(buyJourney.validateCustomerDraft({ ...customerDraft, whatsapp: "bad" }, 2).whatsapp,
+    "A valid WhatsApp number is required before Add to Bag");
+  const configuredItem = cart.addCartItem([], product, "256GB", "Natural Titanium", 1, undefined, undefined,
+    { memory: "8GB", tradeIn: "No" });
+  const editedItems = cart.replaceCartItem(configuredItem, cart.cartItemKey(configuredItem[0]), product,
+    "512GB", "Black Titanium", 2, undefined, undefined, { memory: "16GB", tradeIn: "No" });
+  assert.equal(editedItems.length, 1, "Editing replaces the existing bag line rather than adding another");
+  assert.equal(editedItems[0].storage, "512GB", "Editing preserves the changed storage");
+  assert.equal(editedItems[0].options.memory, "16GB", "Editing preserves extra product specifications");
+  assert.equal(editedItems[0].quantity, 2, "Editing preserves quantity");
+
   items = cart.addCartItem(items, product, "256GB", "Natural Titanium");
   assert.equal(items.length, 1, "Adding same variant does not duplicate item");
   assert.equal(items[0].quantity, 2, "Adding same variant increases quantity");
@@ -187,6 +206,13 @@ try {
   assert.equal(submission.items[0].selectedColour, "Natural Titanium", "Supabase submission keeps the selected finish");
 
   const orderRequestUrl = whatsapp.orderRequestWhatsAppUrl(order);
+  assert.ok(!decodeURIComponent(orderRequestUrl).includes("Payment preference:"), "WhatsApp handoff does not invent a customer payment choice");
+  assert.ok(decodeURIComponent(orderRequestUrl).includes("No payment has been collected"), "WhatsApp handoff states that no payment was collected");
+  const unsavedOrder = await orders.submitOrderRequest(
+    orders.buildOrderRequestPayload(configuredItem, buyJourney.customerDraftToOrderDetails(customerDraft)),
+    orders.buildOrderSubmissionInput(configuredItem, buyJourney.customerDraftToOrderDetails(customerDraft), "local-test-token"),
+  );
+  assert.equal(unsavedOrder.status, "failed", "An unavailable order backend cannot produce a fake saved reference");
   const decodedOrderRequest = decodeURIComponent(orderRequestUrl);
   assert.ok(orderRequestUrl.startsWith("https://wa.me/233551975451?text="), "Order request WhatsApp link uses primary number");
   assert.ok(decodedOrderRequest.includes("Reference: BSGH-TEST-0001"), "Order request WhatsApp link includes reference");

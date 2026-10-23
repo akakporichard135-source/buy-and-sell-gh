@@ -4,6 +4,8 @@ import { AdminAuthProvider } from "./admin/AdminAuth";
 import { ProtectedAdminRoute } from "./admin/ProtectedAdminRoute";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
+import { BagDrawer } from "./components/BagReview";
+import { BuyJourneyProvider } from "./context/BuyJourneyContext";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { isAdminHostname } from "./config/adminHost";
@@ -127,8 +129,10 @@ function PublicShell() {
   }, []);
 
   return (
+    <BuyJourneyProvider>
     <div className="public-shell min-h-screen bg-page text-ink">
       <Header />
+      <BagDrawer />
       <main className="public-main">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -189,6 +193,7 @@ function PublicShell() {
       <Footer />
       <WhatsAppButton className="floating-whatsapp fixed z-40 px-4 py-3 shadow-2xl">Chat</WhatsAppButton>
     </div>
+    </BuyJourneyProvider>
   );
 }
 

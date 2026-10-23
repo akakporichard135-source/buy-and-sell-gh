@@ -110,8 +110,10 @@ export interface CartItem {
   storage: string;
   color: string;
   quantity: number;
+  options?: Record<string, string>;
   variantId?: string;
   variantTitle?: string;
+  variantStockQuantity?: number;
   configuredPrice?: number;
   originalPrice?: number | null;
   colorImageSrc?: string;

@@ -20,6 +20,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 export type FulfilmentType = "pickup" | "delivery";
+export const ORDER_SUCCESS_STORAGE_KEY = "buyandsell-gh-last-order";
 
 export interface OrderCustomerDetails {
   fullName: string;
@@ -44,6 +45,7 @@ export interface OrderRequestItem {
   storage: string;
   colour: string;
   condition: string;
+  specifications?: Record<string, string>;
   batteryHealth?: string;
   warranty?: string;
   quantity: number;
@@ -104,6 +106,7 @@ export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
       storage: item.storage,
       colour: item.color,
       condition: item.product.condition,
+      specifications: item.options,
       batteryHealth: item.product.batteryHealth,
       warranty: item.product.warranty ?? item.product.warrantyInfo,
       quantity: item.quantity,

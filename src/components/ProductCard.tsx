@@ -1,6 +1,6 @@
 import { Eye, MessageCircle, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { familyMatchesProduct, productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { isProductUnavailable, isProductImageEligible } from "../catalog/productCatalog";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
@@ -13,10 +13,11 @@ export function ProductCard({ product, variant = "default", imageVariant = "defa
   if (!isProductImageEligible(product)) {
     return null;
   }
-  const { addItem } = useCart();
   const priceDisplay = getCardPriceDisplay(product);
   const storage = product.storage[0];
   const color = product.colors[0];
+  const buyFamily = (["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[])
+    .find((family) => familyMatchesProduct(product, family)) ?? "accessories";
   const isSoldOut = isProductUnavailable(product);
   const isPriceOnRequest = priceDisplay.isEnquiry;
   const isCompact = variant === "compact";
@@ -66,9 +67,9 @@ export function ProductCard({ product, variant = "default", imageVariant = "defa
           <span className={productBadgeClass(displayStockLabel)}>{displayStockLabel}</span>
         </div>
         <div className="product-card-actions">
-          <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" onClick={() => addItem(product, storage, color)} disabled={isSoldOut}>
-            <Plus size={17} /> {isPriceOnRequest ? "Enquiry only" : isSoldOut ? stockLabel : "Add to Cart"}
-          </button>
+          {isSoldOut ? <span className="btn-primary opacity-45"><Plus size={17} /> {stockLabel}</span> : <Link className="btn-primary" to={productBuyPath(buyFamily, product.slug)}>
+            <Plus size={17} /> {isPriceOnRequest ? "Enquiry only" : "Configure & Buy"}
+          </Link>}
           <div className="product-card-secondary-actions">
             <Link className="btn-secondary" to={`/product/${product.slug}`}>
               <Eye size={17} /> View Details

@@ -2,7 +2,6 @@ import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../catalog/productExperience";
-import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getCardPriceDisplay } from "../utils/productPricing";
@@ -10,7 +9,6 @@ import { storeCardFacts } from "../utils/storePresentation";
 import { ProductVisual } from "./ProductVisual";
 
 export function StoreProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
   const priceDisplay = getCardPriceDisplay(product);
   const enquiry = priceDisplay.isEnquiry;
   const isPurchasable = isProductPurchasable(product);
@@ -59,15 +57,14 @@ export function StoreProductCard({ product }: { product: Product }) {
             </Link>
 
             {canDirectBuy && (
-              <button
-                type="button"
+              <Link
+                to={productBuyPath(family, product.slug)}
                 className="btn-store-card-cart"
-                title="Add to cart"
-                aria-label={`Add ${product.name} to cart`}
-                onClick={() => addItem(product, product.storage[0] || "", product.colors[0] || "")}
+                title="Configure and buy"
+                aria-label={`Configure ${product.name} to buy`}
               >
                 <ShoppingBag size={15} aria-hidden="true" />
-              </button>
+              </Link>
             )}
           </div>
 

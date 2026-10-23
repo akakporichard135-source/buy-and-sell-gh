@@ -62,7 +62,10 @@ export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
       item.lineTotal,
     )})`;
     const photoUrl = toAbsoluteProductImageUrl(item.productImage);
-    return photoUrl ? [line, `   Photo: ${photoUrl}`] : [line];
+    const details = Object.entries(item.specifications ?? {})
+      .filter(([, value]) => value)
+      .map(([name, value]) => `${name.replace(/([a-z])([A-Z])/g, "$1 $2")}: ${value}`);
+    return [line, ...details.map((detail) => `   ${detail}`), ...(photoUrl ? [`   Photo: ${photoUrl}`] : [])];
   });
   const location = order.customer.fulfilmentType === "delivery"
     ? [order.customer.region, order.customer.city, order.customer.deliveryAddress, order.customer.landmark].filter(Boolean).join(", ")
@@ -85,10 +88,9 @@ export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
       `Order total: ${formatGhs(order.total)}`,
       `Delivery method: ${order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"}`,
       `Location: ${location || "To confirm"}`,
-      `Payment preference: ${order.customer.preferredPaymentMethod}`,
       order.customer.additionalNote ? `Additional note: ${order.customer.additionalNote}` : "Additional note: None",
       "",
-      "Please confirm availability and payment details.",
+      "No payment has been collected. Please confirm availability and payment instructions.",
     ].filter(Boolean).join("\n"),
   );
 };

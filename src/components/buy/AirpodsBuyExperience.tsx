@@ -1,14 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
   BuyOptionCard,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 
@@ -24,13 +23,21 @@ const AIRPODS_EDITIONS = [
 ];
 
 export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage } = useBuyEntrySelection();
 
   const [edition, setEdition] = useState("AirPods 5");
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage && AIRPODS_EDITIONS.some((option) => option.name === entryStorage)) setEdition(entryStorage);
+  }, [entryStorage]);
+
+  useEffect(() => {
+    if (!editingItem?.product.slug.startsWith("airpods-")) return;
+    setEdition(editingItem.options?.edition || editingItem.storage);
+  }, [editingItem]);
 
   const thumbnails = useMemo(() => [
     { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
@@ -117,23 +124,20 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `${edition} (White)`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Product photo: ${toAbsoluteProductImageUrl("/products/campaigns/airpods-5-product.webp")} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Product photo: ${toAbsoluteProductImageUrl("/products/campaigns/airpods-5-product.webp")} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(
+    const added = addConfiguredItem(
       activeProduct,
       edition,
       "White",
-      1,
       configured.variant,
-      "/products/campaigns/airpods-5-product.webp"
+      "/products/campaigns/airpods-5-product.webp",
+      { edition, finish: "White" },
     );
     if (added) {
       setNotice(`${edition} (${priceLabel}) added to your bag.`);
-    } else {
-      setNotice(`Your request for ${edition} is ready. Connecting to WhatsApp concierge...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -200,12 +204,6 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         </div>
       </section>
 
-      {/* Step 3: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 4: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 5: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your AirPods 5"
@@ -213,8 +211,6 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Edition", value: edition },
           { label: "Finish", value: "White" },
           { label: "Charging Case", value: edition.includes("Noise Cancellation") ? "Wireless Case with Speaker (USB-C)" : "USB-C Case" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

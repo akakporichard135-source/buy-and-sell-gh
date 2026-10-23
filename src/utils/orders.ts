@@ -71,10 +71,6 @@ export const submitOrderRequest = async (
             candidate.storage === savedItem.storage &&
             candidate.colour === savedItem.colour,
         ) ?? order.items[index];
-      const unitPrice =
-        matchingPayloadItem && matchingPayloadItem.unitPrice > 0
-          ? matchingPayloadItem.unitPrice
-          : savedItem.unitPrice;
       const quantity = savedItem.quantity || matchingPayloadItem?.quantity || 1;
       return {
         ...savedItem,
@@ -82,8 +78,9 @@ export const submitOrderRequest = async (
         productName: matchingPayloadItem?.productName || savedItem.productName,
         productImage: matchingPayloadItem?.productImage || savedItem.productImage || "",
         condition: matchingPayloadItem?.condition || savedItem.condition,
-        unitPrice,
-        lineTotal: unitPrice * quantity,
+        specifications: matchingPayloadItem?.specifications,
+        unitPrice: savedItem.unitPrice,
+        lineTotal: savedItem.unitPrice * quantity,
       };
     });
     const subtotal = enrichedItems.reduce((sum, item) => sum + item.lineTotal, 0);
@@ -97,15 +94,6 @@ export const submitOrderRequest = async (
       },
     };
   } catch (failure) {
-    if (order.items.length > 0 && order.items.every((item) => item.unitPrice > 0 && item.quantity > 0)) {
-      return {
-        status: "saved",
-        order: {
-          ...order,
-          id: input.submissionToken,
-        },
-      };
-    }
     return {
       status: "failed",
       order,

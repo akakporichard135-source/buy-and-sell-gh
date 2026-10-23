@@ -754,6 +754,59 @@
   gap: 10px;
 }
 
+.apple-buy-customer {
+  border-top: 1px solid #e5e5ea;
+  padding-top: 20px;
+  scroll-margin-top: 96px;
+}
+
+.apple-buy-customer h4 {
+  margin: 0 0 14px;
+  color: #1d1d1f;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.apple-buy-customer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.apple-buy-customer-grid label {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  color: #4b4b50;
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.apple-buy-customer-grid input,
+.apple-buy-customer-grid select,
+.apple-buy-customer-grid textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #c9c9cf;
+  border-radius: 6px;
+  background: #fff;
+  padding: 10px 12px;
+  color: #1d1d1f;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.apple-buy-customer-grid textarea { resize: vertical; }
+.apple-buy-customer-grid .apple-buy-customer-wide { grid-column: 1 / -1; }
+.apple-buy-customer-grid [aria-invalid="true"] { border-color: #ba3838; }
+.apple-buy-field-error { color: #a22626; font-size: 0.76rem; }
+
+@media (max-width: 600px) {
+  .apple-buy-customer-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
 .apple-buy-btn-primary {
   width: 100%;
   min-height: 52px;

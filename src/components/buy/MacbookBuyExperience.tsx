@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -9,9 +9,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -43,7 +42,8 @@ const FINISH_IMAGE_SLUGS: Record<"13-inch" | "15-inch", Record<string, string | 
 };
 
 export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const is15Initial = Boolean(catalogProduct?.slug?.includes("15") || catalogProduct?.name?.includes("15"));
   const [screenSize, setScreenSize] = useState<"13-inch" | "15-inch">(is15Initial ? "15-inch" : "13-inch");
@@ -51,10 +51,23 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [memory, setMemory] = useState("16GB");
   const [storage, setStorage] = useState("512GB");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage) setStorage(entryStorage);
+    if (entryColor && MACBOOK_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryStorage, entryColor]);
+
+  useEffect(() => {
+    if (!editingItem?.product.slug.startsWith("macbook-air")) return;
+    const options = editingItem.options;
+    if (options?.screenSize === "13-inch" || options?.screenSize === "15-inch") setScreenSize(options.screenSize);
+    setStorage(editingItem.storage);
+    if (options?.finish) setFinish(options.finish);
+    if (options?.memory) setMemory(options.memory);
+    setTradeIn(options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   useEffect(() => {
     if (catalogProduct?.slug?.includes("15") || catalogProduct?.name?.includes("15")) {
@@ -181,7 +194,7 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `MacBook Air ${screenSize} (${memory} / ${storage}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
@@ -191,7 +204,9 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           title: `MacBook Air ${screenSize} (${memory} / ${storage})`,
         }
       : undefined;
-    const added = addItem(activeProduct, storage, `${finish} / ${memory}`, 1, effectiveVariant, currentFinishImg);
+    const added = addConfiguredItem(activeProduct, storage, `${finish} / ${memory}`, effectiveVariant, currentFinishImg, {
+      screenSize, storage, finish, memory, tradeIn: tradeIn ? "Yes" : "No",
+    });
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
     }
@@ -315,12 +330,6 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       {/* Step 5: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 6: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 7: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 8: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your MacBook Air"
@@ -330,8 +339,6 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           { label: "Unified Memory", value: `${memory} Unified Memory` },
           { label: "Storage", value: `${storage} SSD Storage` },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

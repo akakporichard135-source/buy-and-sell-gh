@@ -1,8 +1,19 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag, ImageOff } from "lucide-react";
 import { SwipeableProductGallery } from "./SwipeableProductGallery";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import "../../styles/apple-buy-experience.css";
+
+export function useBuyEntrySelection(): { storage?: string; color?: string } {
+  const { state } = useLocation();
+  if (!state || typeof state !== "object") return {};
+  const selection = state as { storage?: unknown; color?: unknown };
+  return {
+    storage: typeof selection.storage === "string" ? selection.storage : undefined,
+    color: typeof selection.color === "string" ? selection.color : undefined,
+  };
+}
 
 // --------------------------------------------------------------------------
 // BuyLayout: Shared Two-Column Apple-style Buying Canvas
@@ -429,6 +440,8 @@ export function BuySummaryCard({
         </div>
       )}
 
+      {!isPreorder && <BuyCustomerFields />}
+
       <div className="apple-buy-summary-actions">
         <button type="button" className="apple-buy-btn-primary" onClick={onAddToBag}>
           <ShoppingBag size={19} />
@@ -445,6 +458,53 @@ export function BuySummaryCard({
         <li><Store size={16} /> Inspection and verification before payment in Dome Pillar 2</li>
         <li><Truck size={16} /> Safe doorstep delivery across Accra and nationwide Ghana</li>
       </ul>
+    </section>
+  );
+}
+
+function BuyCustomerFields() {
+  const { customer, errors, quantity, setQuantity, updateCustomer } = useBuyJourney();
+  return (
+    <section className="apple-buy-customer" id="buy-customer-details" aria-label="Customer details">
+      <h4>Contact and delivery</h4>
+      <div className="apple-buy-customer-grid">
+        <label>Full name
+          <input autoComplete="name" maxLength={120} value={customer.fullName} aria-invalid={!!errors.fullName} onChange={(event) => updateCustomer("fullName", event.target.value)} />
+          {errors.fullName && <span className="apple-buy-field-error">{errors.fullName}</span>}
+        </label>
+        <label>WhatsApp number
+          <input type="tel" inputMode="tel" autoComplete="tel" maxLength={32} value={customer.whatsapp} aria-invalid={!!errors.whatsapp} onChange={(event) => updateCustomer("whatsapp", event.target.value)} />
+          {errors.whatsapp && <span className="apple-buy-field-error">{errors.whatsapp}</span>}
+        </label>
+        <label>Quantity
+          <input type="number" inputMode="numeric" min={1} max={999} step={1} value={quantity} aria-invalid={!!errors.quantity} onChange={(event) => setQuantity(Number(event.target.value))} />
+          {errors.quantity && <span className="apple-buy-field-error">{errors.quantity}</span>}
+        </label>
+        <label>Delivery or pickup
+          <select value={customer.fulfilmentType} onChange={(event) => updateCustomer("fulfilmentType", event.target.value as "pickup" | "delivery")}>
+            <option value="pickup">Store pickup</option>
+            <option value="delivery">Delivery</option>
+          </select>
+        </label>
+        {customer.fulfilmentType === "delivery" && <>
+          <label>Region
+            <input maxLength={100} value={customer.region} aria-invalid={!!errors.region} onChange={(event) => updateCustomer("region", event.target.value)} />
+            {errors.region && <span className="apple-buy-field-error">{errors.region}</span>}
+          </label>
+          <label>City or area
+            <input maxLength={120} value={customer.city} aria-invalid={!!errors.city} onChange={(event) => updateCustomer("city", event.target.value)} />
+            {errors.city && <span className="apple-buy-field-error">{errors.city}</span>}
+          </label>
+          <label className="apple-buy-customer-wide">Delivery address or location
+            <input autoComplete="street-address" maxLength={500} value={customer.deliveryAddress} aria-invalid={!!errors.deliveryAddress} onChange={(event) => updateCustomer("deliveryAddress", event.target.value)} />
+            {errors.deliveryAddress && <span className="apple-buy-field-error">{errors.deliveryAddress}</span>}
+          </label>
+        </>}
+        <label className="apple-buy-customer-wide">Order notes, optional
+          <textarea maxLength={2000} rows={3} value={customer.additionalNote} aria-invalid={!!errors.additionalNote} onChange={(event) => updateCustomer("additionalNote", event.target.value)} />
+          {errors.additionalNote && <span className="apple-buy-field-error">{errors.additionalNote}</span>}
+        </label>
+      </div>
     </section>
   );
 }

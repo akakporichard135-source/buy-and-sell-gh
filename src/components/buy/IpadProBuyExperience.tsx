@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -9,9 +9,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -29,7 +28,8 @@ const IPAD_PRO_FINISHES: ColorOption[] = [
 ];
 
 export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const is13Initial = catalogProduct?.slug?.includes("13") ?? false;
 
@@ -39,10 +39,24 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [glass, setGlass] = useState<"Standard glass" | "Nano-texture glass">("Standard glass");
   const [connectivity, setConnectivity] = useState<"Wi-Fi" | "Wi-Fi + Cellular">("Wi-Fi");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage) setStorage(entryStorage);
+    if (entryColor && IPAD_PRO_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryStorage, entryColor]);
+
+  useEffect(() => {
+    if (!editingItem?.product.slug.startsWith("ipad-pro")) return;
+    const options = editingItem.options;
+    if (options?.screenSize === "11-inch" || options?.screenSize === "13-inch") setScreenSize(options.screenSize);
+    if (options?.connectivity === "Wi-Fi" || options?.connectivity === "Wi-Fi + Cellular") setConnectivity(options.connectivity);
+    if (options?.glass === "Standard glass" || options?.glass === "Nano-texture glass") setGlass(options.glass);
+    setStorage(editingItem.storage);
+    if (options?.finish) setFinish(options.finish);
+    setTradeIn(options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   // Sync state if catalogProduct changes
   useEffect(() => {
@@ -172,7 +186,7 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const fullConfigurationTitle = `iPad Pro ${screenSize} (${storage}, ${finish}, ${connectivity}${glass === "Nano-texture glass" ? ", Nano-texture" : ""})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
@@ -183,19 +197,16 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           title: `iPad Pro ${screenSize} (${storage}, ${connectivity}${glass === "Nano-texture glass" ? ", Nano-texture" : ""})`,
         }
       : undefined;
-    const added = addItem(
+    const added = addConfiguredItem(
       activeProduct,
       storage,
       `${screenSize} / ${finish} / ${connectivity}${glass === "Nano-texture glass" ? " / Nano-texture" : ""}`,
-      1,
       effectiveVariant,
-      currentFinishImg
+      currentFinishImg,
+      { screenSize, storage, finish, glass, connectivity, tradeIn: tradeIn ? "Yes" : "No" },
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp concierge...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -351,12 +362,6 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       {/* Step 6: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 7: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 8: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 9: Summary & Add to Bag */}
       <BuySummaryCard
         title="Your iPad Pro"
@@ -367,8 +372,6 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
           ...(storage === "1TB" || storage === "2TB" ? [{ label: "Display Glass", value: glass }] : []),
           { label: "Connectivity", value: connectivity },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

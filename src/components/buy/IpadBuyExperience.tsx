@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -8,9 +8,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -36,17 +35,31 @@ const IPAD_FINISH_IMAGE_MAP: Record<string, string> = {
 };
 
 export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const [screenSize, setScreenSize] = useState<"11-inch" | "13-inch">("11-inch");
   const [finish, setFinish] = useState("Blue");
   const [storage, setStorage] = useState("128GB");
   const [connectivity, setConnectivity] = useState<"Wi-Fi" | "Wi-Fi + Cellular">("Wi-Fi");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage) setStorage(entryStorage);
+    if (entryColor && IPAD_AIR_COLORS.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryStorage, entryColor]);
+
+  useEffect(() => {
+    if (!editingItem?.product.slug.startsWith("ipad-air")) return;
+    const options = editingItem.options;
+    if (options?.screenSize === "11-inch" || options?.screenSize === "13-inch") setScreenSize(options.screenSize);
+    if (options?.connectivity === "Wi-Fi" || options?.connectivity === "Wi-Fi + Cellular") setConnectivity(options.connectivity);
+    setStorage(editingItem.storage);
+    if (options?.finish) setFinish(options.finish);
+    setTradeIn(options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   // Preload all iPad Air finishes
   useEffect(() => {
@@ -151,25 +164,22 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
   const fullConfigurationTitle = `iPad Air ${screenSize} (${storage}, ${finish}, ${connectivity})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(
+    const added = addConfiguredItem(
       activeProduct,
       storage,
       `${screenSize} / ${finish} / ${connectivity}`,
-      1,
       configured.variant
         ? { ...configured.variant, title: `iPad Air ${screenSize} (${storage}, ${connectivity})` }
         : undefined,
-      currentFinishImg
+      currentFinishImg,
+      { screenSize, storage, finish, connectivity, tradeIn: tradeIn ? "Yes" : "No" },
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} - ${priceLabel} added to your bag.`);
-    } else {
-      setNotice(`Your request for ${fullConfigurationTitle} is ready. Connecting to WhatsApp concierge...`);
-      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -293,12 +303,6 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       {/* Step 5: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 6: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 7: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 8: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your iPad Air"
@@ -308,8 +312,6 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
           { label: "Storage", value: storage },
           { label: "Connectivity", value: connectivity },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

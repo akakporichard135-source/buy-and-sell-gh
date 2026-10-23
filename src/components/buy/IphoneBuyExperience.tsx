@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -10,9 +10,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -38,7 +37,8 @@ const FINISH_IMAGE_MAP: Record<string, string> = {
 
 export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const isMaxInitial = Boolean(
     catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name?.includes("Max")
@@ -49,10 +49,13 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const [finish, setFinish] = useState("Deep Burgundy");
   const [storage, setStorage] = useState("256GB");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage) setStorage(entryStorage);
+    if (entryColor && IPHONE_18_COLORS.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryStorage, entryColor]);
 
   useEffect(() => {
     if (catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name?.includes("Max")) {
@@ -61,6 +64,14 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       setModel("iPhone 18 Pro");
     }
   }, [catalogProduct?.slug, catalogProduct?.name]);
+
+  useEffect(() => {
+    if (!editingItem || !["iphone-18-pro", "iphone-18-pro-max"].includes(editingItem.product.slug)) return;
+    setModel(editingItem.options?.model === "iPhone 18 Pro Max" ? "iPhone 18 Pro Max" : "iPhone 18 Pro");
+    setStorage(editingItem.storage);
+    setFinish(editingItem.color);
+    setTradeIn(editingItem.options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   const currentFinishImage = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Silver;
 
@@ -146,11 +157,13 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImage)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImage)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(activeProduct, storage, finish, 1, configured.variant, currentFinishImage);
+    const added = addConfiguredItem(activeProduct, storage, finish, configured.variant, currentFinishImage, {
+      model, storage, finish, tradeIn: tradeIn ? "Yes" : "No",
+    });
     if (added) {
       setNotice(`${model} (${storage}, ${finish}) - ${priceLabel} added to your bag.`);
     }
@@ -249,12 +262,6 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       {/* Step 4: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 5: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 6: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 7: Order Summary & Bag Action */}
       <BuySummaryCard
         title={`Your ${model}`}
@@ -263,8 +270,6 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
           { label: "Finish", value: finish },
           { label: "Storage", value: storage },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

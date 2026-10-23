@@ -4922,6 +4922,10 @@ a.bg-emerald-700 {
   box-shadow: 0 32px 80px rgba(10, 10, 12, 0.3);
 }
 
+.instant-search-panel {
+  background: #fff;
+}
+
 .instant-search-input,
 .search-inline,
 .instant-search-result,

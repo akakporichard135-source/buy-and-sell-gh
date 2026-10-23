@@ -10,6 +10,9 @@ export const getItemEffectivePrice = (item: CartItem): number => {
   return item.product.price;
 };
 
+export const cartItemKey = (item: CartItem): string =>
+  JSON.stringify([item.product.id, item.storage, item.color, item.variantId ?? ""]);
+
 export const isCartItem = (item: unknown): item is CartItem => {
   if (!item || typeof item !== "object") return false;
   const maybe = item as Partial<CartItem>;
@@ -46,7 +49,8 @@ export const addCartItem = (
   color = product.colors[0] ?? "",
   quantity = 1,
   variant?: ProductVariant,
-  colorImageSrc?: string
+  colorImageSrc?: string,
+  options?: Record<string, string>,
 ): CartItem[] => {
   if (isSoldOut(product)) return items;
   const nextQuantity = Math.max(1, Math.floor(quantity));
@@ -78,9 +82,11 @@ export const addCartItem = (
             product,
             variantId: variantId ?? item.variantId,
             variantTitle: variantTitle ?? item.variantTitle,
+            variantStockQuantity: matchedVariant?.stockQuantity ?? item.variantStockQuantity,
             configuredPrice,
             originalPrice,
             colorImageSrc: colorImageSrc ?? item.colorImageSrc,
+            options: options ?? item.options,
             quantity: Math.min(effectiveStock, item.quantity + nextQuantity),
           }
         : item
@@ -95,13 +101,30 @@ export const addCartItem = (
       color,
       variantId,
       variantTitle,
+      variantStockQuantity: matchedVariant?.stockQuantity,
       configuredPrice,
       originalPrice,
       colorImageSrc,
+      options,
       quantity: Math.min(effectiveStock, nextQuantity),
     },
   ];
 };
+
+export const replaceCartItem = (
+  items: CartItem[],
+  originalKey: string,
+  product: Product,
+  storage: string,
+  color: string,
+  quantity: number,
+  variant?: ProductVariant,
+  colorImageSrc?: string,
+  options?: Record<string, string>,
+): CartItem[] => addCartItem(
+  items.filter((item) => cartItemKey(item) !== originalKey),
+  product, storage, color, quantity, variant, colorImageSrc, options,
+);
 
 export const removeCartItem = (
   items: CartItem[],
@@ -139,7 +162,7 @@ export const updateCartQuantity = (
       (variantId === undefined || item.variantId === variantId);
 
     if (!matches) return item;
-    const maxStock = item.product.stockQuantity;
+    const maxStock = item.variantStockQuantity ?? item.product.stockQuantity;
     return { ...item, quantity: Math.min(maxStock, clampCartQuantity(quantity)) };
   });
 

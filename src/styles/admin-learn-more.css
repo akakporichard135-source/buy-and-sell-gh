@@ -5,11 +5,11 @@
 .vlearn-container {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 80px);
-  background: #fbfbfd;
+  min-height: 0;
+  background: #fff;
   color: #1d1d1f;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Helvetica, Arial, sans-serif;
-  margin: -1.5rem; /* cancel out admin layout padding for edge-to-edge feel */
+  margin: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -988,7 +988,7 @@
 }
 
 @media (max-width: 1000px) {
-  .vlearn-container { margin: -1rem -1rem 0; }
+  .vlearn-container { margin: 0; }
   .vlearn-topbar { position: static; padding: 12px; }
   .vlearn-topbar-center, .vlearn-topbar-right { justify-content: flex-start; }
   .vlearn-mobile-tabs { display: flex; gap: 3px; padding: 7px 10px; overflow-x: auto; background: #fff; border-bottom: 1px solid #e8e8eb; }

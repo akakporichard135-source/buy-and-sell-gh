@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
-import { useCart } from "../../context/CartContext";
 import type { Product } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import { resolveCatalogueProductImage } from "../../utils/productImages";
@@ -27,7 +26,6 @@ function getAccessoryEyebrow(product: Product): string {
 }
 
 export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselProps) {
-  const { addItem } = useCart();
   const { mainStore } = useCms();
   const accessoryConfigs = mainStore?.accessories?.length
     ? mainStore.accessories
@@ -130,14 +128,13 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
                   </Link>
 
                   {purchasable ? (
-                    <button
-                      type="button"
+                    <Link
+                      to={productBuyPath(family, product.slug)}
                       className="btn-store-card-primary"
-                      onClick={() => addItem(product, product.storage[0] || "", product.colors[0] || "")}
-                      aria-label={`Add ${product.name} to cart`}
+                      aria-label={`Configure ${product.name} to buy`}
                     >
-                      <ShoppingBag size={15} aria-hidden="true" /> Add
-                    </button>
+                      <ShoppingBag size={15} aria-hidden="true" /> Buy
+                    </Link>
                   ) : (
                     <Link
                       to={productBuyPath(family, product.slug)}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -8,9 +8,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
@@ -42,17 +41,30 @@ const ULTRA_BAND_COLORS: ColorOption[] = [
 ];
 
 export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { color: entryColor } = useBuyEntrySelection();
 
   const [finish, setFinish] = useState("Natural Titanium");
   const [bandStyle, setBandStyle] = useState("Alpine Loop");
   const [bandColor, setBandColor] = useState("Safety Orange");
   const [bandDimension, setBandDimension] = useState<"Medium" | "Small" | "Large">("Medium");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryColor && ULTRA_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+  }, [entryColor]);
+
+  useEffect(() => {
+    if (editingItem?.product.slug !== "apple-watch-ultra-4") return;
+    const options = editingItem.options;
+    if (options?.bandDimension === "Small" || options?.bandDimension === "Medium" || options?.bandDimension === "Large") setBandDimension(options.bandDimension);
+    if (options?.finish) setFinish(options.finish);
+    if (options?.bandStyle) setBandStyle(options.bandStyle);
+    if (options?.bandColor) setBandColor(options.bandColor);
+    setTradeIn(options?.tradeIn === "Yes");
+  }, [editingItem]);
 
   const currentFinishImg = ULTRA_FINISH_IMAGE_MAP[finish] || ULTRA_FINISH_IMAGE_MAP["Natural Titanium"];
 
@@ -117,17 +129,17 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fullConfigurationTitle = `Apple Watch Ultra 4 (49mm, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Payment: ${paymentMethod}, Fulfillment: ${fulfillment === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
-    const added = addItem(
+    const added = addConfiguredItem(
       activeProduct,
       "49mm GPS + Cellular",
       `${finish} / ${bandStyle} (${bandColor}, ${bandDimension})`,
-      1,
       configured.variant ? { ...configured.variant, title: `Apple Watch Ultra 4 (49mm ${finish})` } : undefined,
-      currentFinishImg
+      currentFinishImg,
+      { caseSize: "49mm", connectivity: "GPS + Cellular", finish, bandStyle, bandColor, bandDimension, tradeIn: tradeIn ? "Yes" : "No" },
     );
     if (added) {
       setNotice(`${fullConfigurationTitle} (${priceLabel}) added to your bag.`);
@@ -252,12 +264,6 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       {/* Step 5: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 6: Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Step 7: Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Step 8: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your Apple Watch Ultra 4"
@@ -267,8 +273,6 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
           { label: "Connectivity", value: "GPS + Cellular (Standard)" },
           { label: "Band", value: `${bandStyle} (${bandColor}, ${bandDimension})` },
           { label: "Trade-in", value: tradeIn ? "Device trade-in requested" : "No trade-in" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

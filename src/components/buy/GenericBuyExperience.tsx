@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
-import { useCart } from "../../context/CartContext";
+import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
@@ -14,9 +14,8 @@ import {
   BuyOptionCard,
   BuyColorSwatches,
   BuyTradeInStep,
-  BuyPaymentStep,
-  BuyFulfillmentStep,
   BuySummaryCard,
+  useBuyEntrySelection,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 import type { ProductFamilyKey } from "../../catalog/productExperience";
@@ -30,7 +29,8 @@ export function GenericBuyExperience({
   family: ProductFamilyKey;
   slug: string;
 }) {
-  const { addItem } = useCart();
+  const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const effectiveProduct: Product | undefined = useMemo(() => {
     if (slug === "airpods-pro-3") {
@@ -106,10 +106,13 @@ export function GenericBuyExperience({
   const [storage, setStorage] = useState(effectiveProduct?.storage[0] ?? "");
   const [color, setColor] = useState(effectiveProduct?.colors[0] ?? "");
   const [tradeIn, setTradeIn] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("Mobile Money on Confirmation");
-  const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    if (entryStorage && effectiveProduct?.storage.includes(entryStorage)) setStorage(entryStorage);
+    if (entryColor && effectiveProduct?.colors.includes(entryColor)) setColor(entryColor);
+  }, [entryStorage, entryColor, effectiveProduct?.slug]);
 
   const colorOptions = useMemo(() => resolveColorOptions(effectiveProduct?.colors ?? []), [effectiveProduct?.colors]);
 
@@ -123,6 +126,13 @@ export function GenericBuyExperience({
       }
     }
   }, [effectiveProduct]);
+
+  useEffect(() => {
+    if (!editingItem || editingItem.product.slug !== effectiveProduct?.slug) return;
+    setStorage(editingItem.storage);
+    setColor(editingItem.color);
+    setTradeIn(editingItem.options?.tradeIn === "Yes");
+  }, [editingItem, effectiveProduct?.slug]);
 
   // Preload all available finish images so clicking swatches has 0 latency
   useEffect(() => {
@@ -165,14 +175,16 @@ export function GenericBuyExperience({
   const whatsAppEnquiry = effectiveProduct
     ? productWhatsAppUrl(effectiveProduct, storage || "Standard", color || "Standard", undefined, configured.price, selectedFinishImage)
     : whatsappUrl(
-        `Hello Buy & Sell GH, I would like to enquire about ${name}. Storage: ${storage}, Finish: ${color}, Payment: ${paymentMethod}, Fulfillment: ${
-          fulfillment === "pickup" ? "Pickup (Dome)" : "Delivery"
+        `Hello Buy & Sell GH, I would like to enquire about ${name}. Storage: ${storage}, Finish: ${color}, Fulfillment: ${
+          customer.fulfilmentType === "pickup" ? "Pickup (Dome)" : "Delivery"
         }.${selectedFinishImage ? ` Product photo: ${toAbsoluteProductImageUrl(selectedFinishImage)}` : ""} Please confirm availability and price.`
       );
 
   const handleAddToBag = () => {
     if (effectiveProduct && purchasable) {
-      const added = addItem(effectiveProduct, storage || "Standard", color || "Standard", 1, configured.variant, selectedFinishImage);
+      const added = addConfiguredItem(effectiveProduct, storage || "Standard", color || "Standard", configured.variant, selectedFinishImage, {
+        storage, color, tradeIn: tradeIn ? "Yes" : "No",
+      });
       if (added) {
         setNotice(`${effectiveProduct.name}${storage ? ` (${storage})` : ""}${color ? ` - ${color}` : ""} added to your bag.`);
       }
@@ -262,12 +274,6 @@ export function GenericBuyExperience({
         <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
       )}
 
-      {/* Payment */}
-      <BuyPaymentStep paymentMethod={paymentMethod} onSelect={setPaymentMethod} />
-
-      {/* Delivery & Pickup */}
-      <BuyFulfillmentStep fulfillment={fulfillment} onSelect={setFulfillment} />
-
       {/* Summary */}
       <BuySummaryCard
         title={`Your ${name}`}
@@ -276,8 +282,6 @@ export function GenericBuyExperience({
           ...(storage ? [{ label: "Configuration", value: storage }] : []),
           ...(color ? [{ label: "Finish", value: color }] : []),
           { label: "Condition", value: effectiveProduct?.condition ?? "Verified Unit" },
-          { label: "Payment", value: paymentMethod },
-          { label: "Fulfillment", value: fulfillment === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery" },
         ]}
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}

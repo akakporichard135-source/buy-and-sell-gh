@@ -1,11 +1,10 @@
-import { MessageCircle, Plus, Search, X } from "lucide-react";
+import { MessageCircle, Search, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
 import { isProductUnavailable } from "../catalog/productCatalog";
-import { useCart } from "../context/CartContext";
-import { formatGhs } from "../utils/format";
+import { familyMatchesProduct, productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
 import { resolveProductImage } from "../utils/productImages";
@@ -14,7 +13,6 @@ import { productWhatsAppUrl } from "../utils/whatsapp";
 export function InstantSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { addItem } = useCart();
   const { activeProducts: products } = useProductCatalog();
 
   useEffect(() => {
@@ -37,7 +35,8 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
 
   const results = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    const matches = terms.length ? products
+    if (terms.length === 0) return [];
+    const matches = products
       .filter((product) => {
         const searchable = [
           product.name,
@@ -52,11 +51,10 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
           ...(product.tags ?? []),
         ].join(" ").toLowerCase();
         return terms.every((term) => searchable.includes(term));
-      })
-      : products;
+      });
     return [...matches]
       .sort((left, right) => Number(isAppleCatalogueProduct(right)) - Number(isAppleCatalogueProduct(left)))
-      .slice(0, terms.length ? 8 : 5);
+      .slice(0, 8);
   }, [products, query]);
 
   if (!open) return null;
@@ -70,7 +68,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
           <input ref={inputRef} value={query} maxLength={100} onChange={(event) => setQuery(event.target.value)} placeholder="Search product, brand, model, colour..." />
           {query && <button type="button" aria-label="Clear search" onClick={() => setQuery("")}><X size={20} /></button>}
         </label>
-        <div className="mt-4 grid gap-3">
+        {query.trim() && <div className="mt-4 grid gap-3">
           {results.length > 0 ? (
             results.map((product) => {
               const image = resolveProductImage(product);
@@ -88,9 +86,14 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   <em className={productBadgeClass(stockLabel)}>{stockLabel}</em>
                 </Link>
                 <div className="instant-search-actions">
-                  <button type="button" onClick={() => addItem(product)} disabled={isProductUnavailable(product)}>
-                    <Plus size={15} /> Add
-                  </button>
+                  {isProductUnavailable(product) ? <span>Unavailable</span> : <Link
+                    to={productBuyPath(
+                      (["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[])
+                        .find((family) => familyMatchesProduct(product, family)) ?? "accessories",
+                      product.slug,
+                    )}
+                    onClick={onClose}
+                  >Configure &amp; Buy</Link>}
                   <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noopener noreferrer">
                     <MessageCircle size={15} /> WhatsApp
                   </a>
@@ -103,7 +106,7 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
               No matching products yet. Try another model, storage, colour or condition.
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
