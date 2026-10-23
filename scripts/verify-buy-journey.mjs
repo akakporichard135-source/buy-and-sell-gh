@@ -28,8 +28,23 @@ async function checkViewport(name, viewport) {
 
     await page.type('input[autocomplete="name"]', "Ama Mensah");
     await page.type('input[autocomplete="tel"]', "0240000000");
+    await new Promise((resolve) => setTimeout(resolve, 150));
     await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
-    await page.waitForSelector(".bag-drawer");
+    try {
+      await page.waitForSelector(".bag-drawer", { timeout: 10000 });
+    } catch (error) {
+      console.log("First add diagnostic", { name, errors, state: await page.evaluate(() => ({
+        fields: [...document.querySelectorAll(".apple-buy-field-error")].map((node) => node.textContent),
+        summary: document.querySelector(".apple-buy-summary-actions")?.textContent,
+        toasts: [...document.querySelectorAll('[role="status"], [role="alert"]')].map((node) => node.textContent),
+        nameValue: document.querySelector('input[autocomplete="name"]')?.value,
+        phoneValue: document.querySelector('input[autocomplete="tel"]')?.value,
+        notice: document.querySelector(".apple-buy-summary")?.textContent?.slice(-300),
+        buttonDisabled: document.querySelector(".apple-buy-summary-actions button")?.disabled,
+        page: location.pathname,
+      })) });
+      throw error;
+    }
     await page.waitForFunction(() => {
       const rect = document.querySelector(".bag-drawer")?.getBoundingClientRect();
       return rect && rect.right <= window.innerWidth + 1 && rect.left >= -1;
@@ -51,8 +66,19 @@ async function checkViewport(name, viewport) {
     await page.waitForFunction(() => !document.querySelector(".bag-drawer"));
     const preservedName = await page.$eval('input[autocomplete="name"]', (input) => input.value);
     assert.equal(preservedName, "Ama Mensah", "Edit keeps customer details");
+    await new Promise((resolve) => setTimeout(resolve, 150));
     await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
-    await page.waitForSelector(".bag-drawer");
+    try {
+      await page.waitForSelector(".bag-drawer", { timeout: 10000 });
+    } catch (error) {
+      console.log("Edit re-add diagnostic", await page.evaluate(() => ({
+        errors: [...document.querySelectorAll(".apple-buy-field-error")].map((node) => node.textContent),
+        summary: document.querySelector(".apple-buy-summary-actions")?.textContent,
+        toasts: [...document.querySelectorAll('[role="status"], [role="alert"]')].map((node) => node.textContent),
+        page: location.pathname,
+      })));
+      throw error;
+    }
     await page.waitForFunction(() => {
       const rect = document.querySelector(".bag-drawer")?.getBoundingClientRect();
       return rect && rect.right <= window.innerWidth + 1 && rect.left >= -1;
@@ -112,27 +138,11 @@ async function checkMockOrderHandoff() {
   let submittedPayload;
   let whatsappUrl = "";
   try {
-    await page.goto(`${baseUrl}/shop/buy-iphone/iphone-18-pro`, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await page.waitForSelector("#buy-customer-details", { timeout: 60000 });
-    await page.type('input[autocomplete="name"]', "Local Verification");
-    await page.type('input[autocomplete="tel"]', "0240000000");
-    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
-    try {
-      await page.waitForSelector(".bag-drawer", { timeout: 10000 });
-    } catch (error) {
-      console.log("Mock setup diagnostic", await page.evaluate(() => ({
-        fieldErrors: [...document.querySelectorAll(".apple-buy-field-error")].map((node) => node.textContent),
-        summary: document.querySelector(".apple-buy-summary-actions")?.textContent,
-        customer: document.querySelector("#buy-customer-details")?.textContent,
-      })));
-      throw error;
-    }
-
     await page.exposeFunction("recordMockOrderRpc", (payload) => {
       orderRpcCount += 1;
       submittedPayload = payload;
     });
-    await page.evaluate(() => {
+    await page.evaluateOnNewDocument(() => {
       const originalFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {
         const url = typeof input === "string" ? input : input.url;
@@ -193,6 +203,22 @@ async function checkMockOrderHandoff() {
       }
       await request.continue();
     });
+    await page.goto(`${baseUrl}/shop/buy-iphone/iphone-18-pro`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.waitForSelector("#buy-customer-details", { timeout: 60000 });
+    await page.type('input[autocomplete="name"]', "Local Verification");
+    await page.type('input[autocomplete="tel"]', "0240000000");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
+    try {
+      await page.waitForSelector(".bag-drawer", { timeout: 10000 });
+    } catch (error) {
+      console.log("Mock setup diagnostic", await page.evaluate(() => ({
+        fieldErrors: [...document.querySelectorAll(".apple-buy-field-error")].map((node) => node.textContent),
+        summary: document.querySelector(".apple-buy-summary-actions")?.textContent,
+        customer: document.querySelector("#buy-customer-details")?.textContent,
+      })));
+      throw error;
+    }
 
     await page.click(".bag-place-order");
     const handoffDeadline = Date.now() + 20000;
@@ -210,10 +236,10 @@ async function checkMockOrderHandoff() {
 
 try {
   if (!process.argv.includes("--mock-only")) {
-    console.log(await checkViewport("desktop", { width: 1440, height: 900 }));
-    console.log(await checkViewport("mobile", { width: 390, height: 844, isMobile: true, hasTouch: true }));
+    if (!process.argv.includes("--mobile-only")) console.log(await checkViewport("desktop", { width: 1440, height: 900 }));
+    if (!process.argv.includes("--desktop-only")) console.log(await checkViewport("mobile", { width: 390, height: 844, isMobile: true, hasTouch: true }));
   }
-  await checkMockOrderHandoff();
+  if (!process.argv.includes("--no-mock")) await checkMockOrderHandoff();
   console.log("Desktop and mobile Buy journey checks passed");
 } finally {
   await browser.close();
