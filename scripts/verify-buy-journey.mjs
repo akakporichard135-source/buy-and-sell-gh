@@ -14,6 +14,7 @@ async function checkViewport(name, viewport) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await page.setViewport(viewport);
+  const addButton = name === "mobile" ? ".apple-buy-mobile-btn" : ".apple-buy-summary-actions .apple-buy-btn-primary";
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
@@ -22,14 +23,14 @@ async function checkViewport(name, viewport) {
     await page.waitForSelector("#buy-customer-details", { timeout: 60000 });
     assert.equal(await page.$$("#buy-customer-details input").then((inputs) => inputs.length >= 3), true);
     assert.equal(await page.$$(".apple-buy-summary-actions select").then((inputs) => inputs.length), 0);
-    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
+    await page.click(addButton);
     await page.waitForSelector(".apple-buy-field-error");
     assert.equal(await page.$(".bag-drawer"), null, "Incomplete details must not open the bag");
 
     await page.type('input[autocomplete="name"]', "Ama Mensah");
     await page.type('input[autocomplete="tel"]', "0240000000");
     await new Promise((resolve) => setTimeout(resolve, 150));
-    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
+    await page.click(addButton);
     try {
       await page.waitForSelector(".bag-drawer", { timeout: 10000 });
     } catch (error) {
@@ -66,8 +67,9 @@ async function checkViewport(name, viewport) {
     await page.waitForFunction(() => !document.querySelector(".bag-drawer"));
     const preservedName = await page.$eval('input[autocomplete="name"]', (input) => input.value);
     assert.equal(preservedName, "Ama Mensah", "Edit keeps customer details");
+    assert.equal(await page.$(".cart-toast"), null, "Cart confirmation does not cover the mobile Add button");
     await new Promise((resolve) => setTimeout(resolve, 150));
-    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
+    await page.click(addButton);
     try {
       await page.waitForSelector(".bag-drawer", { timeout: 10000 });
     } catch (error) {
@@ -83,13 +85,20 @@ async function checkViewport(name, viewport) {
       const rect = document.querySelector(".bag-drawer")?.getBoundingClientRect();
       return rect && rect.right <= window.innerWidth + 1 && rect.left >= -1;
     });
-    assert.equal(await page.$$(".bag-line").then((lines) => lines.length), 1, "Edit replaces, not duplicates");
+    const editedBag = await page.evaluate(() => ({
+      lines: [...document.querySelectorAll(".bag-line")].map((line) => line.textContent),
+      items: JSON.parse(localStorage.getItem("buyandsell-gh-cart") || "[]").map((item) => ({
+        id: item.product.id, storage: item.storage, color: item.color, variantId: item.variantId,
+      })),
+    }));
+    console.log("Edited bag", name, editedBag);
+    assert.equal(editedBag.lines.length, 1, "Edit replaces, not duplicates");
 
     await page.$eval('.bag-drawer-header button[aria-label="Close shopping bag"]', (button) => button.click());
     await page.waitForFunction(() => !document.querySelector(".bag-drawer"));
     await page.goto(`${baseUrl}/shop/buy-airpods/airpods-pro-3`, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForSelector("#buy-customer-details", { timeout: 60000 });
-    await page.click(".apple-buy-summary-actions .apple-buy-btn-primary");
+    await page.click(addButton);
     await page.waitForSelector(".bag-drawer");
     await page.waitForFunction(() => {
       const rect = document.querySelector(".bag-drawer")?.getBoundingClientRect();
@@ -134,6 +143,7 @@ async function checkViewport(name, viewport) {
 async function checkMockOrderHandoff() {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
+  await page.setViewport({ width: 1440, height: 900 });
   let orderRpcCount = 0;
   let submittedPayload;
   let whatsappUrl = "";

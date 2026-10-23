@@ -110,9 +110,13 @@ function buyPathForProduct(product: Product): string {
   return productBuyPath(family, product.slug);
 }
 
+function cartEditKey(item: CartItem): string {
+  return JSON.stringify([item.product.slug, item.storage, item.color, item.variantId ?? ""]);
+}
+
 export function BuyJourneyProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const { items, addItem, replaceItem, clearCart } = useCart();
+  const { items, addItem, replaceItem, clearCart, dismissToast } = useCart();
   const [customer, setCustomer] = useState<CustomerDraft>(readCustomerDraft);
   const [errors, setErrors] = useState<CustomerErrors>({});
   const [quantity, setQuantity] = useState(1);
@@ -133,7 +137,7 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
     }
   }, [customer]);
 
-  const editingItem = useMemo(() => items.find((item) => cartItemKey(item) === editingKey) ?? null, [editingKey, items]);
+  const editingItem = useMemo(() => items.find((item) => cartEditKey(item) === editingKey) ?? null, [editingKey, items]);
 
   const updateCustomer: BuyJourneyValue["updateCustomer"] = (field, value) => {
     setCustomer((current) => ({ ...current, [field]: value }));
@@ -155,9 +159,10 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   const addConfiguredItem: BuyJourneyValue["addConfiguredItem"] = (product, storage, color, variant, imageSrc, options) => {
     if (!requireCustomer(quantity)) return false;
     const added = editingItem && editingKey
-      ? replaceItem(editingKey, product, storage, color, quantity, variant, imageSrc, options)
+      ? replaceItem(cartItemKey(editingItem), product, storage, color, quantity, variant, imageSrc, options)
       : addItem(product, storage, color, quantity, variant, imageSrc, options);
     if (added) {
+      dismissToast();
       setEditingKey(null);
       setQuantity(1);
       setOrderError("");
@@ -167,7 +172,8 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   };
 
   const beginEdit = (item: CartItem) => {
-    setEditingKey(cartItemKey(item));
+    dismissToast();
+    setEditingKey(cartEditKey(item));
     setQuantity(item.quantity);
     setBagOpen(false);
     navigate(buyPathForProduct(item.product));
