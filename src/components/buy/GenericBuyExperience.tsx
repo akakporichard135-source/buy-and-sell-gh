@@ -146,7 +146,7 @@ export function GenericBuyExperience({
 
   const configured = resolveConfiguredPrice(effectiveProduct, { storage });
   const purchasable = effectiveProduct
-    ? (!import.meta.env.PROD || backendStatus === "supabase") && isProductOrderable(effectiveProduct) && configured.price > 0
+    ? isProductOrderable(effectiveProduct) && configured.price > 0
     : false;
   const priceLabel = configured.price > 0
     ? configured.formattedPrice
@@ -167,10 +167,6 @@ export function GenericBuyExperience({
       );
 
   const handleAddToBag = () => {
-    if (import.meta.env.PROD && backendStatus !== "supabase") {
-      setNotice("Checking live availability. Please try again shortly.");
-      return;
-    }
     if (effectiveProduct && purchasable) {
       const added = addConfiguredItem(effectiveProduct, storage || "Standard", color || "Standard", configured.variant, selectedFinishImage, {
         storage, color, tradeIn: tradeIn ? "Yes" : "No",

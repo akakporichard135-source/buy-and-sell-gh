@@ -38,8 +38,8 @@ const IPHONE_18_PRO_COLOR_MAP: Record<string, string> = {
   "natural titanium": "/products/campaigns/iphone-18-pro-silver.webp",
   natural: "/products/campaigns/iphone-18-pro-silver.webp",
   silver: "/products/campaigns/iphone-18-pro-silver.webp",
-  "light blue": "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
-  blue: "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
+  "light blue": "/products/buy/iphone-18-pro-gallery-3-blue.jpg",
+  blue: "/products/buy/iphone-18-pro-gallery-3-blue.jpg",
 };
 
 // --------------------------------------------------------------------------

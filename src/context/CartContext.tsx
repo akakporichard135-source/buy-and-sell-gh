@@ -71,10 +71,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   const resolveSelection = (product: Product, variant?: ProductVariant) => {
-    if (import.meta.env.PROD && (loading || backendStatus !== "supabase")) {
-      setToast("Product availability is still loading. Please wait a moment.");
-      return null;
-    }
     const liveProduct = getProductBySlug(product.slug);
     if (!liveProduct) {
       return { product, variant };

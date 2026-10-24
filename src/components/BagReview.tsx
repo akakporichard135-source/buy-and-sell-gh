@@ -19,19 +19,11 @@ import { useBuyJourney } from "../context/BuyJourneyContext";
 import { cartItemKey, getItemEffectivePrice } from "../context/cartOperations";
 import type { CartItem } from "../types/product";
 import { formatGhs } from "../utils/format";
-import { resolveProductColorImage } from "../utils/productColorImages";
-import { hasOwnerUploadedProductImages, resolveProductImage } from "../utils/productImages";
+import { resolveCartItemThumbnail } from "../utils/cartThumbnail";
 import "../styles/apple-bag-checkout.css";
 
 function itemImage(item: CartItem): string {
-  const primary = resolveProductImage(item.product)?.src;
-  return (
-    item.colorImageSrc ||
-    (hasOwnerUploadedProductImages(item.product) ? primary : undefined) ||
-    resolveProductColorImage(item.product, item.color) ||
-    primary ||
-    ""
-  );
+  return resolveCartItemThumbnail(item);
 }
 
 function optionLabel(key: string): string {
@@ -223,18 +215,9 @@ export function BagDrawer() {
 
   useEffect(() => {
     if (!bagOpen) return;
-    const scrollY = window.scrollY;
-    const previous = {
-      position: document.body.style.position,
-      top: document.body.style.top,
-      width: document.body.style.width,
-      overflow: document.body.style.overflow,
-    };
-    document.body.classList.add("bag-open");
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("bag-open");
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeBag();
@@ -242,16 +225,8 @@ export function BagDrawer() {
     window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
       document.body.classList.remove("bag-open");
-      document.body.style.position = previous.position;
-      document.body.style.top = previous.top;
-      document.body.style.width = previous.width;
-      document.body.style.overflow = previous.overflow;
-      const root = document.documentElement;
-      const previousScrollBehavior = root.style.scrollBehavior;
-      root.style.scrollBehavior = "auto";
-      window.scrollTo(0, scrollY);
-      root.style.scrollBehavior = previousScrollBehavior;
     };
   }, [bagOpen, closeBag]);
 
@@ -413,7 +388,10 @@ export function BagDrawer() {
               <button
                 type="button"
                 className="apple-bag-action-btn"
-                onClick={closeBag}
+                onClick={() => {
+                  closeBag();
+                  navigate("/store");
+                }}
               >
                 <ArrowLeft size={14} /> Continue Shopping
               </button>

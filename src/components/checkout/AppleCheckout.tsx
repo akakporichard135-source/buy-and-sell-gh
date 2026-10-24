@@ -16,8 +16,7 @@ import { useCart } from "../../context/CartContext";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { cartItemKey, getItemEffectivePrice } from "../../context/cartOperations";
 import { formatGhs } from "../../utils/format";
-import { resolveProductColorImage } from "../../utils/productColorImages";
-import { hasOwnerUploadedProductImages, resolveProductImage } from "../../utils/productImages";
+import { resolveCartItemThumbnail } from "../../utils/cartThumbnail";
 import type { CartItem } from "../../types/product";
 import "../../styles/apple-bag-checkout.css";
 
@@ -41,14 +40,7 @@ const GHANA_REGIONS = [
 ];
 
 function itemImage(item: CartItem): string {
-  const primary = resolveProductImage(item.product)?.src;
-  return (
-    item.colorImageSrc ||
-    (hasOwnerUploadedProductImages(item.product) ? primary : undefined) ||
-    resolveProductColorImage(item.product, item.color) ||
-    primary ||
-    ""
-  );
+  return resolveCartItemThumbnail(item);
 }
 
 export function AppleCheckout() {
@@ -103,9 +95,15 @@ export function AppleCheckout() {
         {/* Minimalist Apple Checkout Header */}
         <div className="apple-bag-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <Link to="/cart" className="apple-bag-action-btn" style={{ marginBottom: 6 }}>
-              <ChevronLeft size={16} /> Return to Bag
-            </Link>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 8 }}>
+              <Link to="/cart" className="apple-bag-action-btn">
+                <ChevronLeft size={16} /> Return to Bag
+              </Link>
+              <span style={{ color: "#d2d2d7" }}>·</span>
+              <Link to="/store" className="apple-bag-action-btn">
+                Continue Shopping
+              </Link>
+            </div>
             <h1 className="apple-bag-heading">Checkout</h1>
             <p className="apple-bag-subtitle">Review your details and submit your order request directly to Buy &amp; Sell GH.</p>
           </div>
@@ -356,6 +354,12 @@ export function AppleCheckout() {
                 <MessageCircle size={19} />
                 {placingOrder ? "Submitting Order Request..." : "Submit Order Request"}
               </button>
+
+              <div style={{ textAlign: "center", marginTop: 4 }}>
+                <Link to="/store" className="apple-bag-action-btn">
+                  Continue Shopping
+                </Link>
+              </div>
 
               <p style={{ margin: 0, fontSize: "0.8rem", color: "#86868b", textAlign: "center", lineHeight: 1.4 }}>
                 Submitting creates an authentic order request in Buy &amp; Sell GH's system with a confirmed reference number.

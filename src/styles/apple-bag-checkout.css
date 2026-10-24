@@ -82,9 +82,9 @@
 
 .apple-bag-item {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr);
-  gap: 24px;
-  padding: 28px 0;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 20px;
+  padding: 24px 0;
   border-bottom: 1px solid #e5e5ea;
   align-items: start;
 }
@@ -94,20 +94,21 @@
 }
 
 .apple-bag-item-image {
-  width: 130px;
-  height: 130px;
-  background: #fbfbfd;
-  border-radius: 14px;
+  width: 96px;
+  height: 96px;
+  background: #ffffff;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border: 1px solid #e5e5ea;
+  flex-shrink: 0;
 }
 
 .apple-bag-item-image img {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 85%;
+  max-height: 85%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -115,7 +116,7 @@
 }
 
 .apple-bag-item-image:hover img {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
 .apple-bag-item-image-placeholder {
@@ -262,18 +263,22 @@
 }
 
 /* --------------------------------------------------------------------------
-   Order Summary Box
+   Order Summary Box & Card (Content-driven, no blank voids)
    -------------------------------------------------------------------------- */
-.apple-bag-summary-box {
-  background: #fafafc;
+.apple-bag-summary-box,
+.apple-bag-summary-card {
+  background: #ffffff;
   border: 1px solid #e5e5ea;
-  border-radius: 20px;
-  padding: 28px 24px;
+  border-radius: 18px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   position: sticky;
-  top: 96px;
+  top: 88px;
+  height: fit-content;
+  align-self: start;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .apple-bag-summary-title {
@@ -673,46 +678,56 @@
 }
 
 /* --------------------------------------------------------------------------
-   Checkout Review Sticky Sidebar
+   Checkout Review Sticky Sidebar (Content-driven, no blank voids)
    -------------------------------------------------------------------------- */
 .apple-checkout-review-sidebar {
   position: sticky;
-  top: 96px;
+  top: 88px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  height: fit-content;
+  align-self: start;
 }
 
 .apple-checkout-review-card {
-  background: #fafafc;
+  background: #ffffff;
   border: 1px solid #e5e5ea;
-  border-radius: 20px;
-  padding: 28px 24px;
+  border-radius: 18px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  height: fit-content;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .apple-checkout-items-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   border-bottom: 1px solid #e5e5ea;
-  padding-bottom: 20px;
-  max-height: 340px;
+  padding-bottom: 16px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
 .apple-checkout-mini-item {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 80px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f2f2f7;
+}
+
+.apple-checkout-mini-item:last-child {
+  border-bottom: none;
 }
 
 .apple-checkout-mini-thumb {
-  width: 56px;
-  height: 56px;
+  width: 80px;
+  height: 80px;
   border-radius: 10px;
   background: #ffffff;
   border: 1px solid #e5e5ea;
@@ -720,45 +735,58 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .apple-checkout-mini-thumb img {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 85%;
+  max-height: 85%;
   object-fit: contain;
 }
 
 .apple-checkout-mini-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .apple-checkout-mini-title {
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: #1d1d1f;
   margin: 0;
   line-height: 1.3;
+  word-break: break-word;
 }
 
 .apple-checkout-mini-specs {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #6e6e73;
   margin: 0;
+  line-height: 1.35;
 }
 
 .apple-checkout-mini-price {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1d1d1f;
   text-align: right;
   white-space: nowrap;
+  padding-left: 8px;
 }
 
 /* --------------------------------------------------------------------------
-   Mobile Drawer Overlay (when adding from Buy page)
+   Mobile & Global Bag Drawer Overlay
    -------------------------------------------------------------------------- */
+.bag-drawer-root,
+.apple-bag-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.bag-drawer-backdrop,
 .apple-bag-drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -766,21 +794,28 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 100;
+  border: none;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
   animation: appleDrawerFadeIn 0.2s ease-out;
 }
 
+.bag-drawer,
 .apple-bag-drawer {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(100%, 480px);
+  width: min(100%, 460px);
   background: #ffffff;
   z-index: 101;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   animation: appleDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @keyframes appleDrawerFadeIn {
@@ -793,32 +828,129 @@
   to { transform: translateX(0); }
 }
 
+.bag-drawer-header,
 .apple-bag-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid #e5e5ea;
+  background: #ffffff;
 }
 
+.bag-drawer-header h2,
+.bag-drawer-header h3,
+.apple-bag-drawer-header h2,
 .apple-bag-drawer-header h3 {
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.015em;
+  color: #1d1d1f;
 }
 
+.bag-drawer-scroll,
+.bag-drawer-body,
 .apple-bag-drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px;
 }
 
+.bag-drawer-footer,
 .apple-bag-drawer-footer {
-  padding: 20px 24px;
+  padding: 18px 20px 24px;
   border-top: 1px solid #e5e5ea;
   background: #fafafc;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Layout & Ergonomics (Desktop, Tablet, Mobile)
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .apple-bag-grid,
+  .apple-checkout-container {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  .apple-checkout-review-sidebar,
+  .apple-bag-summary-card,
+  .apple-bag-summary-box {
+    position: static;
+    top: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .apple-bag-page,
+  .apple-checkout-page {
+    padding: 24px 16px 80px;
+  }
+
+  .apple-bag-header {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+  }
+
+  .apple-bag-heading {
+    font-size: 1.85rem;
+  }
+
+  .apple-bag-item {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px 0;
+  }
+
+  .apple-bag-item-image {
+    width: 76px;
+    height: 76px;
+    border-radius: 10px;
+  }
+
+  .apple-bag-item-name {
+    font-size: 1.05rem;
+  }
+
+  .apple-bag-item-price {
+    font-size: 1.05rem;
+  }
+
+  .apple-bag-item-bottom {
+    margin-top: 8px;
+    gap: 12px;
+  }
+
+  .apple-checkout-mini-item {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .apple-checkout-mini-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+  }
+
+  .apple-checkout-mini-title {
+    font-size: 0.88rem;
+  }
+
+  .apple-checkout-mini-specs {
+    font-size: 0.78rem;
+  }
+
+  .apple-checkout-mini-price {
+    font-size: 0.92rem;
+  }
+
+  .bag-drawer,
+  .apple-bag-drawer {
+    width: 100%;
+  }
 }

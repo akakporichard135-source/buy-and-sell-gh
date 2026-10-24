@@ -2979,7 +2979,7 @@ export function AdminLearnMorePages() {
                     className={`vlearn-device-btn ${previewDevice === "mobile" ? "is-active" : ""}`}
                     onClick={() => setPreviewDevice("mobile")}
                   >
-                    <Smartphone size={14} /> Mobile (375px)
+                    <Smartphone size={14} /> Mobile (390px)
                   </button>
                 </div>
               </div>
