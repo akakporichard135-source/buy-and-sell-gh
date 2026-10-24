@@ -137,7 +137,7 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
     }
   }, [customer]);
 
-  const editingItem = useMemo(() => items.find((item) => cartEditKey(item) === editingKey) ?? null, [editingKey, items]);
+  const editingItem = useMemo(() => items.find((item) => cartEditKey(item) === editingKey || cartItemKey(item) === editingKey) ?? null, [editingKey, items]);
 
   const updateCustomer: BuyJourneyValue["updateCustomer"] = (field, value) => {
     setCustomer((current) => ({ ...current, [field]: value }));
@@ -149,7 +149,8 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
     const nextErrors = validateCustomerDraft(customer, requestedQuantity);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length === 0) return true;
-    document.getElementById("buy-customer-details")?.scrollIntoView({
+    const errorTarget = document.getElementById("checkout-customer-details") || document.getElementById("buy-customer-details");
+    errorTarget?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       block: "center",
     });
@@ -157,10 +158,15 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   };
 
   const addConfiguredItem: BuyJourneyValue["addConfiguredItem"] = (product, storage, color, variant, imageSrc, options) => {
-    if (!requireCustomer(quantity)) return false;
-    const added = editingItem && editingKey
-      ? replaceItem(cartItemKey(editingItem), product, storage, color, quantity, variant, imageSrc, options)
-      : addItem(product, storage, color, quantity, variant, imageSrc, options);
+    let added = false;
+    if (editingItem && editingKey) {
+      added = replaceItem(cartItemKey(editingItem), product, storage, color, quantity, variant, imageSrc, options);
+      if (!added) {
+        added = addItem(product, storage, color, quantity, variant, imageSrc, options);
+      }
+    } else {
+      added = addItem(product, storage, color, quantity, variant, imageSrc, options);
+    }
     if (added) {
       dismissToast();
       setEditingKey(null);
@@ -182,7 +188,7 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   const placeOrder = async () => {
     if (submissionInFlight.current || items.length === 0) return;
     if (!requireCustomer(1)) {
-      setOrderError("Contact or delivery details need attention. Edit an item to update them on its Buy page.");
+      setOrderError("Please provide your contact and delivery details to submit your order request.");
       return;
     }
     submissionInFlight.current = true;
@@ -210,7 +216,11 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
     setBagOpen(false);
     submissionToken.current = generateSubmissionToken();
     navigate(`/order-success/${order.referenceNumber}`, { replace: true, state: { order } });
-    window.location.assign(orderRequestWhatsAppUrl(order));
+    try {
+      window.open(orderRequestWhatsAppUrl(order), "_blank", "noopener,noreferrer");
+    } catch {
+      // Fallback link is prominently featured on the order confirmation page
+    }
   };
 
   return (

@@ -24,9 +24,11 @@ import { getProductBySlug } from "../data/products";
 
 export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
-  const { activeProducts, products: allProducts } = useProductCatalog();
+  const { activeProducts, products: allProducts, backendStatus } = useProductCatalog();
 
   const candidates = useMemo(() => {
+    const exact = allProducts.find((product) => product.slug === slug);
+    if (exact) return [exact];
     const active = resolveCandidates(activeProducts, family, slug);
     if (active.length > 0) return active;
     const all = resolveCandidates(allProducts, family, slug);
@@ -83,6 +85,10 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
 
   // 9. iPad Pro (11-inch & 13-inch Ultra Retina XDR)
   if (family === "ipad" && (slug === "ipad-pro" || slug.includes("ipad-pro") || slug.includes("pro"))) {
+    if (slug === "ipad-pro" && (backendStatus !== "supabase" || primaryProduct?.condition !== "Brand New" ||
+      !primaryProduct.variants?.some((variant) => variant.screenSize))) {
+      return <GenericBuyExperience product={backendStatus === "supabase" ? primaryProduct : undefined} family={family} slug={slug} />;
+    }
     return <IpadProBuyExperience catalogProduct={primaryProduct} />;
   }
 

@@ -19,6 +19,7 @@ const AdminResetPasswordPage = lazy(() => import("./pages/admin/AdminResetPasswo
 const AdminSectionPage = lazy(() => import("./pages/admin/AdminSectionPage").then((module) => ({ default: module.AdminSectionPage })));
 const AdminOrderDetailPage = lazy(() => import("./pages/admin/AdminOrderDetailPage").then((module) => ({ default: module.AdminOrderDetailPage })));
 const CartPage = lazy(() => import("./pages/CartPage").then((module) => ({ default: module.CartPage })));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage").then((module) => ({ default: module.CheckoutPage })));
 const CategoryPage = lazy(() => import("./pages/CategoryPage").then((module) => ({ default: module.CategoryPage })));
 const ContactPage = lazy(() => import("./pages/ContactPage").then((module) => ({ default: module.ContactPage })));
 const DeviceRequestPage = lazy(() => import("./pages/DeviceRequestPage").then((module) => ({ default: module.DeviceRequestPage })));
@@ -185,6 +186,8 @@ function PublicShell() {
           <Route path="/shopping-information" element={<ShoppingInformationPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/bag" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success/:reference" element={<OrderSuccessPage />} />
           <Route path="/:categorySlug" element={<CategoryPage />} />
           <Route path="*" element={<NotFoundPage />} />

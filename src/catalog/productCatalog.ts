@@ -30,7 +30,7 @@ export const normalizeCondition = (condition: Product["condition"] | "New" | "Re
   return condition;
 };
 
-export const isProductPurchasable = (product: Product) => {
+export const isProductOrderable = (product: Product) => {
   const status = normalizeStockStatus(product);
   return Number.isFinite(product.price) &&
     product.price > 0 &&
@@ -38,9 +38,11 @@ export const isProductPurchasable = (product: Product) => {
     product.stockQuantity > 0 &&
     (status === "In Stock" || status === "Low Stock") &&
     product.archived !== true &&
-    product.available !== false &&
-    isProductImageEligible(product);
+    product.available !== false;
 };
+
+export const isProductPurchasable = (product: Product) =>
+  isProductOrderable(product) && isProductImageEligible(product);
 
 export const isProductUnavailable = (product: Product) => !isProductPurchasable(product);
 

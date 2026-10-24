@@ -1,9 +1,10 @@
-import { CheckCircle2, MessageCircle, ShoppingBag, Store } from "lucide-react";
+import { CheckCircle2, ChevronRight, MessageCircle, Phone, ShieldCheck, ShoppingBag, Store, Truck } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { ORDER_SUCCESS_STORAGE_KEY, type StoredOrderRequest } from "../types/order";
 import { formatGhs } from "../utils/format";
 import { orderRequestWhatsAppUrl, whatsappUrl } from "../utils/whatsapp";
+import "../styles/apple-bag-checkout.css";
 
 export function OrderSuccessPage() {
   const { reference } = useParams();
@@ -17,85 +18,178 @@ export function OrderSuccessPage() {
       : whatsappUrl("Hello Buy & Sell GH, I could not verify an order request in my browser. Please help me check its status.");
 
     return (
-      <>
+      <div className="apple-checkout-page">
         <SEO title="Order Not Verified" description="Buy & Sell GH order request verification." />
-        <section className="page-hero">
-          <p className="eyebrow-dark">Order status</p>
-          <h1>{referenceLabel}</h1>
-          <p>This browser cannot verify the saved order details. Please contact Buy & Sell GH with your reference before assuming the request was received. No payment has been collected.</p>
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <a className="btn-primary" href={fallbackWhatsAppHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
-            <Link className="btn-secondary" to="/shop">View Store</Link>
-            <Link className="btn-secondary" to="/cart">Back to Cart</Link>
+        <div className="apple-checkout-shell" style={{ maxWidth: 680, textAlign: "center", padding: "60px 20px" }}>
+          <p className="apple-bag-eyebrow">Order Status</p>
+          <h1 className="apple-bag-heading" style={{ fontSize: "2rem" }}>{referenceLabel}</h1>
+          <p style={{ color: "#6e6e73", fontSize: "1.05rem", lineHeight: 1.5, margin: "16px 0 28px" }}>
+            This browser session cannot verify the saved order details. Please contact Buy &amp; Sell GH directly on WhatsApp with your reference number. No payment has been processed online.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <a className="apple-checkout-btn-primary is-gold" href={fallbackWhatsAppHref} target="_blank" rel="noopener noreferrer" style={{ maxWidth: 280 }}>
+              <MessageCircle size={18} /> Continue on WhatsApp
+            </a>
+            <Link className="apple-bag-action-btn" to="/store" style={{ padding: "12px 20px" }}>
+              Explore Store
+            </Link>
           </div>
-        </section>
-      </>
+        </div>
+      </div>
     );
   }
 
   const whatsappHref = orderRequestWhatsAppUrl(order);
   const fulfilment = order.customer.fulfilmentType === "delivery"
     ? [order.customer.region, order.customer.city, order.customer.deliveryAddress].filter(Boolean).join(", ")
-    : "Store Pickup";
+    : "Free Store Pickup in Dome Pillar 2, Accra";
 
   return (
-    <>
-      <SEO title={`Order Received ${order.referenceNumber}`} description="Your Buy & Sell GH order request has been received." />
-      <section className="page-hero">
-        <p className="eyebrow-dark">Order Received</p>
-        <h1>{order.referenceNumber}</h1>
-        <p>Your order has been received. Buy & Sell GH will confirm availability, final delivery details and payment instructions with you shortly.</p>
-      </section>
-      <section className="section grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="rounded-lg border border-black/7 bg-white p-5 shadow-card sm:p-7">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-1 text-emerald-600" size={28} />
-            <div>
-              <p className="eyebrow-dark">Confirmation</p>
-              <h2 className="text-2xl font-black">Order request submitted</h2>
-              <p className="mt-2 text-sm font-bold leading-7 text-ink/65">Payment has not been completed online. Payment instructions will be confirmed by Buy & Sell GH after review.</p>
-            </div>
+    <div className="apple-checkout-page">
+      <SEO title={`Order Received — ${order.referenceNumber}`} description="Your Buy & Sell GH order request has been received." />
+      <div className="apple-checkout-shell">
+        <div className="apple-bag-header" style={{ textAlign: "center", borderBottom: "none", paddingBottom: 0 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "#e8f5e9", color: "#2e7d32", marginBottom: 16 }}>
+            <CheckCircle2 size={36} />
           </div>
+          <p className="apple-bag-eyebrow" style={{ color: "#2e7d32" }}>Thank you for your order request</p>
+          <h1 className="apple-bag-heading">Order {order.referenceNumber}</h1>
+          <p className="apple-bag-subtitle" style={{ maxWidth: 600, margin: "0 auto" }}>
+            We've received your device request. Buy &amp; Sell GH will contact you to verify stock and arrange pickup or delivery.
+          </p>
+        </div>
 
-          <div className="mt-6 grid gap-3">
-            {order.items.map((item) => (
-              <article className="order-summary-line rounded-lg border border-black/7 bg-page p-3" key={`${item.productId}-${item.storage}-${item.colour}`}>
-                {item.productImage ? <img src={item.productImage} alt={item.productName} loading="lazy" /> : <div className="grid h-16 w-16 place-items-center rounded-lg bg-warm text-xs font-black text-ink/50">No image</div>}
-                <div>
-                  <strong>{item.quantity}x {item.productName}</strong>
-                  <span>{item.storage} | {item.colour} | {item.condition}</span>
-                  <small>{formatGhs(item.unitPrice)} each | {formatGhs(item.lineTotal)}</small>
-                </div>
-              </article>
-            ))}
+        {/* Apple 3-step Next Steps Flow */}
+        <div style={{ margin: "40px 0", padding: "24px", background: "#fbfbfd", borderRadius: 18, border: "1px solid #e5e5ea" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 16px", color: "#1d1d1f" }}>What happens next?</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1d1d1f", marginBottom: 4 }}>1. Request Registered</div>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#6e6e73", lineHeight: 1.4 }}>
+                Reference <strong>{order.referenceNumber}</strong> has been logged in our Dome Pillar 2 showroom inventory system.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1d1d1f", marginBottom: 4 }}>2. Personal Order Review</div>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#6e6e73", lineHeight: 1.4 }}>
+                Our team confirms device availability and connects with you on WhatsApp or phone ({order.customer.phone}).
+              </p>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#1d1d1f", marginBottom: 4 }}>3. Inspect &amp; Pay</div>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#6e6e73", lineHeight: 1.4 }}>
+                No online payment needed. You inspect and verify the physical Apple hardware before paying on pickup or delivery.
+              </p>
+            </div>
           </div>
         </div>
 
-        <aside className="h-fit rounded-lg border border-black/7 bg-white p-5 shadow-card">
-          <p className="eyebrow-dark">Reference</p>
-          <h2 className="mt-2 text-3xl font-black">{order.referenceNumber}</h2>
-          <dl className="mt-5 grid gap-3 text-sm font-bold text-ink/65">
-            <SummaryDetail label="Customer" value={order.customer.fullName} />
-            <SummaryDetail label="Phone" value={order.customer.phone} />
-            <SummaryDetail label="Fulfilment" value={order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"} />
-            <SummaryDetail label="Location" value={fulfilment || "To confirm"} />
-            <SummaryDetail label="Subtotal" value={formatGhs(order.subtotal)} />
-            <SummaryDetail label="Delivery" value={order.deliveryFee === null ? "To confirm" : formatGhs(order.deliveryFee)} />
-            <SummaryDetail label="Total" value={formatGhs(order.total)} />
-          </dl>
-          <div className="mt-6 grid gap-3">
-            <a className="btn-primary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><MessageCircle size={17} /> Continue on WhatsApp</a>
-            <Link className="btn-secondary" to="/shop"><ShoppingBag size={17} /> Continue Shopping</Link>
-            <Link className="btn-ghost" to="/"><Store size={17} /> View Store</Link>
-          </div>
-        </aside>
-      </section>
-    </>
-  );
-}
+        <div className="apple-checkout-container" style={{ alignItems: "start" }}>
+          {/* Left Column: Ordered Items */}
+          <div className="apple-checkout-steps">
+            <section className="apple-checkout-step">
+              <div className="apple-checkout-step-header">
+                <h3 className="apple-checkout-step-title">Requested Devices ({order.items.length})</h3>
+              </div>
 
-function SummaryDetail({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between gap-4 border-b border-black/7 pb-2"><dt>{label}</dt><dd className="text-right text-ink">{value}</dd></div>;
+              <div className="apple-bag-items">
+                {order.items.map((item) => (
+                  <article className="apple-bag-item" key={`${item.productId}-${item.storage}-${item.colour}`} style={{ padding: "18px 0" }}>
+                    <div className="apple-bag-item-image" style={{ width: 90, height: 90, borderRadius: 12 }}>
+                      {item.productImage ? (
+                        <img src={item.productImage} alt={item.productName} loading="lazy" />
+                      ) : (
+                        <div className="apple-bag-item-image-placeholder">No image</div>
+                      )}
+                    </div>
+                    <div className="apple-bag-item-content">
+                      <div className="apple-bag-item-top">
+                        <div>
+                          <h4 className="apple-bag-item-name" style={{ fontSize: "1.1rem" }}>{item.productName}</h4>
+                          <p className="apple-bag-item-specs">
+                            {[item.storage, item.colour, item.condition].filter(Boolean).join(" · ")}
+                          </p>
+                          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#6e6e73" }}>
+                            Quantity: <strong>{item.quantity}</strong> × {formatGhs(item.unitPrice)}
+                          </p>
+                        </div>
+                        <div className="apple-bag-item-price" style={{ fontSize: "1.1rem" }}>
+                          {formatGhs(item.lineTotal)}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* Right Column: Order Reference & WhatsApp Handoff */}
+          <aside className="apple-checkout-review-sidebar">
+            <div className="apple-checkout-review-card">
+              <span className="apple-bag-eyebrow">Official Request Summary</span>
+              <h3 className="apple-bag-summary-title" style={{ marginTop: 2 }}>{order.referenceNumber}</h3>
+
+              <div className="apple-bag-summary-rows" style={{ margin: "16px 0" }}>
+                <div className="apple-bag-summary-row">
+                  <span>Customer</span>
+                  <strong style={{ color: "#1d1d1f" }}>{order.customer.fullName}</strong>
+                </div>
+                <div className="apple-bag-summary-row">
+                  <span>Phone / WhatsApp</span>
+                  <span>{order.customer.phone}</span>
+                </div>
+                <div className="apple-bag-summary-row">
+                  <span>Fulfillment</span>
+                  <span>{order.customer.fulfilmentType === "delivery" ? "Doorstep Delivery" : "Store Pickup"}</span>
+                </div>
+                {order.customer.fulfilmentType === "delivery" && (
+                  <div className="apple-bag-summary-row">
+                    <span>Address</span>
+                    <span style={{ textAlign: "right", maxWidth: 180 }}>{fulfilment}</span>
+                  </div>
+                )}
+                <div className="apple-bag-summary-row">
+                  <span>Subtotal</span>
+                  <span>{formatGhs(order.subtotal)}</span>
+                </div>
+                <div className="apple-bag-summary-row">
+                  <span>Delivery Fee</span>
+                  <span>{order.deliveryFee === null ? "Confirmed on review" : formatGhs(order.deliveryFee)}</span>
+                </div>
+                <div className="apple-bag-summary-row is-total">
+                  <span>Total Amount</span>
+                  <span>{formatGhs(order.total)}</span>
+                </div>
+              </div>
+
+              <a
+                className="apple-checkout-btn-primary is-gold"
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none" }}
+              >
+                <MessageCircle size={19} /> Open Order on WhatsApp
+              </a>
+
+              <div style={{ textAlign: "center", marginTop: 12 }}>
+                <Link to="/store" className="apple-bag-action-btn">
+                  Continue Shopping
+                </Link>
+              </div>
+
+              <ul className="apple-bag-assurances">
+                <li><ShieldCheck size={16} /> 100% Genuine Apple device guarantee</li>
+                <li><Store size={16} /> Inspect before payment at Dome Pillar 2</li>
+                <li><Truck size={16} /> Safe delivery across Greater Accra &amp; Ghana</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function getOrderFromState(state: unknown) {

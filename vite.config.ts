@@ -62,6 +62,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), adminHostnameGuard()],
   server: {
     allowedHosts: ["admin.localhost", "localhost", "127.0.0.1"],
+    watch: {
+      ignored: ["**/scripts/**", "**/.git/**", "**/*.mjs", "**/node_modules/**"],
+    },
   },
   preview: {
     allowedHosts: ["admin.localhost", "localhost", "127.0.0.1"],

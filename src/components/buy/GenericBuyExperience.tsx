@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
-import { isProductPurchasable } from "../../catalog/productCatalog";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
 import { resolveColorOptions } from "../../utils/productColors";
@@ -30,6 +31,7 @@ export function GenericBuyExperience({
   slug: string;
 }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const effectiveProduct: Product | undefined = useMemo(() => {
@@ -52,10 +54,10 @@ export function GenericBuyExperience({
         storage: product?.storage?.length ? product.storage : ["USB-C MagSafe Case"],
         colors: product?.colors?.length ? product.colors : ["White"],
         images: [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }],
-        available: true,
-        stockStatus: "In Stock",
-        stockQuantity: Math.max(product?.stockQuantity ?? 0, 10),
-        priceOnRequest: false,
+        available: product?.available ?? false,
+        stockStatus: product?.stockStatus ?? "Out of Stock",
+        stockQuantity: product?.stockQuantity ?? 0,
+        priceOnRequest: product?.priceOnRequest ?? true,
       };
     }
     if (slug === "charging-and-power" && !product) {
@@ -76,28 +78,10 @@ export function GenericBuyExperience({
         storage: ["USB-C / 1m"],
         colors: ["White"],
         images: [{ src: "/products/campaigns/accessory-magsafe-puck.webp", alt: "Apple MagSafe Charger" }],
-        available: true,
-        stockStatus: "In Stock",
-        stockQuantity: 10,
-        priceOnRequest: false,
-      };
-    }
-    if (
-      product &&
-      !isUsedProductCondition(product.condition) &&
-      !missingCleanAccessoryImageSlugs.has(product.slug) &&
-      product.price > 0 &&
-      product.available !== false &&
-      product.stockStatus !== "Sold" &&
-      (product.stockQuantity === 0 || product.priceOnRequest) &&
-      product.variants?.some((v) => v.available !== false && v.price > 0)
-    ) {
-      return {
-        ...product,
-        condition: product.condition === "To Confirm" ? "Brand New" : product.condition,
-        priceOnRequest: false,
-        stockStatus: "In Stock",
-        stockQuantity: Math.max(product.stockQuantity, 10),
+        available: false,
+        stockStatus: "Out of Stock",
+        stockQuantity: 0,
+        priceOnRequest: true,
       };
     }
     return product;
@@ -161,7 +145,9 @@ export function GenericBuyExperience({
   const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
 
   const configured = resolveConfiguredPrice(effectiveProduct, { storage });
-  const purchasable = effectiveProduct ? isProductPurchasable(effectiveProduct) && configured.price > 0 : false;
+  const purchasable = effectiveProduct
+    ? (!import.meta.env.PROD || backendStatus === "supabase") && isProductOrderable(effectiveProduct) && configured.price > 0
+    : false;
   const priceLabel = configured.price > 0
     ? configured.formattedPrice
     : effectiveProduct && !effectiveProduct.priceOnRequest && effectiveProduct.price > 0
@@ -181,6 +167,10 @@ export function GenericBuyExperience({
       );
 
   const handleAddToBag = () => {
+    if (import.meta.env.PROD && backendStatus !== "supabase") {
+      setNotice("Checking live availability. Please try again shortly.");
+      return;
+    }
     if (effectiveProduct && purchasable) {
       const added = addConfiguredItem(effectiveProduct, storage || "Standard", color || "Standard", configured.variant, selectedFinishImage, {
         storage, color, tradeIn: tradeIn ? "Yes" : "No",

@@ -2,7 +2,6 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag, ImageOff } from "lucide-react";
 import { SwipeableProductGallery } from "./SwipeableProductGallery";
-import { useBuyJourney } from "../../context/BuyJourneyContext";
 import "../../styles/apple-buy-experience.css";
 
 export function useBuyEntrySelection(): { storage?: string; color?: string } {
@@ -237,6 +236,9 @@ export interface BuyTradeInStepProps {
 }
 
 export function BuyTradeInStep({ tradeInSelected, onSelect }: BuyTradeInStepProps) {
+  const [deviceType, setDeviceType] = React.useState("iPhone");
+  const [condition, setCondition] = React.useState("Working & Flawless");
+
   return (
     <section className="apple-buy-step">
       <div className="apple-buy-step-header">
@@ -257,6 +259,67 @@ export function BuyTradeInStep({ tradeInSelected, onSelect }: BuyTradeInStepProp
           onClick={() => onSelect(false)}
         />
       </div>
+
+      {tradeInSelected && (
+        <div
+          style={{
+            marginTop: 16,
+            padding: "18px 20px",
+            background: "#fbfbfd",
+            borderRadius: 16,
+            border: "1px solid #d2d2d7",
+          }}
+        >
+          <h4 style={{ margin: "0 0 12px", fontSize: "0.98rem", fontWeight: 700, color: "#1d1d1f" }}>
+            Select your trade-in device category
+          </h4>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 14 }}>
+            {["iPhone", "Mac", "iPad", "Apple Watch", "Other Brand"].map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setDeviceType(type)}
+                className={`apple-buy-card ${deviceType === type ? "is-selected" : ""}`}
+                style={{ padding: "12px 14px", minHeight: "auto", textAlign: "center" }}
+              >
+                <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{type}</span>
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+            {[
+              { label: "Working & Flawless", desc: "No cracks, full battery health" },
+              { label: "Normal Everyday Wear", desc: "Light scratches, all functional" },
+              { label: "Cracked or Minor Faults", desc: "Screen cracks or battery replacement needed" },
+            ].map((cond) => (
+              <button
+                key={cond.label}
+                type="button"
+                onClick={() => setCondition(cond.label)}
+                className={`apple-buy-card ${condition === cond.label ? "is-selected" : ""}`}
+                style={{ flex: "1 1 200px", padding: "10px 14px", minHeight: "auto" }}
+              >
+                <div style={{ fontWeight: 600, fontSize: "0.85rem" }}>{cond.label}</div>
+                <div style={{ fontSize: "0.75rem", color: "#86868b" }}>{cond.desc}</div>
+              </button>
+            ))}
+          </div>
+
+          <div
+            style={{
+              padding: "10px 14px",
+              background: "#e8f5e9",
+              borderRadius: 10,
+              fontSize: "0.84rem",
+              color: "#2e7d32",
+              lineHeight: 1.4,
+            }}
+          >
+            <strong>Note on trade-in value:</strong> Bring your {deviceType} ({condition.toLowerCase()}) to our showroom at Dome Pillar 2 or send photos via WhatsApp. We do not automatically deduct trade-in value online; your credit will be finalized in person upon physical verification.
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -440,7 +503,8 @@ export function BuySummaryCard({
         </div>
       )}
 
-      {!isPreorder && <BuyCustomerFields />}
+      {/* Hidden landmark anchor for backwards compatibility */}
+      <div id="buy-customer-details" className="sr-only" aria-hidden="true" />
 
       <div className="apple-buy-summary-actions">
         <button type="button" className="apple-buy-btn-primary" onClick={onAddToBag}>
@@ -458,53 +522,6 @@ export function BuySummaryCard({
         <li><Store size={16} /> Inspection and verification before payment in Dome Pillar 2</li>
         <li><Truck size={16} /> Safe doorstep delivery across Accra and nationwide Ghana</li>
       </ul>
-    </section>
-  );
-}
-
-function BuyCustomerFields() {
-  const { customer, errors, quantity, setQuantity, updateCustomer } = useBuyJourney();
-  return (
-    <section className="apple-buy-customer" id="buy-customer-details" aria-label="Customer details">
-      <h4>Contact and delivery</h4>
-      <div className="apple-buy-customer-grid">
-        <label>Full name
-          <input autoComplete="name" maxLength={120} value={customer.fullName} aria-invalid={!!errors.fullName} onChange={(event) => updateCustomer("fullName", event.target.value)} />
-          {errors.fullName && <span className="apple-buy-field-error">{errors.fullName}</span>}
-        </label>
-        <label>WhatsApp number
-          <input type="tel" inputMode="tel" autoComplete="tel" maxLength={32} value={customer.whatsapp} aria-invalid={!!errors.whatsapp} onChange={(event) => updateCustomer("whatsapp", event.target.value)} />
-          {errors.whatsapp && <span className="apple-buy-field-error">{errors.whatsapp}</span>}
-        </label>
-        <label>Quantity
-          <input type="number" inputMode="numeric" min={1} max={999} step={1} value={quantity} aria-invalid={!!errors.quantity} onChange={(event) => setQuantity(Number(event.target.value))} />
-          {errors.quantity && <span className="apple-buy-field-error">{errors.quantity}</span>}
-        </label>
-        <label>Delivery or pickup
-          <select value={customer.fulfilmentType} onChange={(event) => updateCustomer("fulfilmentType", event.target.value as "pickup" | "delivery")}>
-            <option value="pickup">Store pickup</option>
-            <option value="delivery">Delivery</option>
-          </select>
-        </label>
-        {customer.fulfilmentType === "delivery" && <>
-          <label>Region
-            <input maxLength={100} value={customer.region} aria-invalid={!!errors.region} onChange={(event) => updateCustomer("region", event.target.value)} />
-            {errors.region && <span className="apple-buy-field-error">{errors.region}</span>}
-          </label>
-          <label>City or area
-            <input maxLength={120} value={customer.city} aria-invalid={!!errors.city} onChange={(event) => updateCustomer("city", event.target.value)} />
-            {errors.city && <span className="apple-buy-field-error">{errors.city}</span>}
-          </label>
-          <label className="apple-buy-customer-wide">Delivery address or location
-            <input autoComplete="street-address" maxLength={500} value={customer.deliveryAddress} aria-invalid={!!errors.deliveryAddress} onChange={(event) => updateCustomer("deliveryAddress", event.target.value)} />
-            {errors.deliveryAddress && <span className="apple-buy-field-error">{errors.deliveryAddress}</span>}
-          </label>
-        </>}
-        <label className="apple-buy-customer-wide">Order notes, optional
-          <textarea maxLength={2000} rows={3} value={customer.additionalNote} aria-invalid={!!errors.additionalNote} onChange={(event) => updateCustomer("additionalNote", event.target.value)} />
-          {errors.additionalNote && <span className="apple-buy-field-error">{errors.additionalNote}</span>}
-        </label>
-      </div>
     </section>
   );
 }

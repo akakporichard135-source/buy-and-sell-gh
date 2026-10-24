@@ -1,0 +1,824 @@
+/* ==========================================================================
+   Apple-Inspired Shopping Bag & Checkout Styles
+   Buy & Sell GH Storefront
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Layout Shell
+   -------------------------------------------------------------------------- */
+.apple-bag-page,
+.apple-checkout-page {
+  background-color: #ffffff;
+  color: #1d1d1f;
+  min-height: 80vh;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 40px 20px 100px;
+}
+
+.apple-bag-shell,
+.apple-checkout-shell {
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   Apple Bag Header & Typography
+   -------------------------------------------------------------------------- */
+.apple-bag-header {
+  border-bottom: 1px solid #d2d2d7;
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.apple-bag-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-gold-strong, #c59f27);
+  margin-bottom: 6px;
+}
+
+.apple-bag-heading {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #1d1d1f;
+  margin: 0 0 8px;
+  line-height: 1.1;
+}
+
+.apple-bag-subtitle {
+  font-size: 1.05rem;
+  color: #6e6e73;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Shopping Bag Grid (Naturally sizing, NO giant white blank panels!)
+   -------------------------------------------------------------------------- */
+.apple-bag-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.95fr);
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .apple-bag-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Bag Items List
+   -------------------------------------------------------------------------- */
+.apple-bag-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.apple-bag-item {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 24px;
+  padding: 28px 0;
+  border-bottom: 1px solid #e5e5ea;
+  align-items: start;
+}
+
+.apple-bag-item:first-child {
+  padding-top: 0;
+}
+
+.apple-bag-item-image {
+  width: 130px;
+  height: 130px;
+  background: #fbfbfd;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.apple-bag-item-image img {
+  max-width: 90%;
+  max-height: 90%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.apple-bag-item-image:hover img {
+  transform: scale(1.05);
+}
+
+.apple-bag-item-image-placeholder {
+  color: #86868b;
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 10px;
+}
+
+.apple-bag-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apple-bag-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.apple-bag-item-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.apple-bag-item-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  white-space: nowrap;
+  letter-spacing: -0.015em;
+}
+
+.apple-bag-item-specs {
+  font-size: 0.92rem;
+  color: #6e6e73;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.apple-bag-item-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #e8f5e9;
+  color: #2e7d32;
+  width: fit-content;
+}
+
+.apple-bag-item-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.apple-bag-qty-selector {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 2px 6px;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: #1d1d1f;
+}
+
+.apple-bag-qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #1d1d1f;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.apple-bag-qty-btn:hover:not(:disabled) {
+  background: #f5f5f7;
+}
+
+.apple-bag-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.apple-bag-qty-value {
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.apple-bag-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.apple-bag-action-btn {
+  border: none;
+  background: transparent;
+  color: #0071e3;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.apple-bag-action-btn:hover {
+  text-decoration: underline;
+  color: #0077ed;
+}
+
+.apple-bag-action-btn.is-danger {
+  color: #c93434;
+}
+
+.apple-bag-action-btn.is-danger:hover {
+  color: #df2020;
+}
+
+/* --------------------------------------------------------------------------
+   Order Summary Box
+   -------------------------------------------------------------------------- */
+.apple-bag-summary-box {
+  background: #fafafc;
+  border: 1px solid #e5e5ea;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 96px;
+}
+
+.apple-bag-summary-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: #1d1d1f;
+}
+
+.apple-bag-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #e5e5ea;
+  border-bottom: 1px solid #e5e5ea;
+  padding: 16px 0;
+}
+
+.apple-bag-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.95rem;
+  color: #6e6e73;
+}
+
+.apple-bag-summary-row.is-total {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+}
+
+.apple-bag-summary-row.is-total span:last-child {
+  color: #1d1d1f;
+  font-weight: 800;
+}
+
+.apple-checkout-btn-primary {
+  width: 100%;
+  min-height: 52px;
+  background: #0071e3;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.28);
+  transition: all 0.18s ease;
+}
+
+.apple-checkout-btn-primary:hover {
+  background: #0077ed;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 113, 227, 0.35);
+}
+
+.apple-checkout-btn-primary.is-gold {
+  background: var(--brand-gold, #d8a72d);
+  color: #000000;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(216, 167, 45, 0.3);
+}
+
+.apple-checkout-btn-primary.is-gold:hover {
+  background: var(--brand-gold-hover, #e0b43c);
+  box-shadow: 0 6px 18px rgba(216, 167, 45, 0.4);
+}
+
+.apple-checkout-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.apple-bag-continue-shopping {
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #0071e3;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.apple-bag-continue-shopping:hover {
+  text-decoration: underline;
+}
+
+.apple-bag-assurances {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: #6e6e73;
+}
+
+.apple-bag-assurances li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Empty Bag State
+   -------------------------------------------------------------------------- */
+.apple-bag-empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.apple-bag-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f5f5f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #86868b;
+  margin-bottom: 6px;
+}
+
+.apple-bag-empty-state h2 {
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-bag-empty-state p {
+  font-size: 1.05rem;
+  color: #6e6e73;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Apple Checkout Layout
+   -------------------------------------------------------------------------- */
+.apple-checkout-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.95fr);
+  gap: 52px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .apple-checkout-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.apple-checkout-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.apple-checkout-step {
+  border-top: 1px solid #d2d2d7;
+  padding-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.apple-checkout-step:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.apple-checkout-step-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.apple-checkout-step-num {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--brand-gold-strong, #c59f27);
+}
+
+.apple-checkout-step-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-checkout-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .apple-checkout-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.apple-checkout-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apple-checkout-field.is-full {
+  grid-column: 1 / -1;
+}
+
+.apple-checkout-field label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-checkout-input,
+.apple-checkout-select,
+.apple-checkout-textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #1d1d1f;
+  outline: none;
+  transition: all 0.18s ease;
+  box-sizing: border-box;
+}
+
+.apple-checkout-input:focus,
+.apple-checkout-select:focus,
+.apple-checkout-textarea:focus {
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.16);
+}
+
+.apple-checkout-field.has-error .apple-checkout-input,
+.apple-checkout-field.has-error .apple-checkout-select,
+.apple-checkout-field.has-error .apple-checkout-textarea {
+  border-color: #c93434;
+  box-shadow: 0 0 0 3px rgba(201, 52, 52, 0.14);
+}
+
+.apple-checkout-error-text {
+  font-size: 0.82rem;
+  color: #c93434;
+  font-weight: 500;
+}
+
+.apple-checkout-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1d1d1f;
+  user-select: none;
+}
+
+.apple-checkout-checkbox-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0071e3;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Delivery & Pickup Selection Cards
+   -------------------------------------------------------------------------- */
+.apple-checkout-option-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.apple-checkout-option-card {
+  border: 1.5px solid #d2d2d7;
+  border-radius: 16px;
+  padding: 20px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.18s ease;
+}
+
+.apple-checkout-option-card:hover {
+  border-color: #86868b;
+}
+
+.apple-checkout-option-card.is-selected {
+  border-color: var(--brand-gold-strong, #c59f27);
+  background: rgba(216, 167, 45, 0.04);
+  box-shadow: 0 0 0 1px var(--brand-gold-strong, #c59f27);
+}
+
+.apple-checkout-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.apple-checkout-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-checkout-card-desc {
+  font-size: 0.88rem;
+  color: #6e6e73;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.apple-checkout-card-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* --------------------------------------------------------------------------
+   Offline Payment Notice Callout
+   -------------------------------------------------------------------------- */
+.apple-checkout-notice-callout {
+  background: #fbfbfd;
+  border: 1.5px solid #e5e5ea;
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.apple-checkout-notice-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apple-checkout-notice-body h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0 0 6px;
+}
+
+.apple-checkout-notice-body p {
+  font-size: 0.92rem;
+  color: #6e6e73;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Checkout Review Sticky Sidebar
+   -------------------------------------------------------------------------- */
+.apple-checkout-review-sidebar {
+  position: sticky;
+  top: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.apple-checkout-review-card {
+  background: #fafafc;
+  border: 1px solid #e5e5ea;
+  border-radius: 20px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.apple-checkout-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-bottom: 1px solid #e5e5ea;
+  padding-bottom: 20px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.apple-checkout-mini-item {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.apple-checkout-mini-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e5e5ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.apple-checkout-mini-thumb img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.apple-checkout-mini-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apple-checkout-mini-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.apple-checkout-mini-specs {
+  font-size: 0.8rem;
+  color: #6e6e73;
+  margin: 0;
+}
+
+.apple-checkout-mini-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile Drawer Overlay (when adding from Buy page)
+   -------------------------------------------------------------------------- */
+.apple-bag-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: appleDrawerFadeIn 0.2s ease-out;
+}
+
+.apple-bag-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(100%, 480px);
+  background: #ffffff;
+  z-index: 101;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  animation: appleDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes appleDrawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes appleDrawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.apple-bag-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.apple-bag-drawer-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.apple-bag-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.apple-bag-drawer-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e5ea;
+  background: #fafafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

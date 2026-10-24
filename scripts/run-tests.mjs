@@ -180,6 +180,11 @@ try {
   assert.equal(cart.addCartItem(items, archived).length, items.length, "Archived products cannot be added");
   const zeroStock = { ...product, id: "zero-stock", stockQuantity: 0, stockStatus: "In Stock" };
   assert.equal(cart.addCartItem(items, zeroStock).length, items.length, "Zero-quantity products cannot be added");
+  const overstockedVariant = { id: "variant-stock-10", price: product.price, stockQuantity: 10, available: true };
+  const cappedItems = cart.addCartItem([], product, "256GB", "Natural Titanium", 5, overstockedVariant);
+  assert.equal(cappedItems[0].quantity, 2, "Product stock caps a variant with a higher recorded quantity");
+  assert.equal(cart.updateCartQuantity(cappedItems, product.id, "256GB", "Natural Titanium", 9, overstockedVariant.id)[0].quantity, 2,
+    "Bag quantity updates respect the lower product stock limit");
 
   const normalized = cart.normalizeCartItems([{ nope: true }, { ...items[0], quantity: 3.7 }]);
   assert.equal(normalized.length, 1, "Invalid stored cart data is discarded");
@@ -344,7 +349,10 @@ try {
   const marketplaceSource = await readFile(path.join(projectRoot, "src/components/MarketplaceCatalogue.tsx"), "utf8");
   assert.doesNotMatch(phonesPageSource + marketplaceSource, /non-Apple|Product Manager|owner-published/, "Marketplace copy never excludes Apple or exposes admin instructions");
   const cartContextSource = await readFile(path.join(projectRoot, "src/context/CartContext.tsx"), "utf8");
-  assert.match(cartContextSource, /\[getProductBySlug, items, toast\]/, "Cart actions refresh their inventory lookup when admin products load or change");
+  assert.match(cartContextSource, /\[getProductBySlug, backendStatus, loading, items, toast\]/, "Cart actions refresh their inventory lookup when admin products load or change");
+  assert.match(cartContextSource, /backendStatus !== "supabase"/, "Production cart waits for authoritative inventory");
+  const genericBuySource = await readFile(path.join(projectRoot, "src/components/buy/GenericBuyExperience.tsx"), "utf8");
+  assert.doesNotMatch(genericBuySource, /stockQuantity:\s*Math\.max\(/, "Generic Buy pages never invent stock quantities");
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
@@ -473,6 +481,8 @@ try {
   assert.equal(airpodsPro3Story.chapters.length + airpodsPro3Story.information.items.length, 10, "AirPods Pro 3 explains all ten requested feature topics");
   assert.doesNotMatch(JSON.stringify(airpodsPro3Story), /AirPods 5|airpods-5/, "AirPods Pro 3 story contains no AirPods 5 copy or imagery");
   const productBuySource = await readFile(path.join(projectRoot, "src/pages/ProductBuyPage.tsx"), "utf8");
+  assert.ok(productBuySource.indexOf("allProducts.find((product) => product.slug === slug)") < productBuySource.indexOf("resolveCandidates(activeProducts, family, slug)"),
+    "Exact catalog products win over image-eligible partial slug matches");
   assert.ok(productBuySource.indexOf('slug === "airpods-pro-3"') < productBuySource.indexOf('slug === "airpods-5"'), "AirPods Pro 3 resolves through its own catalogue product before the legacy AirPods 5 flow");
   for (const slug of editorialSlugs) {
     const story = editorialStories.editorialStories[slug];

@@ -44,7 +44,7 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 const STORAGE_KEY = "buyandsell-gh-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const { getProductBySlug } = useProductCatalog();
+  const { getProductBySlug, backendStatus, loading } = useProductCatalog();
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -69,6 +69,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const id = window.setTimeout(() => setToast(null), 3200);
     return () => window.clearTimeout(id);
   }, [toast]);
+
+  const resolveSelection = (product: Product, variant?: ProductVariant) => {
+    if (import.meta.env.PROD && (loading || backendStatus !== "supabase")) {
+      setToast("Product availability is still loading. Please wait a moment.");
+      return null;
+    }
+    const liveProduct = getProductBySlug(product.slug);
+    if (!liveProduct) {
+      return { product, variant };
+    }
+    if (liveProduct.archived || isSoldOut(liveProduct)) {
+      setToast(`${liveProduct.name} is currently out of stock.`);
+      return null;
+    }
+    // Match variant by ID first, then by title, or retain the configured variant
+    const liveVariant = variant
+      ? (liveProduct.variants?.find((candidate) => candidate.id === variant.id) ||
+         liveProduct.variants?.find((candidate) => candidate.title === variant.title) ||
+         variant)
+      : undefined;
+
+    return { product: liveProduct, variant: liveVariant ?? variant };
+  };
 
   // Reconcile cart items with authoritative database product IDs when catalog loads
   useEffect(() => {
@@ -106,36 +129,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     colorImageSrc?: string,
     options?: Record<string, string>,
   ) => {
-    const catalogCandidate = getProductBySlug(product.slug);
-    const useCatalogCandidate =
-      catalogCandidate &&
-      !isSoldOut(catalogCandidate) &&
-      isProductImageEligible(catalogCandidate);
-    const currentProduct = useCatalogCandidate
-      ? {
-          ...catalogCandidate,
-          price: product.price > 0 ? product.price : catalogCandidate.price,
-          condition: product.condition === "Brand New" ? "Brand New" : catalogCandidate.condition,
-        }
-      : product;
-    if (!currentProduct) {
-      setToast(`${product.name} is not available for cart right now.`);
-      return false;
-    }
-    if (isSoldOut(currentProduct)) {
-      setToast(`${currentProduct.name} is not available for cart right now.`);
-      return false;
-    }
-    const effectiveStock = variant?.stockQuantity ?? currentProduct.stockQuantity;
+    const selection = resolveSelection(product, variant);
+    if (!selection) return false;
+    const { product: currentProduct, variant: currentVariant } = selection;
+    const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
     const existingQuantity = items
       .filter((item) => item.product.id === currentProduct.id && item.storage === storage && item.color === color &&
-        (!variant?.id || item.variantId === variant.id))
+        (!currentVariant?.id || item.variantId === currentVariant.id))
       .reduce((sum, item) => sum + item.quantity, 0);
-    if (variant?.available === false || existingQuantity + quantity > effectiveStock) {
+    const productQuantity = items
+      .filter((item) => item.product.id === currentProduct.id)
+      .reduce((sum, item) => sum + item.quantity, 0);
+    if (currentVariant?.available === false || existingQuantity + quantity > effectiveStock ||
+      productQuantity + quantity > currentProduct.stockQuantity) {
       setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, variant, colorImageSrc, options));
+    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, currentVariant, colorImageSrc, options));
     setToast(`${currentProduct.name} added to cart.`);
     return true;
   };
@@ -143,22 +153,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const replaceItem: CartContextValue["replaceItem"] = (
     originalKey, product, storage, color, quantity, variant, colorImageSrc, options,
   ) => {
-    if (!items.some((item) => cartItemKey(item) === originalKey)) {
+    // Find the existing item by direct cartItemKey or by matching slug/variant
+    const existing = items.find((item) =>
+      cartItemKey(item) === originalKey ||
+      JSON.stringify([item.product.slug, item.storage, item.color, item.variantId ?? ""]) === originalKey ||
+      (item.product.slug === product.slug && item.storage === storage && item.color === color)
+    );
+    const targetKey = existing ? cartItemKey(existing) : originalKey;
+    if (!existing && !items.some((item) => cartItemKey(item) === originalKey)) {
       setToast("This item is no longer in your bag. Review your bag before adding it again.");
       return false;
     }
-    const currentProduct = getProductBySlug(product.slug) ?? product;
-    const effectiveStock = variant?.stockQuantity ?? currentProduct.stockQuantity;
+    const selection = resolveSelection(product, variant);
+    if (!selection) return false;
+    const { product: currentProduct, variant: currentVariant } = selection;
+    const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
     const existingQuantity = items
-      .filter((item) => cartItemKey(item) !== originalKey && item.product.id === currentProduct.id &&
-        item.storage === storage && item.color === color && (!variant?.id || item.variantId === variant.id))
+      .filter((item) => cartItemKey(item) !== targetKey && item.product.id === currentProduct.id &&
+        item.storage === storage && item.color === color && (!currentVariant?.id || item.variantId === currentVariant.id))
       .reduce((sum, item) => sum + item.quantity, 0);
-    if (isSoldOut(currentProduct) || variant?.available === false || existingQuantity + quantity > effectiveStock) {
+    const productQuantity = items
+      .filter((item) => cartItemKey(item) !== targetKey && item.product.id === currentProduct.id)
+      .reduce((sum, item) => sum + item.quantity, 0);
+    if (currentVariant?.available === false || existingQuantity + quantity > effectiveStock ||
+      productQuantity + quantity > currentProduct.stockQuantity) {
       setToast(`${currentProduct.name} is not available in the selected quantity.`);
       return false;
     }
     setItems((current) => replaceCartItem(
-      current, originalKey, currentProduct, storage, color, quantity, variant, colorImageSrc, options,
+      current, targetKey, currentProduct, storage, color, quantity, currentVariant, colorImageSrc, options,
     ));
     setToast(`${currentProduct.name} updated in your bag.`);
     return true;
@@ -191,7 +214,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       subtotal: cartSubtotal(items),
       totalItems: cartTotalItems(items),
     }),
-    [getProductBySlug, items, toast],
+    [getProductBySlug, backendStatus, loading, items, toast],
   );
 
   return (
