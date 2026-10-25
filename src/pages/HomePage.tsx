@@ -127,18 +127,20 @@ function normalizeHomepageCampaign(campaign: Campaign): Campaign {
   if (campaign.id === "iphone-18-pro") {
     const rawImage = campaign.image || "";
     const rawMobile = campaign.mobileImage || "";
-    const useApprovedDesktop =
+    const isLegacySeedDesktop =
       !rawImage ||
       rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
-      rawImage.includes("/products/homepage/iphone-18-pro-hero");
-    const useApprovedMobile =
+      rawImage === "/products/homepage/iphone-18-pro-hero.webp" ||
+      rawImage === "/products/homepage/iphone-18-pro-hero.jpg";
+    const isLegacySeedMobile =
       !rawMobile ||
       rawMobile.includes("1792004900948-iphone-18-promax-1.jpg") ||
-      rawMobile.includes("/products/homepage/iphone-18-pro-hero-mobile");
+      rawMobile === "/products/homepage/iphone-18-pro-hero-mobile.jpg" ||
+      rawMobile === "/products/homepage/iphone-18-pro-hero-mobile.webp";
     normalized = {
       ...campaign,
-      image: useApprovedDesktop ? "/products/homepage/iphone-18-pro-hero-2x.webp" : rawImage,
-      mobileImage: useApprovedMobile ? "/products/homepage/iphone-18-pro-hero-mobile.jpg" : rawMobile,
+      image: isLegacySeedDesktop ? "/products/homepage/iphone-18-pro-hero-2x.webp" : rawImage,
+      mobileImage: isLegacySeedMobile ? "/products/homepage/iphone-18-pro-hero-mobile.jpg" : rawMobile,
     };
   }
   if (normalized.id === "iphone-duo") return normalized;
@@ -163,7 +165,30 @@ const serviceFlyers = [
 ];
 
 export function HomePage() {
-  const { homepage } = useCms();
+  const { homepage, loading, hasVerifiedHomepage } = useCms();
+
+  if (loading && !hasVerifiedHomepage) {
+    return (
+      <main className="storefront-home home-reference">
+        <SEO
+          title="Premium Tech Store in Accra | Buy & Sell GH"
+          description="Shop original devices and get trusted trade-in, repair, installment and customer support from Buy & Sell GH in Accra."
+        />
+        <div className="home-ref-announcement" style={{ opacity: 0, pointerEvents: "none" }}>
+          &nbsp;
+        </div>
+        <section className="home-ref-hero is-dark" style={{ minHeight: "650px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "90%", maxWidth: "980px", minHeight: "420px", borderRadius: "24px", background: "rgba(255, 255, 255, 0.03)" }} />
+        </section>
+        <div className="home-ref-grid">
+          <div className="home-ref-row">
+            <div className="home-ref-tile is-dark" style={{ minHeight: "590px", background: "#0a0a0c" }} />
+            <div className="home-ref-tile is-light" style={{ minHeight: "590px", background: "#f5f5f7" }} />
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const rawHeroes: Campaign[] =
     homepage?.heroes?.filter((h) => h.enabled) && homepage.heroes.filter((h) => h.enabled).length > 0
@@ -273,7 +298,7 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
       {mobileImg ? (
-        <picture className="home-ref-hero-picture">
+        <picture key={`${campaign.id}-${campaign.image}`} className="home-ref-hero-picture">
           <source
             media="(max-width: 768px)"
             srcSet={mobileImg}
@@ -281,6 +306,7 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
             height={campaign.id === "iphone-18-pro" ? 880 : undefined}
           />
           <img
+            key={`${campaign.id}-${campaign.image}`}
             className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
             src={campaign.image}
             alt={campaign.alt}
@@ -293,6 +319,7 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         </picture>
       ) : (
         <img
+          key={`${campaign.id}-${campaign.image}`}
           className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
           src={campaign.image}
           alt={campaign.alt}
@@ -318,7 +345,14 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
         <p>{campaign.subtitle}</p>
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      <img className="home-ref-tile-image" src={campaign.image} alt={campaign.alt} loading="lazy" decoding="async" />
+      <img
+        key={`${campaign.id}-${campaign.image}`}
+        className="home-ref-tile-image"
+        src={campaign.image}
+        alt={campaign.alt}
+        loading="lazy"
+        decoding="async"
+      />
     </section>
   );
 }

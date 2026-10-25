@@ -17,7 +17,14 @@ import {
   fetchPageContent,
   fetchSiteSettings,
   fetchStorefrontContent,
+  getInitialFaqs,
   getInitialHomepageContent,
+  getInitialMainStoreContent,
+  getInitialMediaLibrary,
+  getInitialPageContent,
+  getInitialSiteSettings,
+  getInitialStorefrontContent,
+  hasVerifiedLocalHomepageContent,
   removeMediaItemFromLibrary,
   saveFaqs,
   saveHomepageContent,
@@ -29,6 +36,7 @@ import {
   updateMediaAsset,
   uploadMediaAsset,
 } from "./supabaseCmsRepository";
+import { subscribeToPublishedUpdates } from "../utils/imageVersioning";
 import type {
   CategoryDepartmentConfig,
   FaqItem,
@@ -48,6 +56,7 @@ interface CmsContextValue {
   pages: PageContentRegistry;
   departments: Record<string, CategoryDepartmentConfig>;
   loading: boolean;
+  hasVerifiedHomepage: boolean;
   refreshCms: () => Promise<void>;
   updateSettings: (partial: Partial<SiteSettings>) => Promise<SiteSettings>;
   updateHomepage: (content: HomepageContent) => Promise<HomepageContent>;
@@ -84,13 +93,13 @@ interface CmsContextValue {
 const CmsContext = createContext<CmsContextValue | null>(null);
 
 export function CmsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const [settings, setSettings] = useState<SiteSettings>(() => getInitialSiteSettings());
   const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
-  const [mainStore, setMainStore] = useState<MainStoreConfig>(defaultMainStoreConfig);
-  const [media, setMedia] = useState<MediaItem[]>(defaultMediaItems);
-  const [faqs, setFaqs] = useState<FaqItem[]>(defaultFaqs);
-  const [pages, setPages] = useState<PageContentRegistry>(defaultPageContent);
-  const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(CATEGORY_DEPARTMENTS);
+  const [mainStore, setMainStore] = useState<MainStoreConfig>(() => getInitialMainStoreContent());
+  const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
+  const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
+  const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
+  const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(() => getInitialStorefrontContent());
   const [loading, setLoading] = useState(true);
   const [, startTransition] = useTransition();
 
@@ -124,11 +133,15 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     loadAll();
-    const unsubscribe = subscribeToCms(() => {
+    const unsubscribeCms = subscribeToCms(() => {
+      loadAll();
+    });
+    const unsubscribePub = subscribeToPublishedUpdates(() => {
       loadAll();
     });
     return () => {
-      unsubscribe();
+      unsubscribeCms();
+      unsubscribePub();
     };
   }, []);
 
@@ -229,6 +242,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         pages,
         departments,
         loading,
+        hasVerifiedHomepage: hasVerifiedLocalHomepageContent(),
         refreshCms: loadAll,
         updateSettings: handleUpdateSettings,
         updateHomepage: handleUpdateHomepage,

@@ -47,6 +47,7 @@ export function ProductVisual({
         } place-items-center`}
       >
         <img
+          key={image.src}
           src={image.src}
           alt={image.alt}
           loading={priority ? "eager" : "lazy"}

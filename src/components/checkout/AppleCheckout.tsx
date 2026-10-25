@@ -307,7 +307,7 @@ export function AppleCheckout() {
                   return (
                     <div key={key} className="apple-checkout-mini-item">
                       <div className="apple-checkout-mini-thumb">
-                        {img ? <img src={img} alt={item.product.name} /> : <ShoppingBag size={20} color="#86868b" />}
+                        {img ? <img key={img} src={img} alt={item.product.name} /> : <ShoppingBag size={20} color="#86868b" />}
                       </div>
                       <div className="apple-checkout-mini-details">
                         <h4 className="apple-checkout-mini-title">{item.product.name}</h4>

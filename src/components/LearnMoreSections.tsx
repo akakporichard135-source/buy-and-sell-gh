@@ -4,11 +4,12 @@ import "../styles/learn-more-sections.css";
 
 function SectionImage({ section, src, alt }: { section: LearnMoreSection; src: string; alt: string }) {
   return (
-    <picture>
+    <picture key={src}>
       {section.mobileImage && src === section.image && (
         <source media="(max-width: 700px)" srcSet={section.mobileImage} />
       )}
       <img
+        key={src}
         src={src}
         alt={alt}
         loading="lazy"
@@ -107,7 +108,7 @@ export function LearnMoreSections({ sections }: { sections: LearnMoreSection[] }
                     <article className="learn-more-feature-card" key={`${item.label}-${idx}`}>
                       {item.image && (
                         <div className="learn-more-card-media">
-                          <img src={item.image} alt={item.label} loading="lazy" />
+                          <img key={item.image} src={item.image} alt={item.label} loading="lazy" />
                         </div>
                       )}
                       <div className="learn-more-card-content">
@@ -144,7 +145,7 @@ export function LearnMoreSections({ sections }: { sections: LearnMoreSection[] }
                     <div className="learn-more-comp-card" key={`${col.label}-${idx}`}>
                       {col.image && (
                         <div className="learn-more-comp-img">
-                          <img src={col.image} alt={col.label} loading="lazy" />
+                          <img key={col.image} src={col.image} alt={col.label} loading="lazy" />
                         </div>
                       )}
                       <h4 className="learn-more-comp-name">{col.label}</h4>

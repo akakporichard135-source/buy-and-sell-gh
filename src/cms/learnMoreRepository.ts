@@ -6,6 +6,7 @@ import { productStories, type ProductFamilyKey, type ProductStoryDefinition } fr
 import { iphone18ProEducation, type IphoneEducationContent } from "../data/iphone18ProEducation";
 import { macStudioStory, type MacStudioStory } from "../data/macStudioStory";
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
+import { broadcastPublishedUpdate } from "../utils/imageVersioning";
 
 export type LearnMoreSectionType =
   | "text-image"
@@ -93,10 +94,33 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
     }) as T;
   }
   if (published && current && typeof published === "object" && typeof current === "object") {
-    return Object.fromEntries(Object.entries(published).map(([key, value]) => [
-      key, key === "src" && (published as Record<string, unknown>).cmsAssetOverride === true
-        ? value : refreshBundledStoryAssets(value, (current as Record<string, unknown>)[key]),
-    ])) as T;
+    return Object.fromEntries(Object.entries(published).map(([key, value]) => {
+      if (
+        (key === "src" || key === "image" || key === "mobileImage" || key === "poster" || key === "video" || key === "mobileVideo") &&
+        typeof value === "string" &&
+        value.trim() !== ""
+      ) {
+        const publishedStr = value.trim();
+        const currentStr = typeof (current as Record<string, unknown>)?.[key] === "string"
+          ? ((current as Record<string, unknown>)[key] as string).trim() : "";
+        if (
+          (published as Record<string, unknown>).cmsAssetOverride === true ||
+          publishedStr.startsWith("http://") ||
+          publishedStr.startsWith("https://") ||
+          publishedStr.startsWith("data:") ||
+          publishedStr.includes("/storage/v1/object/") ||
+          publishedStr !== currentStr
+        ) {
+          return [key, publishedStr];
+        }
+      }
+      return [
+        key,
+        key === "src" && (published as Record<string, unknown>).cmsAssetOverride === true
+          ? value
+          : refreshBundledStoryAssets(value, (current as Record<string, unknown>)[key]),
+      ];
+    })) as T;
   }
   if (typeof published === "string" && published.startsWith("/assets/") && typeof current === "string" && current.startsWith("/assets/")) {
     return current as T;
@@ -121,28 +145,99 @@ interface CacheEntry {
 }
 const publicCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 60 * 1000; // 60s TTL
+const FAST_CACHE_PREFIX = "buyandsell_learn_more_pub_v2_";
+
+/**
+ * Synchronously retrieves cached published Learn More content to prevent
+ * flash of default bundled content during page mount or refresh.
+ */
+export function getPublishedLearnMoreSync(id: string): LearnMoreContent | null {
+  const memory = publicCache.get(id);
+  if (memory && memory.content) {
+    return memory.content;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem(`${FAST_CACHE_PREFIX}${id}`) || localStorage.getItem(`${FAST_CACHE_PREFIX}${id}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (validContent(parsed, id)) {
+          publicCache.set(id, { content: parsed, fetchedAt: Date.now() });
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return null;
+}
+
+export function savePublishedLearnMoreToFastCache(id: string, content: LearnMoreContent | null): void {
+  if (typeof window === "undefined") return;
+  const key = `${FAST_CACHE_PREFIX}${id}`;
+  try {
+    if (content) {
+      const json = JSON.stringify(content);
+      sessionStorage.setItem(key, json);
+      localStorage.setItem(key, json);
+    } else {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export function invalidateLearnMoreCache(id?: string) {
   if (id) {
     publicCache.delete(id);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem(`${FAST_CACHE_PREFIX}${id}`);
+        localStorage.removeItem(`${FAST_CACHE_PREFIX}${id}`);
+      } catch {}
+    }
+    broadcastPublishedUpdate("learn-more", id);
   } else {
     publicCache.clear();
+    if (typeof window !== "undefined") {
+      try {
+        const toRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(FAST_CACHE_PREFIX)) toRemove.push(k);
+        }
+        toRemove.forEach((k) => localStorage.removeItem(k));
+
+        const toRemoveSession: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const k = sessionStorage.key(i);
+          if (k && k.startsWith(FAST_CACHE_PREFIX)) toRemoveSession.push(k);
+        }
+        toRemoveSession.forEach((k) => sessionStorage.removeItem(k));
+      } catch {}
+    }
+    broadcastPublishedUpdate("learn-more");
   }
 }
 
 export async function fetchPublishedLearnMore(id: string): Promise<LearnMoreContent | null> {
-  const cached = publicCache.get(id);
+  const syncCached = getPublishedLearnMoreSync(id);
+  const memory = publicCache.get(id);
   const now = Date.now();
-  if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
-    return cached.content;
+  if (memory && now - memory.fetchedAt < CACHE_TTL_MS && memory.content) {
+    return memory.content;
   }
 
-  if (!supabase) return null;
+  if (!supabase) return syncCached;
   const { data, error } = await supabase.from("learn_more_published")
     .select("content").eq("id", id).maybeSingle();
-  if (error) return null;
+  if (error) return syncCached;
   const content = validContent(data?.content, id) ? data.content : null;
   publicCache.set(id, { content, fetchedAt: now });
+  savePublishedLearnMoreToFastCache(id, content);
   return content;
 }
 
@@ -196,6 +291,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       p_notes: notes || "Published via Visual Admin Editor",
     });
     if (!rpcError && typeof revNum === "number") {
+      savePublishedLearnMoreToFastCache(pageId, content);
       invalidateLearnMoreCache(pageId);
       return revNum;
     }
@@ -226,10 +322,12 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       created_at: new Date().toISOString(),
     });
     await client.from("learn_more_drafts").delete().eq("id", pageId);
+    savePublishedLearnMoreToFastCache(pageId, content);
     invalidateLearnMoreCache(pageId);
     return nextRev;
   } catch {
     await client.from("learn_more_drafts").delete().eq("id", pageId);
+    savePublishedLearnMoreToFastCache(pageId, content);
     invalidateLearnMoreCache(pageId);
     return 1;
   }
@@ -268,6 +366,7 @@ export async function rollbackLearnMoreRevision(pageId: string, revisionNumber: 
   if (pubErr) throw pubErr;
 
   await client.from("learn_more_drafts").delete().eq("id", pageId);
+  savePublishedLearnMoreToFastCache(pageId, content);
   invalidateLearnMoreCache(pageId);
   return revisionNumber;
 }
@@ -277,6 +376,7 @@ export async function unpublishLearnMore(pageId: string): Promise<void> {
   const client = getSupabaseOrThrow();
   const { error } = await client.from("learn_more_published").delete().eq("id", pageId);
   if (error) throw error;
+  savePublishedLearnMoreToFastCache(pageId, null);
   invalidateLearnMoreCache(pageId);
 }
 

@@ -93,6 +93,7 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
                 >
                   {imageSrc ? (
                     <img
+                      key={imageSrc}
                       src={imageSrc}
                       alt={imageAlt || displayName}
                       loading="lazy"

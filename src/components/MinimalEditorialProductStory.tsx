@@ -24,6 +24,7 @@ export function MinimalEditorialProductStory({ story, sections }: { story: Edito
           <Link className="minimal-editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
         </div>
         <img
+          key={story.hero.src}
           className="minimal-editorial-hero-image"
           src={story.hero.src}
           alt={story.hero.alt}

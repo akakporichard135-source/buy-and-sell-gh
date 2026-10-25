@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { editorialStories } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
-import { fetchPublishedLearnMore, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
+import { fetchPublishedLearnMore, getPublishedLearnMoreSync, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
 import { EditorialProductStory } from "../components/EditorialProductStory";
 import { LearnMoreSections } from "../components/LearnMoreSections";
 import { macStudioStory, type MacStudioPanel } from "../data/macStudioStory";
@@ -14,16 +14,35 @@ import type { NewMacLaunchKey } from "../data/newMacLaunches";
 const panelIcons = { zap: Zap, cpu: Cpu, sparkles: Sparkles, braces: Braces, workflow: Workflow };
 
 export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; preview?: LearnMoreContent }) {
-  const [published, setPublished] = useState<LearnMoreContent | null>(null);
+  const [published, setPublished] = useState<LearnMoreContent | null>(() =>
+    preview || getPublishedLearnMoreSync(product)
+  );
+  const [isResolving, setIsResolving] = useState<boolean>(() => !preview && !published);
+
   useEffect(() => {
     if (preview) return;
     let active = true;
     void fetchPublishedLearnMore(product).catch(() => null).then((content) => {
-      if (active) setPublished(content);
+      if (active) {
+        setPublished(content);
+        setIsResolving(false);
+      }
     });
     return () => { active = false; };
   }, [product, preview]);
+
   const content = preview || published;
+
+  if (isResolving && !content) {
+    return (
+      <main className="mac-story-page mac-story-skeleton" style={{ minHeight: "80vh", background: "#000" }}>
+        <SEO title="Mac | Buy & Sell GH" description="Explore Apple Silicon Macs with Buy & Sell GH." />
+        <section className="mac-story-hero" style={{ minHeight: "70vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "90%", maxWidth: "980px", minHeight: "380px", borderRadius: "24px", background: "rgba(255, 255, 255, 0.04)" }} />
+        </section>
+      </main>
+    );
+  }
   if (product === "mac-mini") {
     const current = editorialStories["mac-mini"];
     return <EditorialProductStory

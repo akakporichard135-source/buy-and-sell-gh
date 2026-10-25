@@ -66,7 +66,7 @@ export function BagReview() {
             <article className="apple-bag-item" key={key}>
               <div className="apple-bag-item-image">
                 {image ? (
-                  <img src={image} alt={item.product.name} loading="lazy" />
+                  <img key={image} src={image} alt={item.product.name} loading="lazy" />
                 ) : (
                   <span className="apple-bag-item-image-placeholder">No image</span>
                 )}
@@ -268,7 +268,7 @@ export function BagDrawer() {
                   <article className="apple-bag-item" key={key} style={{ padding: "20px 0" }}>
                     <div className="apple-bag-item-image" style={{ width: 88, height: 88, borderRadius: 10 }}>
                       {image ? (
-                        <img src={image} alt={item.product.name} loading="lazy" />
+                        <img key={image} src={image} alt={item.product.name} loading="lazy" />
                       ) : (
                         <span className="apple-bag-item-image-placeholder" style={{ fontSize: "0.7rem" }}>No image</span>
                       )}

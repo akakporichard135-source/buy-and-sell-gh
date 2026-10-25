@@ -242,6 +242,7 @@ function AccessoryMiniCard({ product, override, catalogProduct }: AccessoryMiniC
       <div className="store-cat-acc-card-media">
         {displaySrc ? (
           <img
+            key={displaySrc}
             src={displaySrc}
             alt={displayAlt}
             loading="lazy"

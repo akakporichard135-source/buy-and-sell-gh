@@ -1,6 +1,7 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
 import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
+import { broadcastPublishedUpdate } from "../utils/imageVersioning";
 import {
   defaultFaqs,
   defaultHomepageContent,
@@ -21,6 +22,7 @@ import type {
 
 const CMS_STORAGE_KEY_SETTINGS = "buyandsell_cms_settings_v1";
 const CMS_STORAGE_KEY_HOMEPAGE = "buyandsell_cms_homepage_v1";
+const CMS_STORAGE_KEY_HOMEPAGE_VERIFIED = "buyandsell_cms_homepage_verified_v1";
 const CMS_STORAGE_KEY_MEDIA = "buyandsell_cms_media_v1";
 const CMS_STORAGE_KEY_FAQS = "buyandsell_cms_faqs_v1";
 const CMS_STORAGE_KEY_PAGES = "buyandsell_cms_pages_v1";
@@ -91,8 +93,11 @@ const sanitizeSiteSettings = (settings: SiteSettings): SiteSettings => {
 };
 
 // 1. SITE SETTINGS
+export const getInitialSiteSettings = (): SiteSettings =>
+  sanitizeSiteSettings(readLocal<SiteSettings>(CMS_STORAGE_KEY_SETTINGS, defaultSiteSettings));
+
 export const fetchSiteSettings = async (): Promise<SiteSettings> => {
-  const local = sanitizeSiteSettings(readLocal<SiteSettings>(CMS_STORAGE_KEY_SETTINGS, defaultSiteSettings));
+  const local = getInitialSiteSettings();
   if (!supabase) return local;
 
   try {
@@ -145,6 +150,7 @@ export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise
 
   // Only update client cache after authoritative Supabase write succeeds
   writeLocal(CMS_STORAGE_KEY_SETTINGS, updated);
+  broadcastPublishedUpdate("homepage");
   notifyListeners();
   return updated;
 };
@@ -173,22 +179,24 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
     const rawImage = h.image || def?.image || "";
     const rawMobileImage = h.mobileImage || def?.mobileImage;
-    const isDefaultIphone18ProDesktop =
+    const isLegacySeedIphone18ProDesktop =
       h.id === "iphone-18-pro" &&
       (!rawImage ||
         rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
-        rawImage.includes("/products/homepage/iphone-18-pro-hero"));
-    const isDefaultIphone18ProMobile =
+        rawImage === "/products/homepage/iphone-18-pro-hero.webp" ||
+        rawImage === "/products/homepage/iphone-18-pro-hero.jpg");
+    const isLegacySeedIphone18ProMobile =
       h.id === "iphone-18-pro" &&
       (!rawMobileImage ||
         rawMobileImage.includes("1792004900948-iphone-18-promax-1.jpg") ||
-        rawMobileImage.includes("/products/homepage/iphone-18-pro-hero-mobile"));
+        rawMobileImage === "/products/homepage/iphone-18-pro-hero-mobile.jpg" ||
+        rawMobileImage === "/products/homepage/iphone-18-pro-hero-mobile.webp");
 
     const combined = {
       ...def,
       ...h,
-      image: isDefaultIphone18ProDesktop ? APPROVED_IPHONE_18_PRO_DESKTOP_HERO : rawImage,
-      mobileImage: isDefaultIphone18ProMobile ? APPROVED_IPHONE_18_PRO_MOBILE_HERO : rawMobileImage,
+      image: isLegacySeedIphone18ProDesktop ? APPROVED_IPHONE_18_PRO_DESKTOP_HERO : rawImage,
+      mobileImage: isLegacySeedIphone18ProMobile ? APPROVED_IPHONE_18_PRO_MOBILE_HERO : rawMobileImage,
     };
     return normalizeSecondary(combined);
   });
@@ -205,6 +213,15 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     heroes: mergedHeroes,
     tiles: mergedTiles,
   };
+};
+
+export const hasVerifiedLocalHomepageContent = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(CMS_STORAGE_KEY_HOMEPAGE_VERIFIED) === "true";
+  } catch {
+    return false;
+  }
 };
 
 export const getInitialHomepageContent = (): HomepageContent =>
@@ -224,6 +241,11 @@ export const fetchHomepageContent = async (): Promise<HomepageContent> => {
     if (!error && data?.content) {
       const merged = normalizeHomepageContent(data.content as Partial<HomepageContent>);
       writeLocal(CMS_STORAGE_KEY_HOMEPAGE, merged);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(CMS_STORAGE_KEY_HOMEPAGE_VERIFIED, "true");
+        } catch {}
+      }
       return merged;
     }
   } catch {
@@ -253,6 +275,12 @@ export const saveHomepageContent = async (
 
   // Only update client cache after authoritative Supabase write succeeds
   writeLocal(CMS_STORAGE_KEY_HOMEPAGE, content);
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(CMS_STORAGE_KEY_HOMEPAGE_VERIFIED, "true");
+    } catch {}
+  }
+  broadcastPublishedUpdate("homepage");
   notifyListeners();
   return content;
 };
@@ -465,6 +493,12 @@ export const syncMissingMediaToSupabase = async (missingItems: MediaItem[]): Pro
   } catch {
     // Non-blocking fallback if unauthenticated
   }
+};
+
+export const getInitialMediaLibrary = (): MediaItem[] => {
+  const deletedIds = getDeletedMediaIds();
+  const rawLocal = readLocal<MediaItem[]>(CMS_STORAGE_KEY_MEDIA, defaultMediaItems);
+  return mergeMediaItems(rawLocal, defaultMediaItems, deletedIds);
 };
 
 export const fetchMediaLibrary = async (): Promise<MediaItem[]> => {
@@ -904,8 +938,11 @@ export const updateMediaAsset = async (
 };
 
 // 4. FAQS
+export const getInitialFaqs = (): FaqItem[] =>
+  readLocal<FaqItem[]>(CMS_STORAGE_KEY_FAQS, defaultFaqs);
+
 export const fetchFaqs = async (): Promise<FaqItem[]> => {
-  const local = readLocal<FaqItem[]>(CMS_STORAGE_KEY_FAQS, defaultFaqs);
+  const local = getInitialFaqs();
   if (!supabase) return local;
 
   try {
@@ -937,13 +974,17 @@ export const saveFaqs = async (faqs: FaqItem[]): Promise<FaqItem[]> => {
   }
 
   writeLocal(CMS_STORAGE_KEY_FAQS, faqs);
+  broadcastPublishedUpdate("homepage");
   notifyListeners();
   return faqs;
 };
 
 // 5. PAGE CONTENT (About, Repairs, Trade-In)
+export const getInitialPageContent = (): PageContentRegistry =>
+  readLocal<PageContentRegistry>(CMS_STORAGE_KEY_PAGES, defaultPageContent);
+
 export const fetchPageContent = async (): Promise<PageContentRegistry> => {
-  const local = readLocal<PageContentRegistry>(CMS_STORAGE_KEY_PAGES, defaultPageContent);
+  const local = getInitialPageContent();
   if (!supabase) return local;
 
   try {
@@ -990,33 +1031,38 @@ export const savePageContent = async <K extends keyof PageContentRegistry>(
   const current = await fetchPageContent();
   const updated = { ...current, [key]: content };
   writeLocal(CMS_STORAGE_KEY_PAGES, updated);
+  broadcastPublishedUpdate("homepage");
   notifyListeners();
   return content;
 };
 
 // 6. STOREFRONT CONTENT (Category Departments & Showcase Collections)
-export const fetchStorefrontContent = async (): Promise<Record<string, CategoryDepartmentConfig>> => {
-  const mergeWithDefaults = (source: Record<string, CategoryDepartmentConfig>) => {
-    const res: Record<string, CategoryDepartmentConfig> = { ...CATEGORY_DEPARTMENTS };
-    for (const [key, def] of Object.entries(CATEGORY_DEPARTMENTS)) {
-      const s = source[key];
-      if (s) {
-        res[key] = {
-          ...def,
-          ...s,
-          featuredCards: s.featuredCards && s.featuredCards.length > 0 ? s.featuredCards : def.featuredCards,
-          accessoryOverrides: {
-            ...(def.accessoryOverrides || {}),
-            ...(s.accessoryOverrides || {}),
-          },
-        };
-      }
+const mergeStorefrontWithDefaults = (source: Record<string, CategoryDepartmentConfig>) => {
+  const res: Record<string, CategoryDepartmentConfig> = { ...CATEGORY_DEPARTMENTS };
+  for (const [key, def] of Object.entries(CATEGORY_DEPARTMENTS)) {
+    const s = source[key];
+    if (s) {
+      res[key] = {
+        ...def,
+        ...s,
+        featuredCards: s.featuredCards && s.featuredCards.length > 0 ? s.featuredCards : def.featuredCards,
+        accessoryOverrides: {
+          ...(def.accessoryOverrides || {}),
+          ...(s.accessoryOverrides || {}),
+        },
+      };
     }
-    return res;
-  };
+  }
+  return res;
+};
 
+export const getInitialStorefrontContent = (): Record<string, CategoryDepartmentConfig> => {
   const local = readLocal<Record<string, CategoryDepartmentConfig>>(CMS_STORAGE_KEY_STOREFRONT, CATEGORY_DEPARTMENTS);
-  const mergedLocal = mergeWithDefaults(local);
+  return mergeStorefrontWithDefaults(local);
+};
+
+export const fetchStorefrontContent = async (): Promise<Record<string, CategoryDepartmentConfig>> => {
+  const mergedLocal = getInitialStorefrontContent();
   if (!supabase) return mergedLocal;
 
   try {
@@ -1027,7 +1073,7 @@ export const fetchStorefrontContent = async (): Promise<Record<string, CategoryD
       .maybeSingle();
 
     if (!error && data?.config) {
-      const merged = mergeWithDefaults(data.config as Record<string, CategoryDepartmentConfig>);
+      const merged = mergeStorefrontWithDefaults(data.config as Record<string, CategoryDepartmentConfig>);
       writeLocal(CMS_STORAGE_KEY_STOREFRONT, merged);
       return merged;
     }
@@ -1053,6 +1099,7 @@ export const saveStorefrontContent = async (
   if (error) {
     if (isLocalAdminActive()) {
       writeLocal(CMS_STORAGE_KEY_STOREFRONT, departments);
+      broadcastPublishedUpdate("storefront");
       notifyListeners();
       return departments;
     }
@@ -1062,6 +1109,7 @@ export const saveStorefrontContent = async (
   }
 
   writeLocal(CMS_STORAGE_KEY_STOREFRONT, departments);
+  broadcastPublishedUpdate("storefront");
   notifyListeners();
   return departments;
 };
@@ -1104,9 +1152,13 @@ const mergeMainStoreWithDefaults = (source?: Partial<MainStoreConfig> | null): M
   };
 };
 
-export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
+export const getInitialMainStoreContent = (): MainStoreConfig => {
   const local = readLocal<MainStoreConfig>(CMS_STORAGE_KEY_MAIN_STORE, defaultMainStoreConfig);
-  const mergedLocal = mergeMainStoreWithDefaults(local);
+  return mergeMainStoreWithDefaults(local);
+};
+
+export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
+  const mergedLocal = getInitialMainStoreContent();
   if (!supabase) return mergedLocal;
 
   try {
@@ -1143,15 +1195,17 @@ export const saveMainStoreContent = async (
   if (error) {
     if (isLocalAdminActive()) {
       writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
+      broadcastPublishedUpdate("main-store");
       notifyListeners();
       return config;
     }
     throw new Error(
-      `Failed to save main store content to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
+      `Failed to save main store configuration to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
     );
   }
 
   writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
+  broadcastPublishedUpdate("main-store");
   notifyListeners();
   return config;
 };

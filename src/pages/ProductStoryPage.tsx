@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { editorialStories } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
-import { fetchPublishedLearnMore, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
+import { fetchPublishedLearnMore, getPublishedLearnMoreSync, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
 import {
   familyMatchesProduct,
   getProductStory,
@@ -55,7 +55,10 @@ export function resolveStorySlug(slug: string): string {
 export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
   const resolvedSlug = resolveStorySlug(slug);
-  const [published, setPublished] = useState<LearnMoreContent | null>(null);
+  const [published, setPublished] = useState<LearnMoreContent | null>(() =>
+    getPublishedLearnMoreSync(slug) || (slug !== resolvedSlug ? getPublishedLearnMoreSync(resolvedSlug) : null)
+  );
+  const [isResolving, setIsResolving] = useState<boolean>(() => !published);
 
   useEffect(() => {
     let active = true;
@@ -63,10 +66,24 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
       .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug) : null))
       .catch(() => null)
       .then((content) => {
-        if (active) setPublished(content);
+        if (active) {
+          setPublished(content);
+          setIsResolving(false);
+        }
       });
     return () => { active = false; };
   }, [slug, resolvedSlug]);
+
+  if (isResolving && !published) {
+    return (
+      <main className="minimal-editorial-story minimal-editorial-skeleton">
+        <SEO title="Buy & Sell GH" description="Explore original Apple products with Buy & Sell GH." />
+        <section className="minimal-editorial-hero is-dark" style={{ minHeight: "75vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div className="home-ref-hero-skeleton" style={{ width: "90%", maxWidth: "980px", minHeight: "420px", borderRadius: "24px", background: "rgba(255, 255, 255, 0.04)" }} />
+        </section>
+      </main>
+    );
+  }
 
   const editorialStory = editorialStories[resolvedSlug] || editorialStories[slug];
   if (editorialStory) return <MinimalEditorialProductStory

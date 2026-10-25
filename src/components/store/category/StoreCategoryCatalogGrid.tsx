@@ -166,6 +166,7 @@ function StoreCatalogProductCard({ product, family }: { product: Product; family
       <div className="store-cat-grid-card-media">
         {resolvedImg ? (
           <img
+            key={resolvedImg.src}
             src={resolvedImg.src}
             alt={resolvedImg.alt || product.name}
             loading="lazy"

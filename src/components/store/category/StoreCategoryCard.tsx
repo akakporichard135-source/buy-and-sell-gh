@@ -47,6 +47,7 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
       <div className="store-cat-card-media">
         {card.image ? (
           <img
+            key={card.image}
             src={card.image}
             alt={card.alt || card.title}
             loading="lazy"
@@ -55,6 +56,7 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
           />
         ) : matchedProduct && resolveCatalogueProductImage(matchedProduct) ? (
           <img
+            key={resolveCatalogueProductImage(matchedProduct)!.src}
             src={resolveCatalogueProductImage(matchedProduct)!.src}
             alt={card.alt || card.title}
             loading="lazy"

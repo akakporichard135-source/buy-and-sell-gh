@@ -124,7 +124,7 @@ function featuredRail({
               </div>
               <Link to={product.learnMorePath} className="store-latest-card-media" aria-label={`Learn more about ${product.name}`}>
                 {product.image ? (
-                  <img src={product.image} alt={product.alt} loading="lazy" decoding="async" className="store-latest-card-img" />
+                  <img key={product.image} src={product.image} alt={product.alt} loading="lazy" decoding="async" className="store-latest-card-img" />
                 ) : (
                   <span className="store-feature-image-pending">Image coming soon</span>
                 )}

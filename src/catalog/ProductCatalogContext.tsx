@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { broadcastPublishedUpdate, subscribeToPublishedUpdates } from "../utils/imageVersioning";
 import type { Product } from "../types/product";
 import {
   archiveProductById,
@@ -54,13 +55,36 @@ interface ProductCatalogValue {
 const ProductCatalogContext = createContext<ProductCatalogValue | undefined>(undefined);
 
 export function ProductCatalogProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(seedCatalog);
-  const [backendStatus, setBackendStatus] = useState<ProductCatalogValue["backendStatus"]>("static-seed");
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = readStoredProducts();
+      if (stored && stored.length > 0) return stored;
+    }
+    return isSupabaseConfigured() ? [] : seedCatalog;
+  });
+  const [backendStatus, setBackendStatus] = useState<ProductCatalogValue["backendStatus"]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = readStoredProducts();
+      if (stored && stored.length > 0) return "supabase";
+    }
+    return isSupabaseConfigured() ? "supabase" : "static-seed";
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     void loadProducts();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribeSync = subscribeToPublishedUpdates((msg) => {
+      if (msg.type === "product") {
+        void loadProducts();
+      }
+    });
+    return () => {
+      unsubscribeSync();
+    };
   }, []);
 
   useEffect(() => {
@@ -94,7 +118,11 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
   const persistLocal = (nextProducts: Product[]) => {
     const normalized = nextProducts.map(normalizeProduct);
     setProducts(normalized);
-    localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(normalized));
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(normalized));
+      } catch {}
+    }
     setBackendStatus("local-catalog");
   };
 
@@ -106,12 +134,22 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
         const remoteProducts = await fetchProducts();
         setProducts(remoteProducts);
         setBackendStatus("supabase");
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(remoteProducts));
+          } catch {}
+        }
         return;
       } catch {
         setError("Catalogue could not be loaded. Please check Supabase tables, RLS policies and network access.");
         setBackendStatus("error");
         if (import.meta.env.PROD) {
-          setProducts([]);
+          const stored = readStoredProducts();
+          if (stored && stored.length > 0) {
+            setProducts(stored);
+          } else {
+            setProducts([]);
+          }
           return;
         }
       } finally {
@@ -119,8 +157,8 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       }
     }
 
-    const stored = !import.meta.env.PROD ? readStoredProducts() : null;
-    if (stored) {
+    const stored = readStoredProducts();
+    if (stored && stored.length > 0) {
       setProducts(stored);
       setBackendStatus("local-catalog");
     } else {
@@ -150,8 +188,15 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
           const saved = await upsertProduct(normalized);
           setProducts((current) => {
             const exists = current.some((item) => item.id === saved.id);
-            return exists ? current.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...current];
+            const next = exists ? current.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...current];
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(next));
+              } catch {}
+            }
+            return next;
           });
+          broadcastPublishedUpdate("product", saved.id);
           return saved;
         }
         if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
