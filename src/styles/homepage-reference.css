@@ -219,14 +219,19 @@
   font-size: clamp(0.98rem, 1.15vw, 1.15rem);
 }
 
+.home-ref-tile.home-ref-watch-ultra-4 .home-ref-copy {
+  padding-top: 36px;
+}
+
 .home-ref-watch-ultra-4 .home-ref-tile-image {
-  width: min(100%, 850px);
-  height: 62%;
+  width: min(96%, 720px);
+  height: 74%;
   left: 50%;
-  bottom: -2%;
+  top: 110px;
+  bottom: auto;
   transform: translateX(-50%);
   object-fit: contain;
-  object-position: center bottom;
+  object-position: center center;
 }
 
 .home-ref-airpods-5 .home-ref-tile-image {
@@ -475,6 +480,22 @@ body:has(.home-reference) .store-footer {
 
   .home-ref-service-card {
     flex-basis: min(43vw, 360px);
+  }
+
+  /* Watch Ultra 4 Tablet: Balanced vertical spacing */
+  .home-ref-tile.home-ref-watch-ultra-4 .home-ref-copy {
+    padding-top: 28px;
+  }
+
+  .home-ref-watch-ultra-4 .home-ref-tile-image {
+    width: min(96%, 600px);
+    height: 64%;
+    top: 145px;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
+    object-position: center center;
   }
 
   /* AirPods Pro 3 Mobile & Tablet: Heading, subtitle, & buttons at top; large image centered underneath */
@@ -778,14 +799,15 @@ body:has(.home-reference) .store-footer {
   }
 
   .home-ref-watch-ultra-4 .home-ref-copy {
-    padding-top: 28px;
+    padding-top: 24px;
   }
 
   .home-ref-watch-ultra-4 .home-ref-tile-image {
-    width: min(92vw, 380px);
-    height: auto;
-    max-height: min(320px, 52svh);
-    bottom: 62px;
+    width: min(94vw, 400px);
+    height: 68%;
+    max-height: none;
+    top: 105px;
+    bottom: auto;
     left: 50%;
     transform: translateX(-50%);
     object-fit: contain;
