@@ -114,6 +114,13 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
         const publishedStr = value.trim();
         const currentStr = typeof (current as Record<string, unknown>)?.[key] === "string"
           ? ((current as Record<string, unknown>)[key] as string).trim() : "";
+        const isLegacyWatch12Poster =
+          key === "poster" &&
+          (publishedStr === "/products/homepage/watch-series-12.webp" ||
+            publishedStr === "/products/campaigns/watch-series-12-product.webp");
+        if (isLegacyWatch12Poster && currentStr) {
+          return [key, currentStr];
+        }
         if (
           (published as Record<string, unknown>).cmsAssetOverride === true ||
           publishedStr.startsWith("http://") ||
@@ -153,6 +160,7 @@ export interface LearnMoreRevision {
 interface CacheEntry {
   content: LearnMoreContent | null;
   fetchedAt: number;
+  isNetworkFresh?: boolean;
 }
 const publicCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 60 * 1000; // 60s TTL
@@ -173,7 +181,8 @@ export function getPublishedLearnMoreSync(id: string): LearnMoreContent | null {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (validContent(parsed, id)) {
-          publicCache.set(id, { content: parsed, fetchedAt: Date.now() });
+          // Do not mark as network fresh so fetchPublishedLearnMore still revalidates from Supabase
+          publicCache.set(id, { content: parsed, fetchedAt: Date.now(), isNetworkFresh: false });
           return parsed;
         }
       }
@@ -234,11 +243,11 @@ export function invalidateLearnMoreCache(id?: string) {
   }
 }
 
-export async function fetchPublishedLearnMore(id: string): Promise<LearnMoreContent | null> {
+export async function fetchPublishedLearnMore(id: string, forceRefresh = false): Promise<LearnMoreContent | null> {
   const syncCached = getPublishedLearnMoreSync(id);
   const memory = publicCache.get(id);
   const now = Date.now();
-  if (memory && now - memory.fetchedAt < CACHE_TTL_MS && memory.content) {
+  if (!forceRefresh && memory && memory.isNetworkFresh && now - memory.fetchedAt < CACHE_TTL_MS && memory.content) {
     return memory.content;
   }
 
@@ -247,7 +256,7 @@ export async function fetchPublishedLearnMore(id: string): Promise<LearnMoreCont
     .select("content").eq("id", id).maybeSingle();
   if (error) return syncCached;
   const content = validContent(data?.content, id) ? data.content : null;
-  publicCache.set(id, { content, fetchedAt: now });
+  publicCache.set(id, { content, fetchedAt: now, isNetworkFresh: true });
   savePublishedLearnMoreToFastCache(id, content);
   return content;
 }
@@ -262,10 +271,37 @@ export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent 
 
 export async function saveDraftLearnMore(content: LearnMoreContent): Promise<void> {
   await assertAdminAal2();
-  const { error } = await getSupabaseOrThrow().from("learn_more_drafts").upsert({
-    id: content.story.slug, content, updated_at: new Date().toISOString(),
+  const client = getSupabaseOrThrow();
+  const pageId = content.story.slug;
+  const { error } = await client.from("learn_more_drafts").upsert({
+    id: pageId, content, updated_at: new Date().toISOString(),
   });
   if (error) throw error;
+
+  // Strict read-back verification: confirm all expected section IDs were persisted in draft
+  const { data: verifyDraft, error: verifyErr } = await client
+    .from("learn_more_drafts")
+    .select("content")
+    .eq("id", pageId)
+    .single();
+
+  if (verifyErr || !verifyDraft?.content) {
+    throw new Error(
+      `Draft persistence verification failed: could not confirm saved draft in Supabase (${verifyErr?.message || "empty response"}).`
+    );
+  }
+
+  const persistedDraft = verifyDraft.content as LearnMoreContent;
+  const expectedSectionIds = (content.sections || []).map((s) => s.id);
+  const persistedSectionIds = new Set((persistedDraft.sections || []).map((s) => s.id));
+
+  for (const expectedId of expectedSectionIds) {
+    if (!persistedSectionIds.has(expectedId)) {
+      throw new Error(
+        `Draft persistence verification failed: newly created section ID "${expectedId}" was not preserved in Supabase draft.`
+      );
+    }
+  }
 }
 
 export async function fetchLearnMoreRevisions(id: string): Promise<LearnMoreRevision[]> {
@@ -289,12 +325,20 @@ export async function fetchLearnMoreRevisions(id: string): Promise<LearnMoreRevi
   }
 }
 
-export async function publishLearnMore(content: LearnMoreContent, notes?: string): Promise<number> {
+export interface PublishResult {
+  revisionNumber: number;
+  verifiedContent: LearnMoreContent;
+  persistedSectionIds: string[];
+}
+
+export async function publishLearnMore(content: LearnMoreContent, notes?: string): Promise<PublishResult> {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const pageId = content.story.slug;
+  let nextRev = 1;
 
   // 1. Attempt atomic RPC call if available
+  let rpcSucceeded = false;
   try {
     const { data: revNum, error: rpcError } = await client.rpc("publish_learn_more_page", {
       p_page_id: pageId,
@@ -302,49 +346,89 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       p_notes: notes || "Published via Visual Admin Editor",
     });
     if (!rpcError && typeof revNum === "number") {
-      invalidateLearnMoreCache(pageId);
-      savePublishedLearnMoreToFastCache(pageId, content);
-      publicCache.set(pageId, { content, fetchedAt: Date.now() });
-      return revNum;
+      nextRev = revNum;
+      rpcSucceeded = true;
+    } else if (rpcError) {
+      console.warn("RPC publish_learn_more_page returned error, falling back to direct operations:", rpcError);
     }
   } catch (err) {
-    console.warn("RPC publish_learn_more_page fallback to direct operations:", err);
+    console.warn("RPC publish_learn_more_page threw error, falling back to direct operations:", err);
   }
 
-  // 2. Direct fallback
-  const { error } = await client.from("learn_more_published").upsert({
-    id: pageId, content, updated_at: new Date().toISOString(),
-  });
-  if (error) throw error;
-
-  // Insert revision record
-  try {
-    const { data: revData } = await client
-      .from("learn_more_revisions")
-      .select("revision_number")
-      .eq("page_id", pageId)
-      .order("revision_number", { ascending: false })
-      .limit(1);
-    const nextRev = (((revData?.[0]?.revision_number as number) || 0) + 1);
-    await client.from("learn_more_revisions").insert({
-      page_id: pageId,
-      revision_number: nextRev,
-      content,
-      notes: notes || "Published via Visual Admin Editor",
-      created_at: new Date().toISOString(),
+  // 2. Direct fallback if RPC did not succeed
+  if (!rpcSucceeded) {
+    const { error: pubError } = await client.from("learn_more_published").upsert({
+      id: pageId, content, updated_at: new Date().toISOString(),
     });
-    await client.from("learn_more_drafts").delete().eq("id", pageId);
-    invalidateLearnMoreCache(pageId);
-    savePublishedLearnMoreToFastCache(pageId, content);
-    publicCache.set(pageId, { content, fetchedAt: Date.now() });
-    return nextRev;
-  } catch {
-    await client.from("learn_more_drafts").delete().eq("id", pageId);
-    invalidateLearnMoreCache(pageId);
-    savePublishedLearnMoreToFastCache(pageId, content);
-    publicCache.set(pageId, { content, fetchedAt: Date.now() });
-    return 1;
+    if (pubError) throw pubError;
+
+    // Insert revision record
+    try {
+      const { data: revData } = await client
+        .from("learn_more_revisions")
+        .select("revision_number")
+        .eq("page_id", pageId)
+        .order("revision_number", { ascending: false })
+        .limit(1);
+      nextRev = (((revData?.[0]?.revision_number as number) || 0) + 1);
+      await client.from("learn_more_revisions").insert({
+        page_id: pageId,
+        revision_number: nextRev,
+        content,
+        notes: notes || "Published via Visual Admin Editor",
+        created_at: new Date().toISOString(),
+      });
+      await client.from("learn_more_drafts").delete().eq("id", pageId);
+    } catch {
+      await client.from("learn_more_drafts").delete().eq("id", pageId);
+      nextRev = 1;
+    }
   }
+
+  // 3. STRICT READ-BACK VERIFICATION:
+  // Query Supabase directly to verify the published record was persisted and contains every single section ID
+  const { data: readBack, error: readBackErr } = await client
+    .from("learn_more_published")
+    .select("content, updated_at")
+    .eq("id", pageId)
+    .single();
+
+  if (readBackErr || !readBack?.content) {
+    throw new Error(
+      `Publish verification failed: could not confirm published record in Supabase (${readBackErr?.message || "empty response"}).`
+    );
+  }
+
+  const persistedContent = readBack.content as LearnMoreContent;
+  if (!validContent(persistedContent, pageId)) {
+    throw new Error(
+      `Publish verification failed: persisted content in Supabase does not match valid Learn More schema.`
+    );
+  }
+
+  const expectedSectionIds = (content.sections || []).map((s) => s.id);
+  const persistedSections = persistedContent.sections || [];
+  const persistedSectionIds = persistedSections.map((s) => s.id);
+  const persistedIdSet = new Set(persistedSectionIds);
+
+  for (const expectedId of expectedSectionIds) {
+    if (!persistedIdSet.has(expectedId)) {
+      throw new Error(
+        `Publish verification failed: newly created section ID "${expectedId}" is missing from the persisted Supabase record.`
+      );
+    }
+  }
+
+  // 4. Verification passed: update fast-cache, memory cache, and broadcast live update across tabs
+  invalidateLearnMoreCache(pageId);
+  savePublishedLearnMoreToFastCache(pageId, persistedContent);
+  publicCache.set(pageId, { content: persistedContent, fetchedAt: Date.now(), isNetworkFresh: true });
+
+  return {
+    revisionNumber: nextRev,
+    verifiedContent: persistedContent,
+    persistedSectionIds,
+  };
 }
 
 export async function rollbackLearnMoreRevision(pageId: string, revisionNumber: number): Promise<number> {

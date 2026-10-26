@@ -23,19 +23,19 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
   useEffect(() => {
     if (preview) return;
     let active = true;
-    const fetchLatest = () => {
-      void fetchPublishedLearnMore(product).catch(() => null).then((content) => {
-        if (active) {
+    const fetchLatest = (force = false) => {
+      void fetchPublishedLearnMore(product, force).catch(() => null).then((content) => {
+        if (active && content) {
           setPublished(content);
           setIsResolving(false);
         }
       });
     };
-    fetchLatest();
+    fetchLatest(false);
 
     const unsubscribe = subscribeToPublishedUpdates((msg) => {
       if (msg.type === "learn-more" && (!msg.id || msg.id === product)) {
-        fetchLatest();
+        fetchLatest(true);
       }
     });
 

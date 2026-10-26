@@ -63,22 +63,22 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
 
   useEffect(() => {
     let active = true;
-    const fetchLatest = () => {
-      void fetchPublishedLearnMore(slug)
-        .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug) : null))
+    const fetchLatest = (force = false) => {
+      void fetchPublishedLearnMore(slug, force)
+        .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug, force) : null))
         .catch(() => null)
         .then((content) => {
-          if (active) {
+          if (active && content) {
             setPublished(content);
             setIsResolving(false);
           }
         });
     };
-    fetchLatest();
+    fetchLatest(false);
 
     const unsubscribe = subscribeToPublishedUpdates((msg) => {
       if (msg.type === "learn-more" && (!msg.id || msg.id === slug || msg.id === resolvedSlug)) {
-        fetchLatest();
+        fetchLatest(true);
       }
     });
 

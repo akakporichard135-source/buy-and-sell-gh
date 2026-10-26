@@ -356,7 +356,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     ],
     cinematicVideo: {
       src: "/videos/learn-more/watch-series-12-showcase.mp4",
-      poster: "/products/homepage/watch-series-12.webp",
+      poster: "/products/campaigns/watch-series-12-cinematic.webp",
       alt: "Apple Watch Series 12 slim profile and wide-angle OLED display",
       eyebrow: "Sleek Geometry",
       headline: "Thin. Vibrant. Built for the pulse of Accra.",

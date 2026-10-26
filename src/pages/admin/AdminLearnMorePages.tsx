@@ -786,8 +786,12 @@ export function AdminLearnMorePages() {
       setHasDraft(true);
       setBaselineJson(JSON.stringify(workingContent));
       await refreshStatusMap();
-      setStatusMsg({ text: `Draft saved for "${workingContent.story.name}".`, type: "success" });
+      setStatusMsg({
+        text: `Draft saved and verified in Supabase for "${workingContent.story.name}".`,
+        type: "success",
+      });
     } catch (err: any) {
+      console.error("Draft save error:", err);
       setStatusMsg({ text: `Failed to save draft: ${err.message}`, type: "error" });
     } finally {
       setIsSaving(false);
@@ -799,20 +803,24 @@ export function AdminLearnMorePages() {
     if (!workingContent) return;
     try {
       setIsPublishing(true);
-      const revNum = await publishLearnMore(
+      setStatusMsg({ text: `Publishing and verifying "${workingContent.story.name}" in Supabase...`, type: "info" });
+      const { revisionNumber, verifiedContent, persistedSectionIds } = await publishLearnMore(
         workingContent,
         `Published "${workingContent.story.name}" from Visual Learn More Editor on ${new Date().toLocaleString()}`
       );
-      const pubClone = clone(workingContent);
+      // Strictly update publishedContent from the verified read-back content from Supabase
+      const pubClone = clone(verifiedContent);
       setPublishedContent(pubClone);
+      setWorkingContent(pubClone);
       setBaselineJson(JSON.stringify(pubClone));
       setHasDraft(false);
       await refreshStatusMap();
       setStatusMsg({
-        text: `Published "${workingContent.story.name}" live (Revision #${revNum}) at ${getLearnMorePublicPath(workingContent)}.`,
+        text: `Successfully published & verified "${workingContent.story.name}" (Revision #${revisionNumber}, ${persistedSectionIds.length} live sections) at ${getLearnMorePublicPath(workingContent)}.`,
         type: "success",
       });
     } catch (err: any) {
+      console.error("Publishing error:", err);
       setStatusMsg({ text: `Publish failed: ${err.message}`, type: "error" });
     } finally {
       setIsPublishing(false);
