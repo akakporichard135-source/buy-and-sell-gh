@@ -10,10 +10,17 @@ export interface LearnMoreMediaTarget {
 
 export function getLearnMoreMediaSource(content: LearnMoreContent, target: LearnMoreMediaTarget): string | undefined {
   if (!target.sectionId) {
-    if (target.field !== "heroImage") return undefined;
-    if (content.kind === "editorial") return content.story.hero.src;
-    if (content.kind === "mac-studio") return content.story.image.src;
-    return content.story.media.type === "image" ? content.story.media.src : undefined;
+    if (target.field === "heroImage") {
+      if (content.kind === "editorial") return content.story.hero.src;
+      if (content.kind === "mac-studio") return content.story.image.src;
+      return content.story.media.type === "image" ? content.story.media.src : undefined;
+    }
+    if (content.kind === "editorial" && content.story.cinematicVideo) {
+      if (target.field === "videoPoster") return content.story.cinematicVideo.poster;
+      if (target.field === "videoSrc") return content.story.cinematicVideo.src;
+      if (target.field === "mobileVideoSrc") return content.story.cinematicVideo.mobileSrc;
+    }
+    return undefined;
   }
   const section = content.sections.find((item) => item.id === target.sectionId);
   if (!section) return undefined;

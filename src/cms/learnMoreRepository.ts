@@ -117,7 +117,8 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
         const isLegacyWatch12Poster =
           key === "poster" &&
           (publishedStr === "/products/homepage/watch-series-12.webp" ||
-            publishedStr === "/products/campaigns/watch-series-12-product.webp");
+            publishedStr === "/products/campaigns/watch-series-12-product.webp" ||
+            publishedStr.includes("watch-series-12.webp"));
         if (isLegacyWatch12Poster && currentStr) {
           return [key, currentStr];
         }
@@ -144,6 +145,51 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
     return current as T;
   }
   return published;
+}
+
+export function normalizeLearnMoreContent(content: LearnMoreContent, id?: string): LearnMoreContent {
+  if (!content) return content;
+  const pageId = id || content.story?.slug;
+  const normalized = structuredClone(content);
+
+  if (normalized.kind === "editorial" && normalized.story) {
+    if (pageId === "apple-watch-series-12" || normalized.story.slug === "apple-watch-series-12") {
+      if (normalized.story.cinematicVideo) {
+        const currentPoster = (normalized.story.cinematicVideo.poster || "").trim();
+        if (
+          !currentPoster ||
+          currentPoster === "/products/homepage/watch-series-12.webp" ||
+          currentPoster === "/products/campaigns/watch-series-12-product.webp" ||
+          currentPoster.includes("watch-series-12.webp") ||
+          currentPoster.includes("iphone")
+        ) {
+          normalized.story.cinematicVideo.poster = "/products/campaigns/watch-series-12-cinematic.webp";
+        }
+        if (
+          !normalized.story.cinematicVideo.src ||
+          normalized.story.cinematicVideo.src.includes("iphone")
+        ) {
+          normalized.story.cinematicVideo.src = "/videos/learn-more/watch-series-12-showcase.mp4";
+        }
+      }
+    }
+  }
+
+  if (Array.isArray(normalized.sections)) {
+    for (const section of normalized.sections) {
+      if (pageId === "apple-watch-series-12" || normalized.story?.slug === "apple-watch-series-12") {
+        if (
+          section.poster === "/products/homepage/watch-series-12.webp" ||
+          section.poster === "/products/campaigns/watch-series-12-product.webp" ||
+          (typeof section.poster === "string" && section.poster.includes("watch-series-12.webp"))
+        ) {
+          section.poster = "/products/campaigns/watch-series-12-cinematic.webp";
+        }
+      }
+    }
+  }
+
+  return normalized;
 }
 
 export interface LearnMoreRevision {
@@ -173,7 +219,7 @@ const FAST_CACHE_PREFIX = "buyandsell_learn_more_pub_v2_";
 export function getPublishedLearnMoreSync(id: string): LearnMoreContent | null {
   const memory = publicCache.get(id);
   if (memory && memory.content) {
-    return memory.content;
+    return normalizeLearnMoreContent(memory.content, id);
   }
   if (typeof window !== "undefined") {
     try {
@@ -181,9 +227,10 @@ export function getPublishedLearnMoreSync(id: string): LearnMoreContent | null {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (validContent(parsed, id)) {
+          const norm = normalizeLearnMoreContent(parsed, id);
           // Do not mark as network fresh so fetchPublishedLearnMore still revalidates from Supabase
-          publicCache.set(id, { content: parsed, fetchedAt: Date.now(), isNetworkFresh: false });
-          return parsed;
+          publicCache.set(id, { content: norm, fetchedAt: Date.now(), isNetworkFresh: false });
+          return norm;
         }
       }
     } catch {
@@ -198,7 +245,8 @@ export function savePublishedLearnMoreToFastCache(id: string, content: LearnMore
   const key = `${FAST_CACHE_PREFIX}${id}`;
   try {
     if (content) {
-      const json = JSON.stringify(content);
+      const norm = normalizeLearnMoreContent(content, id);
+      const json = JSON.stringify(norm);
       sessionStorage.setItem(key, json);
       localStorage.setItem(key, json);
     } else {
@@ -248,14 +296,14 @@ export async function fetchPublishedLearnMore(id: string, forceRefresh = false):
   const memory = publicCache.get(id);
   const now = Date.now();
   if (!forceRefresh && memory && memory.isNetworkFresh && now - memory.fetchedAt < CACHE_TTL_MS && memory.content) {
-    return memory.content;
+    return normalizeLearnMoreContent(memory.content, id);
   }
 
   if (!supabase) return syncCached;
   const { data, error } = await supabase.from("learn_more_published")
     .select("content").eq("id", id).maybeSingle();
   if (error) return syncCached;
-  const content = validContent(data?.content, id) ? data.content : null;
+  const content = validContent(data?.content, id) ? normalizeLearnMoreContent(data.content, id) : null;
   publicCache.set(id, { content, fetchedAt: now, isNetworkFresh: true });
   savePublishedLearnMoreToFastCache(id, content);
   return content;
@@ -266,15 +314,16 @@ export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent 
   const { data, error } = await getSupabaseOrThrow().from("learn_more_drafts")
     .select("content").eq("id", id).maybeSingle();
   if (error) throw error;
-  return validContent(data?.content, id) ? data.content : null;
+  return validContent(data?.content, id) ? normalizeLearnMoreContent(data.content, id) : null;
 }
 
 export async function saveDraftLearnMore(content: LearnMoreContent): Promise<void> {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
-  const pageId = content.story.slug;
+  const normalized = normalizeLearnMoreContent(content);
+  const pageId = normalized.story.slug;
   const { error } = await client.from("learn_more_drafts").upsert({
-    id: pageId, content, updated_at: new Date().toISOString(),
+    id: pageId, content: normalized, updated_at: new Date().toISOString(),
   });
   if (error) throw error;
 
@@ -291,8 +340,8 @@ export async function saveDraftLearnMore(content: LearnMoreContent): Promise<voi
     );
   }
 
-  const persistedDraft = verifyDraft.content as LearnMoreContent;
-  const expectedSectionIds = (content.sections || []).map((s) => s.id);
+  const persistedDraft = normalizeLearnMoreContent(verifyDraft.content as LearnMoreContent, pageId);
+  const expectedSectionIds = (normalized.sections || []).map((s) => s.id);
   const persistedSectionIds = new Set((persistedDraft.sections || []).map((s) => s.id));
 
   for (const expectedId of expectedSectionIds) {
@@ -334,7 +383,8 @@ export interface PublishResult {
 export async function publishLearnMore(content: LearnMoreContent, notes?: string): Promise<PublishResult> {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
-  const pageId = content.story.slug;
+  const normalized = normalizeLearnMoreContent(content);
+  const pageId = normalized.story.slug;
   let nextRev = 1;
 
   // 1. Attempt atomic RPC call if available
@@ -342,7 +392,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
   try {
     const { data: revNum, error: rpcError } = await client.rpc("publish_learn_more_page", {
       p_page_id: pageId,
-      p_content: content,
+      p_content: normalized,
       p_notes: notes || "Published via Visual Admin Editor",
     });
     if (!rpcError && typeof revNum === "number") {
@@ -358,7 +408,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
   // 2. Direct fallback if RPC did not succeed
   if (!rpcSucceeded) {
     const { error: pubError } = await client.from("learn_more_published").upsert({
-      id: pageId, content, updated_at: new Date().toISOString(),
+      id: pageId, content: normalized, updated_at: new Date().toISOString(),
     });
     if (pubError) throw pubError;
 
@@ -374,7 +424,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       await client.from("learn_more_revisions").insert({
         page_id: pageId,
         revision_number: nextRev,
-        content,
+        content: normalized,
         notes: notes || "Published via Visual Admin Editor",
         created_at: new Date().toISOString(),
       });
@@ -399,14 +449,15 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
     );
   }
 
-  const persistedContent = readBack.content as LearnMoreContent;
-  if (!validContent(persistedContent, pageId)) {
+  const rawPersisted = readBack.content as LearnMoreContent;
+  if (!validContent(rawPersisted, pageId)) {
     throw new Error(
       `Publish verification failed: persisted content in Supabase does not match valid Learn More schema.`
     );
   }
 
-  const expectedSectionIds = (content.sections || []).map((s) => s.id);
+  const persistedContent = normalizeLearnMoreContent(rawPersisted, pageId);
+  const expectedSectionIds = (normalized.sections || []).map((s) => s.id);
   const persistedSections = persistedContent.sections || [];
   const persistedSectionIds = persistedSections.map((s) => s.id);
   const persistedIdSet = new Set(persistedSectionIds);

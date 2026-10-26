@@ -108,7 +108,7 @@ export const productFamilies: Record<ProductFamilyKey, ProductFamilyDefinition> 
     eyebrow: "Apple Watch",
     title: "Move through your day more connected.",
     description: "Explore everyday and rugged Apple Watch options, then confirm the exact model with our team.",
-    heroMedia: "/products/homepage/watch-series-12.webp",
+    heroMedia: "/products/campaigns/watch-series-12-cinematic.webp",
     heroAlt: "Apple Watch Series 12 campaign presentation",
     heroTone: "dark",
     featuredStorySlug: "apple-watch-series-12",
@@ -228,7 +228,7 @@ export const productStories: ProductStoryDefinition[] = [
     media: { type: "video", src: "/videos/learn-more/watch-series-12-showcase.mp4", alt: "Apple Watch Series 12 cinematic showcase" },
     designMedia: { type: "image", src: "/products/campaigns/watch-series-12-product.webp", alt: "Apple Watch Series 12 with new features overview" },
     galleryMedia: [
-      { src: "/products/homepage/watch-series-12.webp", alt: "Apple Watch Series 12 campaign presentation" },
+      { src: "/products/campaigns/watch-series-12-cinematic.webp", alt: "Apple Watch Series 12 campaign presentation" },
       { src: "/products/campaigns/watch-series-12-product.webp", alt: "Apple Watch Series 12 features" },
       campaignAssets.watch.sensor,
       campaignAssets.watch.comparison,

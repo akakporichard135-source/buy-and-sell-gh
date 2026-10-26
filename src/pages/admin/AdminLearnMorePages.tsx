@@ -48,6 +48,7 @@ import {
   getLearnMoreHeroThumbnail,
   getLearnMorePublicPath,
   listLearnMoreMedia,
+  normalizeLearnMoreContent,
   publishLearnMore,
   rollbackLearnMoreRevision,
   saveDraftLearnMore,
@@ -488,6 +489,21 @@ function SectionWireframePreview({ type }: { type: LearnMoreSectionType }) {
   }
 }
 
+export function getCinematicVideoThumbnail(content: LearnMoreContent | null): string {
+  if (!content || content.kind !== "editorial" || !content.story.cinematicVideo) return "";
+  const poster = (content.story.cinematicVideo.poster || "").trim();
+  if (
+    content.story.slug === "apple-watch-series-12" &&
+    (!poster ||
+      poster === "/products/homepage/watch-series-12.webp" ||
+      poster === "/products/campaigns/watch-series-12-product.webp" ||
+      poster.includes("watch-series-12.webp"))
+  ) {
+    return "/products/campaigns/watch-series-12-cinematic.webp";
+  }
+  return poster;
+}
+
 export function AdminLearnMorePages() {
   // Strictly eligible Learn More products (13 public Learn More routes)
   const allChoices: LearnMoreContent[] = useMemo(() => getEligibleLearnMoreProducts(), []);
@@ -568,7 +584,7 @@ export function AdminLearnMorePages() {
     if (!baseChoice) return;
 
     setStatusMsg(null);
-    const initialClone = clone(baseChoice);
+    const initialClone = normalizeLearnMoreContent(clone(baseChoice));
     setWorkingContent(initialClone);
     setBaselineJson(JSON.stringify(initialClone));
     setActiveItemKey("hero");
@@ -1411,8 +1427,8 @@ export function AdminLearnMorePages() {
                 }}
               >
                 <div className="vlearn-card-thumb is-video-thumb">
-                  {workingContent.story.cinematicVideo.poster ? (
-                    <img src={workingContent.story.cinematicVideo.poster} alt="Video poster" />
+                  {getCinematicVideoThumbnail(workingContent) ? (
+                    <img src={getCinematicVideoThumbnail(workingContent)} alt="Video poster" />
                   ) : (
                     <Video size={18} />
                   )}
@@ -1902,7 +1918,7 @@ export function AdminLearnMorePages() {
                         <div className="vlearn-media-preview-box">
                           <video
                             src={workingContent.story.cinematicVideo.src}
-                            poster={workingContent.story.cinematicVideo.poster}
+                            poster={getCinematicVideoThumbnail(workingContent)}
                             controls
                             muted
                           />

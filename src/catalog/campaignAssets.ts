@@ -47,7 +47,7 @@ export const campaignAssets = {
     pair: { src: `${root}/iphone-duo-pair.webp`, alt: "Black and white foldable phone presentations" },
   },
   watch: {
-    series12: { src: "/products/homepage/watch-series-12.webp", fallback: `${root}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 everyday smartwatch presentation" },
+    series12: { src: "/products/campaigns/watch-series-12-cinematic.webp", fallback: `${root}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 everyday smartwatch presentation" },
     ultraHero: { src: "/products/homepage/watch-ultra-4.webp", fallback: `${root}/watch-ultra-4-hero.webp`, alt: "Apple Watch Ultra 4 rugged titanium smartwatch with orange band" },
     ultraInterface: { src: `${root}/watch-ultra-4-interface.webp`, alt: "Apple Watch Ultra interface presentation" },
     sensor: { src: `${root}/watch-sensor-detail.webp`, alt: "Close product demonstration of watch sensor lights" },

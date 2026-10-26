@@ -46,6 +46,15 @@ export function CinematicVideo({
   );
   const [hasError, setHasError] = useState(false);
 
+  const resolvedPoster =
+    (src.includes("watch-series-12") &&
+      (!poster ||
+        poster === "/products/homepage/watch-series-12.webp" ||
+        poster === "/products/campaigns/watch-series-12-product.webp" ||
+        poster.includes("watch-series-12.webp")))
+      ? "/products/campaigns/watch-series-12-cinematic.webp"
+      : poster;
+
   const hasLoopRange = loopStart !== undefined && loopEnd !== undefined;
 
   const getTiming = () => {
@@ -190,10 +199,10 @@ export function CinematicVideo({
       <div
         ref={containerRef}
         className={`cinematic-video-container cinematic-clean-fallback cinematic-video-fit-${fit} ${className}`}
-        style={aspectRatio ? { aspectRatio } : undefined}
+        style={{ ...(aspectRatio ? { aspectRatio } : {}), backgroundColor: "#000" }}
       >
         <img
-          src={poster}
+          src={resolvedPoster}
           alt={alt}
           className="cinematic-video-media cinematic-video-poster"
           loading={priority ? "eager" : "lazy"}
@@ -211,11 +220,11 @@ export function CinematicVideo({
     <div
       ref={containerRef}
       className={`cinematic-video-container cinematic-video-fit-${fit} ${className} relative overflow-hidden`}
-      style={aspectRatio ? { aspectRatio } : undefined}
+      style={{ ...(aspectRatio ? { aspectRatio } : {}), backgroundColor: "#000" }}
     >
       {/* High-res poster until video loads */}
       <img
-        src={poster}
+        src={resolvedPoster}
         alt={alt}
         className={`cinematic-video-poster transition-opacity duration-700 ease-out ${
           isLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -235,7 +244,7 @@ export function CinematicVideo({
         playsInline
         loop={!hasLoopRange}
         preload={priority ? "auto" : "metadata"}
-        poster={poster}
+        poster={resolvedPoster}
         onLoadedData={() => {
           setIsLoaded(true);
           const videoEl = videoRef.current;
