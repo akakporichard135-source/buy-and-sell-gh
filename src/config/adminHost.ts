@@ -23,9 +23,17 @@ export function isAdminHostname(hostname?: string): boolean {
     return true;
   }
 
-  // Support local test verification via ?admin_preview=1
-  if (typeof window !== "undefined" && window.location.search.includes("admin_preview=1")) {
-    return true;
+  // Support local test verification via ?admin_preview=1 or persisted preview session
+  if (typeof window !== "undefined") {
+    try {
+      if (window.location.search.includes("admin_preview=1")) {
+        sessionStorage.setItem("admin_preview_active", "1");
+        return true;
+      }
+      if (sessionStorage.getItem("admin_preview_active") === "1") {
+        return true;
+      }
+    } catch {}
   }
 
   // Any subdomain starting with admin. (e.g. admin.staging.example.com or Vercel preview subdomains)
