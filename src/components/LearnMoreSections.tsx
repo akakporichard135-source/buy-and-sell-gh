@@ -25,7 +25,7 @@ function SectionImage({ section, src, alt }: { section: LearnMoreSection; src: s
 }
 
 export function LearnMoreSections({ sections }: { sections: LearnMoreSection[] }) {
-  const visible = sections.filter((section) => section.enabled);
+  const visible = sections.filter((section) => section.enabled !== false);
   if (!visible.length) return null;
 
   return (

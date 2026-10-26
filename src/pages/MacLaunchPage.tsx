@@ -5,11 +5,12 @@ import { SEO } from "../components/SEO";
 import { editorialStories } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
 import { fetchPublishedLearnMore, getPublishedLearnMoreSync, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
-import { EditorialProductStory } from "../components/EditorialProductStory";
+import { MinimalEditorialProductStory } from "../components/MinimalEditorialProductStory";
 import { LearnMoreSections } from "../components/LearnMoreSections";
 import { macStudioStory, type MacStudioPanel } from "../data/macStudioStory";
 import { newMacLaunches } from "../data/newMacLaunches";
 import type { NewMacLaunchKey } from "../data/newMacLaunches";
+import { subscribeToPublishedUpdates } from "../utils/imageVersioning";
 
 const panelIcons = { zap: Zap, cpu: Cpu, sparkles: Sparkles, braces: Braces, workflow: Workflow };
 
@@ -22,13 +23,26 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
   useEffect(() => {
     if (preview) return;
     let active = true;
-    void fetchPublishedLearnMore(product).catch(() => null).then((content) => {
-      if (active) {
-        setPublished(content);
-        setIsResolving(false);
+    const fetchLatest = () => {
+      void fetchPublishedLearnMore(product).catch(() => null).then((content) => {
+        if (active) {
+          setPublished(content);
+          setIsResolving(false);
+        }
+      });
+    };
+    fetchLatest();
+
+    const unsubscribe = subscribeToPublishedUpdates((msg) => {
+      if (msg.type === "learn-more" && (!msg.id || msg.id === product)) {
+        fetchLatest();
       }
     });
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [product, preview]);
 
   const content = preview || published;
@@ -45,14 +59,15 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
   }
   if (product === "mac-mini") {
     const current = editorialStories["mac-mini"];
-    return <EditorialProductStory
+    return <MinimalEditorialProductStory
       story={content?.kind === "editorial" ? refreshBundledStoryAssets(content.story, current) : current}
       sections={content?.sections ?? defaultEditorialShowcases(current)} />;
   }
 
   const launch = newMacLaunches[product];
   const story = content?.kind === "mac-studio" ? refreshBundledStoryAssets(content.story, macStudioStory) : macStudioStory;
-  const sections = story.panels.filter((section) => section.enabled);
+  const sections = story.panels.filter((section) => section.enabled !== false);
+  const macStudioSlots = ["after-hero", "after-panels", "after-film", "end"];
 
   return (
     <>
@@ -81,7 +96,7 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
 
         <LearnMoreSections sections={sectionsAt(content?.sections || [], "after-panels")} />
         <LearnMoreSections sections={sectionsAt(content?.sections || [], "after-film")} />
-        <LearnMoreSections sections={sectionsAt(content?.sections || [], "end")} />
+        <LearnMoreSections sections={sectionsAt(content?.sections || [], "end", macStudioSlots)} />
 
         <section className="mac-story-preorder" aria-labelledby="mac-story-preorder-title">
           <p className="store-eyebrow">{story.conclusion.eyebrow}</p>

@@ -65,6 +65,10 @@ import { MacLaunchPage } from "../MacLaunchPage";
 import "../../styles/admin-learn-more.css";
 
 const clone = <T,>(value: T): T => structuredClone(value);
+const createSectionId = (): string =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `sec-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 export interface SectionPresetMeta {
   type: LearnMoreSectionType;
@@ -872,8 +876,9 @@ export function AdminLearnMorePages() {
     if (!workingContent) return;
     const next = clone(workingContent);
     const target = clone(next.sections[index]);
-    target.id = crypto.randomUUID();
+    target.id = createSectionId();
     target.title = `${target.title} (Copy)`;
+    target.enabled = true;
     next.sections.splice(index + 1, 0, target);
     setWorkingContent(next);
     setActiveItemKey(target.id);
@@ -895,9 +900,9 @@ export function AdminLearnMorePages() {
     const defaultBuyPath = getStoryBuyPath(workingContent);
 
     const newSection: LearnMoreSection = {
-      id: crypto.randomUUID(),
+      id: createSectionId(),
       type,
-      enabled: false,
+      enabled: true,
       eyebrow: "",
       title: `Untitled ${preset?.shortName || "Section"}`,
       body: "",
@@ -914,7 +919,7 @@ export function AdminLearnMorePages() {
           : type === "feature-cards"
           ? "grid-3"
           : "stacked",
-      animationPreset: "slide-up",
+      animationPreset: "none",
       placement: "end",
       fit: type === "full-bleed" ? "cover" : "contain",
       position: "center",
@@ -1971,16 +1976,17 @@ export function AdminLearnMorePages() {
                         <span className="vlearn-stage-badge">
                           SECTION {String(activeSectionIndex + 1).padStart(2, "0")} ·{" "}
                           {getSectionPresetLabel(activeSection.type).toUpperCase()}
-                          {!activeSection.enabled ? " (HIDDEN)" : ""}
+                          {activeSection.enabled !== false ? " · LIVE ON STOREFRONT" : " (HIDDEN)"}
                         </span>
                         <div className="vlearn-stage-quick-actions">
                           <button
                             type="button"
-                            className="vlearn-btn vlearn-btn-sm"
+                            className={`vlearn-btn vlearn-btn-sm ${activeSection.enabled === false ? "vlearn-btn-primary" : ""}`}
                             onClick={() => handleToggleSectionEnabled(activeSection.id)}
+                            title={activeSection.enabled !== false ? "Hide section from storefront" : "Show section on storefront"}
                           >
-                            {activeSection.enabled ? <EyeOff size={13} /> : <Eye size={13} />}
-                            {activeSection.enabled ? "Hide Section" : "Show Section"}
+                            {activeSection.enabled !== false ? <EyeOff size={13} /> : <Eye size={13} />}
+                            {activeSection.enabled !== false ? "Hide Section" : "Show Section"}
                           </button>
                           <button
                             type="button"
@@ -2069,6 +2075,28 @@ export function AdminLearnMorePages() {
                                 {p.shortName} — {p.label}
                               </option>
                             ))}
+                          </select>
+                        </div>
+
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Placement Slot</label>
+                          <select
+                            className="vlearn-select"
+                            value={activeSection.placement || "end"}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.placement = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          >
+                            <option value="end">Bottom of Story (Default)</option>
+                            <option value="after-hero">After Hero</option>
+                            <option value="after-intro">After Overview / Intro</option>
+                            <option value="after-highlights">After Highlights</option>
+                            <option value="after-film">After Film</option>
+                            <option value="after-design">After Design</option>
+                            <option value="after-colors">After Colors</option>
                           </select>
                         </div>
                       </div>

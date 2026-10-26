@@ -19,6 +19,7 @@ import { LearnMoreSections } from "../components/LearnMoreSections";
 import type { Product } from "../types/product";
 import { resolveProductImage } from "../utils/productImages";
 import { useCinematicScrollAnimation } from "../hooks/useCinematicScrollAnimation";
+import { subscribeToPublishedUpdates } from "../utils/imageVersioning";
 import "../styles/product-experience.css";
 
 export const STORY_SLUG_ALIASES: Record<string, string> = {
@@ -62,16 +63,29 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
 
   useEffect(() => {
     let active = true;
-    void fetchPublishedLearnMore(slug)
-      .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug) : null))
-      .catch(() => null)
-      .then((content) => {
-        if (active) {
-          setPublished(content);
-          setIsResolving(false);
-        }
-      });
-    return () => { active = false; };
+    const fetchLatest = () => {
+      void fetchPublishedLearnMore(slug)
+        .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug) : null))
+        .catch(() => null)
+        .then((content) => {
+          if (active) {
+            setPublished(content);
+            setIsResolving(false);
+          }
+        });
+    };
+    fetchLatest();
+
+    const unsubscribe = subscribeToPublishedUpdates((msg) => {
+      if (msg.type === "learn-more" && (!msg.id || msg.id === slug || msg.id === resolvedSlug)) {
+        fetchLatest();
+      }
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, [slug, resolvedSlug]);
 
   if (isResolving && !published) {
@@ -106,6 +120,7 @@ export function CatalogProductStory({ family, slug, published }: { family: Produ
       : published?.kind === "catalog" ? published.story : current;
   }, [configuredStory, family, product, published]);
   const sections = published?.sections || [];
+  const catalogSlots = ["after-hero", "after-intro", "after-highlights", "after-film", "after-design", "after-colors", "end"];
   const containerRef = useRef<HTMLDivElement>(null);
   useCinematicScrollAnimation(containerRef);
   const [filmOpen, setFilmOpen] = useState(false);
@@ -281,7 +296,7 @@ export function CatalogProductStory({ family, slug, published }: { family: Produ
         </div>
       </section>
 
-      <LearnMoreSections sections={sectionsAt(sections, "end")} />
+      <LearnMoreSections sections={sectionsAt(sections, "end", catalogSlots)} />
 
       <section className="story-final-cta" aria-labelledby="story-final-cta-title">
         <p className="story-final-eyebrow">{story.name}</p>

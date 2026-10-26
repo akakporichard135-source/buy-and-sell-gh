@@ -60,7 +60,10 @@ export function Iphone18ProEducation({ buyPath, hero, sections = [], content = i
       <Chapter chapter={chapter} hero={hero} />
       <LearnMoreSections sections={sectionsAt(sections, `after-chapter:${chapter.id}`)} />
     </Fragment>)}
-    <LearnMoreSections sections={sectionsAt(sections, "end")} />
+    {(() => {
+      const eduSlots = ["after-overview", ...(content.chapters || []).map((c) => `after-chapter:${c.id}`), "end"];
+      return <LearnMoreSections sections={sectionsAt(sections, "end", eduSlots)} />;
+    })()}
 
     {content.finale.enabled && <section className="iphone-edu-finale" aria-labelledby="iphone-edu-finale-title">
       <div className="iphone-edu-inner"><span className="iphone-edu-index">{content.finale.label}</span>

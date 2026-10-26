@@ -66,7 +66,18 @@ export interface LearnMoreSection {
   items?: LearnMoreSectionItem[];
 }
 
-export function sectionsAt(sections: LearnMoreSection[], placement: string): LearnMoreSection[] {
+export function sectionsAt(
+  sections: LearnMoreSection[],
+  placement: string,
+  handledPlacements?: string[]
+): LearnMoreSection[] {
+  if (placement === "end" && handledPlacements && handledPlacements.length > 0) {
+    const handledSet = new Set(handledPlacements);
+    return sections.filter((section) => {
+      const p = section.placement || "end";
+      return p === "end" || !handledSet.has(p);
+    });
+  }
   return sections.filter((section) => (section.placement || "end") === placement);
 }
 
@@ -291,8 +302,9 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       p_notes: notes || "Published via Visual Admin Editor",
     });
     if (!rpcError && typeof revNum === "number") {
-      savePublishedLearnMoreToFastCache(pageId, content);
       invalidateLearnMoreCache(pageId);
+      savePublishedLearnMoreToFastCache(pageId, content);
+      publicCache.set(pageId, { content, fetchedAt: Date.now() });
       return revNum;
     }
   } catch (err) {
@@ -322,13 +334,15 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
       created_at: new Date().toISOString(),
     });
     await client.from("learn_more_drafts").delete().eq("id", pageId);
-    savePublishedLearnMoreToFastCache(pageId, content);
     invalidateLearnMoreCache(pageId);
+    savePublishedLearnMoreToFastCache(pageId, content);
+    publicCache.set(pageId, { content, fetchedAt: Date.now() });
     return nextRev;
   } catch {
     await client.from("learn_more_drafts").delete().eq("id", pageId);
-    savePublishedLearnMoreToFastCache(pageId, content);
     invalidateLearnMoreCache(pageId);
+    savePublishedLearnMoreToFastCache(pageId, content);
+    publicCache.set(pageId, { content, fetchedAt: Date.now() });
     return 1;
   }
 }

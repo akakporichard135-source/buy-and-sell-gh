@@ -186,7 +186,18 @@ export function EditorialProductStory({ story, sections = [], education }: { sto
       <LearnMoreSections sections={sectionsAt(sections, "after-information")} />
       <LearnMoreSections sections={sectionsAt(sections, "after-film")} />
 
-      <LearnMoreSections sections={sectionsAt(sections, "end")} />
+      {(() => {
+        const editorialSlots = [
+          "after-hero",
+          "after-highlights",
+          "after-hardware",
+          ...(story.chapters || []).map((c) => `after-chapter:${c.id}`),
+          "after-information",
+          "after-film",
+          "end",
+        ];
+        return <LearnMoreSections sections={sectionsAt(sections, "end", editorialSlots)} />;
+      })()}
 
       {story.finalImage && (
         <section className="editorial-final-beauty" aria-label={`${story.name} final product view`}>
