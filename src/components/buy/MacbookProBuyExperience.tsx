@@ -5,6 +5,7 @@ import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -96,10 +97,17 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     preloadProductImages(urls);
   }, []);
 
-  const thumbnails = [
-    ...(currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : []),
-    { src: "/products/campaigns/macbook-pro-cutout.webp", alt: `MacBook Pro ${screenSize} Liquid Retina XDR screen` },
-  ];
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      ...(currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : []),
+      { src: "/products/campaigns/macbook-pro-cutout.webp", alt: `MacBook Pro ${screenSize} Liquid Retina XDR screen` },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentDisplayImg, screenSize, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
 

@@ -14,6 +14,7 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 import ipadPro11BlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
 import ipadPro11SilverWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m5-premium.webp";
 import ipadPro13BlackWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m5-premium.webp";
@@ -87,12 +88,17 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     ? (finish === "Space Black" ? ipadPro13BlackWhite : ipadPro13SilverWhite)
     : (finish === "Space Black" ? ipadPro11BlackWhite : ipadPro11SilverWhite);
 
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
   const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
     return [
       { src: currentFinishImg, alt: `${finish} ${screenSize} iPad Pro on pure white` },
       { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro Ultra Retina XDR display` },
     ];
-  }, [screenSize, finish, currentFinishImg]);
+  }, [isCustomPublished, publishedGalleryImages, screenSize, finish, currentFinishImg]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 

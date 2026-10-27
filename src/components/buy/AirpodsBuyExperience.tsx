@@ -10,6 +10,7 @@ import {
   useBuyEntrySelection,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const AIRPODS_EDITIONS = [
   {
@@ -39,11 +40,18 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     setEdition(editingItem.options?.edition || editingItem.storage);
   }, [editingItem]);
 
-  const thumbnails = useMemo(() => [
-    { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
-    { src: "/products/campaigns/airpods-5-earbuds.webp", alt: "AirPods 5 acoustic vents, microphone mesh, and transducer ports" },
-    { src: "/products/campaigns/airpods-5-front.webp", alt: "AirPods 5 front-facing case with status LED and USB-C port" },
-  ], []);
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
+      { src: "/products/campaigns/airpods-5-earbuds.webp", alt: "AirPods 5 acoustic vents, microphone mesh, and transducer ports" },
+      { src: "/products/campaigns/airpods-5-front.webp", alt: "AirPods 5 front-facing case with status LED and USB-C port" },
+    ];
+  }, [isCustomPublished, publishedGalleryImages]);
 
   const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/airpods-5-product.webp";
 

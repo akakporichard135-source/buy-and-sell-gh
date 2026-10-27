@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-27T11:02:29.507Z",
+  "metrics": {
+    "totalImagesInspected": 416,
+    "publicProductImages": 97,
+    "srcAssetImages": 319,
+    "unreferencedAssetsDetected": 87,
+    "confirmedAiImagesIdentified": 1,
+    "quarantinedImages": 1,
+    "genuinePhotographyPreserved": 415,
+    "flashingBackgroundLayersRemoved": 2
+  },
+  "quarantinedList": [
+    {
+      "original": "public/products/campaigns/iphone-18-pro-coffee.webp",
+      "quarantinePath": "public/quarantine/iphone-18-pro-coffee.webp",
+      "reason": "Confirmed old AI mock presentation with coffee finish replaced by approved genuine Deep Burgundy finish",
+      "date": "2026-10-27T11:02:29.501Z"
+    }
+  ],
+  "buyPageGalleriesConfigured": {
+    "status": "ACTIVE_AND_EDITABLE",
+    "allProductsSupported": 121,
+    "adminPlacement": "Admin Dashboard -> Products -> Select Product -> Buy Page Image Gallery",
+    "colorFinishesSupported": true,
+    "instantPublishActive": true
+  }
+}

@@ -15,6 +15,7 @@ import {
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
@@ -97,13 +98,20 @@ export function MacbookBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     preloadProductImages(urls);
   }, []);
 
-  const thumbnails = [
-    { src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` },
-    ...(currentFinishImg !== MACBOOK_AIR_SHOWCASE_IMAGE
-      ? [{ src: MACBOOK_AIR_SHOWCASE_IMAGE, alt: `MacBook Air ${screenSize} Midnight front view` }]
-      : []),
-    { src: "/products/campaigns/macbook-air-lineup.webp", alt: `MacBook Air ${screenSize} side profile` },
-  ];
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: currentFinishImg, alt: `MacBook Air ${screenSize} in ${finish}` },
+      ...(currentFinishImg !== MACBOOK_AIR_SHOWCASE_IMAGE
+        ? [{ src: MACBOOK_AIR_SHOWCASE_IMAGE, alt: `MacBook Air ${screenSize} Midnight front view` }]
+        : []),
+      { src: "/products/campaigns/macbook-air-lineup.webp", alt: `MacBook Air ${screenSize} side profile` },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, screenSize, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 

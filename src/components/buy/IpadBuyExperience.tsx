@@ -13,6 +13,7 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 import ipadAirBlueWhite from "../../assets/catalogue-products/ipad-air-11-inch-m3-premium.webp";
 import ipadAirPurpleWhite from "../../assets/catalogue-products/ipad-air-13-inch-m3-premium.webp";
 import ipadKeyboardWhite from "../../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
@@ -74,13 +75,20 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
 
   const currentFinishImg = IPAD_FINISH_IMAGE_MAP[finish] || ipadAirBlueWhite;
 
-  const thumbnails = useMemo(() => [
-    { src: currentFinishImg, alt: `iPad Air in ${finish}` },
-    { src: ipadAirBlueWhite, alt: "Blue 11-inch iPad Air Liquid Retina display" },
-    { src: ipadAirPurpleWhite, alt: "Purple 13-inch iPad Air expansive canvas" },
-    { src: "/products/campaigns/ipad-air-colors.webp", alt: "iPad Air anodized aluminum color finishes" },
-    { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard on white" },
-  ], [currentFinishImg, finish]);
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: currentFinishImg, alt: `iPad Air in ${finish}` },
+      { src: ipadAirBlueWhite, alt: "Blue 11-inch iPad Air Liquid Retina display" },
+      { src: ipadAirPurpleWhite, alt: "Purple 13-inch iPad Air expansive canvas" },
+      { src: "/products/campaigns/ipad-air-colors.webp", alt: "iPad Air anodized aluminum color finishes" },
+      { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard on white" },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 

@@ -3,17 +3,24 @@ import { Link } from "react-router-dom";
 import { MessageCircle, ShieldCheck, Sparkles, Truck, Store, ArrowRight } from "lucide-react";
 import { SEO } from "../SEO";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { SwipeableProductGallery } from "./SwipeableProductGallery";
 import "../../styles/apple-buy-experience.css";
 
 export function IphoneDuoPricingExperience() {
+  const { getProductBySlug } = useProductCatalog();
+  const duoProduct = getProductBySlug("iphone-duo");
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(duoProduct);
   const [selectedAngle, setSelectedAngle] = useState(0);
 
-  const gallery = [
-    { src: "/products/buy/iphone-duo-open-white.png", alt: "iPhone Duo unfolded in expansive dual-display format", label: "Open Canvas" },
-    { src: "/products/campaigns/iphone-duo-folded.webp", alt: "iPhone Duo folded compact profile", label: "Folded Pocket" },
-    { src: "/products/buy/iphone-duo-side-white.png", alt: "iPhone Duo precision hinge engineering", label: "Hinge Profile" },
-  ];
+  const gallery = isCustomPublished && publishedGalleryImages.length > 0
+    ? publishedGalleryImages.map((img, i) => ({ ...img, label: `View ${i + 1}` }))
+    : [
+        { src: "/products/buy/iphone-duo-open-white.png", alt: "iPhone Duo unfolded in expansive dual-display format", label: "Open Canvas" },
+        { src: "/products/campaigns/iphone-duo-folded.webp", alt: "iPhone Duo folded compact profile", label: "Folded Pocket" },
+        { src: "/products/buy/iphone-duo-side-white.png", alt: "iPhone Duo precision hinge engineering", label: "Hinge Profile" },
+      ];
 
   const currentImage = gallery[selectedAngle];
 

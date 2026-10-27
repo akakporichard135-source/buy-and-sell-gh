@@ -18,6 +18,7 @@ import type { Product } from "../../types/product";
 
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const IPHONE_18_COLORS: ColorOption[] = [
   resolveColorOption("Deep Burgundy"),
@@ -87,11 +88,18 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
     ]);
   }, []);
 
-  const thumbnails = [
-    { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
-    { src: "/products/buy/iphone-18-pro-gallery-2-silver.jpg", alt: `${model} Silver / Natural Titanium dual view` },
-    { src: "/products/buy/iphone-18-pro-gallery-3-blue.jpg", alt: `${model} Light Blue dual view` },
-  ];
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
+      { src: "/products/buy/iphone-18-pro-gallery-2-silver.jpg", alt: `${model} Silver / Natural Titanium dual view` },
+      { src: "/products/buy/iphone-18-pro-gallery-3-blue.jpg", alt: `${model} Light Blue dual view` },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentFinishImage, finish, model]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImage;
 

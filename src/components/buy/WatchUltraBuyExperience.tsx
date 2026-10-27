@@ -17,6 +17,7 @@ import type { Product } from "../../types/product";
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const ULTRA_FINISHES: ColorOption[] = [
   resolveColorOption("Natural Titanium"),
@@ -78,11 +79,18 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
     ]);
   }, []);
 
-  const thumbnails = useMemo(() => [
-    { src: currentFinishImg, alt: `${finish} Apple Watch Ultra with Alpine Loop on white` },
-    { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra high-contrast action display" },
-    { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra dual perspective" },
-  ], [currentFinishImg, finish]);
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: currentFinishImg, alt: `${finish} Apple Watch Ultra with Alpine Loop on white` },
+      { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra high-contrast action display" },
+      { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra dual perspective" },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 

@@ -17,6 +17,7 @@ import type { Product } from "../../types/product";
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
 import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const WATCH_12_FINISHES: ColorOption[] = [
   resolveColorOption("Jet Black"),
@@ -91,11 +92,18 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
     ]);
   }, []);
 
-  const thumbnails = useMemo(() => [
-    { src: currentFinishImg, alt: `Apple Watch Series 12 in ${finish}` },
-    { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 contoured profile on white" },
-    { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
-  ], [currentFinishImg, finish]);
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: currentFinishImg, alt: `Apple Watch Series 12 in ${finish}` },
+      { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 contoured profile on white" },
+      { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
+    ];
+  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
 
   const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
 

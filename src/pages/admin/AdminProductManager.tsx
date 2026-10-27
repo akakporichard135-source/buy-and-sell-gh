@@ -25,6 +25,7 @@ import { type FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState }
 import { Link, useSearchParams } from "react-router-dom";
 import { useAdminAuth } from "../../admin/AdminAuth";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
+import { AdminBuyPageGallery } from "../../components/admin/AdminBuyPageGallery";
 import type { MediaItem } from "../../cms/types";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { getProductRam, withProductRam } from "../../catalog/catalogueDiscovery";
@@ -146,6 +147,7 @@ export function AdminProductManager() {
     backendStatus,
     loading,
     error,
+    refreshProducts,
   } = useProductCatalog();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,6 +178,7 @@ export function AdminProductManager() {
   }, [query, brand, category, condition, stock, isMaintenance, maintenanceTab]);
 
   const [editing, setEditing] = useState<ProductFormState | null>(null);
+  const [editorTab, setEditorTab] = useState<"details" | "buy-gallery">("details");
   const [pendingEditorTarget, setPendingEditorTarget] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [actionError, setActionError] = useState("");
@@ -337,6 +340,15 @@ export function AdminProductManager() {
   const startEdit = (product: Product) => {
     setMessage("");
     setActionError("");
+    setEditorTab("details");
+    setEditing(productToForm(product));
+    setPendingEditorTarget(product.id);
+  };
+
+  const startBuyGallery = (product: Product) => {
+    setMessage("");
+    setActionError("");
+    setEditorTab("buy-gallery");
     setEditing(productToForm(product));
     setPendingEditorTarget(product.id);
   };
@@ -797,6 +809,15 @@ export function AdminProductManager() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => startBuyGallery(product)}
+                            className="admin-btn admin-btn-secondary admin-btn-sm"
+                            title="Open Buy Page Image Gallery"
+                          >
+                            <ImageIcon size={13} className="text-[#d4af37]" />
+                            <span>Gallery</span>
+                          </button>
+                          <button
+                            type="button"
                             onClick={() =>
                               promptConfirm(
                                 isArchived ? "Restore Product" : "Archive Product",
@@ -945,6 +966,15 @@ export function AdminProductManager() {
                     >
                       <Edit3 size={13} />
                       <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startBuyGallery(product)}
+                      className="admin-btn admin-btn-secondary admin-btn-sm"
+                      title="Open Buy Page Image Gallery"
+                    >
+                      <ImageIcon size={13} className="text-[#d4af37]" />
+                      <span>Gallery</span>
                     </button>
                     <button
                       type="button"
@@ -1114,19 +1144,59 @@ export function AdminProductManager() {
               </button>
             </div>
 
+            {/* Tabs Selector */}
+            <div className="flex border-b border-slate-200 bg-slate-50/80 px-6 pt-1 gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setEditorTab("details")}
+                className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
+                  editorTab === "details"
+                    ? "border-black text-black bg-white rounded-t-lg shadow-xs"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Package size={14} />
+                <span>Product Details &amp; Pricing</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorTab("buy-gallery")}
+                className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-colors ${
+                  editorTab === "buy-gallery"
+                    ? "border-[#d4af37] text-slate-900 bg-white rounded-t-lg shadow-xs"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <ImageIcon size={14} className="text-[#d4af37]" />
+                <span>Buy Page Image Gallery</span>
+              </button>
+            </div>
+
             <div className="admin-drawer-body">
-              <ProductForm
-                form={editing}
-                setForm={setEditing}
-                onSubmit={handleSave}
-                products={products}
-                brandOptions={brandOptions}
-                backendStatus={backendStatus}
-                saving={saving}
-                setActionError={setActionError}
-                productNameRef={productNameRef}
-                onCancel={() => setEditing(null)}
-              />
+              {editorTab === "buy-gallery" ? (
+                <AdminBuyPageGallery
+                  product={formToProduct(editing, products)}
+                  onProductUpdated={(updatedProd) => {
+                    setEditing(productToForm(updatedProd));
+                    void refreshProducts();
+                  }}
+                  onClose={() => setEditing(null)}
+                />
+              ) : (
+                <ProductForm
+                  form={editing}
+                  setForm={setEditing}
+                  onSubmit={handleSave}
+                  products={products}
+                  brandOptions={brandOptions}
+                  backendStatus={backendStatus}
+                  saving={saving}
+                  setActionError={setActionError}
+                  productNameRef={productNameRef}
+                  onCancel={() => setEditing(null)}
+                  onOpenBuyGallery={() => setEditorTab("buy-gallery")}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1185,6 +1255,7 @@ function ProductForm({
   setActionError,
   productNameRef,
   onCancel,
+  onOpenBuyGallery,
 }: {
   form: ProductFormState;
   setForm: (form: ProductFormState) => void;
@@ -1196,6 +1267,7 @@ function ProductForm({
   setActionError: (message: string) => void;
   productNameRef: React.RefObject<HTMLInputElement | null>;
   onCancel: () => void;
+  onOpenBuyGallery?: () => void;
 }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -1887,6 +1959,28 @@ function ProductForm({
           <h3 className="font-bold text-slate-900 text-sm">4. Product Media &amp; Photos</h3>
           <span className="text-xs text-slate-500">{form.images.length} custom images loaded</span>
         </div>
+
+        {onOpenBuyGallery && (
+          <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between gap-3 shadow-xs">
+            <div className="space-y-0.5">
+              <span className="text-xs font-bold text-slate-900 block flex items-center gap-1.5">
+                <ImageIcon size={14} className="text-[#d4af37]" />
+                Buy Page Image Gallery Manager
+              </span>
+              <p className="text-[11px] text-slate-600">
+                Full-featured editor to upload, replace, reorder, delete, set main image, and preview desktop &amp; mobile galleries.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenBuyGallery}
+              className="admin-btn admin-btn-primary admin-btn-sm text-xs shrink-0 flex items-center gap-1"
+            >
+              <span>Manage Buy Gallery</span>
+              <ArrowRight size={13} />
+            </button>
+          </div>
+        )}
 
         {/* If no custom images exist, show the active storefront baseline presentation */}
         {form.images.length === 0 ? (

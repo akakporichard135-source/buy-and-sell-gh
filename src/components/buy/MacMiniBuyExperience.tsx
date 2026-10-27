@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { SEO } from "../SEO";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice } from "../../utils/productPricing";
@@ -9,6 +9,7 @@ import {
   BuySummaryCard,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 
 export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const [chipConfig, setChipConfig] = useState<"M6" | "M5 Pro">("M6");
@@ -18,9 +19,16 @@ export function MacMiniBuyExperience({ catalogProduct }: { catalogProduct?: Prod
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
-  const thumbnails = [
-    { src: "/products/homepage/mac-mini-device.jpg", alt: "Mac mini front view with ports" },
-  ];
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct);
+
+  const thumbnails = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
+    return [
+      { src: "/products/homepage/mac-mini-device.jpg", alt: "Mac mini front view with ports" },
+    ];
+  }, [isCustomPublished, publishedGalleryImages]);
 
   const activeImage = thumbnails[activeThumb]?.src || "/products/homepage/mac-mini-device.jpg";
 

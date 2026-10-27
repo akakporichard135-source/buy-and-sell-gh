@@ -10,6 +10,7 @@ import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGa
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
 import { resolveColorOptions } from "../../utils/productColors";
 import { resolveProductColorImage, resolveProductColorGallery, preloadProductImages } from "../../utils/productColorImages";
+import { useBuyGallery } from "../../cms/buyGalleryRepository";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -134,13 +135,19 @@ export function GenericBuyExperience({
   const hasOwnerImages = Boolean(effectiveProduct && hasOwnerUploadedProductImages(effectiveProduct));
 
   // Determine active finish image & angle thumbnails
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(effectiveProduct, color);
+
+  // Determine active finish image & angle thumbnails
   const matchedFinishImage = resolveProductColorImage(effectiveProduct, color, fallbackAsset);
   const gallery = useMemo(() => {
+    if (isCustomPublished && publishedGalleryImages.length > 0) {
+      return publishedGalleryImages;
+    }
     if (hasOwnerImages) {
       return rawGallery;
     }
     return resolveProductColorGallery(effectiveProduct, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
-  }, [effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
+  }, [isCustomPublished, publishedGalleryImages, effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
 
   const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
 
