@@ -107,6 +107,27 @@
       "destination": "/index.html"
     },
     {
+      "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml).*)",
+      "has": [
+        {
+          "type": "query",
+          "key": "admin_preview"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml).*)",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "admin_preview_active",
+          "value": "1"
+        }
+      ],
+      "destination": "/index.html"
+    },
+    {
       "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml|admin(?:/|$)).*)",
       "destination": "/index.html"
     }
