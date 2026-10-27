@@ -151,6 +151,17 @@ export function refreshBundledStoryAssets<T>(published: T, current: T): T {
   return published;
 }
 
+export function isUnwantedAiAsset(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes("iphone-18-pro-coffee.webp") ||
+    lower.includes("macbook-pro-cinematic.webp") ||
+    lower.includes("macbook-air-cinematic.webp") ||
+    lower.includes("ipad-pro-cinematic.webp")
+  );
+}
+
 export function normalizeLearnMoreContent(content: LearnMoreContent, id?: string): LearnMoreContent {
   if (!content) return content;
   const pageId = id || content.story?.slug;
@@ -160,6 +171,13 @@ export function normalizeLearnMoreContent(content: LearnMoreContent, id?: string
     // TASK 4: Apple Watch Series 12 cinematic showcase is strictly removed from Admin and Public
     if (pageId === "apple-watch-series-12" || normalized.story.slug === "apple-watch-series-12") {
       delete normalized.story.cinematicVideo;
+    }
+    // Cleanse any legacy unwanted AI imagery from story hero
+    if (normalized.story.hero?.src && isUnwantedAiAsset(normalized.story.hero.src)) {
+      if (pageId === "macbook-pro") normalized.story.hero.src = "/products/catalogue/macbook-pro-14-m4.webp";
+      else if (pageId === "macbook-air") normalized.story.hero.src = "/products/catalogue/macbook-air-13-m4.webp";
+      else if (pageId === "ipad-pro") normalized.story.hero.src = "/products/catalogue/ipad-pro-11-m4.webp";
+      else normalized.story.hero.src = localCatalogueImageBySlug[pageId] || "";
     }
   }
 
@@ -173,6 +191,13 @@ export function normalizeLearnMoreContent(content: LearnMoreContent, id?: string
         ) {
           section.poster = "/products/campaigns/watch-series-12-cinematic.webp";
         }
+      }
+      // Cleanse any legacy unwanted AI imagery from section image
+      if (section.image && isUnwantedAiAsset(section.image)) {
+        if (pageId === "macbook-pro") section.image = "/products/catalogue/macbook-pro-14-m4.webp";
+        else if (pageId === "macbook-air") section.image = "/products/catalogue/macbook-air-13-m4.webp";
+        else if (pageId === "ipad-pro") section.image = "/products/catalogue/ipad-pro-11-m4.webp";
+        else section.image = localCatalogueImageBySlug[pageId] || "";
       }
     }
   }
@@ -763,43 +788,43 @@ export function resolveApprovedProductThumbnail(
   // 1. If catalogProduct is provided and has images, use latest product catalog image
   if (catalogProduct) {
     const adminImg = resolveAdminProductImage(catalogProduct);
-    if (adminImg?.src) return adminImg.src;
+    if (adminImg?.src && !isUnwantedAiAsset(adminImg.src)) return adminImg.src;
     if (Array.isArray(catalogProduct.images) && catalogProduct.images.length > 0) {
       const idx = catalogProduct.primaryImageIndex ?? 0;
       const primary = catalogProduct.images[idx]?.src || catalogProduct.images[0]?.src;
-      if (primary) return primary;
+      if (primary && !isUnwantedAiAsset(primary)) return primary;
     }
   }
 
-  // 2. If content has an active/published hero or visual asset
+  // 2. Check local clean catalog images
+  const cleanCatalogue = localCatalogueImageBySlug[slug];
+  if (cleanCatalogue && !isUnwantedAiAsset(cleanCatalogue)) return cleanCatalogue;
+
+  // 3. If content has an active/published hero or visual asset
   if (content) {
-    if (content.kind === "editorial" && content.story.hero?.src) {
+    if (content.kind === "editorial" && content.story.hero?.src && !isUnwantedAiAsset(content.story.hero.src)) {
       return content.story.hero.src;
     }
-    if (content.kind === "mac-studio" && content.story.image?.src) {
+    if (content.kind === "mac-studio" && content.story.image?.src && !isUnwantedAiAsset(content.story.image.src)) {
       return content.story.image.src;
     }
-    if (content.kind === "catalog" && content.story.media?.src) {
+    if (content.kind === "catalog" && content.story.media?.src && !isUnwantedAiAsset(content.story.media.src)) {
       return content.story.media.src;
     }
     if (Array.isArray(content.sections)) {
       for (const s of content.sections) {
-        if (s.image) return s.image;
-        if (s.poster) return s.poster;
+        if (s.image && !isUnwantedAiAsset(s.image)) return s.image;
+        if (s.poster && !isUnwantedAiAsset(s.poster)) return s.poster;
       }
     }
   }
 
-  // 3. Check local clean catalog images
-  const cleanCatalogue = localCatalogueImageBySlug[slug];
-  if (cleanCatalogue) return cleanCatalogue;
-
   const cleanPremium = localPremiumImageBySlug[slug];
-  if (cleanPremium) return cleanPremium;
+  if (cleanPremium && !isUnwantedAiAsset(cleanPremium)) return cleanPremium;
 
   // 4. Check editorial stories
   const edStory = editorialStories[slug];
-  if (edStory?.hero?.src) return edStory.hero.src;
+  if (edStory?.hero?.src && !isUnwantedAiAsset(edStory.hero.src)) return edStory.hero.src;
 
   return "";
 }

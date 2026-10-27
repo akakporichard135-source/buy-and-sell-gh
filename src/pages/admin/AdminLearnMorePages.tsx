@@ -49,6 +49,7 @@ import {
   getLearnMoreFamily,
   getLearnMoreHeroThumbnail,
   getLearnMorePublicPath,
+  isUnwantedAiAsset,
   listLearnMoreMedia,
   normalizeLearnMoreContent,
   publishLearnMore,
@@ -282,10 +283,14 @@ function setStoryBuyLabel(content: LearnMoreContent, val: string) {
 
 function getHeroImageSrc(content: LearnMoreContent | null): string {
   if (!content) return "";
-  if (content.kind === "editorial") return content.story.hero.src || "";
-  if (content.kind === "mac-studio") return content.story.image.src || "";
-  if (content.kind === "catalog") return content.story.media.src || "";
-  return "";
+  let src = "";
+  if (content.kind === "editorial") src = content.story.hero.src || "";
+  else if (content.kind === "mac-studio") src = content.story.image.src || "";
+  else if (content.kind === "catalog") src = content.story.media.src || "";
+  if (isUnwantedAiAsset(src)) {
+    return "";
+  }
+  return src;
 }
 
 function setHeroImageSrc(content: LearnMoreContent, url: string) {
@@ -364,10 +369,20 @@ function setHeroFit(content: LearnMoreContent, fit: "contain" | "cover") {
 }
 
 function getSectionThumbnail(section: LearnMoreSection): string {
-  if (section.image) return section.image;
-  if (section.poster) return section.poster;
-  if (section.images && section.images.length > 0) return section.images[0];
-  const itemWithImg = section.items?.find((it) => Boolean(it.image));
+  if (section.type === "gallery") {
+    const gImg = section.images?.find((img) => img && !isUnwantedAiAsset(img));
+    return gImg || "";
+  }
+  if (section.type === "video") {
+    return (section.poster && !isUnwantedAiAsset(section.poster)) ? section.poster : "";
+  }
+  if (section.image && !isUnwantedAiAsset(section.image)) return section.image;
+  if (section.poster && !isUnwantedAiAsset(section.poster)) return section.poster;
+  if (section.images && section.images.length > 0) {
+    const valid = section.images.find((img) => img && !isUnwantedAiAsset(img));
+    if (valid) return valid;
+  }
+  const itemWithImg = section.items?.find((it) => Boolean(it.image && !isUnwantedAiAsset(it.image)));
   if (itemWithImg?.image) return itemWithImg.image;
   return "";
 }
@@ -495,6 +510,7 @@ function SectionWireframePreview({ type }: { type: LearnMoreSectionType }) {
 export function getCinematicVideoThumbnail(content: LearnMoreContent | null): string {
   if (!content || content.kind !== "editorial" || !content.story.cinematicVideo) return "";
   const poster = (content.story.cinematicVideo.poster || "").trim();
+  if (isUnwantedAiAsset(poster)) return "";
   if (
     content.story.slug === "apple-watch-series-12" &&
     (!poster ||
@@ -1510,8 +1526,10 @@ export function AdminLearnMorePages() {
                   >
                     <div className="vlearn-card-thumb">
                       {(() => {
+                        const rawHero = getHeroImageSrc(workingContent);
+                        const cleanHero = rawHero && !isUnwantedAiAsset(rawHero) ? rawHero : "";
                         const heroThumb =
-                          getHeroImageSrc(workingContent) ||
+                          cleanHero ||
                           resolveApprovedProductThumbnail(
                             workingContent?.story.slug || selectedSlug,
                             workingContent,
@@ -1832,18 +1850,27 @@ export function AdminLearnMorePages() {
                         <p className="vlearn-stage-tagline">{getStoryTagline(workingContent)}</p>
                         <span className="vlearn-stage-cta">{getStoryBuyLabel(workingContent)}</span>
                       </div>
-                      {getHeroImageSrc(workingContent) && (
-                        <div className="vlearn-stage-art">
-                          <img
-                            src={getHeroImageSrc(workingContent)}
-                            alt={getHeroImageAlt(workingContent)}
-                            style={{
-                              objectFit: getHeroFit(workingContent),
-                              objectPosition: getHeroPosition(workingContent),
-                            }}
-                          />
-                        </div>
-                      )}
+                      {(() => {
+                        const rawHero = getHeroImageSrc(workingContent);
+                        const cleanHero = rawHero && !isUnwantedAiAsset(rawHero) ? rawHero : "";
+                        const heroSrc = cleanHero || resolveApprovedProductThumbnail(
+                          workingContent?.story.slug || selectedSlug,
+                          workingContent,
+                          getProductBySlug(workingContent?.story.slug || selectedSlug)
+                        );
+                        return heroSrc ? (
+                          <div className="vlearn-stage-art">
+                            <img
+                              src={heroSrc}
+                              alt={getHeroImageAlt(workingContent)}
+                              style={{
+                                objectFit: getHeroFit(workingContent),
+                                objectPosition: getHeroPosition(workingContent),
+                              }}
+                            />
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
 
                     {/* Hero Copy Settings Card */}
@@ -1928,18 +1955,27 @@ export function AdminLearnMorePages() {
                       <h3 className="vlearn-card-section-heading">Hero Image, Alt Text &amp; Positioning</h3>
                       <div className="vlearn-media-picker-card">
                         <div className="vlearn-media-preview-box">
-                          {getHeroImageSrc(workingContent) ? (
-                            <img
-                              src={getHeroImageSrc(workingContent)}
-                              alt={getHeroImageAlt(workingContent)}
-                              style={{
-                                objectFit: getHeroFit(workingContent),
-                                objectPosition: getHeroPosition(workingContent),
-                              }}
-                            />
-                          ) : (
-                            <span style={{ color: "#86868b" }}>No hero image selected</span>
-                          )}
+                          {(() => {
+                            const rawHero = getHeroImageSrc(workingContent);
+                            const cleanHero = rawHero && !isUnwantedAiAsset(rawHero) ? rawHero : "";
+                            const heroSrc = cleanHero || resolveApprovedProductThumbnail(
+                              workingContent?.story.slug || selectedSlug,
+                              workingContent,
+                              getProductBySlug(workingContent?.story.slug || selectedSlug)
+                            );
+                            return heroSrc ? (
+                              <img
+                                src={heroSrc}
+                                alt={getHeroImageAlt(workingContent)}
+                                style={{
+                                  objectFit: getHeroFit(workingContent),
+                                  objectPosition: getHeroPosition(workingContent),
+                                }}
+                              />
+                            ) : (
+                              <span style={{ color: "#86868b" }}>No hero image selected</span>
+                            );
+                          })()}
                         </div>
 
                         <div className="vlearn-media-actions">

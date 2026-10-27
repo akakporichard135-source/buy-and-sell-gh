@@ -15,6 +15,8 @@ import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productB
 import { resolveProductColorImage } from "../utils/productColorImages";
 import { hasOwnerUploadedProductImages, requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
+import { SwipeableProductGallery } from "../components/buy/SwipeableProductGallery";
+import { useBuyGallery } from "../cms/buyGalleryRepository";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
 
@@ -92,12 +94,21 @@ export function ProductDetailsPage() {
   const hasOwnerImages = hasOwnerUploadedProductImages(product);
   const matchedFinishImage = !hasOwnerImages ? resolveProductColorImage(product, color) : undefined;
   const baseGallery = resolveProductGallery(product);
-  const gallery = matchedFinishImage
-    ? [
+  const { images: publishedBuyGallery, isCustomPublished } = useBuyGallery(product, color);
+
+  const gallery = useMemo(() => {
+    if (isCustomPublished && publishedBuyGallery.length > 0) {
+      return publishedBuyGallery;
+    }
+    if (matchedFinishImage) {
+      return [
         { src: matchedFinishImage, alt: `${product.name} in ${color}` },
         ...baseGallery.filter((img) => img.src !== matchedFinishImage),
-      ]
-    : baseGallery;
+      ];
+    }
+    return baseGallery;
+  }, [isCustomPublished, publishedBuyGallery, matchedFinishImage, product.name, color, baseGallery]);
+
   const active = gallery[activeImage] ?? resolveProductImage(product);
   const selectedColorImage = matchedFinishImage ?? active?.src;
   const realPhotosPending = requiresRealProductPhotos(product);
@@ -180,16 +191,12 @@ export function ProductDetailsPage() {
       </script>
       <section className="section product-detail-layout">
         <div className="product-gallery">
-          <button className={`product-main-image ${product.category === "Accessories" || product.category === "AirPods" ? "product-main-image-clean" : ""} ${zoomed ? "is-zoomed" : ""}`} type="button" onClick={() => setZoomed((current) => !current)} aria-label="Zoom product image">
-            {active ? <img src={active.src} alt={active.alt} loading="eager" /> : <span className="product-gallery-empty">{realPhotosPending ? "Photos of this exact device are coming soon" : "Image coming soon"}</span>}
-          </button>
-          <div className="product-thumbnails" aria-label="Product image thumbnails">
-            {gallery.map((image, index) => (
-              <button className={index === activeImage ? "is-active" : ""} key={image.src} type="button" onClick={() => setActiveImage(index)} aria-label={`Show image ${index + 1}`}>
-                <img src={image.src} alt={image.alt} loading="lazy" />
-              </button>
-            ))}
-          </div>
+          <SwipeableProductGallery
+            images={gallery}
+            activeIndex={activeImage}
+            onSelectIndex={setActiveImage}
+            productName={product.name}
+          />
         </div>
         <div className="product-buy-panel">
           <div className="flex flex-wrap gap-2">
