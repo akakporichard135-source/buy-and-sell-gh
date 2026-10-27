@@ -80,7 +80,7 @@ import macbookPro16M5Premium from "../assets/products/macbook-pro-16-inch-m5-pro
 import type { Product, ProductImage } from "../types/product";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "./catalogueProductImages";
 
-const localPremiumImageBySlug: Record<string, string> = {
+export const localPremiumImageBySlug: Record<string, string> = {
   "iphone-16-pro-max": iphone16ProMaxPremium,
   "iphone-16-pro": iphone16ProPremium,
   "iphone-16-plus": iphone16PlusPremium,

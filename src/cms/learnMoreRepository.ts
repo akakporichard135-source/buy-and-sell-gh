@@ -2,11 +2,15 @@ import * as tus from "tus-js-client";
 import { assertAdminAal2 } from "../admin/adminAuthorization";
 import { editorialStories, type EditorialStory } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
-import { productStories, type ProductFamilyKey, type ProductStoryDefinition } from "../catalog/productExperience";
+import { getProductFamily, productBuyPath, productStories, type ProductFamilyKey, type ProductStoryDefinition } from "../catalog/productExperience";
+import { seedCatalog } from "../catalog/productCatalog";
 import { iphone18ProEducation, type IphoneEducationContent } from "../data/iphone18ProEducation";
 import { macStudioStory, type MacStudioStory } from "../data/macStudioStory";
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
+import type { Product } from "../types/product";
+import { localCatalogueImageBySlug } from "../utils/catalogueProductImages";
 import { broadcastPublishedUpdate } from "../utils/imageVersioning";
+import { localPremiumImageBySlug, resolveAdminProductImage } from "../utils/productImages";
 
 export type LearnMoreSectionType =
   | "text-image"
@@ -82,9 +86,9 @@ export function sectionsAt(
 }
 
 export type LearnMoreContent =
-  | { kind: "editorial"; story: EditorialStory; sections: LearnMoreSection[]; education?: IphoneEducationContent }
-  | { kind: "catalog"; story: ProductStoryDefinition; sections: LearnMoreSection[] }
-  | { kind: "mac-studio"; story: MacStudioStory; sections: LearnMoreSection[] };
+  | { kind: "editorial"; story: EditorialStory; sections: LearnMoreSection[]; education?: IphoneEducationContent; isEmptyPage?: boolean }
+  | { kind: "catalog"; story: ProductStoryDefinition; sections: LearnMoreSection[]; isEmptyPage?: boolean }
+  | { kind: "mac-studio"; story: MacStudioStory; sections: LearnMoreSection[]; isEmptyPage?: boolean };
 
 const validContent = (value: unknown, id: string): value is LearnMoreContent => {
   if (!value || typeof value !== "object") return false;
@@ -153,25 +157,9 @@ export function normalizeLearnMoreContent(content: LearnMoreContent, id?: string
   const normalized = structuredClone(content);
 
   if (normalized.kind === "editorial" && normalized.story) {
+    // TASK 4: Apple Watch Series 12 cinematic showcase is strictly removed from Admin and Public
     if (pageId === "apple-watch-series-12" || normalized.story.slug === "apple-watch-series-12") {
-      if (normalized.story.cinematicVideo) {
-        const currentPoster = (normalized.story.cinematicVideo.poster || "").trim();
-        if (
-          !currentPoster ||
-          currentPoster === "/products/homepage/watch-series-12.webp" ||
-          currentPoster === "/products/campaigns/watch-series-12-product.webp" ||
-          currentPoster.includes("watch-series-12.webp") ||
-          currentPoster.includes("iphone")
-        ) {
-          normalized.story.cinematicVideo.poster = "/products/campaigns/watch-series-12-cinematic.webp";
-        }
-        if (
-          !normalized.story.cinematicVideo.src ||
-          normalized.story.cinematicVideo.src.includes("iphone")
-        ) {
-          normalized.story.cinematicVideo.src = "/videos/learn-more/watch-series-12-showcase.mp4";
-        }
-      }
+      delete normalized.story.cinematicVideo;
     }
   }
 
@@ -670,13 +658,115 @@ export function getLearnMoreHeroThumbnail(content: LearnMoreContent): string {
   return content.story.designMedia?.src || content.story.galleryMedia?.[0]?.src || "";
 }
 
+export function createEmptyLearnMorePage(product: Product): LearnMoreContent {
+  const family = getProductFamily(product);
+  const buyPath = productBuyPath(family, product.slug);
+  const primaryImg = resolveAdminProductImage(product)?.src || "";
+
+  return {
+    kind: "catalog",
+    story: {
+      family,
+      slug: product.slug,
+      name: product.name,
+      eyebrow: product.generation || product.subcategory || product.category,
+      tagline: "",
+      introduction: "",
+      media: {
+        type: "image",
+        src: primaryImg,
+        alt: product.name,
+      },
+      theme: family === "mac" || family === "watch" ? "ink" : "light",
+      buyPath,
+      highlights: [],
+      designTitle: "",
+      designCopy: "",
+      finalCtaHeadline: "",
+      detailGroups: [],
+    },
+    sections: [],
+    isEmptyPage: true,
+  };
+}
+
+export function resolveApprovedProductThumbnail(
+  slug: string,
+  content?: LearnMoreContent | null,
+  catalogProduct?: Product | null
+): string {
+  // 1. If catalogProduct is provided and has images, use latest product catalog image
+  if (catalogProduct) {
+    const adminImg = resolveAdminProductImage(catalogProduct);
+    if (adminImg?.src) return adminImg.src;
+    if (Array.isArray(catalogProduct.images) && catalogProduct.images.length > 0) {
+      const idx = catalogProduct.primaryImageIndex ?? 0;
+      const primary = catalogProduct.images[idx]?.src || catalogProduct.images[0]?.src;
+      if (primary) return primary;
+    }
+  }
+
+  // 2. If content has an active/published hero or visual asset
+  if (content) {
+    if (content.kind === "editorial" && content.story.hero?.src) {
+      return content.story.hero.src;
+    }
+    if (content.kind === "mac-studio" && content.story.image?.src) {
+      return content.story.image.src;
+    }
+    if (content.kind === "catalog" && content.story.media?.src) {
+      return content.story.media.src;
+    }
+    if (Array.isArray(content.sections)) {
+      for (const s of content.sections) {
+        if (s.image) return s.image;
+        if (s.poster) return s.poster;
+      }
+    }
+  }
+
+  // 3. Check local clean catalog images
+  const cleanCatalogue = localCatalogueImageBySlug[slug];
+  if (cleanCatalogue) return cleanCatalogue;
+
+  const cleanPremium = localPremiumImageBySlug[slug];
+  if (cleanPremium) return cleanPremium;
+
+  // 4. Check editorial stories
+  const edStory = editorialStories[slug];
+  if (edStory?.hero?.src) return edStory.hero.src;
+
+  return "";
+}
+
+export function hasUsableLearnMoreContent(
+  slug: string,
+  publishedContent?: LearnMoreContent | null
+): boolean {
+  const content = publishedContent ?? getPublishedLearnMoreSync(slug);
+  if (content) {
+    if (content.sections && content.sections.some((s) => s.enabled)) return true;
+    if (content.kind === "editorial" && content.story.hero?.src) return true;
+    if (content.kind === "catalog" && !content.isEmptyPage && content.story.introduction) return true;
+  }
+
+  // Editorial stories that have approved content
+  if (editorialStories[slug]) return true;
+  if (slug === "mac-studio") return true;
+
+  return false;
+}
+
 /**
- * Automatically returns only devices and products that have an existing
- * Learn More page on the public website (`editorialStories`, `productStories`,
- * `macStudioStory`, and any additional valid Learn More pages registered in future).
- * Unrelated store/marketplace catalog products without a Learn More page are excluded.
+ * Returns Learn More page configurations for every product in the catalog.
+ * Preserves existing editorial and catalog stories while generating
+ * clean, empty Learn More pages for all other products across
+ * iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories.
  */
-export function getEligibleLearnMoreProducts(extraRegistered: LearnMoreContent[] = []): LearnMoreContent[] {
+export function getEligibleLearnMoreProducts(
+  catalogProducts: Product[] = [],
+  extraRegistered: LearnMoreContent[] = []
+): LearnMoreContent[] {
   const choices: LearnMoreContent[] = [
     ...Object.values(editorialStories).map((story) => ({
       kind: "editorial" as const,
@@ -702,6 +792,16 @@ export function getEligibleLearnMoreProducts(extraRegistered: LearnMoreContent[]
       seenSlugs.add(extra.story.slug);
       choices.push(extra);
     }
+  }
+
+  // Ensure every product from catalog (Supabase or seedCatalog) has an editable Learn More entry
+  const productsToProcess = catalogProducts.length > 0 ? catalogProducts : seedCatalog;
+  for (const product of productsToProcess) {
+    if (!product || !product.slug) continue;
+    if (seenSlugs.has(product.slug)) continue;
+
+    seenSlugs.add(product.slug);
+    choices.push(createEmptyLearnMorePage(product));
   }
 
   return choices;

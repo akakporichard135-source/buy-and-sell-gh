@@ -35,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import type { ProductFamilyKey } from "../../catalog/productExperience";
 import { getLearnMoreMediaSource, replaceLearnMoreMedia, type LearnMoreMediaTarget } from "../../cms/learnMoreMedia";
 import {
@@ -50,6 +51,7 @@ import {
   listLearnMoreMedia,
   normalizeLearnMoreContent,
   publishLearnMore,
+  resolveApprovedProductThumbnail,
   rollbackLearnMoreRevision,
   saveDraftLearnMore,
   unpublishLearnMore,
@@ -505,8 +507,12 @@ export function getCinematicVideoThumbnail(content: LearnMoreContent | null): st
 }
 
 export function AdminLearnMorePages() {
-  // Strictly eligible Learn More products (13 public Learn More routes)
-  const allChoices: LearnMoreContent[] = useMemo(() => getEligibleLearnMoreProducts(), []);
+  const { products: catalogProducts, getProductBySlug } = useProductCatalog();
+  // Eligible Learn More products: all catalog products (seed & Supabase) with clean empty pages for unconfigured products
+  const allChoices: LearnMoreContent[] = useMemo(
+    () => getEligibleLearnMoreProducts(catalogProducts),
+    [catalogProducts]
+  );
   const builtInMedia = useMemo(() => getBuiltInLearnMoreMedia(), []);
 
   const [selectedSlug, setSelectedSlug] = useState<string>("iphone-18-pro");
@@ -587,7 +593,7 @@ export function AdminLearnMorePages() {
     const initialClone = normalizeLearnMoreContent(clone(baseChoice));
     setWorkingContent(initialClone);
     setBaselineJson(JSON.stringify(initialClone));
-    setActiveItemKey("hero");
+    setActiveItemKey(initialClone.isEmptyPage ? (initialClone.sections[0]?.id || "") : "hero");
 
     async function loadData() {
       try {
@@ -602,16 +608,19 @@ export function AdminLearnMorePages() {
           const draftClone = clone(draft);
           setWorkingContent(draftClone);
           setBaselineJson(JSON.stringify(draftClone));
+          setActiveItemKey(draftClone.isEmptyPage ? (draftClone.sections[0]?.id || "") : "hero");
         } else if (published) {
           setHasDraft(false);
           const pubClone = clone(published);
           setWorkingContent(pubClone);
           setBaselineJson(JSON.stringify(pubClone));
+          setActiveItemKey(pubClone.isEmptyPage ? (pubClone.sections[0]?.id || "") : "hero");
         } else {
           setHasDraft(false);
           const defClone = clone(baseChoice);
           setWorkingContent(defClone);
           setBaselineJson(JSON.stringify(defClone));
+          setActiveItemKey(defClone.isEmptyPage ? (defClone.sections[0]?.id || "") : "hero");
         }
       } catch (err) {
         console.warn("Could not load published/draft data:", err);
@@ -817,6 +826,13 @@ export function AdminLearnMorePages() {
   // Publish Live
   const handlePublish = async () => {
     if (!workingContent) return;
+    if (workingContent.isEmptyPage && (!workingContent.sections || workingContent.sections.length === 0)) {
+      setStatusMsg({
+        text: "Cannot publish an empty page. Please add at least one section before publishing live.",
+        type: "error",
+      });
+      return;
+    }
     try {
       setIsPublishing(true);
       setStatusMsg({ text: `Publishing and verifying "${workingContent.story.name}" in Supabase...`, type: "info" });
@@ -915,7 +931,33 @@ export function AdminLearnMorePages() {
     const next = clone(workingContent);
     next.sections = next.sections.filter((s) => s.id !== sectionId);
     setWorkingContent(next);
-    if (activeItemKey === sectionId) setActiveItemKey("hero");
+    if (activeItemKey === sectionId) {
+      if (next.isEmptyPage) {
+        setActiveItemKey(next.sections[0]?.id || "");
+      } else {
+        setActiveItemKey("hero");
+      }
+    }
+  };
+
+  const handleDeleteCinematicVideo = () => {
+    if (!workingContent) return;
+    if (
+      window.confirm(
+        `Are you sure you want to remove the Cinematic Video from ${workingContent.story.name}? You can re-add it at any time.`
+      )
+    ) {
+      const next = clone(workingContent);
+      if (next.kind === "editorial" && next.story.cinematicVideo) {
+        delete next.story.cinematicVideo;
+      }
+      setWorkingContent(next);
+      setActiveItemKey(next.isEmptyPage ? (next.sections[0]?.id || "") : "hero");
+      setStatusMsg({
+        text: "Cinematic video removed from this page. Save Draft or Publish Live to persist.",
+        type: "info",
+      });
+    }
   };
 
   const handleAddSection = (type: LearnMoreSectionType) => {
@@ -971,7 +1013,10 @@ export function AdminLearnMorePages() {
 
   // Ordered keys for Prev/Next section navigation
   const outlineKeys = useMemo(() => {
-    if (!workingContent) return ["hero"];
+    if (!workingContent) return [];
+    if (workingContent.isEmptyPage) {
+      return workingContent.sections.map((s) => s.id);
+    }
     const keys = ["hero"];
     if (workingContent.kind === "editorial" && workingContent.story.cinematicVideo) {
       keys.push("video");
@@ -1015,6 +1060,17 @@ export function AdminLearnMorePages() {
 
   const renderLivePagePreview = () => {
     if (!workingContent) return null;
+    if (workingContent.isEmptyPage && (!workingContent.sections || workingContent.sections.length === 0)) {
+      return (
+        <div className={`vlearn-device-bezel is-${previewDevice}`}>
+          <div className="vlearn-empty-preview-state" style={{ padding: "80px 24px", textAlign: "center", color: "#86868b" }}>
+            <Layers size={36} strokeWidth={1.5} style={{ opacity: 0.5, marginBottom: 12 }} />
+            <h3 style={{ color: "#f5f5f7", margin: "0 0 8px" }}>{workingContent.story.name}</h3>
+            <p style={{ margin: 0 }}>This Learn More page is currently empty. Add sections in the editor to see your live preview here.</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className={`vlearn-device-bezel is-${previewDevice}`}>
         {workingContent.kind === "editorial" ? (
@@ -1051,9 +1107,15 @@ export function AdminLearnMorePages() {
           </button>
 
           <div className="vlearn-active-product-meta">
-            {workingContent && getLearnMoreHeroThumbnail(workingContent) && (
+            {workingContent && (
               <img
-                src={getLearnMoreHeroThumbnail(workingContent)}
+                src={
+                  resolveApprovedProductThumbnail(
+                    workingContent.story.slug,
+                    workingContent,
+                    getProductBySlug(workingContent.story.slug)
+                  ) || getLearnMoreHeroThumbnail(workingContent)
+                }
                 alt=""
                 className="vlearn-topbar-thumb"
               />
@@ -1325,7 +1387,12 @@ export function AdminLearnMorePages() {
                 const isSelected = slug === selectedSlug;
                 const fam = getLearnMoreFamily(choice);
                 const publicPath = getLearnMorePublicPath(choice);
-                const thumb = getLearnMoreHeroThumbnail(choice);
+                const catProd = getProductBySlug(slug);
+                const thumb = resolveApprovedProductThumbnail(
+                  slug,
+                  isSelected ? workingContent : choice,
+                  catProd
+                );
                 const pageStatus = statusMap[slug];
                 const isPub = isSelected ? Boolean(publishedContent) : Boolean(pageStatus?.published);
                 const isDrf = isSelected ? hasDraft : Boolean(pageStatus?.hasDraft);
@@ -1374,7 +1441,9 @@ export function AdminLearnMorePages() {
             <div>
               <h3>Story Outline</h3>
               <span className="vlearn-panel-subtitle">
-                {(workingContent?.sections.length || 0) + 1} visual blocks · Click to edit
+                {workingContent?.isEmptyPage
+                  ? `${workingContent.sections.length} visual blocks`
+                  : `${(workingContent?.sections.length || 0) + 1} visual blocks`} · Click to edit
               </span>
             </div>
             <button
@@ -1388,64 +1457,106 @@ export function AdminLearnMorePages() {
           </div>
 
           <div className="vlearn-section-cards-list">
-            {/* Core Hero Section Card */}
-            <div
-              data-testid="outline-card-hero"
-              className={`vlearn-section-card ${activeItemKey === "hero" ? "is-selected" : ""}`}
-              onClick={() => {
-                setActiveItemKey("hero");
-                setWorkspaceMode("inspector");
-                setMobileStep("editor");
-              }}
-            >
-              <div className="vlearn-card-thumb">
-                {getHeroImageSrc(workingContent) ? (
-                  <img src={getHeroImageSrc(workingContent)} alt={workingContent?.story.name || "Hero"} />
-                ) : (
-                  <Laptop size={18} />
-                )}
+            {workingContent?.isEmptyPage && (!workingContent.sections || workingContent.sections.length === 0) ? (
+              <div className="vlearn-outline-empty" data-testid="outline-empty-state" style={{ padding: "48px 16px", textAlign: "center", color: "#86868b" }}>
+                <Layers size={32} strokeWidth={1.5} style={{ opacity: 0.5, marginBottom: 10 }} />
+                <h4 style={{ color: "#f5f5f7", margin: "0 0 6px", fontSize: 15 }}>No sections yet</h4>
+                <p style={{ margin: "0 0 16px", fontSize: 13, lineHeight: 1.4 }}>
+                  This Learn More page is currently empty. Click below to add your first section from the visual library.
+                </p>
+                <button
+                  type="button"
+                  className="vlearn-btn vlearn-btn-primary"
+                  onClick={() => setShowAddSectionModal(true)}
+                  data-testid="outline-empty-add-btn"
+                >
+                  <Plus size={14} /> + Add Section
+                </button>
               </div>
-              <div className="vlearn-card-body">
-                <div className="vlearn-card-header">
-                  <span className="vlearn-card-type is-core">HERO STAGE</span>
-                  <span className="vlearn-card-meta-pill">Pinned Top</span>
-                </div>
-                <h4 className="vlearn-card-title">{workingContent?.story.name}</h4>
-                <p className="vlearn-card-desc">{getStoryTagline(workingContent)}</p>
-              </div>
-            </div>
-
-            {/* Cinematic Film Card (if present on editorial story) */}
-            {workingContent?.kind === "editorial" && workingContent.story.cinematicVideo && (
-              <div
-                data-testid="outline-card-video"
-                className={`vlearn-section-card ${activeItemKey === "video" ? "is-selected" : ""}`}
-                onClick={() => {
-                  setActiveItemKey("video");
-                  setWorkspaceMode("inspector");
-                  setMobileStep("editor");
-                }}
-              >
-                <div className="vlearn-card-thumb is-video-thumb">
-                  {getCinematicVideoThumbnail(workingContent) ? (
-                    <img src={getCinematicVideoThumbnail(workingContent)} alt="Video poster" />
-                  ) : (
-                    <Video size={18} />
-                  )}
-                  <span className="vlearn-thumb-video-badge">4K</span>
-                </div>
-                <div className="vlearn-card-body">
-                  <div className="vlearn-card-header">
-                    <span className="vlearn-card-type is-video">CINEMATIC VIDEO</span>
+            ) : (
+              <>
+                {/* Core Hero Section Card (only for editorial/configured stories or if not isEmptyPage) */}
+                {!workingContent?.isEmptyPage && (
+                  <div
+                    data-testid="outline-card-hero"
+                    className={`vlearn-section-card ${activeItemKey === "hero" ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setActiveItemKey("hero");
+                      setWorkspaceMode("inspector");
+                      setMobileStep("editor");
+                    }}
+                  >
+                    <div className="vlearn-card-thumb">
+                      {(() => {
+                        const heroThumb =
+                          getHeroImageSrc(workingContent) ||
+                          resolveApprovedProductThumbnail(
+                            workingContent?.story.slug || selectedSlug,
+                            workingContent,
+                            getProductBySlug(workingContent?.story.slug || selectedSlug)
+                          );
+                        return heroThumb ? (
+                          <img src={heroThumb} alt={workingContent?.story.name || "Hero"} />
+                        ) : (
+                          <Laptop size={18} />
+                        );
+                      })()}
+                    </div>
+                    <div className="vlearn-card-body">
+                      <div className="vlearn-card-header">
+                        <span className="vlearn-card-type is-core">HERO STAGE</span>
+                        <span className="vlearn-card-meta-pill">Pinned Top</span>
+                      </div>
+                      <h4 className="vlearn-card-title">{workingContent?.story.name}</h4>
+                      <p className="vlearn-card-desc">{getStoryTagline(workingContent)}</p>
+                    </div>
                   </div>
-                  <h4 className="vlearn-card-title">
-                    {workingContent.story.cinematicVideo.headline || "Product Film"}
-                  </h4>
-                  <p className="vlearn-card-desc">
-                    {workingContent.story.cinematicVideo.subheadline || "Autoplaying hardware film"}
-                  </p>
-                </div>
-              </div>
+                )}
+
+                {/* Cinematic Film Card (if present on editorial story) */}
+                {workingContent?.kind === "editorial" && workingContent.story.cinematicVideo && (
+                  <div
+                    data-testid="outline-card-video"
+                    className={`vlearn-section-card ${activeItemKey === "video" ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setActiveItemKey("video");
+                      setWorkspaceMode("inspector");
+                      setMobileStep("editor");
+                    }}
+                  >
+                    <div className="vlearn-card-thumb is-video-thumb">
+                      {getCinematicVideoThumbnail(workingContent) ? (
+                        <img src={getCinematicVideoThumbnail(workingContent)} alt="Video poster" />
+                      ) : (
+                        <Video size={18} />
+                      )}
+                      <span className="vlearn-thumb-video-badge">4K</span>
+                    </div>
+                    <div className="vlearn-card-body">
+                      <div className="vlearn-card-header">
+                        <span className="vlearn-card-type is-video">CINEMATIC VIDEO</span>
+                        <div className="vlearn-card-actions" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="vlearn-icon-btn vlearn-icon-btn-danger"
+                            onClick={handleDeleteCinematicVideo}
+                            title="Remove cinematic video"
+                            aria-label="Remove cinematic video"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+                      <h4 className="vlearn-card-title">
+                        {workingContent.story.cinematicVideo.headline || "Product Film"}
+                      </h4>
+                      <p className="vlearn-card-desc">
+                        {workingContent.story.cinematicVideo.subheadline || "Autoplaying hardware film"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Dynamic Storytelling Sections */}
@@ -1658,7 +1769,7 @@ export function AdminLearnMorePages() {
                   </div>
                 </div>
 
-                {activeItemKey === "hero" && workingContent ? (
+                {activeItemKey === "hero" && workingContent && !workingContent.isEmptyPage ? (
                   <div className="vlearn-inspector-cards">
                     {/* Live Visual Hero Stage Preview Card */}
                     <div
@@ -1981,6 +2092,16 @@ export function AdminLearnMorePages() {
                             />
                           </div>
                         </div>
+
+                        <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+                          <button
+                            type="button"
+                            className="vlearn-btn vlearn-btn-danger-outline"
+                            onClick={handleDeleteCinematicVideo}
+                          >
+                            <Trash2 size={14} /> Remove Cinematic Video
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2257,6 +2378,203 @@ export function AdminLearnMorePages() {
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        </div>
+                      ) : activeSection.type === "video" ? (
+                        <div className="vlearn-media-picker-card">
+                          <label className="vlearn-form-label">Cinematic Video &amp; Poster Preview</label>
+                          <div className="vlearn-media-preview-box">
+                            {activeSection.video ? (
+                              <video
+                                src={activeSection.video}
+                                poster={activeSection.poster}
+                                controls
+                                muted
+                                playsInline
+                              />
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "#86868b", padding: "30px 0" }}>
+                                <Video size={32} />
+                                <span>No video attached to this cinematic section</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="vlearn-media-actions">
+                            <label className="vlearn-btn vlearn-btn-primary">
+                              <Upload size={14} /> Upload Video (MP4/WebM)
+                              <input
+                                type="file"
+                                accept="video/mp4,video/webm"
+                                style={{ display: "none" }}
+                                onChange={(e) => void handleFileUpload(e, { sectionId: activeSection.id, field: "video" })}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              className="vlearn-btn"
+                              onClick={() => handleOpenMediaLibrary({ sectionId: activeSection.id, field: "video" })}
+                            >
+                              <Video size={14} /> Choose Video from Library
+                            </button>
+                            <label className="vlearn-btn">
+                              <Upload size={14} /> Upload Poster
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/avif"
+                                style={{ display: "none" }}
+                                onChange={(e) => void handleFileUpload(e, { sectionId: activeSection.id, field: "poster" })}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              className="vlearn-btn"
+                              onClick={() => handleOpenMediaLibrary({ sectionId: activeSection.id, field: "poster" })}
+                            >
+                              <ImageIcon size={14} /> Choose Poster Image
+                            </button>
+                            {(activeSection.video || activeSection.poster) && (
+                              <button
+                                type="button"
+                                className="vlearn-btn vlearn-btn-danger-outline"
+                                onClick={() => {
+                                  const next = clone(workingContent);
+                                  const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                  if (s) {
+                                    s.video = undefined;
+                                    s.poster = undefined;
+                                    s.mobileVideo = undefined;
+                                  }
+                                  setWorkingContent(next);
+                                }}
+                              >
+                                <Trash2 size={14} /> Clear Media
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="vlearn-grid-2" style={{ marginTop: 14 }}>
+                            <div className="vlearn-form-group">
+                              <label className="vlearn-form-label">Video Stream URL</label>
+                              <input
+                                type="text"
+                                className="vlearn-input"
+                                placeholder="/videos/..."
+                                value={activeSection.video || ""}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                  if (s) s.video = e.target.value;
+                                  setWorkingContent(next);
+                                }}
+                              />
+                            </div>
+                            <div className="vlearn-form-group">
+                              <label className="vlearn-form-label">Poster Image URL</label>
+                              <input
+                                type="text"
+                                className="vlearn-input"
+                                placeholder="/products/..."
+                                value={activeSection.poster || ""}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                  if (s) s.poster = e.target.value;
+                                  setWorkingContent(next);
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="vlearn-grid-2">
+                            <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                              <label className="vlearn-form-label">Mobile Video URL (Optional)</label>
+                              <input
+                                type="text"
+                                className="vlearn-input"
+                                placeholder="Optional mobile video crop"
+                                value={activeSection.mobileVideo || ""}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                  if (s) s.mobileVideo = e.target.value;
+                                  setWorkingContent(next);
+                                }}
+                              />
+                            </div>
+                            <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                              <label className="vlearn-form-label">Video Description / Alt Text</label>
+                              <input
+                                type="text"
+                                className="vlearn-input"
+                                placeholder="Accessibility description of video"
+                                value={activeSection.alt || ""}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                  if (s) s.alt = e.target.value;
+                                  setWorkingContent(next);
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                            <label className="vlearn-form-label" style={{ marginBottom: 8 }}>Playback Controls &amp; Settings</label>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={activeSection.autoplay !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                    if (s) s.autoplay = e.target.checked;
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Autoplay
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={activeSection.muted !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                    if (s) s.muted = e.target.checked;
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Muted
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={activeSection.loop !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                    if (s) s.loop = e.target.checked;
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Loop playback
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={activeSection.controls !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                    if (s) s.controls = e.target.checked;
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Show native controls
+                              </label>
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -2694,6 +3012,44 @@ export function AdminLearnMorePages() {
                           No structured sub-items in this section. Click "+ Add Item" to add feature cards, specification rows, or color swatches.
                         </p>
                       )}
+                    </div>
+                  </div>
+                ) : workingContent?.isEmptyPage && (!workingContent.sections || workingContent.sections.length === 0) ? (
+                  <div className="vlearn-empty-inspector" data-testid="empty-inspector" style={{ padding: "60px 24px", textAlign: "center" }}>
+                    <div className="vlearn-empty-inspector-card" style={{ maxWidth: 540, margin: "0 auto", background: "rgba(255, 255, 255, 0.02)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: 16, padding: 32 }}>
+                      <span className="vlearn-badge vlearn-badge-category" style={{ marginBottom: 12, display: "inline-block" }}>
+                        Clean Empty Canvas
+                      </span>
+                      <h2 style={{ fontSize: 22, margin: "0 0 8px", color: "#f5f5f7" }}>{workingContent.story.name}</h2>
+                      <p style={{ color: "#86868b", fontSize: 14, lineHeight: 1.5, margin: "0 0 24px" }}>
+                        This product currently has an empty Learn More page with no placeholder content.
+                        Build your custom product showcase section by section.
+                      </p>
+                      <button
+                        type="button"
+                        className="vlearn-btn vlearn-btn-primary"
+                        onClick={() => setShowAddSectionModal(true)}
+                        data-testid="empty-inspector-add-btn"
+                        style={{ padding: "10px 20px", fontSize: 14 }}
+                      >
+                        <Plus size={16} /> + Add Section from Visual Library
+                      </button>
+
+                      <div className="vlearn-quick-presets-label" style={{ marginTop: 28, marginBottom: 10, textAlign: "left", fontSize: 12, color: "#86868b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Popular Starting Templates:
+                      </div>
+                      <div className="vlearn-quick-presets-grid" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {SECTION_TYPE_PRESETS.filter((p) => p.featured).map((preset) => (
+                          <button
+                            key={preset.type}
+                            type="button"
+                            className="vlearn-quick-chip"
+                            onClick={() => handleAddSection(preset.type)}
+                          >
+                            <Plus size={11} /> {preset.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (

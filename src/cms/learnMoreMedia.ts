@@ -26,7 +26,12 @@ export function getLearnMoreMediaSource(content: LearnMoreContent, target: Learn
   if (!section) return undefined;
   if (typeof target.galleryIndex === "number") return section.images?.[target.galleryIndex];
   if (typeof target.itemIndex === "number") return section.items?.[target.itemIndex]?.image;
-  return target.field === "image" ? section.image : undefined;
+  if (target.field === "image") return section.image;
+  if (target.field === "video") return section.video;
+  if (target.field === "poster") return section.poster;
+  if (target.field === "mobileVideo") return section.mobileVideo;
+  if (target.field === "mobileImage") return section.mobileImage;
+  return undefined;
 }
 
 export function replaceLearnMoreMedia(

@@ -354,16 +354,6 @@ export const editorialStories: Record<string, EditorialStory> = {
       { label: "Fast Charge", title: "80% battery in 30 minutes before leaving home.", image: { src: `${campaign}/watch-series-12-angle.webp`, alt: "Apple Watch Series 12 angled profile in space black finish" }, tone: "light" },
       { label: "Finishes", title: "Jet Black aluminum and polished titanium.", image: { src: `${campaign}/watch-series-12-product.webp`, alt: "Apple Watch Series 12 case options and premium materials" }, tone: "light" },
     ],
-    cinematicVideo: {
-      src: "/videos/learn-more/watch-series-12-showcase.mp4",
-      poster: "/products/campaigns/watch-series-12-cinematic.webp",
-      alt: "Apple Watch Series 12 slim profile and wide-angle OLED display",
-      eyebrow: "Sleek Geometry",
-      headline: "Thin. Vibrant. Built for the pulse of Accra.",
-      subheadline: "Wide-angle OLED brilliance in our thinnest case architecture ever made.",
-      aspectRatio: "16/9",
-      isClean: true,
-    },
     chapters: [
       {
         id: "silhouette",

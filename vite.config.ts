@@ -34,7 +34,8 @@ function adminHostnameGuard(): Plugin {
     const hostname = rawHost.split(":")[0];
     const url = (rawReq.url || "").split("?")[0];
 
-    const isAdminHost = hostname.startsWith("admin.") || hostname === "admin.localhost";
+    const hasAdminPreview = (rawReq.url || "").includes("admin_preview=1");
+    const isAdminHost = hostname.startsWith("admin.") || hostname === "admin.localhost" || hasAdminPreview;
     const isAdminRoute = url === "/admin" || url.startsWith("/admin/");
 
     if (!isAdminHost && isAdminRoute) {

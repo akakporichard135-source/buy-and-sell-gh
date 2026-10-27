@@ -450,6 +450,15 @@ export function familyMatchesProduct(product: Product, family: ProductFamilyKey)
   return cat === "Accessories" || (product.subcategory?.toLowerCase().includes("accessory") ?? false);
 }
 
+export function getProductFamily(product: Product): ProductFamilyKey {
+  if (familyMatchesProduct(product, "iphone")) return "iphone";
+  if (familyMatchesProduct(product, "mac")) return "mac";
+  if (familyMatchesProduct(product, "ipad")) return "ipad";
+  if (familyMatchesProduct(product, "watch")) return "watch";
+  if (familyMatchesProduct(product, "airpods")) return "airpods";
+  return "accessories";
+}
+
 export function productStoryPath(family: ProductFamilyKey, slug: string) {
   return `${productFamilies[family].path}/${slug}`;
 }

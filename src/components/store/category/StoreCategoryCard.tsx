@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import type { CategoryFeaturedCardData } from "./categoryData";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { useProductCatalog } from "../../../catalog/ProductCatalogContext";
+import { hasUsableLearnMoreContent } from "../../../cms/learnMoreRepository";
 import { getCardPriceDisplay } from "../../../utils/productPricing";
 import { resolveCatalogueProductImage } from "../../../utils/productImages";
 
@@ -20,6 +21,8 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
   const isIphoneDuo = card.id.includes("duo") || card.title.toLowerCase().includes("duo");
   const isViewPricing = isIphoneDuo || card.isViewPricingOnly;
   const primaryCtaText = isViewPricing ? "View Pricing" : (card.buyLabel || "Buy");
+  const productSlug = matchedProduct?.slug || card.id;
+  const hasStory = card.storyPath ? hasUsableLearnMoreContent(productSlug) : false;
 
   return (
     <article
@@ -78,7 +81,7 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
           {primaryCtaText}
         </Link>
 
-        {card.storyPath && (
+        {hasStory && card.storyPath && (
           <Link
             to={card.storyPath}
             className="store-cat-btn-text"

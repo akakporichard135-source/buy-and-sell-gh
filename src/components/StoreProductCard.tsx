@@ -2,6 +2,7 @@ import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../catalog/productExperience";
+import { hasUsableLearnMoreContent } from "../cms/learnMoreRepository";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getCardPriceDisplay } from "../utils/productPricing";
@@ -17,13 +18,17 @@ export function StoreProductCard({ product }: { product: Product }) {
   const family = productFamilyForCard(product);
   const status = product.condition === "UK Used" ? "UK USED" : isPurchasable ? "IN STOCK" : "AVAILABLE ON REQUEST";
   const facts = storeCardFacts(product);
+  const hasStory = hasUsableLearnMoreContent(product.slug);
+  const buyPath = productBuyPath(family, product.slug);
+  const storyPath = productStoryPath(family, product.slug);
+  const targetPath = hasStory ? storyPath : buyPath;
 
   return (
     <article className="store-product-card" aria-label={product.name}>
       <Link
         className="store-product-art"
-        to={productStoryPath(family, product.slug)}
-        aria-label={`Learn more about ${product.name}`}
+        to={targetPath}
+        aria-label={hasStory ? `Learn more about ${product.name}` : `View ${product.name}`}
         tabIndex={-1}
       >
         <ProductVisual product={product} imageVariant="catalogue" />
@@ -36,7 +41,7 @@ export function StoreProductCard({ product }: { product: Product }) {
         </div>
 
         <h3 className="store-product-title" title={product.name}>
-          <Link to={productStoryPath(family, product.slug)}>{product.name}</Link>
+          <Link to={targetPath}>{product.name}</Link>
         </h3>
 
         {facts.length > 0 && (
@@ -52,13 +57,13 @@ export function StoreProductCard({ product }: { product: Product }) {
 
         <div className="store-product-actions">
           <div className="store-product-actions-primary-group">
-            <Link className="btn-store-card-primary" to={productBuyPath(family, product.slug)}>
+            <Link className="btn-store-card-primary" to={buyPath}>
               {canDirectBuy ? "Buy" : "View Pricing"}
             </Link>
 
             {canDirectBuy && (
               <Link
-                to={productBuyPath(family, product.slug)}
+                to={buyPath}
                 className="btn-store-card-cart"
                 title="Configure and buy"
                 aria-label={`Configure ${product.name} to buy`}
@@ -68,9 +73,11 @@ export function StoreProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          <Link className="btn-store-card-secondary" to={productStoryPath(family, product.slug)}>
-            Learn more <ArrowRight size={13} aria-hidden="true" />
-          </Link>
+          {hasStory && (
+            <Link className="btn-store-card-secondary" to={storyPath}>
+              Learn more <ArrowRight size={13} aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </div>
     </article>
