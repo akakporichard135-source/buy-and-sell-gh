@@ -43,6 +43,7 @@ import {
   fetchLearnMoreRevisions,
   fetchLearnMoreStatusMap,
   fetchPublishedLearnMore,
+  getPublishedLearnMoreSync,
   getBuiltInLearnMoreMedia,
   getEligibleLearnMoreProducts,
   getLearnMoreFamily,
@@ -590,7 +591,8 @@ export function AdminLearnMorePages() {
     if (!baseChoice) return;
 
     setStatusMsg(null);
-    const initialClone = normalizeLearnMoreContent(clone(baseChoice));
+    const cachedPub = getPublishedLearnMoreSync(selectedSlug);
+    const initialClone = normalizeLearnMoreContent(clone(cachedPub || baseChoice));
     setWorkingContent(initialClone);
     setBaselineJson(JSON.stringify(initialClone));
     setActiveItemKey(initialClone.isEmptyPage ? (initialClone.sections[0]?.id || "") : "hero");
@@ -962,6 +964,26 @@ export function AdminLearnMorePages() {
 
   const handleAddSection = (type: LearnMoreSectionType) => {
     if (!workingContent) return;
+
+    if (type === "video" && workingContent.kind === "editorial" && !workingContent.story.cinematicVideo) {
+      const next = clone(workingContent);
+      next.story.cinematicVideo = {
+        headline: "Precision in continuous motion.",
+        subheadline: "Autoplaying hardware film",
+        src: "",
+        poster: "",
+        alt: `${workingContent.story.name} cinematic film`,
+        eyebrow: "Cinematic Hardware",
+        aspectRatio: "16/9",
+      };
+      setWorkingContent(next);
+      setActiveItemKey("video");
+      setWorkspaceMode("inspector");
+      setMobileStep("editor");
+      setStatusMsg({ text: "Cinematic video showcase added to story.", type: "success" });
+      return;
+    }
+
     const preset = SECTION_TYPE_PRESETS.find((p) => p.type === type);
     const defaultBuyPath = getStoryBuyPath(workingContent);
 
@@ -1553,6 +1575,30 @@ export function AdminLearnMorePages() {
                       <p className="vlearn-card-desc">
                         {workingContent.story.cinematicVideo.subheadline || "Autoplaying hardware film"}
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* If editorial story does not have cinematic video, provide an add card */}
+                {workingContent?.kind === "editorial" && !workingContent.story.cinematicVideo && (
+                  <div
+                    data-testid="outline-add-video-card"
+                    className="vlearn-section-card vlearn-section-card-empty-prompt"
+                    style={{ borderStyle: "dashed", opacity: 0.85, cursor: "pointer" }}
+                    onClick={() => handleAddSection("video")}
+                  >
+                    <div className="vlearn-card-thumb is-video-thumb" style={{ background: "rgba(255,255,255,0.04)" }}>
+                      <Video size={18} />
+                    </div>
+                    <div className="vlearn-card-body">
+                      <div className="vlearn-card-header">
+                        <span className="vlearn-card-type is-video">CINEMATIC VIDEO</span>
+                        <span className="vlearn-card-meta-pill" style={{ color: "#38bdf8" }}>+ Add</span>
+                      </div>
+                      <h4 className="vlearn-card-title" style={{ fontSize: "0.85rem", color: "var(--color-primary-accent, #38bdf8)" }}>
+                        + Add Cinematic Video Showcase
+                      </h4>
+                      <p className="vlearn-card-desc">Showcase product hardware in 4K continuous motion</p>
                     </div>
                   </div>
                 )}
