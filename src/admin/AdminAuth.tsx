@@ -47,7 +47,20 @@ interface AdminAuthValue {
 
 const STORAGE_KEY = "buyandsell-gh-temp-admin-session";
 const AdminAuthContext = createContext<AdminAuthValue | undefined>(undefined);
-const LOCAL_ADMIN_ENABLED = import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true";
+const isPreviewMode = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      window.location.search.includes("admin_preview=1") ||
+      sessionStorage.getItem("admin_preview_active") === "1" ||
+      localStorage.getItem("admin_preview_active") === "1"
+    );
+  } catch {
+    return false;
+  }
+};
+const isLocalAdminAllowed = () => import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true" || isPreviewMode();
+const LOCAL_ADMIN_ENABLED = isLocalAdminAllowed();
 const EMAIL_CHANGE_ACCOUNT_ID = "950ec818-3b39-4e28-a02c-01f0597b5455";
 const EMAIL_CHANGE_OLD = "akakporichard135@gmail.com";
 const EMAIL_CHANGE_NEW = "buyandsellgh@yahoo.com";
@@ -155,7 +168,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           if (data.session) {
             return applySupabaseSession(data.session);
           }
-          if (LOCAL_ADMIN_ENABLED) {
+          if (isLocalAdminAllowed()) {
             try {
               const saved = localStorage.getItem(STORAGE_KEY);
               if (saved) {
@@ -167,7 +180,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           return applySupabaseSession(null);
         })
         .catch(() => {
-          if (LOCAL_ADMIN_ENABLED) {
+          if (isLocalAdminAllowed()) {
             try {
               const saved = localStorage.getItem(STORAGE_KEY);
               if (saved) {

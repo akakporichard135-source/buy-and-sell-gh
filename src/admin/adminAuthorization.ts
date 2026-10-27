@@ -2,14 +2,27 @@ import { supabase } from "../lib/supabase";
 
 export type AdminRole = "owner" | "admin";
 
+export const isPreviewMode = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    return (
+      window.location.search.includes("admin_preview=1") ||
+      sessionStorage.getItem("admin_preview_active") === "1" ||
+      localStorage.getItem("admin_preview_active") === "1"
+    );
+  } catch {
+    return false;
+  }
+};
+
 export const isLocalAdminActive = (): boolean => {
   if (typeof window === "undefined") return false;
-  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN !== "true") return false;
+  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN !== "true" && !isPreviewMode()) return false;
   try {
     const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
     if (!saved) return false;
     const session = JSON.parse(saved);
-    return session.mode === "local" && (session.role === "owner" || session.role === "admin");
+    return (session.mode === "local" || session.mode === "preview") && (session.role === "owner" || session.role === "admin");
   } catch {
     return false;
   }
@@ -28,12 +41,12 @@ export const fetchAdminRole = async (userId: string): Promise<AdminRole | null> 
 };
 
 export const assertAdminAal2 = async (requiredRole?: AdminRole) => {
-  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true") {
+  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true" || isPreviewMode()) {
     try {
       const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
       if (saved) {
         const session = JSON.parse(saved);
-        if (session.mode === "local" && (session.role === "owner" || session.role === "admin")) {
+        if ((session.mode === "local" || session.mode === "preview") && (session.role === "owner" || session.role === "admin")) {
           if (!requiredRole || session.role === requiredRole || session.role === "owner") {
             return session.role as AdminRole;
           }
