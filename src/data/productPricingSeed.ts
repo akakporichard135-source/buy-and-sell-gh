@@ -10,6 +10,399 @@ export interface SeedPricingItem {
 }
 
 export const initialProductPricingSeed: Record<string, SeedPricingItem> = {
+  "iphone-duo": {
+    "price": 28000,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "iduo-256",
+        "productId": "iphone-duo",
+        "title": "iPhone Duo 256GB",
+        "sku": "BSGH-IPHONE-DUO-256",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 28000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 5,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "iduo-512",
+        "productId": "iphone-duo",
+        "title": "iPhone Duo 512GB",
+        "sku": "BSGH-IPHONE-DUO-512",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 31000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 5,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "iduo-1tb",
+        "productId": "iphone-duo",
+        "title": "iPhone Duo 1TB",
+        "sku": "BSGH-IPHONE-DUO-1TB",
+        "storage": "1TB",
+        "condition": "Brand New",
+        "price": 34500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 5,
+        "available": true,
+        "position": 3
+      }
+    ]
+  },
+  "apple-watch-series-12": {
+    "price": 7800,
+    "previousPrice": 8800,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "aws12-42-gps",
+        "productId": "apple-watch-series-12",
+        "title": "42mm GPS",
+        "screenSize": "42mm",
+        "connectivity": "GPS",
+        "condition": "Brand New",
+        "price": 7800,
+        "previousPrice": 8800,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "aws12-46-gps",
+        "productId": "apple-watch-series-12",
+        "title": "46mm GPS",
+        "screenSize": "46mm",
+        "connectivity": "GPS",
+        "condition": "Brand New",
+        "price": 8400,
+        "previousPrice": 9400,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "aws12-42-cell",
+        "productId": "apple-watch-series-12",
+        "title": "42mm GPS + Cellular",
+        "screenSize": "42mm",
+        "connectivity": "GPS + Cellular",
+        "condition": "Brand New",
+        "price": 9500,
+        "previousPrice": 10500,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      },
+      {
+        "id": "aws12-46-cell",
+        "productId": "apple-watch-series-12",
+        "title": "46mm GPS + Cellular",
+        "screenSize": "46mm",
+        "connectivity": "GPS + Cellular",
+        "condition": "Brand New",
+        "price": 10200,
+        "previousPrice": 11200,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 4
+      }
+    ]
+  },
+  "watch-series-12": {
+    "price": 7800,
+    "previousPrice": 8800,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "ws12-42-gps",
+        "productId": "watch-series-12",
+        "title": "42mm GPS",
+        "screenSize": "42mm",
+        "connectivity": "GPS",
+        "condition": "Brand New",
+        "price": 7800,
+        "previousPrice": 8800,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "ws12-46-gps",
+        "productId": "watch-series-12",
+        "title": "46mm GPS",
+        "screenSize": "46mm",
+        "connectivity": "GPS",
+        "condition": "Brand New",
+        "price": 8400,
+        "previousPrice": 9400,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      }
+    ]
+  },
+  "apple-watch-ultra-4": {
+    "price": 14800,
+    "previousPrice": 15800,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "awu4-49-cell",
+        "productId": "apple-watch-ultra-4",
+        "title": "49mm GPS + Cellular",
+        "screenSize": "49mm",
+        "connectivity": "GPS + Cellular",
+        "condition": "Brand New",
+        "price": 14800,
+        "previousPrice": 15800,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      }
+    ]
+  },
+  "watch-ultra-4": {
+    "price": 14800,
+    "previousPrice": 15800,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "wu4-49-cell",
+        "productId": "watch-ultra-4",
+        "title": "49mm GPS + Cellular",
+        "screenSize": "49mm",
+        "connectivity": "GPS + Cellular",
+        "condition": "Brand New",
+        "price": 14800,
+        "previousPrice": 15800,
+        "isSale": true,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      }
+    ]
+  },
+  "ipad-air": {
+    "price": 9800,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "ia-11-128-wifi",
+        "productId": "ipad-air",
+        "title": "11-inch 128GB Wi-Fi",
+        "screenSize": "11-inch",
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "condition": "Brand New",
+        "price": 9800,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "ia-11-256-wifi",
+        "productId": "ipad-air",
+        "title": "11-inch 256GB Wi-Fi",
+        "screenSize": "11-inch",
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "condition": "Brand New",
+        "price": 11600,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "ia-13-128-wifi",
+        "productId": "ipad-air",
+        "title": "13-inch 128GB Wi-Fi",
+        "screenSize": "13-inch",
+        "storage": "128GB",
+        "connectivity": "Wi-Fi",
+        "condition": "Brand New",
+        "price": 13800,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      },
+      {
+        "id": "ia-13-256-wifi",
+        "productId": "ipad-air",
+        "title": "13-inch 256GB Wi-Fi",
+        "screenSize": "13-inch",
+        "storage": "256GB",
+        "connectivity": "Wi-Fi",
+        "condition": "Brand New",
+        "price": 15600,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 4
+      }
+    ]
+  },
+  "macbook-air": {
+    "price": 13500,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "mba-13-16gb-256gb",
+        "productId": "macbook-air",
+        "title": "MacBook Air 13-inch (16GB / 256GB)",
+        "screenSize": "13-inch",
+        "memory": "16GB",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 13500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "mba-13-16gb-512gb",
+        "productId": "macbook-air",
+        "title": "MacBook Air 13-inch (16GB / 512GB)",
+        "screenSize": "13-inch",
+        "memory": "16GB",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 16000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "mba-15-16gb-256gb",
+        "productId": "macbook-air",
+        "title": "MacBook Air 15-inch (16GB / 256GB)",
+        "screenSize": "15-inch",
+        "memory": "16GB",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 18500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      },
+      {
+        "id": "mba-15-16gb-512gb",
+        "productId": "macbook-air",
+        "title": "MacBook Air 15-inch (16GB / 512GB)",
+        "screenSize": "15-inch",
+        "memory": "16GB",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 21000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 4
+      }
+    ]
+  },
+  "mac-mini": {
+    "price": 8500,
+    "condition": "Brand New",
+    "variants": [
+      {
+        "id": "mm-m6-16gb-256gb",
+        "productId": "mac-mini",
+        "title": "Mac mini M6 (16GB / 256GB)",
+        "chip": "M6",
+        "memory": "16GB",
+        "storage": "256GB",
+        "condition": "Brand New",
+        "price": 8500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 1
+      },
+      {
+        "id": "mm-m6-16gb-512gb",
+        "productId": "mac-mini",
+        "title": "Mac mini M6 (16GB / 512GB)",
+        "chip": "M6",
+        "memory": "16GB",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 11000,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 2
+      },
+      {
+        "id": "mm-m5pro-24gb-512gb",
+        "productId": "mac-mini",
+        "title": "Mac mini M5 Pro (24GB / 512GB)",
+        "chip": "M5 Pro",
+        "memory": "24GB",
+        "storage": "512GB",
+        "condition": "Brand New",
+        "price": 21500,
+        "previousPrice": null,
+        "isSale": false,
+        "stockStatus": "In Stock",
+        "stockQuantity": 10,
+        "available": true,
+        "position": 3
+      }
+    ]
+  },
   "iphone-18-pro": {
     "price": 20500,
     "condition": "Brand New",

@@ -81,6 +81,9 @@ import type { Product, ProductImage } from "../types/product";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "./catalogueProductImages";
 
 export const localPremiumImageBySlug: Record<string, string> = {
+  "iphone-18-pro": "/products/homepage/iphone-18-pro-hero-2x.webp",
+  "iphone-18-pro-max": "/products/homepage/iphone-18-pro-hero-2x.webp",
+  "iphone-duo": "/products/homepage/iphone-duo.webp",
   "iphone-16-pro-max": iphone16ProMaxPremium,
   "iphone-16-pro": iphone16ProPremium,
   "iphone-16-plus": iphone16PlusPremium,
@@ -118,6 +121,7 @@ export const localPremiumImageBySlug: Record<string, string> = {
   "ipad-air-13-inch-m3": ipadAir13M3Premium,
   "ipad-air-11-inch-m4": ipadAir11M4Premium,
   "ipad-air-13-inch-m4": ipadAir13M4Premium,
+  "ipad-air": "/products/homepage/homepage-ipad-air-white.webp",
   "ipad-pro-11-inch-m2": ipadPro11M2Premium,
   "ipad-pro-12-9-inch-m2": ipadPro129M2Premium,
   "ipad-pro-11-inch-m4": ipadPro11M4Premium,
@@ -132,10 +136,15 @@ export const localPremiumImageBySlug: Record<string, string> = {
   "apple-watch-series-9": appleWatchSeries9Premium,
   "apple-watch-series-10": appleWatchSeries10Premium,
   "apple-watch-series-11": appleWatchSeries11Premium,
+  "apple-watch-series-12": "/products/homepage/watch-series-12.webp",
+  "watch-series-12": "/products/homepage/watch-series-12.webp",
   "apple-watch-ultra": appleWatchUltraPremium,
   "apple-watch-ultra-2": appleWatchUltra2Premium,
   "apple-watch-ultra-3": appleWatchUltra3Premium,
+  "apple-watch-ultra-4": "/products/homepage/watch-ultra-4.webp",
+  "watch-ultra-4": "/products/homepage/watch-ultra-4.webp",
   "apple-watch": appleWatchPremium,
+  "macbook-air": "/products/homepage/macbook-air.jpg",
   "macbook-air-13-m1": macbookAir13M1Premium,
   "macbook-air-13-m2": macbookAir13M2Premium,
   "macbook-air-15-m2": macbookAir15M2Premium,
@@ -160,6 +169,7 @@ export const localPremiumImageBySlug: Record<string, string> = {
   "macbook-pro-14-m5": macbookPro14M5Premium,
   "macbook-pro-14-m5-pro-max": macbookPro14M5ProMaxPremium,
   "macbook-pro-16-m5-pro-max": macbookPro16M5Premium,
+  "mac-mini": "/products/homepage/mac-mini-device.jpg",
 };
 
 export function hasLocalPremiumImage(slug: string) {

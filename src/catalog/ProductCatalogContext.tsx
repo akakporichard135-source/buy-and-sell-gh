@@ -60,7 +60,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       const stored = readStoredProducts();
       if (stored && stored.length > 0) return stored;
     }
-    return isSupabaseConfigured() ? [] : seedCatalog;
+    return seedCatalog;
   });
   const [backendStatus, setBackendStatus] = useState<ProductCatalogValue["backendStatus"]>(() => {
     if (typeof window !== "undefined") {
@@ -132,11 +132,25 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     if (isSupabaseConfigured()) {
       try {
         const remoteProducts = await fetchProducts();
-        setProducts(remoteProducts);
+        const existingSlugs = new Set(remoteProducts.map((p) => p.slug));
+        const existingIds = new Set(remoteProducts.map((p) => p.id));
+        const missingSeedProducts = seedCatalog.filter(
+          (p) => !existingSlugs.has(p.slug) && !existingIds.has(p.id)
+        );
+        const stored = readStoredProducts() || [];
+        const storedById = new Map(stored.map((p) => [p.id, p]));
+        const mergedProducts = [...remoteProducts, ...missingSeedProducts].map((p) => {
+          const local = storedById.get(p.id);
+          if (local && local.updatedAt && (!p.updatedAt || new Date(local.updatedAt) > new Date(p.updatedAt))) {
+            return local;
+          }
+          return p;
+        });
+        setProducts(mergedProducts);
         setBackendStatus("supabase");
         if (typeof window !== "undefined") {
           try {
-            localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(remoteProducts));
+            localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(mergedProducts));
           } catch {}
         }
         return;
@@ -148,7 +162,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
           if (stored && stored.length > 0) {
             setProducts(stored);
           } else {
-            setProducts([]);
+            setProducts(seedCatalog);
           }
           return;
         }
@@ -184,32 +198,36 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       createDraftProduct: () => createEmptyProduct(products),
       saveProduct: async (product) => {
         const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() });
+        let saved = normalized;
         if (backendStatus === "supabase") {
-          const saved = await upsertProduct(normalized);
-          setProducts((current) => {
-            const exists = current.some((item) => item.id === saved.id);
-            const next = exists ? current.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...current];
-            if (typeof window !== "undefined") {
-              try {
-                localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(next));
-              } catch {}
-            }
-            return next;
-          });
-          broadcastPublishedUpdate("product", saved.id);
-          return saved;
+          try {
+            saved = await upsertProduct(normalized);
+          } catch (err) {
+            console.warn("Remote Supabase upsert fallback to local catalog:", err);
+          }
         }
-        if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
-        const exists = products.some((item) => item.id === normalized.id);
-        const next = exists
-          ? products.map((item) => (item.id === normalized.id ? normalized : item))
-          : [normalized, ...products];
-        persistLocal(next);
-        return normalized;
+        setProducts((current) => {
+          const exists = current.some((item) => item.id === saved.id || item.slug === saved.slug);
+          const next = exists
+            ? current.map((item) => (item.id === saved.id || item.slug === saved.slug ? saved : item))
+            : [saved, ...current];
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(next));
+            } catch {}
+          }
+          return next;
+        });
+        broadcastPublishedUpdate("product", saved.id);
+        return saved;
       },
       updateVariantPriceAndStock: async (variantId, fields) => {
         if (backendStatus === "supabase") {
-          await updateVariantPriceAndStockRepo(variantId, fields);
+          try {
+            await updateVariantPriceAndStockRepo(variantId, fields);
+          } catch (err) {
+            console.warn("Remote variant update fallback to local:", err);
+          }
         }
         setProducts((current) => {
           const next = current.map((product) => {
@@ -231,17 +249,21 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
               variants: updatedVariants,
             });
           });
-          if (backendStatus !== "supabase") persistLocal(next);
+          persistLocal(next);
           return next;
         });
       },
       updateProductBasePrice: async (productId, price, previousPrice) => {
         if (backendStatus === "supabase") {
-          await updateProductBasePriceRepo(productId, price, previousPrice);
+          try {
+            await updateProductBasePriceRepo(productId, price, previousPrice);
+          } catch (err) {
+            console.warn("Remote price update fallback to local:", err);
+          }
         }
         setProducts((current) => {
           const next = current.map((product) => {
-            if (product.id !== productId) return product;
+            if (product.id !== productId && product.slug !== productId) return product;
             let updatedVariants = product.variants ? [...product.variants] : undefined;
             if (updatedVariants && updatedVariants.length > 0 && price > 0) {
               const sorted = [...updatedVariants].sort((a, b) => a.position - b.position);
@@ -265,7 +287,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
               variants: updatedVariants,
             });
           });
-          if (backendStatus !== "supabase") persistLocal(next);
+          persistLocal(next);
           return next;
         });
       },

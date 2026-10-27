@@ -33,9 +33,10 @@ export function productBadgeClass(label: string) {
   return "product-badge";
 }
 
-export const iphoneGenerationOptions = ["iPhone 17", "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11"];
+export const iphoneGenerationOptions = ["iPhone 18", "iPhone Duo", "iPhone 17", "iPhone 16", "iPhone 15", "iPhone 14", "iPhone 13", "iPhone 12", "iPhone 11"];
 
 const iphoneNewestOrder = [
+  "iphone-18-pro-max", "iphone-18-pro", "iphone-duo",
   "iphone-17-pro-max", "iphone-17-pro", "iphone-air", "iphone-17",
   "iphone-16-pro-max", "iphone-16-pro", "iphone-16-plus", "iphone-16", "iphone-16e",
   "iphone-15-pro-max", "iphone-15-pro", "iphone-15-plus", "iphone-15",
@@ -48,6 +49,7 @@ const iphoneNewestOrder = [
 export function getIphoneGeneration(product: Product) {
   if (product.generation?.startsWith("iPhone ")) return product.generation;
   if (product.slug === "iphone-air") return "iPhone 17";
+  if (product.slug === "iphone-duo" || product.name.includes("iPhone Duo")) return "iPhone Duo";
   const match = product.model.match(/iPhone\s+(\d{2})/i);
   return match ? `iPhone ${match[1]}` : "";
 }
@@ -65,6 +67,7 @@ export const ipadFamilyOptions = ["iPad", "iPad mini", "iPad Air", "iPad Pro"] a
 
 const ipadNewestOrder = [
   "ipad-pro-13-inch-m5", "ipad-pro-11-inch-m5",
+  "ipad-air",
   "ipad-air-13-inch-m4", "ipad-air-11-inch-m4",
   "ipad-air-13-inch-m3", "ipad-air-11-inch-m3",
   "ipad-pro-13-inch-m4", "ipad-pro-11-inch-m4",
@@ -94,6 +97,7 @@ export function compareIpadsNewest(a: Product, b: Product) {
 export const watchFamilyOptions = ["Apple Watch SE", "Apple Watch Series", "Apple Watch Ultra"] as const;
 
 const watchNewestOrder = [
+  "apple-watch-ultra-4", "watch-ultra-4", "apple-watch-series-12", "watch-series-12",
   "apple-watch-ultra-3", "apple-watch-series-11", "apple-watch-se-3",
   "apple-watch-series-10", "apple-watch-ultra-2", "apple-watch-series-9",
   "apple-watch-series-8", "apple-watch-ultra", "apple-watch-series-7",
@@ -117,10 +121,11 @@ export function compareWatchesNewest(a: Product, b: Product) {
   return aIndex - bIndex;
 }
 
-export const macbookFamilyOptions = ["MacBook Air", "MacBook Pro"] as const;
-export const macbookGenerationOptions = ["M5", "M4", "M3", "M2", "M1"] as const;
+export const macbookFamilyOptions = ["MacBook Air", "MacBook Pro", "Mac mini"] as const;
+export const macbookGenerationOptions = ["M6", "M5", "M4", "M3", "M2", "M1"] as const;
 
 const macbookNewestOrder = [
+  "mac-mini", "macbook-air",
   "macbook-air-13-m5", "macbook-air-15-m5",
   "macbook-pro-14-m5", "macbook-pro-14-m5-pro-max", "macbook-pro-16-m5-pro-max",
   "macbook-air-13-m4", "macbook-air-15-m4",
@@ -136,6 +141,7 @@ export function getMacbookFamily(product: Product) {
   const searchable = [product.subcategory, product.name, product.model].filter(Boolean).join(" ").toLowerCase();
   if (searchable.includes("macbook air")) return "MacBook Air";
   if (searchable.includes("macbook pro")) return "MacBook Pro";
+  if (searchable.includes("mac mini") || product.slug === "mac-mini") return "Mac mini";
   return "";
 }
 
