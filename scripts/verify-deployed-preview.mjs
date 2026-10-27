@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const ARTIFACTS_DIR = 'C:\\Users\\akakp\\.gemini\\antigravity\\brain\\6c721dee-7d06-4a2d-92fb-b74a2b38f58f';
-const BASE_URL = 'https://buy-and-sell-npzfzklw4-richard-akakpo-s-projects.vercel.app';
+const BASE_URL = 'https://buy-and-sell-ngxihcotb-richard-akakpo-s-projects.vercel.app';
 
 async function run() {
   console.log(`\n======================================================`);
@@ -95,7 +95,7 @@ async function run() {
     const videoCard = document.querySelector('[data-testid="outline-card-video"]');
     const emptyInspector = document.querySelector('[data-testid="empty-inspector"]');
     const topbarTitle = document.querySelector('.vlearn-topbar-title')?.textContent?.trim();
-    const topbarThumb = document.querySelector('.vlearn-topbar-thumb img')?.getAttribute('src');
+    const topbarThumb = document.querySelector('img.vlearn-topbar-thumb')?.getAttribute('src');
 
     return {
       hasEmptyOutlineState: Boolean(emptyState),
