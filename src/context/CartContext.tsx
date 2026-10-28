@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import type { CartItem, Product, ProductVariant } from "../types/product";
-import { isProductImageEligible } from "../utils/productImages";
 import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
 interface CartContextValue {
@@ -71,20 +70,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   const resolveSelection = (product: Product, variant?: ProductVariant) => {
+    if (loading || (import.meta.env.PROD && backendStatus !== "supabase")) {
+      setToast("Please wait for current product availability to load.");
+      return null;
+    }
     const liveProduct = getProductBySlug(product.slug);
     if (!liveProduct) {
+      if (backendStatus === "supabase") {
+        setToast("This product is not available in the current catalogue.");
+        return null;
+      }
       return { product, variant };
     }
-    if (liveProduct.archived || isSoldOut(liveProduct)) {
+    if (liveProduct.archived || liveProduct.available === false || isSoldOut(liveProduct)) {
       setToast(`${liveProduct.name} is currently out of stock.`);
       return null;
     }
     // Match variant by ID first, then by title, or retain the configured variant
     const liveVariant = variant
       ? (liveProduct.variants?.find((candidate) => candidate.id === variant.id) ||
-         liveProduct.variants?.find((candidate) => candidate.title === variant.title) ||
-         variant)
+         liveProduct.variants?.find((candidate) => candidate.title === variant.title))
       : undefined;
+    if (variant && !liveVariant && backendStatus === "supabase") {
+      setToast("This product configuration is no longer available.");
+      return null;
+    }
 
     return { product: liveProduct, variant: liveVariant ?? variant };
   };
@@ -98,8 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         if (
           catalogProd &&
           catalogProd.id !== item.product.id &&
-          !isSoldOut(catalogProd) &&
-          isProductImageEligible(catalogProd)
+          !isSoldOut(catalogProd)
         ) {
           changed = true;
           return {

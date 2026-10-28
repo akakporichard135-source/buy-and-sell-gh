@@ -6,7 +6,6 @@ import {
   type ProductFamilyKey,
 } from "../catalog/productExperience";
 import type { Product } from "../types/product";
-import { getIpadFamily, getMacbookFamily, getWatchFamily } from "../utils/productPresentation";
 
 import { IphoneBuyExperience } from "../components/buy/IphoneBuyExperience";
 import { WatchSeries12BuyExperience } from "../components/buy/WatchSeries12BuyExperience";
@@ -20,23 +19,31 @@ import { IpadProBuyExperience } from "../components/buy/IpadProBuyExperience";
 import { IphoneDuoPricingExperience } from "../components/buy/IphoneDuoPricingExperience";
 import { GenericBuyExperience } from "../components/buy/GenericBuyExperience";
 
-import { getProductBySlug } from "../data/products";
 
 export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   const { slug = "" } = useParams();
   const { activeProducts, products: allProducts, backendStatus } = useProductCatalog();
 
   const candidates = useMemo(() => {
-    const exact = allProducts.find((product) => product.slug === slug);
+    const exact = allProducts.find((product) => product.slug === slug && familyMatchesProduct(product, family));
     if (exact) return [exact];
     const active = resolveCandidates(activeProducts, family, slug);
     if (active.length > 0) return active;
     const all = resolveCandidates(allProducts, family, slug);
     if (all.length > 0) return all;
-    const staticItem = getProductBySlug(slug);
-    return staticItem ? [staticItem] : [];
+    return [];
   }, [activeProducts, allProducts, family, slug]);
   const primaryProduct = candidates[0];
+
+  if (backendStatus === "error") {
+    return <section className="page-hero"><h1>Catalogue unavailable</h1><p>Product details could not be loaded. Please try again shortly.</p></section>;
+  }
+  if (backendStatus !== "supabase" && import.meta.env.PROD) {
+    return <section className="page-hero"><h1>Loading product</h1><p>Please wait while the catalogue loads.</p></section>;
+  }
+  if (!primaryProduct && backendStatus === "supabase") {
+    return <GenericBuyExperience family={family} slug={slug} />;
+  }
 
   // 1. iPhone Duo: Special VIEW PRICING Experience
   if (slug === "iphone-duo") {
@@ -120,22 +127,12 @@ function resolveCandidates(products: Product[], family: ProductFamilyKey, slug: 
   );
   if (familySlugMatch) return [familySlugMatch];
 
-  if (family === "mac" && slug === "macbook-air") return familyProducts.filter((product) => getMacbookFamily(product) === "MacBook Air");
-  if (family === "mac" && slug === "macbook-pro") return familyProducts.filter((product) => getMacbookFamily(product) === "MacBook Pro");
-  if (family === "ipad" && slug === "ipad-air") return familyProducts.filter((product) => getIpadFamily(product) === "iPad Air");
-  if (family === "ipad" && slug === "ipad-pro") return familyProducts.filter((product) => getIpadFamily(product) === "iPad Pro");
-  if (family === "watch" && slug.includes("ultra")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Ultra");
-  if (family === "watch" && slug.includes("series")) return familyProducts.filter((product) => getWatchFamily(product) === "Apple Watch Series");
   if (family === "accessories" && slug === "charging-and-power") {
     const magsafe = familyProducts.find((product) => product.slug === "apple-magsafe-charger");
     if (magsafe) return [magsafe];
     const adapter30 = familyProducts.find((product) => product.slug === "apple-30w-usb-c-power-adapter");
     if (adapter30) return [adapter30];
   }
-
-  // 4. Substring candidate match within family
-  const partial = familyProducts.filter((product) => product.slug.includes(normSlug) || normSlug.includes(product.slug.replace(/-inch-/g, "-")));
-  if (partial.length > 0) return partial;
 
   return [];
 }

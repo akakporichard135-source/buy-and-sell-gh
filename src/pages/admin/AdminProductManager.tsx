@@ -211,7 +211,7 @@ export function AdminProductManager() {
   // Authoritative catalogue metrics (storefront vs safely preserved archive)
   const storeCounts = useMemo(() => {
     const published = products.filter(
-      (p) => !p.archived && p.available !== false && isProductImageEligible(p)
+      (p) => !p.archived && p.available !== false
     );
     const inStock = published.filter(
       (p) => p.stockStatus === "In Stock" && p.stockQuantity > 0
@@ -258,7 +258,7 @@ export function AdminProductManager() {
 
       if (!isMaintenance) {
         // Everyday admin view: ONLY products currently published and visible on the public storefront
-        const isStorefrontProduct = !isArchived && isAvailable && isEligible;
+        const isStorefrontProduct = !isArchived && isAvailable;
         if (!isStorefrontProduct) return false;
       } else {
         // Restricted maintenance view: safely stored hidden or inactive records

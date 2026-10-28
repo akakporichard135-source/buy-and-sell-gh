@@ -67,6 +67,21 @@ export function ProductDetailsPage() {
     }
   }, [product]);
 
+  const hasOwnerImages = Boolean(product && hasOwnerUploadedProductImages(product));
+  const matchedFinishImage = product && !hasOwnerImages ? resolveProductColorImage(product, color) : undefined;
+  const baseGallery = product ? resolveProductGallery(product) : [];
+  const { images: publishedBuyGallery, isCustomPublished } = useBuyGallery(product, color);
+  const gallery = useMemo(() => {
+    if (isCustomPublished && publishedBuyGallery.length > 0) return publishedBuyGallery;
+    if (matchedFinishImage && product) {
+      return [
+        { src: matchedFinishImage, alt: `${product.name} in ${color}` },
+        ...baseGallery.filter((img) => img.src !== matchedFinishImage),
+      ];
+    }
+    return baseGallery;
+  }, [isCustomPublished, publishedBuyGallery, matchedFinishImage, product?.name, color, baseGallery]);
+
   if (loading) {
     return <section className="page-hero"><h1>Loading product</h1><p>Please wait while the catalogue loads.</p></section>;
   }
@@ -81,7 +96,7 @@ export function ProductDetailsPage() {
     );
   }
 
-  if (!product || !isProductImageEligible(product)) {
+  if (!product) {
     return (
       <section className="page-hero">
         <h1>Product not listed</h1>
@@ -90,24 +105,6 @@ export function ProductDetailsPage() {
       </section>
     );
   }
-
-  const hasOwnerImages = hasOwnerUploadedProductImages(product);
-  const matchedFinishImage = !hasOwnerImages ? resolveProductColorImage(product, color) : undefined;
-  const baseGallery = resolveProductGallery(product);
-  const { images: publishedBuyGallery, isCustomPublished } = useBuyGallery(product, color);
-
-  const gallery = useMemo(() => {
-    if (isCustomPublished && publishedBuyGallery.length > 0) {
-      return publishedBuyGallery;
-    }
-    if (matchedFinishImage) {
-      return [
-        { src: matchedFinishImage, alt: `${product.name} in ${color}` },
-        ...baseGallery.filter((img) => img.src !== matchedFinishImage),
-      ];
-    }
-    return baseGallery;
-  }, [isCustomPublished, publishedBuyGallery, matchedFinishImage, product.name, color, baseGallery]);
 
   const active = gallery[activeImage] ?? resolveProductImage(product);
   const selectedColorImage = matchedFinishImage ?? active?.src;

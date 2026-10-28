@@ -27,6 +27,7 @@ import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 import {
   buildDefaultBuyGallery,
   discardDraftBuyGallery,
+  fetchAllPublishedBuyGalleries,
   getDraftBuyGallerySync,
   getPublishedBuyGallerySync,
   publishBuyGallery,
@@ -85,18 +86,23 @@ export function AdminBuyPageGallery({
 
   // Sync when product changes
   useEffect(() => {
+    let active = true;
     const draft = getDraftBuyGallerySync(slug);
     if (draft) {
       setGallery(draft);
-      return;
+    } else {
+      setGallery(getPublishedBuyGallerySync(slug) || buildDefaultBuyGallery(product));
     }
-    const published = getPublishedBuyGallerySync(slug);
-    if (published) {
-      setGallery(published);
-      return;
-    }
-    setGallery(buildDefaultBuyGallery(product));
-  }, [slug, product]);
+    void fetchAllPublishedBuyGalleries(true)
+      .then((published) => {
+        if (!active) return;
+        setGallery((current) => current.hasDraft ? current : published[slug] || buildDefaultBuyGallery(product));
+      })
+      .catch((error: unknown) => {
+        if (active) setErrorMessage(error instanceof Error ? error.message : "Could not load the published gallery.");
+      });
+    return () => { active = false; };
+  }, [slug, product.id]);
 
   // Derived finish list
   const colorFinishes = useMemo(() => {

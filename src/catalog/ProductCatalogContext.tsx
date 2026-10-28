@@ -17,7 +17,6 @@ import {
   PRODUCT_CATALOG_STORAGE_KEY,
   createEmptyProduct,
   getProductBySlugFrom,
-  isProductImageEligible,
   normalizeProduct,
   readStoredProducts,
   seedCatalog,
@@ -56,6 +55,7 @@ const ProductCatalogContext = createContext<ProductCatalogValue | undefined>(und
 
 export function ProductCatalogProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(() => {
+    if (import.meta.env.PROD && isSupabaseConfigured()) return [];
     if (typeof window !== "undefined") {
       const stored = readStoredProducts();
       if (stored && stored.length > 0) return stored;
@@ -63,6 +63,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     return seedCatalog;
   });
   const [backendStatus, setBackendStatus] = useState<ProductCatalogValue["backendStatus"]>(() => {
+    if (import.meta.env.PROD && isSupabaseConfigured()) return "static-seed";
     if (typeof window !== "undefined") {
       const stored = readStoredProducts();
       if (stored && stored.length > 0) return "supabase";
@@ -132,25 +133,11 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     if (isSupabaseConfigured()) {
       try {
         const remoteProducts = await fetchProducts();
-        const existingSlugs = new Set(remoteProducts.map((p) => p.slug));
-        const existingIds = new Set(remoteProducts.map((p) => p.id));
-        const missingSeedProducts = seedCatalog.filter(
-          (p) => !existingSlugs.has(p.slug) && !existingIds.has(p.id)
-        );
-        const stored = readStoredProducts() || [];
-        const storedById = new Map(stored.map((p) => [p.id, p]));
-        const mergedProducts = [...remoteProducts, ...missingSeedProducts].map((p) => {
-          const local = storedById.get(p.id);
-          if (local && local.updatedAt && (!p.updatedAt || new Date(local.updatedAt) > new Date(p.updatedAt))) {
-            return local;
-          }
-          return p;
-        });
-        setProducts(mergedProducts);
+        setProducts(remoteProducts);
         setBackendStatus("supabase");
         if (typeof window !== "undefined") {
           try {
-            localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(mergedProducts));
+            localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(remoteProducts));
           } catch {}
         }
         return;
@@ -158,12 +145,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
         setError("Catalogue could not be loaded. Please check Supabase tables, RLS policies and network access.");
         setBackendStatus("error");
         if (import.meta.env.PROD) {
-          const stored = readStoredProducts();
-          if (stored && stored.length > 0) {
-            setProducts(stored);
-          } else {
-            setProducts(seedCatalog);
-          }
+          setProducts([]);
           return;
         }
       } finally {
@@ -184,7 +166,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
 
   const value = useMemo<ProductCatalogValue>(() => {
     const activeProducts = products.filter(
-      (product) => !product.archived && product.available !== false && isProductImageEligible(product)
+      (product) => !product.archived && product.available !== false
     );
 
     return {
@@ -198,39 +180,27 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       createDraftProduct: () => createEmptyProduct(products),
       saveProduct: async (product) => {
         const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() });
-        let saved = normalized;
         if (backendStatus === "supabase") {
-          try {
-            saved = await upsertProduct(normalized);
-          } catch (err) {
-            console.warn("Remote Supabase upsert fallback to local catalog:", err);
-          }
+          const saved = await upsertProduct(normalized);
+          await loadProducts();
+          broadcastPublishedUpdate("product", saved.id);
+          return saved;
         }
-        setProducts((current) => {
-          const exists = current.some((item) => item.id === saved.id || item.slug === saved.slug);
-          const next = exists
-            ? current.map((item) => (item.id === saved.id || item.slug === saved.slug ? saved : item))
-            : [saved, ...current];
-          if (typeof window !== "undefined") {
-            try {
-              localStorage.setItem(PRODUCT_CATALOG_STORAGE_KEY, JSON.stringify(next));
-            } catch {}
-          }
-          return next;
-        });
-        broadcastPublishedUpdate("product", saved.id);
-        return saved;
+        if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
+        const exists = products.some((item) => item.id === normalized.id || item.slug === normalized.slug);
+        persistLocal(exists
+          ? products.map((item) => (item.id === normalized.id || item.slug === normalized.slug ? normalized : item))
+          : [normalized, ...products]);
+        return normalized;
       },
       updateVariantPriceAndStock: async (variantId, fields) => {
         if (backendStatus === "supabase") {
-          try {
-            await updateVariantPriceAndStockRepo(variantId, fields);
-          } catch (err) {
-            console.warn("Remote variant update fallback to local:", err);
-          }
+          await updateVariantPriceAndStockRepo(variantId, fields);
+          await loadProducts();
+          return;
         }
-        setProducts((current) => {
-          const next = current.map((product) => {
+        if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
+        const next = products.map((product) => {
             const hasVariant = product.variants?.some((v) => v.id === variantId);
             if (!hasVariant) return product;
             const updatedVariants = product.variants!.map((v) =>
@@ -248,21 +218,17 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
               previousPrice: lowestVar?.previousPrice ?? product.previousPrice,
               variants: updatedVariants,
             });
-          });
-          persistLocal(next);
-          return next;
         });
+        persistLocal(next);
       },
       updateProductBasePrice: async (productId, price, previousPrice) => {
         if (backendStatus === "supabase") {
-          try {
-            await updateProductBasePriceRepo(productId, price, previousPrice);
-          } catch (err) {
-            console.warn("Remote price update fallback to local:", err);
-          }
+          await updateProductBasePriceRepo(productId, price, previousPrice);
+          await loadProducts();
+          return;
         }
-        setProducts((current) => {
-          const next = current.map((product) => {
+        if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
+        const next = products.map((product) => {
             if (product.id !== productId && product.slug !== productId) return product;
             let updatedVariants = product.variants ? [...product.variants] : undefined;
             if (updatedVariants && updatedVariants.length > 0 && price > 0) {
@@ -286,10 +252,8 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
               priceOnRequest: price <= 0,
               variants: updatedVariants,
             });
-          });
-          persistLocal(next);
-          return next;
         });
+        persistLocal(next);
       },
       archiveProduct: async (productId) => {
         if (backendStatus === "supabase") {

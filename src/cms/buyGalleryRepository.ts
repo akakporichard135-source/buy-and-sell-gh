@@ -41,6 +41,8 @@ const STORAGE_KEY_DRAFTS = "buy_galleries_drafts_v1";
 // In-memory fast cache
 let publishedCache: Record<string, ProductBuyGallery> | null = null;
 let draftCache: Record<string, ProductBuyGallery> | null = null;
+let publishedLoaded = false;
+let publishedLoadPromise: Promise<Record<string, ProductBuyGallery>> | null = null;
 
 function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -162,12 +164,37 @@ export function buildDefaultBuyGallery(product: Product, finish?: string): Produ
 /**
  * Synchronous read of published gallery from cache or localStorage
  */
-export function getPublishedBuyGallerySync(slug: string): ProductBuyGallery | null {
+export function getPublishedBuyGallerySync(slug: string, fallbackCandidates?: string[]): ProductBuyGallery | null {
   if (!slug) return null;
   if (!publishedCache) {
-    publishedCache = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
+    publishedCache = isSupabaseConfigured() && !isPreviewEnvironment()
+      ? {}
+      : readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
   }
-  return publishedCache[slug] || null;
+  if (publishedCache[slug]) return publishedCache[slug];
+
+  // Check normalized slug (e.g. without "-inch-")
+  const normSlug = slug.replace(/-inch-/g, "-").toLowerCase();
+  for (const [key, val] of Object.entries(publishedCache)) {
+    if (key.replace(/-inch-/g, "-").toLowerCase() === normSlug) {
+      return val;
+    }
+  }
+
+  // Check fallback candidates
+  if (fallbackCandidates && fallbackCandidates.length > 0) {
+    for (const cand of fallbackCandidates) {
+      if (publishedCache[cand]) return publishedCache[cand];
+      const normCand = cand.replace(/-inch-/g, "-").toLowerCase();
+      for (const [key, val] of Object.entries(publishedCache)) {
+        if (key.replace(/-inch-/g, "-").toLowerCase() === normCand) {
+          return val;
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -184,32 +211,40 @@ export function getDraftBuyGallerySync(slug: string): ProductBuyGallery | null {
 /**
  * Fetch all published galleries from Supabase storefront_content
  */
-export async function fetchAllPublishedBuyGalleries(): Promise<Record<string, ProductBuyGallery>> {
+export async function fetchAllPublishedBuyGalleries(force = false): Promise<Record<string, ProductBuyGallery>> {
   const local = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
   if (!supabase || !isSupabaseConfigured()) {
     publishedCache = local;
+    publishedLoaded = true;
     return local;
   }
+  if (publishedLoaded && !force) return publishedCache ?? {};
+  if (publishedLoadPromise) return publishedLoadPromise;
 
-  try {
+  publishedLoadPromise = (async () => {
     const { data, error } = await supabase
       .from("storefront_content")
       .select("config")
       .eq("key", "buy_galleries")
       .maybeSingle();
-
-    if (!error && data?.config && typeof data.config === "object") {
-      const merged = { ...local, ...(data.config as Record<string, ProductBuyGallery>) };
-      publishedCache = merged;
-      writeStorage(STORAGE_KEY_PUBLISHED, merged);
-      return merged;
-    }
-  } catch {
-    // Graceful fallback
+    if (error) throw new Error(`Could not load published Buy galleries: ${error.message}`);
+    const remote = data?.config && typeof data.config === "object" && !Array.isArray(data.config)
+      ? data.config as Record<string, ProductBuyGallery>
+      : {};
+    const resolved = isPreviewEnvironment() ? { ...remote, ...local } : remote;
+    publishedCache = resolved;
+    publishedLoaded = true;
+    writeStorage(STORAGE_KEY_PUBLISHED, resolved);
+    return resolved;
+  })();
+  try {
+    return await publishedLoadPromise;
+  } catch (error) {
+    if (!isPreviewEnvironment()) publishedCache = {};
+    throw error;
+  } finally {
+    publishedLoadPromise = null;
   }
-
-  publishedCache = local;
-  return local;
 }
 
 /**
@@ -237,23 +272,26 @@ export async function saveDraftBuyGallery(
     hasDraft: true,
   };
 
-  const drafts = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {});
+  const drafts = { ...readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {}) };
   drafts[slug] = updatedDraft;
+
+  if (supabase && isSupabaseConfigured() && !isPreviewEnvironment()) {
+    const { data, error: readError } = await supabase.from("storefront_content")
+      .select("config").eq("key", "buy_galleries_drafts").maybeSingle();
+    if (readError) throw new Error(`Could not load gallery drafts: ${readError.message}`);
+    const remoteDrafts = data?.config && typeof data.config === "object" && !Array.isArray(data.config)
+      ? data.config as Record<string, ProductBuyGallery>
+      : {};
+    const { error: saveError } = await supabase.from("storefront_content").upsert({
+      key: "buy_galleries_drafts",
+      config: { ...remoteDrafts, [slug]: updatedDraft },
+      updated_at: new Date().toISOString(),
+    });
+    if (saveError) throw new Error(`Could not save gallery draft: ${saveError.message}`);
+  }
+
   draftCache = drafts;
   writeStorage(STORAGE_KEY_DRAFTS, drafts);
-
-  // In production or when credentials exist, attempt to persist drafts to Supabase
-  if (supabase && isSupabaseConfigured() && !isPreviewEnvironment()) {
-    try {
-      await supabase.from("storefront_content").upsert({
-        key: "buy_galleries_drafts",
-        config: drafts,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      // Non-blocking fallback to local storage
-    }
-  }
 
   broadcastPublishedUpdate("product", slug);
   return updatedDraft;
@@ -273,7 +311,7 @@ export async function publishBuyGallery(
   if (!slug) throw new Error("Product slug is required");
 
   // Re-sort items by position and ensure primary image is index 0
-  const sortedItems = [...gallery.items].sort((a, b) => a.position - b.position);
+  const sortedItems = gallery.items.map((item) => ({ ...item })).sort((a, b) => a.position - b.position);
   let mainItemIndex = sortedItems.findIndex((it) => it.isMain);
   if (mainItemIndex < 0 && sortedItems.length > 0) {
     sortedItems[0].isMain = true;
@@ -290,46 +328,57 @@ export async function publishBuyGallery(
     });
   }
 
+  const remoteWrite = Boolean(supabase && isSupabaseConfigured() && !isPreviewEnvironment());
+  const currentPublished = remoteWrite
+    ? await fetchAllPublishedBuyGalleries(true)
+    : readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
+  const previousItems = currentPublished[slug]?.items;
+  const mainGalleryChanged = gallery.hasDraft && (!previousItems ||
+    JSON.stringify(previousItems) !== JSON.stringify(sortedItems));
   const published: ProductBuyGallery = {
     ...gallery,
     slug,
     items: sortedItems,
+    finishItems: mainGalleryChanged ? undefined : gallery.finishItems,
     updatedAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
     isPublished: true,
     hasDraft: false,
   };
+  const publishedMap = { ...currentPublished, [slug]: published };
+  if (remoteWrite && supabase) {
+    const { error: sbError } = await supabase.from("storefront_content").upsert({
+      key: "buy_galleries",
+      config: publishedMap,
+      updated_at: new Date().toISOString(),
+    });
+    if (sbError) throw new Error(`Failed to save published gallery to database: ${sbError.message}`);
+  }
 
-  // 1. Update published storage & fast cache
-  const publishedMap = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
-  publishedMap[slug] = published;
   publishedCache = publishedMap;
+  publishedLoaded = true;
   writeStorage(STORAGE_KEY_PUBLISHED, publishedMap);
-
-  // 2. Clear draft for this slug
-  const drafts = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {});
+  const drafts = { ...readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {}) };
   delete drafts[slug];
   draftCache = drafts;
   writeStorage(STORAGE_KEY_DRAFTS, drafts);
 
-  // 3. Update Supabase storefront_content
-  if (supabase && isSupabaseConfigured()) {
-    try {
-      if (!isPreviewEnvironment()) {
-        }
-      await supabase.from("storefront_content").upsert({
-        key: "buy_galleries",
-        config: publishedMap,
-        updated_at: new Date().toISOString(),
-      });
-      await supabase.from("storefront_content").upsert({
-        key: "buy_galleries_drafts",
-        config: drafts,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      // Non-blocking fallback
+  if (remoteWrite && supabase) {
+    const { data, error: readError } = await supabase.from("storefront_content")
+      .select("config").eq("key", "buy_galleries_drafts").maybeSingle();
+    if (readError) {
+      console.warn("Published gallery is live, but draft cleanup could not load drafts:", readError);
     }
+    const remoteDrafts = data?.config && typeof data.config === "object" && !Array.isArray(data.config)
+      ? { ...data.config as Record<string, ProductBuyGallery> }
+      : {};
+    delete remoteDrafts[slug];
+    const { error: draftError } = await supabase.from("storefront_content").upsert({
+      key: "buy_galleries_drafts",
+      config: remoteDrafts,
+      updated_at: new Date().toISOString(),
+    });
+    if (draftError) console.warn("Published gallery is live, but draft cleanup failed:", draftError);
   }
 
   // 4. Synchronize with Product record (images, thumbnail, primary_image)
@@ -380,22 +429,26 @@ export async function publishBuyGallery(
  * Discard draft and revert to published
  */
 export async function discardDraftBuyGallery(slug: string): Promise<void> {
-  const drafts = readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {});
+  if (supabase && isSupabaseConfigured() && !isPreviewEnvironment()) {
+    const { data, error: readError } = await supabase.from("storefront_content")
+      .select("config").eq("key", "buy_galleries_drafts").maybeSingle();
+    if (readError) throw new Error(`Could not load gallery drafts: ${readError.message}`);
+    const remoteDrafts = data?.config && typeof data.config === "object" && !Array.isArray(data.config)
+      ? { ...data.config as Record<string, ProductBuyGallery> }
+      : {};
+    delete remoteDrafts[slug];
+    const { error } = await supabase.from("storefront_content").upsert({
+      key: "buy_galleries_drafts",
+      config: remoteDrafts,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(`Could not discard gallery draft: ${error.message}`);
+  }
+
+  const drafts = { ...readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_DRAFTS, {}) };
   delete drafts[slug];
   draftCache = drafts;
   writeStorage(STORAGE_KEY_DRAFTS, drafts);
-
-  if (supabase && isSupabaseConfigured() && !isPreviewEnvironment()) {
-    try {
-      await supabase.from("storefront_content").upsert({
-        key: "buy_galleries_drafts",
-        config: drafts,
-        updated_at: new Date().toISOString(),
-      });
-    } catch {
-      // Non-blocking
-    }
-  }
 
   broadcastPublishedUpdate("product", slug);
 }
@@ -413,15 +466,27 @@ export function useBuyGallery(
   isCustomPublished: boolean;
 } {
   const slug = product?.slug || "";
-  const [version, setVersion] = useState(0);
+  const [, setVersion] = useState(0);
 
-  // Subscribe to live broadcasted updates
   useEffect(() => {
-    return subscribeToPublishedUpdates((msg) => {
+    let mounted = true;
+    const refresh = () => {
+      void fetchAllPublishedBuyGalleries(true)
+        .catch(() => null)
+        .then(() => {
+          if (mounted) setVersion((v) => v + 1);
+        });
+    };
+    refresh();
+    const unsubscribe = subscribeToPublishedUpdates((msg) => {
       if ((msg.type === "product" && (!msg.id || msg.id === slug)) || msg.type === "storefront") {
-        setVersion((v) => v + 1);
+        refresh();
       }
     });
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, [slug]);
 
   // Read published or build default
