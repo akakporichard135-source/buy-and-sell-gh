@@ -1,5 +1,5 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
-import { assertAdminAal2 } from "../admin/adminAuthorization";
+import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import type { Product, ProductCondition, ProductImage, ProductVariant } from "../types/product";
 import { normalizeProduct } from "./productCatalog";
 
@@ -513,6 +513,17 @@ export const uploadProductImage = async (file: File, productId: string, onProgre
   if (!(await hasValidImageSignature(file))) throw new Error("The selected file does not contain a valid supported image.");
 
   onProgress?.(10);
+  const alt = file.name.replace(/\.[^.]+$/, "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) || "Product image";
+  if (isLocalAdminActive()) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Could not read uploaded image."));
+      reader.readAsDataURL(file);
+    });
+    onProgress?.(100);
+    return { src: dataUrl, alt };
+  }
   const extension = imageExtensions[file.type as keyof typeof imageExtensions];
   const safeBaseName = file.name.toLowerCase().replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "product-image";
   const safeName = `${safeBaseName}.${extension}`;
@@ -527,7 +538,7 @@ export const uploadProductImage = async (file: File, productId: string, onProgre
   onProgress?.(90);
   const { data } = client.storage.from(productImagesBucket).getPublicUrl(path);
   onProgress?.(100);
-  return { src: data.publicUrl, alt: file.name.replace(/\.[^.]+$/, "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) || "Product image" };
+  return { src: data.publicUrl, alt };
 };
 
 const imageExtensions = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" } as const;

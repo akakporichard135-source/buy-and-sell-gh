@@ -5,6 +5,7 @@
 // ==============================================================================
 
 import { useState, useEffect } from "react";
+import { isLocalAdminActive, isPreviewMode } from "../admin/adminAuthorization";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 import { broadcastPublishedUpdate, subscribeToPublishedUpdates } from "../utils/imageVersioning";
@@ -66,7 +67,13 @@ function writeStorage<T>(key: string, data: T): void {
 function isPreviewEnvironment(): boolean {
   if (typeof window === "undefined") return false;
   const host = window.location.hostname;
-  return host.includes("vercel.app") || host.includes("localhost") || host === "127.0.0.1";
+  return (
+    host.includes("vercel.app") ||
+    host.includes("localhost") ||
+    host === "127.0.0.1" ||
+    isLocalAdminActive() ||
+    isPreviewMode()
+  );
 }
 
 /**
@@ -458,14 +465,15 @@ export async function discardDraftBuyGallery(slug: string): Promise<void> {
  */
 export function useBuyGallery(
   product?: Product,
-  selectedFinish?: string
+  selectedFinish?: string,
+  fallbackSlug?: string
 ): {
   gallery: ProductBuyGallery;
   images: { src: string; alt: string }[];
   mainImage: { src: string; alt: string };
   isCustomPublished: boolean;
 } {
-  const slug = product?.slug || "";
+  const slug = product?.slug || fallbackSlug || "";
   const [, setVersion] = useState(0);
 
   useEffect(() => {
@@ -490,26 +498,33 @@ export function useBuyGallery(
   }, [slug]);
 
   // Read published or build default
-  const published = getPublishedBuyGallerySync(slug);
+  const published = getPublishedBuyGallerySync(slug, fallbackSlug ? [fallbackSlug] : undefined);
   const defaultGallery = product ? buildDefaultBuyGallery(product, selectedFinish) : null;
   const activeGallery = published || defaultGallery;
 
-  // Resolve finish-specific images if available
-  let resolvedItems = activeGallery?.items || [];
-  if (selectedFinish && activeGallery?.finishItems?.[selectedFinish]?.length) {
+  // Resolve finish-specific images without overriding custom published items
+  let resolvedItems = [...(activeGallery?.items || [])];
+  if (!published && selectedFinish && activeGallery?.finishItems?.[selectedFinish]?.length) {
     resolvedItems = activeGallery.finishItems[selectedFinish];
-  }
-
-  // If a finish is selected and an item matches it, prioritize that finish item
-  if (selectedFinish && !activeGallery?.finishItems?.[selectedFinish]) {
-    const matchingFinishItem = resolvedItems.find(
-      (it) => it.colorFinish && it.colorFinish.toLowerCase() === selectedFinish.toLowerCase()
+  } else if (selectedFinish && resolvedItems.length > 0) {
+    const defaultFinish = (product?.defaultColor || product?.colors?.[0] || "").toLowerCase();
+    const normSelected = selectedFinish.toLowerCase();
+    const firstItemHasDifferentFinish = Boolean(
+      resolvedItems[0]?.colorFinish &&
+      resolvedItems[0].colorFinish.toLowerCase() !== normSelected
     );
-    if (matchingFinishItem) {
-      resolvedItems = [
-        matchingFinishItem,
-        ...resolvedItems.filter((it) => it.id !== matchingFinishItem.id),
-      ];
+    const isNonDefaultFinish = Boolean(defaultFinish && normSelected !== defaultFinish);
+
+    if (firstItemHasDifferentFinish || isNonDefaultFinish) {
+      const matchingFinishItem = resolvedItems.find(
+        (it) => it.colorFinish && it.colorFinish.toLowerCase() === normSelected
+      );
+      if (matchingFinishItem) {
+        resolvedItems = [
+          matchingFinishItem,
+          ...resolvedItems.filter((it) => it.id !== matchingFinishItem.id),
+        ];
+      }
     }
   }
 

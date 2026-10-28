@@ -135,7 +135,7 @@ export function GenericBuyExperience({
   const hasOwnerImages = Boolean(effectiveProduct && hasOwnerUploadedProductImages(effectiveProduct));
 
   // Determine active finish image & angle thumbnails
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(effectiveProduct, color);
+  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(effectiveProduct, color, slug);
 
   // Determine active finish image & angle thumbnails
   const matchedFinishImage = resolveProductColorImage(effectiveProduct, color, fallbackAsset);

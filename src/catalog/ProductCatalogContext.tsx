@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { isLocalAdminActive, isPreviewMode } from "../admin/adminAuthorization";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { broadcastPublishedUpdate, subscribeToPublishedUpdates } from "../utils/imageVersioning";
 import type { Product } from "../types/product";
@@ -116,6 +117,26 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     return () => window.removeEventListener("buyandsell-gh:admin-session-cleared", clearAdminCatalogue);
   }, []);
 
+  const ADMIN_TEST_PRODUCTS_KEY = "buyandsell-gh-admin-test-products-v1";
+  const readAdminTestProducts = (): Product[] => {
+    if (typeof window === "undefined" || (!isLocalAdminActive() && !isPreviewMode())) return [];
+    try {
+      const raw = localStorage.getItem(ADMIN_TEST_PRODUCTS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.map(normalizeProduct) : [];
+    } catch {
+      return [];
+    }
+  };
+  const writeAdminTestProducts = (items: Product[]) => {
+    if (typeof window === "undefined") return;
+    try {
+      if (items.length === 0) localStorage.removeItem(ADMIN_TEST_PRODUCTS_KEY);
+      else localStorage.setItem(ADMIN_TEST_PRODUCTS_KEY, JSON.stringify(items.map(normalizeProduct)));
+    } catch {}
+  };
+
   const persistLocal = (nextProducts: Product[]) => {
     const normalized = nextProducts.map(normalizeProduct);
     setProducts(normalized);
@@ -133,7 +154,16 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     if (isSupabaseConfigured()) {
       try {
         const remoteProducts = await fetchProducts();
-        setProducts(remoteProducts);
+        const testOverlay = readAdminTestProducts();
+        const merged = testOverlay.length > 0
+          ? [
+              ...testOverlay,
+              ...remoteProducts.filter(
+                (r) => !testOverlay.some((t) => t.id === r.id || t.slug === r.slug)
+              ),
+            ]
+          : remoteProducts;
+        setProducts(merged);
         setBackendStatus("supabase");
         if (typeof window !== "undefined") {
           try {
@@ -181,6 +211,17 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       saveProduct: async (product) => {
         const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() });
         if (backendStatus === "supabase") {
+          if (isLocalAdminActive()) {
+            const currentOverlay = readAdminTestProducts();
+            const existsInOverlay = currentOverlay.some((item) => item.id === normalized.id || item.slug === normalized.slug);
+            const nextOverlay = existsInOverlay
+              ? currentOverlay.map((item) => (item.id === normalized.id || item.slug === normalized.slug ? normalized : item))
+              : [normalized, ...currentOverlay];
+            writeAdminTestProducts(nextOverlay);
+            await loadProducts();
+            broadcastPublishedUpdate("product", normalized.id);
+            return normalized;
+          }
           const saved = await upsertProduct(normalized);
           await loadProducts();
           broadcastPublishedUpdate("product", saved.id);
@@ -266,6 +307,14 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       },
       deleteProduct: async (productId) => {
         if (backendStatus === "supabase") {
+          if (isLocalAdminActive()) {
+            const currentOverlay = readAdminTestProducts();
+            if (currentOverlay.some((item) => item.id === productId || item.slug === productId)) {
+              writeAdminTestProducts(currentOverlay.filter((item) => item.id !== productId && item.slug !== productId));
+              setProducts((current) => current.filter((product) => product.id !== productId && product.slug !== productId));
+              return;
+            }
+          }
           await deleteProductById(productId);
           setProducts((current) => current.filter((product) => product.id !== productId));
           return;
