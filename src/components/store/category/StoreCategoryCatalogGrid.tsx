@@ -87,6 +87,11 @@ export function StoreCategoryCatalogGrid({
 
   const availableConditions = Array.from(new Set(subnavFiltered.map((p) => p.condition))).filter(Boolean);
   const showConditionTabs = availableConditions.length > 1;
+  const rowCount = filtered.length >= 7 ? 3 : filtered.length >= 4 ? 2 : 1;
+  const productsPerRow = Math.ceil(filtered.length / rowCount);
+  const productRows = Array.from({ length: rowCount }, (_, index) =>
+    filtered.slice(index * productsPerRow, (index + 1) * productsPerRow)
+  ).filter((row) => row.length > 0);
 
   return (
     <section className="store-cat-catalog-section" id="all-listings" aria-labelledby="catalog-section-title">
@@ -130,8 +135,18 @@ export function StoreCategoryCatalogGrid({
           </div>
         ) : (
           <div className="store-cat-products-grid">
-            {filtered.map((product) => (
-              <StoreCatalogProductCard key={product.id} product={product} family={family} />
+            {productRows.map((row, index) => (
+              <div
+                className="store-cat-products-row"
+                key={index}
+                role="region"
+                aria-label={`${catalogTitle} row ${index + 1}`}
+                tabIndex={0}
+              >
+                {row.map((product) => (
+                  <StoreCatalogProductCard key={product.id} product={product} family={family} />
+                ))}
+              </div>
             ))}
           </div>
         )}
