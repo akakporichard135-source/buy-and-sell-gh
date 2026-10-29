@@ -498,8 +498,8 @@ async function run() {
       assert.equal(info.hasAddToBag, false, `${promo.path} must remain enquiry-only without enabled Add to Bag`);
     }
 
-    // Verify Add to Bag on canonical in-stock product (iPhone 18 Pro)
-    console.log("12. Verifying Add to Bag and Bag page with canonical in-stock product...");
+    // Verify Add to Bag on canonical in-stock product (iPhone 18 Pro) & Checkout page without submitting an order
+    console.log("12. Verifying Add to Bag and Checkout page with canonical in-stock product (without submitting order)...");
     await publicPage.goto(`${baseUrl}/shop/buy-iphone/iphone-18-pro`, { waitUntil: "domcontentloaded" });
     await publicPage.waitForFunction(
       () => {
@@ -520,7 +520,24 @@ async function run() {
     const cartRaw = await publicPage.evaluate(() => localStorage.getItem("buyandsell-gh-cart"));
     const cartItems = JSON.parse(cartRaw || "[]");
     assert.ok(cartItems.length > 0 && cartItems[0].product?.slug === "iphone-18-pro", "Cart must contain canonical iPhone 18 Pro");
-    report.addToBagAndCheckout = { passed: true, cartItemSlug: cartItems[0].product.slug, price: cartItems[0].product.price };
+
+    await publicPage.goto(`${baseUrl}/checkout`, { waitUntil: "domcontentloaded" });
+    await publicPage.waitForFunction(
+      () => document.body.innerText.includes("iPhone 18 Pro"),
+      { timeout: 20000 }
+    );
+    const checkoutVerified = await publicPage.evaluate(() => {
+      const text = document.body.innerText;
+      const hasInput = Boolean(document.querySelector("input, textarea, select"));
+      return text.includes("iPhone 18 Pro") && hasInput;
+    });
+    assert.ok(checkoutVerified, "Checkout page must render canonical bag item and form inputs without submitting an order");
+    report.addToBagAndCheckout = {
+      passed: true,
+      cartItemSlug: cartItems[0].product.slug,
+      price: cartItems[0].product.price,
+      checkoutPageVerified: checkoutVerified,
+    };
 
     // Verify Desktop Store Grid
     await publicPage.goto(`${baseUrl}/iphone`, { waitUntil: "domcontentloaded" });
@@ -528,41 +545,122 @@ async function run() {
     await new Promise((r) => setTimeout(r, 1000));
     const desktopGrid = await publicPage.$eval(".store-cat-products-grid", (el) => {
       const css = getComputedStyle(el);
-      return { flow: css.gridAutoFlow, cols: css.gridTemplateColumns.split(" ").length };
+      const rowCss = el.querySelector(".store-cat-products-row")
+        ? getComputedStyle(el.querySelector(".store-cat-products-row")).display
+        : "none";
+      return {
+        display: css.display,
+        rowDisplay: rowCss,
+        cols: css.gridTemplateColumns.split(" ").length,
+      };
     });
-    assert.equal(desktopGrid.flow, "row", "Desktop Store must use standard row grid flow");
+    assert.equal(desktopGrid.display, "grid", "Desktop Store must use standard CSS grid");
+    assert.equal(desktopGrid.rowDisplay, "contents", "Desktop Store rows must use display: contents");
     assert.ok(desktopGrid.cols >= 3, "Desktop Store must display multiple columns");
     report.desktopStoreGrid = desktopGrid;
 
-    // Verify Mobile Store 3-row Horizontal Swiping across all 6 departments
-    console.log("13. Verifying Mobile Store 3-row horizontal swiping across all 6 departments...");
-    await publicPage.setViewport({ width: 390, height: 844 });
+    // Verify Mobile Store Independent Row Horizontal Scrolling & Vertical Scrolling across all 6 departments
+    console.log("13. Verifying Mobile Store independent horizontal row scrolling & vertical scrolling across all 6 departments...");
+    await publicPage.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
     const mobileDepartments = {};
     for (const dept of ["/iphone", "/mac", "/ipad", "/watch", "/airpods", "/accessories"]) {
       await publicPage.goto(`${baseUrl}${dept}`, { waitUntil: "domcontentloaded" });
       await publicPage.waitForSelector(".store-cat-products-grid", { timeout: 30000 });
       await new Promise((r) => setTimeout(r, 1000));
-      const metrics = await publicPage.$eval(".store-cat-products-grid", (el) => {
-        const css = getComputedStyle(el);
-        const before = el.scrollLeft;
-        el.scrollLeft = 320;
-        const after = el.scrollLeft;
+      const metrics = await publicPage.evaluate(() => {
+        const grid = document.querySelector(".store-cat-products-grid");
+        const rows = [...document.querySelectorAll(".store-cat-products-row")];
+        const productCount = grid ? grid.querySelectorAll(".store-cat-grid-card").length : 0;
+        const expectedRows = productCount >= 7 ? 3 : productCount >= 4 ? 2 : 1;
+
+        const rowDetails = rows.map((row) => ({
+          cards: row.querySelectorAll(".store-cat-grid-card").length,
+          scrollWidth: row.scrollWidth,
+          clientWidth: row.clientWidth,
+          cardWidth: row.querySelector(".store-cat-grid-card")?.getBoundingClientRect().width || 0,
+        }));
+
+        const independentScrollChecks = rows.map((_, targetIdx) => {
+          rows.forEach((r) => {
+            r.scrollLeft = 0;
+          });
+          rows[targetIdx].scrollLeft = 180;
+          const offsetsAfterLeft = rows.map((r) => r.scrollLeft);
+          const movedOnlyTargetLeft =
+            offsetsAfterLeft[targetIdx] > 0 &&
+            offsetsAfterLeft.every((val, idx) => idx === targetIdx || val === 0);
+
+          rows[targetIdx].scrollLeft = 0;
+          const offsetsAfterRight = rows.map((r) => r.scrollLeft);
+          const movedBackRight = offsetsAfterRight.every((val) => val === 0);
+          return movedOnlyTargetLeft && movedBackRight;
+        });
+
         return {
-          flow: css.gridAutoFlow,
-          rows: css.gridTemplateRows.split(" ").length,
-          scrollWidth: el.scrollWidth,
-          clientWidth: el.clientWidth,
-          scrolled: after > before,
+          productCount,
+          expectedRows,
+          actualRows: rows.length,
+          rowDetails,
+          allRowsIndependent: independentScrollChecks.every(Boolean),
           pageScrollWidth: document.documentElement.scrollWidth,
           viewportWidth: window.innerWidth,
         };
       });
-      assert.equal(metrics.flow, "column", `${dept} mobile grid must use column flow`);
-      assert.equal(metrics.rows, 3, `${dept} mobile grid must have 3 rows`);
+
+      assert.equal(metrics.actualRows, metrics.expectedRows, `${dept} must have ${metrics.expectedRows} independent row(s)`);
+      assert.ok(metrics.allRowsIndependent, `${dept} rows must scroll left and right independently without moving other rows`);
+      assert.ok(
+        metrics.rowDetails.every((r) => Math.abs(r.cardWidth - r.clientWidth) < 2),
+        `${dept} mobile cards must maintain full width without shrinking`
+      );
       assert.ok(metrics.pageScrollWidth <= metrics.viewportWidth + 2, `${dept} must not overflow horizontally`);
       mobileDepartments[dept] = metrics;
     }
-    report.mobileStoreSwipe = { passed: true, departments: mobileDepartments };
+
+    // Touch gesture verification on /iphone (horizontal left, horizontal right, and vertical page scroll)
+    await publicPage.goto(`${baseUrl}/iphone`, { waitUntil: "domcontentloaded" });
+    await publicPage.waitForSelector(".store-cat-products-row", { timeout: 30000 });
+    await new Promise((r) => setTimeout(r, 800));
+    await publicPage.$eval(".store-cat-products-row:first-child .store-cat-grid-card-img", (img) =>
+      img.scrollIntoView({ block: "center", behavior: "instant" })
+    );
+    await new Promise((r) => setTimeout(r, 300));
+    const center = await publicPage.$eval(".store-cat-products-row:first-child .store-cat-grid-card-img", (img) => {
+      const rect = img.getBoundingClientRect();
+      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    });
+
+    // Swipe left on Row 1
+    await publicPage.touchscreen.touchStart(center.x, center.y);
+    for (let s = 1; s <= 6; s++) {
+      await publicPage.touchscreen.touchMove(center.x - s * 25, center.y);
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    await publicPage.touchscreen.touchEnd();
+    await new Promise((r) => setTimeout(r, 250));
+    const afterSwipeLeft = await publicPage.evaluate(() =>
+      [...document.querySelectorAll(".store-cat-products-row")].map((r) => r.scrollLeft)
+    );
+    assert.ok(afterSwipeLeft[0] > 0 && afterSwipeLeft[1] === 0 && afterSwipeLeft[2] === 0, "Touch swipe left on Row 1 must move only Row 1");
+
+    // Swipe up (vertical scroll) starting on Row 1 image
+    const beforeY = await publicPage.evaluate(() => window.scrollY);
+    await publicPage.touchscreen.touchStart(center.x, center.y);
+    for (let s = 1; s <= 6; s++) {
+      await publicPage.touchscreen.touchMove(center.x, center.y - s * 22);
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    await publicPage.touchscreen.touchEnd();
+    await new Promise((r) => setTimeout(r, 250));
+    const afterY = await publicPage.evaluate(() => window.scrollY);
+    assert.ok(afterY > beforeY, "Vertical touch gesture on product row must scroll the page vertically");
+
+    report.mobileStoreSwipe = {
+      passed: true,
+      independentHorizontalTouchVerified: true,
+      verticalPageTouchScrollVerified: true,
+      departments: mobileDepartments,
+    };
     report.canonicalConsistency = {
       passed: true,
       iphone18ProImages: gallery18ProBuy.length,
