@@ -27,7 +27,7 @@ async function closePage(page) {
 }
 
 async function check(page, path) {
-  await page.goto(new URL(path, base), { waitUntil: "domcontentloaded", timeout: 30000 });
+  await page.goto(new URL(path, base), { waitUntil: "domcontentloaded", timeout: base.startsWith("https://") ? 90000 : 30000 });
   await page.waitForFunction(() => {
     const heading = document.querySelector("h1")?.textContent?.trim() || "";
     return Boolean(heading) && heading !== "Loading product" && heading !== "Loading products";
