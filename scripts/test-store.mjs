@@ -27,7 +27,8 @@ export function testStore({ presentation, product, productEditor, repository, ca
   assert.equal(productImages.resolveProductImage(missingCleanPhoto), undefined, "Accessories without a clean local asset use the existing placeholder");
   assert.equal(productImages.resolveProductImage({ ...missingCleanPhoto, images: [ownerPhoto] })?.src, ownerPhoto.src, "A real uploaded photo still overrides the placeholder");
   assert.ok(shopSource.includes("activeProducts.filter(isAppleCatalogueProduct)"), "Store preserves its existing inventory selector");
-  assert.ok(shopSource.includes("<StoreMoreToLoveCarousel products={products} />"), "Store keeps the new favorites rail connected to the real catalogue");
+  assert.ok(shopSource.includes("<StoreMoreToLoveCarousel products={products} />") || shopSource.includes("<StorePageRenderer products={products} />"), "Store keeps the new favorites rail connected to the real catalogue");
+  assert.ok(shopSource.includes("<StorePageRenderer products={products} />"), "Store renders sections dynamically via StorePageRenderer");
   assert.equal(shopSource.includes('id="all-products"'), false, "Store landing no longer renders the lower inventory grid");
   assert.ok(shopSource.includes("<Navigate to={categoryPath[category]} replace />"), "Older category deep links resolve to existing family routes");
   assert.ok(cardSource.includes("productStoryPath(family, product.slug)"), "Learn More routes to the editorial product experience");

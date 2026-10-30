@@ -10,9 +10,11 @@ import {
 import {
   deleteMediaItemById,
   deleteMediaItemPermanently,
+  discardMainStoreDraft,
   fetchFaqs,
   fetchHomepageContent,
   fetchMainStoreContent,
+  fetchMainStoreDraft,
   fetchMediaLibrary,
   fetchPageContent,
   fetchSiteSettings,
@@ -20,6 +22,7 @@ import {
   getInitialFaqs,
   getInitialHomepageContent,
   getInitialMainStoreContent,
+  getInitialMainStoreDraft,
   getInitialMediaLibrary,
   getInitialPageContent,
   getInitialSiteSettings,
@@ -29,6 +32,7 @@ import {
   saveFaqs,
   saveHomepageContent,
   saveMainStoreContent,
+  saveMainStoreDraft,
   savePageContent,
   saveSiteSettings,
   saveStorefrontContent,
@@ -51,6 +55,7 @@ interface CmsContextValue {
   settings: SiteSettings;
   homepage: HomepageContent;
   mainStore: MainStoreConfig;
+  mainStoreDraft: MainStoreConfig | null;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -61,6 +66,8 @@ interface CmsContextValue {
   updateSettings: (partial: Partial<SiteSettings>) => Promise<SiteSettings>;
   updateHomepage: (content: HomepageContent) => Promise<HomepageContent>;
   updateMainStore: (config: MainStoreConfig) => Promise<MainStoreConfig>;
+  saveMainStoreDraftConfig: (config: MainStoreConfig) => Promise<MainStoreConfig>;
+  discardMainStoreDraftConfig: () => Promise<void>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -96,6 +103,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(() => getInitialSiteSettings());
   const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
   const [mainStore, setMainStore] = useState<MainStoreConfig>(() => getInitialMainStoreContent());
+  const [mainStoreDraft, setMainStoreDraft] = useState<MainStoreConfig | null>(() => getInitialMainStoreDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
@@ -105,7 +113,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
   const loadAll = async () => {
     try {
-      const [s, h, m, f, p, d, ms] = await Promise.all([
+      const [s, h, m, f, p, d, ms, msDraft] = await Promise.all([
         fetchSiteSettings(),
         fetchHomepageContent(),
         fetchMediaLibrary(),
@@ -113,6 +121,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         fetchPageContent(),
         fetchStorefrontContent(),
         fetchMainStoreContent(),
+        fetchMainStoreDraft(),
       ]);
 
       startTransition(() => {
@@ -123,6 +132,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         setPages(p);
         setDepartments(d);
         setMainStore(ms);
+        setMainStoreDraft(msDraft);
       });
     } catch {
       // Graceful fallback to initial values
@@ -228,7 +238,19 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const handleUpdateMainStore = async (newConfig: MainStoreConfig) => {
     const updated = await saveMainStoreContent(newConfig);
     setMainStore(updated);
+    setMainStoreDraft(null);
     return updated;
+  };
+
+  const handleSaveMainStoreDraft = async (newConfig: MainStoreConfig) => {
+    const draft = await saveMainStoreDraft(newConfig);
+    setMainStoreDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardMainStoreDraft = async () => {
+    await discardMainStoreDraft();
+    setMainStoreDraft(null);
   };
 
   return (
@@ -237,6 +259,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         settings,
         homepage,
         mainStore,
+        mainStoreDraft,
         media,
         faqs,
         pages,
@@ -247,6 +270,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateSettings: handleUpdateSettings,
         updateHomepage: handleUpdateHomepage,
         updateMainStore: handleUpdateMainStore,
+        saveMainStoreDraftConfig: handleSaveMainStoreDraft,
+        discardMainStoreDraftConfig: handleDiscardMainStoreDraft,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,

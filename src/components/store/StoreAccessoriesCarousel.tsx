@@ -2,6 +2,7 @@ import { Eye, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
+import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
 import type { Product } from "../../types/product";
 import { formatGhs } from "../../utils/format";
@@ -11,6 +12,8 @@ import { StoreCarousel } from "./StoreCarousel";
 
 interface StoreAccessoriesCarouselProps {
   products: Product[];
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
 }
 
 function getAccessoryEyebrow(product: Product): string {
@@ -25,10 +28,15 @@ function getAccessoryEyebrow(product: Product): string {
   return product.storage?.[0] || product.condition || "Original Apple";
 }
 
-export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselProps) {
+export function StoreAccessoriesCarousel({
+  products,
+  section,
+  configOverride,
+}: StoreAccessoriesCarouselProps) {
   const { mainStore } = useCms();
-  const accessoryConfigs = mainStore?.accessories?.length
-    ? mainStore.accessories
+  const activeConfig = configOverride || mainStore;
+  const accessoryConfigs = activeConfig?.accessories?.length
+    ? activeConfig.accessories
     : defaultMainStoreConfig.accessories;
 
   const featuredAccessories = accessoryConfigs.flatMap((item) => {
@@ -65,18 +73,30 @@ export function StoreAccessoriesCarousel({ products }: StoreAccessoriesCarouselP
   }
 
 
+  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== "" ? section.eyebrow : "ACCESSORIES";
+  const title = section?.heading?.trim() || "Complete your setup.";
+  const subtitle = section?.subtitle !== undefined ? section.subtitle : "The essentials that go beautifully together.";
+  const btnLabel = section?.buttonLabel !== undefined && section.buttonLabel !== "" ? section.buttonLabel : "All accessories";
+  const btnDest = section?.buttonDestination !== undefined && section.buttonDestination !== "" ? section.buttonDestination : "/accessories";
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+
   return (
-    <section className="store-section store-accessories-section" aria-labelledby="store-accessories-title">
+    <section
+      className="store-section store-accessories-section"
+      aria-labelledby="store-accessories-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-accessories-carousel"}
+    >
       <div className="store-container">
         <StoreCarousel
-          eyebrow="ACCESSORIES"
-          title="Complete your setup."
-          subtitle="The essentials that go beautifully together."
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
           controlsAriaLabel="Accessories carousel navigation"
           trackClassName="store-accessories-track"
           headerRight={
-            <Link to="/accessories" className="store-section-header-link">
-              All accessories
+            <Link to={btnDest} className="store-section-header-link">
+              {btnLabel}
             </Link>
           }
         >

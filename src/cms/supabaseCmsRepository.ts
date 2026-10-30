@@ -9,6 +9,7 @@ import {
   defaultMediaItems,
   defaultPageContent,
   defaultSiteSettings,
+  defaultStorePageSections,
 } from "./defaultCmsData";
 import type {
   CategoryDepartmentConfig,
@@ -18,6 +19,7 @@ import type {
   MediaItem,
   PageContentRegistry,
   SiteSettings,
+  StorePageSection,
 } from "./types";
 
 const CMS_STORAGE_KEY_SETTINGS = "buyandsell_cms_settings_v1";
@@ -28,6 +30,8 @@ const CMS_STORAGE_KEY_FAQS = "buyandsell_cms_faqs_v1";
 const CMS_STORAGE_KEY_PAGES = "buyandsell_cms_pages_v1";
 const CMS_STORAGE_KEY_STOREFRONT = "buyandsell_cms_storefront_v1";
 const CMS_STORAGE_KEY_MAIN_STORE = "buyandsell_cms_main_store_v1";
+const CMS_STORAGE_KEY_MAIN_STORE_DRAFT = "buyandsell_cms_main_store_draft_v1";
+const CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB = "buyandsell_cms_main_store_local_pub_v1";
 
 // Cache listeners for reactive UI across tabs and components
 type CmsListener = () => void;
@@ -767,6 +771,33 @@ export const uploadMediaAsset = async (
     throw new Error("Invalid image header signature. Please choose an authentic image file.");
   }
 
+  if (isLocalAdminActive()) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Could not read uploaded image."));
+      reader.readAsDataURL(file);
+    });
+    const localMediaItem: MediaItem = {
+      id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      title: customTitle || file.name.replace(/\.[^.]+$/, ""),
+      filename: file.name,
+      url: dataUrl,
+      fileSize: file.size,
+      mimeType: file.type,
+      category,
+      alt: customTitle || `${file.name} asset`,
+      fit: "cover",
+      position: "center",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const current = getInitialMediaLibrary();
+    writeLocal(CMS_STORAGE_KEY_MEDIA, [localMediaItem, ...current]);
+    notifyListeners();
+    return localMediaItem;
+  }
+
   const ext = imageExtensions[file.type] || "jpg";
   const cleanBase = file.name
     .toLowerCase()
@@ -1114,9 +1145,43 @@ export const saveStorefrontContent = async (
   return departments;
 };
 
-// 7. MAIN STORE PAGE CONTENT (Store Landing Page)
+// 7. MAIN STORE PAGE CONTENT (Store Landing Page & Section Builder)
+const normalizeStorePageSection = (section: Partial<StorePageSection>, idx: number): StorePageSection => {
+  const def = section.builtInKey
+    ? defaultStorePageSections.find((d) => d.builtInKey === section.builtInKey)
+    : defaultStorePageSections.find((d) => d.id === section.id);
+
+  return {
+    id: section.id || def?.id || `store-section-${idx + 1}`,
+    type: section.type || def?.type || "featured-products",
+    builtInKey: section.builtInKey ?? def?.builtInKey,
+    eyebrow: section.eyebrow !== undefined ? section.eyebrow : (def?.eyebrow || ""),
+    heading: section.heading !== undefined ? section.heading : (def?.heading || "Store Section"),
+    subtitle: section.subtitle !== undefined ? section.subtitle : (def?.subtitle || ""),
+    description: section.description !== undefined ? section.description : (def?.description || ""),
+    desktopImage: section.desktopImage !== undefined ? section.desktopImage : (def?.desktopImage || ""),
+    mobileImage: section.mobileImage !== undefined ? section.mobileImage : (def?.mobileImage || ""),
+    imageAlt: section.imageAlt !== undefined ? section.imageAlt : (def?.imageAlt || section.heading || "Store section image"),
+    backgroundColor: section.backgroundColor || def?.backgroundColor || "#ffffff",
+    textAlignment: section.textAlignment || def?.textAlignment || "left",
+    productIds: Array.isArray(section.productIds) ? section.productIds : (def?.productIds || []),
+    buttonLabel: section.buttonLabel !== undefined ? section.buttonLabel : (def?.buttonLabel || ""),
+    buttonDestination: section.buttonDestination !== undefined ? section.buttonDestination : (def?.buttonDestination || ""),
+    secondaryButtonLabel: section.secondaryButtonLabel ?? def?.secondaryButtonLabel ?? "",
+    secondaryButtonDestination: section.secondaryButtonDestination ?? def?.secondaryButtonDestination ?? "",
+    layoutStyle: section.layoutStyle || def?.layoutStyle || "standard",
+    visible: section.visible !== false,
+    order: typeof section.order === "number" ? section.order : idx,
+  };
+};
+
 const mergeMainStoreWithDefaults = (source?: Partial<MainStoreConfig> | null): MainStoreConfig => {
   if (!source) return defaultMainStoreConfig;
+
+  const sections =
+    Array.isArray(source.sections) && source.sections.length > 0
+      ? source.sections.map((sec, idx) => normalizeStorePageSection(sec, idx))
+      : defaultStorePageSections.map((sec, idx) => normalizeStorePageSection(sec, idx));
 
   const productFamilies = defaultMainStoreConfig.productFamilies.map((def) => {
     const s = (source.productFamilies || []).find((item) => item.id === def.id);
@@ -1144,21 +1209,58 @@ const mergeMainStoreWithDefaults = (source?: Partial<MainStoreConfig> | null): M
   });
 
   return {
+    sections,
     productFamilies,
     latestCards,
     categoryCards,
     moreToLoveCards,
     accessories,
+    hasDraft: Boolean(source.hasDraft),
+    updatedAt: source.updatedAt,
   };
 };
 
 export const getInitialMainStoreContent = (): MainStoreConfig => {
+  try {
+    if (
+      typeof window !== "undefined" &&
+      (isLocalAdminActive() || localStorage.getItem("admin_preview_active") === "1")
+    ) {
+      const localPubRaw = localStorage.getItem(CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB);
+      if (localPubRaw && localPubRaw.startsWith("{")) {
+        return mergeMainStoreWithDefaults(JSON.parse(localPubRaw) as Partial<MainStoreConfig>);
+      }
+    }
+  } catch {
+    // ignore
+  }
   const local = readLocal<MainStoreConfig>(CMS_STORAGE_KEY_MAIN_STORE, defaultMainStoreConfig);
   return mergeMainStoreWithDefaults(local);
 };
 
+export const getInitialMainStoreDraft = (): MainStoreConfig | null => {
+  try {
+    const raw = localStorage.getItem(CMS_STORAGE_KEY_MAIN_STORE_DRAFT);
+    if (!raw) return null;
+    return mergeMainStoreWithDefaults(JSON.parse(raw) as Partial<MainStoreConfig>);
+  } catch {
+    return null;
+  }
+};
+
 export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
   const mergedLocal = getInitialMainStoreContent();
+  try {
+    if (
+      typeof window !== "undefined" &&
+      Boolean(localStorage.getItem(CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB)) &&
+      (isLocalAdminActive() || localStorage.getItem("admin_preview_active") === "1")
+    ) {
+      return mergedLocal;
+    }
+  } catch {
+    // ignore
+  }
   if (!supabase) return mergedLocal;
 
   try {
@@ -1169,6 +1271,13 @@ export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
       .maybeSingle();
 
     if (!error && data?.config) {
+      if (
+        typeof window !== "undefined" &&
+        Boolean(localStorage.getItem(CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB)) &&
+        (isLocalAdminActive() || localStorage.getItem("admin_preview_active") === "1")
+      ) {
+        return getInitialMainStoreContent();
+      }
       const merged = mergeMainStoreWithDefaults(data.config as Partial<MainStoreConfig>);
       writeLocal(CMS_STORAGE_KEY_MAIN_STORE, merged);
       return merged;
@@ -1177,37 +1286,139 @@ export const fetchMainStoreContent = async (): Promise<MainStoreConfig> => {
     // Non-blocking fallback
   }
 
-  return mergedLocal;
+  return getInitialMainStoreContent();
+};
+
+export const fetchMainStoreDraft = async (): Promise<MainStoreConfig | null> => {
+  const localDraft = getInitialMainStoreDraft();
+  if (isLocalAdminActive() || !supabase) {
+    return localDraft;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("storefront_content")
+      .select("config")
+      .eq("key", "main_store_draft")
+      .maybeSingle();
+
+    if (!error && data?.config) {
+      const merged = mergeMainStoreWithDefaults({
+        ...(data.config as Partial<MainStoreConfig>),
+        hasDraft: true,
+      });
+      writeLocal(CMS_STORAGE_KEY_MAIN_STORE_DRAFT, merged);
+      return merged;
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+
+  return localDraft;
+};
+
+export const saveMainStoreDraft = async (
+  config: MainStoreConfig
+): Promise<MainStoreConfig> => {
+  await assertAdminAal2();
+  const normalized = mergeMainStoreWithDefaults({
+    ...config,
+    hasDraft: true,
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (isLocalAdminActive()) {
+    writeLocal(CMS_STORAGE_KEY_MAIN_STORE_DRAFT, normalized);
+    notifyListeners();
+    return normalized;
+  }
+
+  const client = getSupabaseOrThrow();
+  const { error } = await client.from("storefront_content").upsert({
+    key: "main_store_draft",
+    config: normalized,
+    updated_at: normalized.updatedAt,
+  });
+
+  if (error) {
+    throw new Error(
+      `Failed to save Store Page draft to Supabase (${error.message}, code: ${error.code || "ERR"}).`
+    );
+  }
+
+  writeLocal(CMS_STORAGE_KEY_MAIN_STORE_DRAFT, normalized);
+  notifyListeners();
+  return normalized;
+};
+
+export const discardMainStoreDraft = async (): Promise<void> => {
+  await assertAdminAal2();
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_MAIN_STORE_DRAFT);
+  } catch {
+    // ignore
+  }
+  if (!isLocalAdminActive() && supabase) {
+    try {
+      await supabase.from("storefront_content").delete().eq("key", "main_store_draft");
+    } catch {
+      // ignore
+    }
+  }
+  notifyListeners();
 };
 
 export const saveMainStoreContent = async (
   config: MainStoreConfig
 ): Promise<MainStoreConfig> => {
   await assertAdminAal2();
-  const client = getSupabaseOrThrow();
+  const normalized = mergeMainStoreWithDefaults({
+    ...config,
+    hasDraft: false,
+    updatedAt: new Date().toISOString(),
+  });
 
+  if (isLocalAdminActive()) {
+    writeLocal(CMS_STORAGE_KEY_MAIN_STORE, normalized);
+    writeLocal(CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB, normalized);
+    try {
+      localStorage.removeItem(CMS_STORAGE_KEY_MAIN_STORE_DRAFT);
+    } catch {
+      // ignore
+    }
+    broadcastPublishedUpdate("main-store");
+    notifyListeners();
+    return normalized;
+  }
+
+  const client = getSupabaseOrThrow();
   const { error } = await client.from("storefront_content").upsert({
     key: "main_store",
-    config,
-    updated_at: new Date().toISOString(),
+    config: normalized,
+    updated_at: normalized.updatedAt,
   });
 
   if (error) {
-    if (isLocalAdminActive()) {
-      writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
-      broadcastPublishedUpdate("main-store");
-      notifyListeners();
-      return config;
-    }
     throw new Error(
-      `Failed to save main store configuration to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
+      `Failed to publish Store Page configuration to Supabase (${error.message}, code: ${error.code || "ERR"}). Ensure migration 016 has been run in Supabase SQL Editor.`
     );
   }
 
-  writeLocal(CMS_STORAGE_KEY_MAIN_STORE, config);
+  try {
+    await client.from("storefront_content").delete().eq("key", "main_store_draft");
+  } catch {
+    // ignore
+  }
+
+  writeLocal(CMS_STORAGE_KEY_MAIN_STORE, normalized);
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_MAIN_STORE_DRAFT);
+  } catch {
+    // ignore
+  }
   broadcastPublishedUpdate("main-store");
   notifyListeners();
-  return config;
+  return normalized;
 };
 
 // Cascades replaced media URLs to homepage content and storefront departments

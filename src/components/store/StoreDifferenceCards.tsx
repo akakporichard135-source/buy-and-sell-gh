@@ -1,4 +1,5 @@
 import { BadgeCheck, MapPin, MessageCircle, PackageCheck, RefreshCw, Wrench } from "lucide-react";
+import type { StorePageSection } from "../../cms/types";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface DifferenceItem {
@@ -47,14 +48,30 @@ const differences: DifferenceItem[] = [
   },
 ];
 
-export function StoreDifferenceCards() {
+export function StoreDifferenceCards({ section }: { section?: StorePageSection }) {
+  const eyebrow =
+    section?.eyebrow !== undefined && section.eyebrow !== ""
+      ? section.eyebrow
+      : "THE BUY & SELL GH DIFFERENCE";
+  const title = section?.heading?.trim() || "Why shop with us.";
+  const subtitle =
+    section?.subtitle !== undefined
+      ? section.subtitle
+      : "Simple, transparent, and confirmed technology commerce built for customers in Ghana.";
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+
   return (
-    <section className="store-section store-diff-section" aria-labelledby="store-diff-title">
+    <section
+      className="store-section store-diff-section"
+      aria-labelledby="store-diff-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-difference-cards"}
+    >
       <div className="store-container">
         <StoreCarousel
-          eyebrow="THE BUY & SELL GH DIFFERENCE"
-          title="Why shop with us."
-          subtitle="Simple, transparent, and confirmed technology commerce built for customers in Ghana."
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
           controlsAriaLabel="Store differences carousel navigation"
           trackClassName="store-diff-track"
         >

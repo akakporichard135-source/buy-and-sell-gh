@@ -1,5 +1,6 @@
 import { ArrowRight, Banknote, CreditCard, Gift, MessageCircle, RefreshCw, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { StorePageSection } from "../../cms/types";
 import { intentWhatsAppUrl } from "../../utils/whatsapp";
 import { StoreCarousel } from "./StoreCarousel";
 
@@ -86,14 +87,27 @@ const helpCards: HelpCardItem[] = [
   },
 ];
 
-export function StoreHelpCards() {
+export function StoreHelpCards({ section }: { section?: StorePageSection }) {
+  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== "" ? section.eyebrow : "HELP IS HERE";
+  const title = section?.heading?.trim() || "Whenever you need it.";
+  const subtitle =
+    section?.subtitle !== undefined
+      ? section.subtitle
+      : "Support, flexible financing, repairs, trade-in, and customer rewards tailored for Ghana.";
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+
   return (
-    <section className="store-section store-help-section" aria-labelledby="store-help-title">
+    <section
+      className="store-section store-help-section"
+      aria-labelledby="store-help-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-help-cards"}
+    >
       <div className="store-container">
         <StoreCarousel
-          eyebrow="HELP IS HERE"
-          title="Whenever you need it."
-          subtitle="Support, flexible financing, repairs, trade-in, and customer rewards tailored for Ghana."
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
           controlsAriaLabel="Store help services carousel navigation"
           trackClassName="store-help-track"
         >

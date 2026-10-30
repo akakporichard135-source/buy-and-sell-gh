@@ -228,10 +228,67 @@ export interface MainStoreAccessoryItem {
   alt?: string;
 }
 
+export type StorePageSectionType =
+  | "hero-banner"
+  | "featured-products"
+  | "new-arrivals"
+  | "product-collection"
+  | "promotional-image"
+  | "product-carousel"
+  | "special-offers"
+  | "image-text"
+  | "category-showcase"
+  | (string & {});
+
+export type StoreBuiltInSectionKey =
+  | "store-intro"
+  | "family-strip"
+  | "latest-carousel"
+  | "category-cards"
+  | "help-cards"
+  | "more-to-love"
+  | "accessories-carousel"
+  | "difference-cards";
+
+export type StoreSectionLayoutStyle =
+  | "standard"
+  | "split"
+  | "full-bleed"
+  | "compact"
+  | "grid-3"
+  | "grid-4"
+  | "carousel";
+
+export interface StorePageSection {
+  id: string;
+  type: StorePageSectionType;
+  builtInKey?: StoreBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle: string;
+  description: string;
+  desktopImage: string;
+  mobileImage: string;
+  imageAlt?: string;
+  backgroundColor: string;
+  textAlignment: "left" | "center" | "right";
+  productIds: string[];
+  buttonLabel: string;
+  buttonDestination: string;
+  secondaryButtonLabel?: string;
+  secondaryButtonDestination?: string;
+  layoutStyle: StoreSectionLayoutStyle;
+  visible: boolean;
+  order: number;
+}
+
 export interface MainStoreConfig {
+  sections?: StorePageSection[];
   productFamilies: MainStoreFamilyItem[];
   latestCards: MainStorePromoCard[];
   categoryCards: MainStoreCategoryCard[];
   moreToLoveCards: MainStorePromoCard[];
   accessories: MainStoreAccessoryItem[];
+  hasDraft?: boolean;
+  updatedAt?: string;
 }

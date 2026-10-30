@@ -1,12 +1,26 @@
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
+import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 
-export function StoreProductFamilyStrip() {
+export function StoreProductFamilyStrip({
+  section,
+  configOverride,
+}: {
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
   const { mainStore } = useCms();
-  const productFamilies = mainStore?.productFamilies || [];
+  const activeConfig = configOverride || mainStore;
+  const productFamilies = activeConfig?.productFamilies || [];
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
 
   return (
-    <section className="store-family-strip-section" aria-label="Browse by product family">
+    <section
+      className="store-family-strip-section"
+      aria-label={section?.heading || "Browse by product family"}
+      style={bgStyle}
+      data-section-id={section?.id || "section-family-strip"}
+    >
       <div className="store-family-strip-container">
         <div className="store-family-strip-rail">
           {productFamilies.map((family) => (

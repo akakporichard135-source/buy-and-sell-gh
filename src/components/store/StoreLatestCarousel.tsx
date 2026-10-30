@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
-import type { MainStorePromoCard } from "../../cms/types";
+import type { MainStoreConfig, MainStorePromoCard, StorePageSection } from "../../cms/types";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
 import { newMacLaunches } from "../../data/newMacLaunches";
 import type { Product } from "../../types/product";
@@ -68,10 +68,12 @@ function featuredRail({
   products,
   type,
   cards,
+  section,
 }: {
   products: Product[];
   type: "latest" | "more";
   cards: MainStorePromoCard[];
+  section?: StorePageSection;
 }) {
   const items: FeaturedProduct[] = cards.map((card) => {
     const product = products.find((item) => item.slug === card.id);
@@ -106,14 +108,36 @@ function featuredRail({
     };
   });
 
+  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== ""
+    ? section.eyebrow
+    : type === "latest" ? "THE LATEST" : "MORE TO LOVE";
+  const title = section?.heading?.trim()
+    ? section.heading
+    : type === "latest" ? "Take a look at what's new." : "Find your new favorites.";
+  const subtitle = section?.subtitle?.trim() || undefined;
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+  const headerRight =
+    section?.buttonLabel && section?.buttonDestination ? (
+      <Link to={section.buttonDestination} className="store-section-header-link">
+        {section.buttonLabel}
+      </Link>
+    ) : undefined;
+
   return (
-    <section className={`store-section store-latest-section store-feature-section-${type}`} aria-label={type === "latest" ? "The latest" : "More to love"}>
+    <section
+      className={`store-section store-latest-section store-feature-section-${type}`}
+      aria-label={title}
+      style={bgStyle}
+      data-section-id={section?.id || (type === "latest" ? "section-latest-carousel" : "section-more-to-love")}
+    >
       <div className="store-container">
         <StoreCarousel
-          eyebrow={type === "latest" ? "THE LATEST" : "MORE TO LOVE"}
-          title={type === "latest" ? "Take a look at what's new." : "Find your new favorites."}
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
           controlsAriaLabel={type === "latest" ? "The latest products carousel navigation" : "More to love carousel navigation"}
           trackClassName="store-latest-track"
+          headerRight={headerRight}
         >
           {items.map((product) => (
             <article key={product.id} className={`store-latest-card store-latest-card-${product.theme}`}>
@@ -141,15 +165,33 @@ function featuredRail({
   );
 }
 
-export function StoreLatestCarousel({ products }: { products: Product[] }) {
+export function StoreLatestCarousel({
+  products,
+  section,
+  configOverride,
+}: {
+  products: Product[];
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
   const { mainStore } = useCms();
-  const cards = mainStore?.latestCards?.length ? mainStore.latestCards : defaultMainStoreConfig.latestCards;
-  return featuredRail({ products, type: "latest", cards });
+  const activeConfig = configOverride || mainStore;
+  const cards = activeConfig?.latestCards?.length ? activeConfig.latestCards : defaultMainStoreConfig.latestCards;
+  return featuredRail({ products, type: "latest", cards, section });
 }
 
-export function StoreMoreToLoveCarousel({ products }: { products: Product[] }) {
+export function StoreMoreToLoveCarousel({
+  products,
+  section,
+  configOverride,
+}: {
+  products: Product[];
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
   const { mainStore } = useCms();
-  const cards = mainStore?.moreToLoveCards?.length ? mainStore.moreToLoveCards : defaultMainStoreConfig.moreToLoveCards;
-  return featuredRail({ products, type: "more", cards });
+  const activeConfig = configOverride || mainStore;
+  const cards = activeConfig?.moreToLoveCards?.length ? activeConfig.moreToLoveCards : defaultMainStoreConfig.moreToLoveCards;
+  return featuredRail({ products, type: "more", cards, section });
 }
 

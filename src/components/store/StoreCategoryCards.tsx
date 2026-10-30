@@ -1,19 +1,36 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
+import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { StoreCarousel } from "./StoreCarousel";
 
-export function StoreCategoryCards() {
+export function StoreCategoryCards({
+  section,
+  configOverride,
+}: {
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
   const { mainStore } = useCms();
-  const categoryCards = mainStore?.categoryCards || [];
+  const activeConfig = configOverride || mainStore;
+  const categoryCards = activeConfig?.categoryCards || [];
+  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== "" ? section.eyebrow : "SHOP BY CATEGORY";
+  const title = section?.heading?.trim() || "Browse by device.";
+  const subtitle = section?.subtitle !== undefined ? section.subtitle : "Explore devices by family.";
 
   return (
-    <section className="store-section store-category-section" aria-labelledby="store-category-title">
+    <section
+      className="store-section store-category-section"
+      aria-labelledby="store-category-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-category-cards"}
+    >
       <div className="store-container">
         <StoreCarousel
-          eyebrow="SHOP BY CATEGORY"
-          title="Browse by device."
-          subtitle="Explore devices by family."
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
           controlsAriaLabel="Shop by category carousel navigation"
           trackClassName="store-category-track"
         >

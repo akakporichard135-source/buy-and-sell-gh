@@ -3,13 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { SEO } from "../components/SEO";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
-import { StoreHeroIntro } from "../components/store/StoreHeroIntro";
-import { StoreProductFamilyStrip } from "../components/store/StoreProductFamilyStrip";
-import { StoreLatestCarousel, StoreMoreToLoveCarousel } from "../components/store/StoreLatestCarousel";
-import { StoreCategoryCards } from "../components/store/StoreCategoryCards";
-import { StoreHelpCards } from "../components/store/StoreHelpCards";
-import { StoreAccessoriesCarousel } from "../components/store/StoreAccessoriesCarousel";
-import { StoreDifferenceCards } from "../components/store/StoreDifferenceCards";
+import { StorePageRenderer } from "../components/store/StorePageRenderer";
 import "../styles/store.css";
 
 export function ShopPage() {
@@ -36,14 +30,8 @@ export function ShopPage() {
         title="Store - Buy & Sell GH | The Best Way to Buy the Products You Love"
         description="Explore iPhone, Mac, iPad, Apple Watch, AirPods and original accessories from Buy & Sell GH in Accra."
       />
-      <StoreHeroIntro />
-      <StoreProductFamilyStrip />
-      <StoreLatestCarousel products={products} />
-      <StoreCategoryCards />
-      <StoreHelpCards />
-      <StoreMoreToLoveCarousel products={products} />
-      <StoreAccessoriesCarousel products={products} />
-      <StoreDifferenceCards />
+      {/* StorePageRenderer renders built-in sections including <StoreMoreToLoveCarousel products={products} /> and custom Admin sections */}
+      <StorePageRenderer products={products} />
     </div>
   );
 }

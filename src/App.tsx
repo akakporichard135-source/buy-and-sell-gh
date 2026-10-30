@@ -69,6 +69,8 @@ export default function App() {
                   <Route path="homepage" element={<AdminSectionPage section="homepage" />} />
                   <Route path="learn-more" element={<AdminSectionPage section="learn-more" />} />
                   <Route path="storefront" element={<AdminSectionPage section="storefront" />} />
+                  <Route path="store" element={<AdminSectionPage section="storefront" />} />
+                  <Route path="store-page" element={<AdminSectionPage section="storefront" />} />
                   <Route path="services" element={<AdminSectionPage section="services" />} />
                   <Route path="pages" element={<AdminSectionPage section="pages" />} />
                   <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />

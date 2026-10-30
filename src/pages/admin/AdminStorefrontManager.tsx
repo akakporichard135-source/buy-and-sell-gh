@@ -48,27 +48,48 @@ import { getCategoryRelevantAccessories } from "../../components/store/category/
 import { resolveAdminProductImage, resolveCatalogueProductImage, resolveProductImage } from "../../utils/productImages";
 import { formatGhs } from "../../utils/format";
 import type { Product, ProductImage } from "../../types/product";
+import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
 export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
 type StorefrontSection = "featured" | "listings" | "accessories";
-type MainStoreSection = "latest" | "categories" | "moreToLove" | "families" | "accessories";
+type MainStoreSection = "sections" | "latest" | "categories" | "moreToLove" | "families" | "accessories";
 
 export function AdminStorefrontManager() {
-  const { departments: cmsDepartments, mainStore: cmsMainStore, updateStorefront, updateMainStore, uploadMedia } = useCms();
+  const {
+    departments: cmsDepartments,
+    mainStore: cmsMainStore,
+    mainStoreDraft,
+    updateStorefront,
+    updateMainStore,
+    saveMainStoreDraftConfig,
+    discardMainStoreDraftConfig,
+    uploadMedia,
+  } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
 
   const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(cmsDepartments);
   const [selectedDeptKey, setSelectedDeptKey] = useState<StorefrontDepartmentKey>("main-store");
   const [activeSection, setActiveSection] = useState<StorefrontSection>("featured");
-  const [activeMainStoreSection, setActiveMainStoreSection] = useState<MainStoreSection>("latest");
-  const [mainStoreConfig, setMainStoreConfig] = useState<MainStoreConfig>(cmsMainStore || defaultMainStoreConfig);
+  const [activeMainStoreSection, setActiveMainStoreSection] = useState<MainStoreSection>("sections");
+  const [mainStoreConfig, setMainStoreConfigRaw] = useState<MainStoreConfig>(
+    mainStoreDraft || cmsMainStore || defaultMainStoreConfig
+  );
+  const hasLocalMainStoreEdits = useRef(false);
+
+  const setMainStoreConfig: React.Dispatch<React.SetStateAction<MainStoreConfig>> = (updater) => {
+    hasLocalMainStoreEdits.current = true;
+    setMainStoreConfigRaw(updater);
+  };
 
   useEffect(() => {
-    if (cmsMainStore) {
-      setMainStoreConfig(cmsMainStore);
+    if (hasLocalMainStoreEdits.current) return;
+    if (mainStoreDraft) {
+      setMainStoreConfigRaw(mainStoreDraft);
+    } else if (cmsMainStore) {
+      setMainStoreConfigRaw(cmsMainStore);
     }
-  }, [cmsMainStore]);
+  }, [cmsMainStore, mainStoreDraft]);
 
   useEffect(() => {
     if (cmsDepartments) {
@@ -546,6 +567,24 @@ export function AdminStorefrontManager() {
           <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
             <button
               type="button"
+              data-testid="main-store-tab-sections"
+              onClick={() => setActiveMainStoreSection("sections")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeMainStoreSection === "sections"
+                  ? "bg-slate-900 text-white shadow"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              <Layers size={14} className={activeMainStoreSection === "sections" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Store Page Sections (Builder)</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "sections" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                {(mainStoreConfig.sections || defaultMainStoreConfig.sections || []).length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="main-store-tab-latest"
               onClick={() => setActiveMainStoreSection("latest")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeMainStoreSection === "latest"
@@ -680,6 +719,34 @@ export function AdminStorefrontManager() {
       {/* ===================== MAIN STORE PAGE EDITORS ===================== */}
       {selectedDeptKey === "main-store" && (
         <div className="space-y-6">
+          {/* 0. Store Page Section Builder */}
+          {activeMainStoreSection === "sections" && (
+            <StorePageSectionBuilder
+              mainStoreConfig={mainStoreConfig}
+              setMainStoreConfig={setMainStoreConfig}
+              hasDraft={Boolean(mainStoreDraft)}
+              onSaveDraft={async (cfg) => {
+                const saved = await saveMainStoreDraftConfig(cfg);
+                setMainStoreConfigRaw(saved);
+                return saved;
+              }}
+              onPublishLive={async (cfg) => {
+                const published = await updateMainStore(cfg);
+                setMainStoreConfigRaw(published);
+                return published;
+              }}
+              onDiscardDraft={async () => {
+                await discardMainStoreDraftConfig();
+                hasLocalMainStoreEdits.current = false;
+                setMainStoreConfigRaw(cmsMainStore || defaultMainStoreConfig);
+              }}
+              uploadMedia={uploadMedia}
+              products={products}
+              activeProducts={activeProducts}
+              onSwitchSubTab={(tab) => setActiveMainStoreSection(tab)}
+            />
+          )}
+
           {/* 1. The Latest (8 cards) */}
           {activeMainStoreSection === "latest" && (
             <div className="space-y-5">
