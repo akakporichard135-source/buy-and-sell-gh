@@ -416,10 +416,16 @@ export function AdminProductManager() {
     try {
       const saved = await saveProduct(normalized);
       setEditing(productToForm(saved));
+      const actionLabel =
+        editing.purchaseAction === "buy"
+          ? "Buy"
+          : editing.purchaseAction === "enquire"
+          ? "WhatsApp Enquiry"
+          : "View Pricing";
       setMessage(
         normalized.available
-          ? `${normalized.name} published successfully to storefront.`
-          : `${normalized.name} saved as draft (hidden until published with approved photos).`
+          ? `${normalized.name} saved with purchase action "${actionLabel}" and published successfully.`
+          : `${normalized.name} saved as draft with purchase action "${actionLabel}".`
       );
     } catch (saveFailure) {
       setActionError(saveFailure instanceof Error ? saveFailure.message : "Product could not be saved.");
@@ -801,10 +807,26 @@ export function AdminProductManager() {
                             Missing Image
                           </span>
                         ) : (
-                          <span className="admin-badge admin-badge-emerald text-[0.7rem] flex items-center gap-1 w-fit">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Published
-                          </span>
+                          <div className="space-y-1">
+                            <span className="admin-badge admin-badge-emerald text-[0.7rem] flex items-center gap-1 w-fit">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Published
+                            </span>
+                            {(() => {
+                              const action = getProductPurchaseAction(product);
+                              return (
+                                <span className={`admin-badge text-[0.65rem] font-bold block w-fit ${
+                                  action === "buy"
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : action === "enquire"
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : "bg-slate-100 text-slate-700 border border-slate-200"
+                                }`}>
+                                  Action: {action === "buy" ? "Buy" : action === "enquire" ? "WhatsApp" : "Pricing"}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         )}
                       </td>
                       <td>
@@ -955,10 +977,26 @@ export function AdminProductManager() {
                       Missing Image
                     </span>
                   ) : (
-                    <span className="admin-badge admin-badge-emerald text-[0.68rem] flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      Published
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="admin-badge admin-badge-emerald text-[0.68rem] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Published
+                      </span>
+                      {(() => {
+                        const action = getProductPurchaseAction(product);
+                        return (
+                          <span className={`admin-badge text-[0.65rem] font-bold ${
+                            action === "buy"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : action === "enquire"
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              : "bg-slate-100 text-slate-700 border border-slate-200"
+                          }`}>
+                            {action === "buy" ? "Buy" : action === "enquire" ? "WhatsApp" : "Pricing"}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   )}
                 </div>
 
@@ -1201,7 +1239,10 @@ export function AdminProductManager() {
                   brandOptions={brandOptions}
                   backendStatus={backendStatus}
                   saving={saving}
+                  actionError={actionError}
+                  message={message}
                   setActionError={setActionError}
+                  setMessage={setMessage}
                   productNameRef={productNameRef}
                   onCancel={() => setEditing(null)}
                   onOpenBuyGallery={() => setEditorTab("buy-gallery")}
@@ -1262,7 +1303,10 @@ function ProductForm({
   brandOptions,
   backendStatus,
   saving,
+  actionError,
+  message,
   setActionError,
+  setMessage,
   productNameRef,
   onCancel,
   onOpenBuyGallery,
@@ -1274,7 +1318,10 @@ function ProductForm({
   brandOptions: string[];
   backendStatus: string;
   saving: boolean;
+  actionError: string;
+  message: string;
   setActionError: (message: string) => void;
+  setMessage: (message: string) => void;
   productNameRef: React.RefObject<HTMLInputElement | null>;
   onCancel: () => void;
   onOpenBuyGallery?: () => void;
@@ -1339,8 +1386,11 @@ function ProductForm({
     setShowMediaLibraryPicker(false);
   };
 
-  const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) =>
+  const update = <K extends keyof ProductFormState>(key: K, value: ProductFormState[K]) => {
+    setActionError("");
+    setMessage("");
     setForm({ ...form, [key]: value });
+  };
 
   const updateImage = (index: number, field: keyof ProductImage, value: string) =>
     update(
@@ -1416,6 +1466,18 @@ function ProductForm({
 
   return (
     <form className="space-y-6" onSubmit={onSubmit}>
+      {actionError && (
+        <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2.5">
+          <AlertCircle size={16} className="shrink-0 text-rose-600" />
+          <span>{actionError}</span>
+        </div>
+      )}
+      {message && (
+        <div role="status" className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2.5">
+          <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+          <span>{message}</span>
+        </div>
+      )}
       {/* 1. Basic Info */}
       <div className="p-5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-4">
         <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -1719,10 +1781,22 @@ function ProductForm({
             <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
               <span>Customer purchase action</span>
               <select
+                aria-label="Customer purchase action"
                 value={form.purchaseAction}
                 onChange={(event) => {
                   const purchaseAction = event.target.value as ProductPurchaseAction;
-                  setForm({ ...form, purchaseAction, priceOnRequest: purchaseAction === "buy" ? false : purchaseAction === "enquire" ? true : form.priceOnRequest });
+                  setActionError("");
+                  setMessage("");
+                  setForm({
+                    ...form,
+                    purchaseAction,
+                    priceOnRequest:
+                      purchaseAction === "buy"
+                        ? false
+                        : purchaseAction === "enquire"
+                        ? true
+                        : form.priceOnRequest,
+                  });
                 }}
                 className="rounded border border-slate-200 bg-white p-2"
               >
@@ -1735,7 +1809,18 @@ function ProductForm({
               <input
                 type="checkbox"
                 checked={form.priceOnRequest}
-                onChange={(e) => setForm({ ...form, priceOnRequest: e.target.checked, purchaseAction: e.target.checked && form.purchaseAction === "buy" ? "view-pricing" : form.purchaseAction })}
+                onChange={(e) => {
+                  setActionError("");
+                  setMessage("");
+                  setForm({
+                    ...form,
+                    priceOnRequest: e.target.checked,
+                    purchaseAction:
+                      e.target.checked && form.purchaseAction === "buy"
+                        ? "view-pricing"
+                        : form.purchaseAction,
+                  });
+                }}
                 className="rounded"
               />
               <span>Contact for Price (Disables direct checkout)</span>
@@ -2159,6 +2244,19 @@ function ProductForm({
         </div>
       </div>
 
+      {actionError && (
+        <div role="alert" className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2.5">
+          <AlertCircle size={16} className="shrink-0 text-rose-600" />
+          <span>{actionError}</span>
+        </div>
+      )}
+      {message && (
+        <div role="status" className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2.5">
+          <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+          <span>{message}</span>
+        </div>
+      )}
+
       {/* 5. Sticky Action Bar */}
       <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-4 sticky bottom-0 shadow-lg z-20">
         <div className="min-w-0">
@@ -2334,6 +2432,11 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     selectedPrimaryImage ? validImages.indexOf(selectedPrimaryImage) : 0
   );
 
+  const generatedTokens = textToList(`${form.name},${form.model},${form.category},${form.storage},${form.colors}`);
+  const existingTags = (existing?.tags ?? []).filter((tag) => !tag.startsWith("purchase-action:"));
+  const combinedTags = Array.from(new Set([...existingTags, ...generatedTokens]));
+  const tags = withProductPurchaseAction(combinedTags, form.purchaseAction);
+
   return normalizeProduct({
     ...(existing ?? {}),
     id: form.id,
@@ -2346,7 +2449,7 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     generation: form.generation,
     price: Number(form.price) || 0,
     previousPrice: form.previousPrice ? Number(form.previousPrice) : undefined,
-    priceOnRequest: form.priceOnRequest,
+    priceOnRequest: form.purchaseAction === "buy" ? false : form.priceOnRequest,
     condition: form.condition,
     storage,
     colors,
@@ -2378,7 +2481,7 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     popular: form.popular,
     available: form.available && stockStatus !== "Sold",
     archived: form.archived,
-    tags: withProductPurchaseAction(textToList(`${form.name},${form.model},${form.category},${form.storage},${form.colors}`), form.purchaseAction),
+    tags,
     createdAt: form.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Product);

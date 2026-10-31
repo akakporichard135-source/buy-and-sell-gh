@@ -3,6 +3,8 @@ import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import type { MainStoreConfig, MainStorePromoCard, StorePageSection } from "../../cms/types";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
+import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
+import { whatsappUrl } from "../../utils/whatsapp";
 import { newMacLaunches } from "../../data/newMacLaunches";
 import type { Product } from "../../types/product";
 import { resolveCatalogueProductImage } from "../../utils/productImages";
@@ -82,7 +84,14 @@ function featuredRail({
     const name = card.name || (product ? product.name : card.id);
     const statement = card.statement || "";
     const theme = card.theme || "light";
-    const actionLabel = card.actionLabel || "View Pricing";
+    const action = product ? getPublicPurchaseAction(product) : undefined;
+    const actionLabel = action
+      ? action === "buy"
+        ? "Buy"
+        : action === "enquire"
+        ? "Enquire on WhatsApp"
+        : "View Pricing"
+      : card.actionLabel || "View Pricing";
 
     let learnMorePath = card.learnMorePath;
     let actionPath = card.actionPath;
@@ -91,7 +100,12 @@ function featuredRail({
       learnMorePath = productStoryPath(product.category as ProductFamilyKey, product.slug);
     }
     if (!actionPath && product) {
-      actionPath = productBuyPath(product.category as ProductFamilyKey, product.slug);
+      actionPath =
+        action === "enquire"
+          ? whatsappUrl(
+              `Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`
+            )
+          : productBuyPath(product.category as ProductFamilyKey, product.slug);
     }
 
     return {
@@ -155,7 +169,19 @@ function featuredRail({
               </Link>
               <div className="store-latest-card-actions">
                 <Link to={product.learnMorePath} className="btn-store-secondary" aria-label={`Learn more about ${product.name}`}>Learn more</Link>
-                <Link to={product.actionPath} className="btn-store-primary" aria-label={`${product.actionLabel} for ${product.name}`}>{product.actionLabel}</Link>
+                {product.actionPath.startsWith("http") ? (
+                  <a
+                    href={product.actionPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-store-primary"
+                    aria-label={`${product.actionLabel} for ${product.name}`}
+                  >
+                    {product.actionLabel}
+                  </a>
+                ) : (
+                  <Link to={product.actionPath} className="btn-store-primary" aria-label={`${product.actionLabel} for ${product.name}`}>{product.actionLabel}</Link>
+                )}
               </div>
             </article>
           ))}

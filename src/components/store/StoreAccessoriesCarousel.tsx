@@ -8,6 +8,8 @@ import type { Product } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import { resolveCatalogueProductImage } from "../../utils/productImages";
 import { isProductPurchasable } from "../../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
+import { whatsappUrl } from "../../utils/whatsapp";
 import { StoreCarousel } from "./StoreCarousel";
 
 interface StoreAccessoriesCarouselProps {
@@ -148,22 +150,45 @@ export function StoreAccessoriesCarousel({
                     <Eye size={15} aria-hidden="true" /> Details
                   </Link>
 
-                  {purchasable ? (
-                    <Link
-                      to={productBuyPath(family, product.slug)}
-                      className="btn-store-card-primary"
-                      aria-label={`Configure ${product.name} to buy`}
-                    >
-                      <ShoppingBag size={15} aria-hidden="true" /> Buy
-                    </Link>
-                  ) : (
-                    <Link
-                      to={productBuyPath(family, product.slug)}
-                      className="btn-store-card-primary"
-                    >
-                      Enquire
-                    </Link>
-                  )}
+                  {(() => {
+                    const action = getPublicPurchaseAction(product);
+                    const buyPath = productBuyPath(family, product.slug);
+                    if (action === "buy") {
+                      return (
+                        <Link
+                          to={buyPath}
+                          className="btn-store-card-primary"
+                          aria-label={`Configure ${product.name} to buy`}
+                        >
+                          <ShoppingBag size={15} aria-hidden="true" /> Buy
+                        </Link>
+                      );
+                    }
+                    if (action === "enquire") {
+                      return (
+                        <a
+                          href={whatsappUrl(
+                            `Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-store-card-primary"
+                          aria-label={`Enquire on WhatsApp about ${product.name}`}
+                        >
+                          Enquire
+                        </a>
+                      );
+                    }
+                    return (
+                      <Link
+                        to={buyPath}
+                        className="btn-store-card-primary"
+                        aria-label={`View pricing for ${product.name}`}
+                      >
+                        View Pricing
+                      </Link>
+                    );
+                  })()}
                 </div>
               </article>
             );

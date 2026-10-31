@@ -54,15 +54,18 @@ try {
   assert.equal(duoEnquiry.variants.length, 0, "An empty published variant list must never be filled with seed variants");
   assert.equal(duoEnquiry.priceOnRequest, true, "Duo normalization must honor the published enquiry setting");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoEnquiry), "view-pricing", "Legacy enquiry records retain their pricing-page route");
-  const duoIncompleteBuy = productCatalog.normalizeProduct({ ...duoEnquiry, priceOnRequest: false, tags: purchaseActions.withProductPurchaseAction(duoEnquiry.tags, "buy") });
-  assert.match(purchaseActions.getBuyConfigurationError(duoIncompleteBuy), /variant for 256GB/, "Duo cannot publish Buy without priced storage variants");
+  const duoIncompleteBuy = {
+    ...productCatalog.normalizeProduct({ ...duoEnquiry, tags: purchaseActions.withProductPurchaseAction(duoEnquiry.tags, "buy") }),
+    priceOnRequest: true,
+  };
+  assert.match(purchaseActions.getBuyConfigurationError(duoIncompleteBuy), /confirmed price/, "Duo cannot publish Buy without a confirmed price");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoIncompleteBuy), "view-pricing", "An incomplete Buy record never advertises a working Buy flow");
   const duoVariants = duoIncompleteBuy.storage.map((storage, position) => ({
     id: `qa-duo-${position}`, productId: duoIncompleteBuy.id, title: storage, storage,
     condition: "Brand New", price: 28000 + position * 1000, stockStatus: "In Stock",
     stockQuantity: 2, available: true, position,
   }));
-  const duoBuy = productCatalog.normalizeProduct({ ...duoIncompleteBuy, variants: duoVariants });
+  const duoBuy = productCatalog.normalizeProduct({ ...duoIncompleteBuy, priceOnRequest: false, variants: duoVariants });
   assert.equal(purchaseActions.getBuyConfigurationError(duoBuy), null, "Complete priced variants permit Buy");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoBuy), "buy", "Published Buy resolves to Buy");
   const duoPricing = { ...duoBuy, tags: purchaseActions.withProductPurchaseAction(duoBuy.tags, "view-pricing") };

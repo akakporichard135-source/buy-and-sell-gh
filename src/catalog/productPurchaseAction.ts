@@ -28,12 +28,13 @@ export function getBuyConfigurationError(product: Product): string | null {
   if (!isProductPurchasable(product)) {
     return "Buy requires an approved product image.";
   }
-  if (product.storage.length > 1) {
-    const missingStorage = product.storage.find((storage) => !(product.variants ?? []).some((variant) =>
-      variant.storage?.toLowerCase() === storage.toLowerCase() &&
-      variant.available && variant.price > 0 && variant.stockQuantity > 0
-    ));
-    if (missingStorage) return `Buy requires a priced, stocked variant for ${missingStorage}.`;
+  if (product.variants && product.variants.length > 0) {
+    const hasPricedStockedVariant = product.variants.some(
+      (variant) => variant.available && variant.price > 0 && variant.stockQuantity > 0
+    );
+    if (!hasPricedStockedVariant) {
+      return "Buy requires at least one active, priced variant in stock.";
+    }
   }
   return null;
 }
