@@ -736,14 +736,13 @@ export function StorePageSectionBuilder({
       )}
 
       {/* Main Grid: Section List + Section Editor */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div
+        data-testid="store-builder-workspace"
+        className={`store-builder-workspace ${editingSection ? "is-editing" : ""}`}
+      >
         {/* Left Column: Reorderable Section List */}
-        <div
-          className={`${
-            editingSection ? "xl:col-span-5" : "xl:col-span-12"
-          } space-y-3`}
-        >
-          <div className="flex items-center justify-between px-1">
+        <div className="store-builder-list-col space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               Section Order (Top to Bottom on /store)
             </span>
@@ -769,14 +768,14 @@ export function StorePageSectionBuilder({
                   key={sec.id}
                   data-testid={`store-section-row-${sec.id}`}
                   data-section-heading={sec.heading}
-                  className={`p-4 rounded-2xl bg-white border transition-all ${
+                  className={`store-builder-section-card p-4 rounded-2xl bg-white border transition-all ${
                     isEditing
                       ? "border-[#d4af37] ring-2 ring-[#d4af37]/30 shadow-md"
                       : "border-slate-200 hover:border-slate-300 shadow-sm"
                   } ${sec.visible === false ? "opacity-65 bg-slate-50" : ""}`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0">
+                  <div className="store-builder-card-inner">
+                    <div className="store-builder-card-info">
                       <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-extrabold text-xs flex items-center justify-center flex-shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
@@ -791,32 +790,38 @@ export function StorePageSectionBuilder({
                         </div>
                       )}
 
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
+                      <div className="store-builder-card-text">
+                        <div className="store-builder-card-badges">
+                          <span className="store-builder-card-badge px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
                             {formatSectionTypeBadge(sec)}
                           </span>
                           {sec.visible === false ? (
-                            <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[0.65rem] font-bold">
+                            <span className="store-builder-card-badge px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[0.65rem] font-bold">
                               Hidden
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
+                            <span className="store-builder-card-badge px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
                               Visible
                             </span>
                           )}
                           {sec.productIds && sec.productIds.length > 0 && (
-                            <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 text-[0.65rem] font-bold">
+                            <span className="store-builder-card-badge px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200 text-[0.65rem] font-bold">
                               {sec.productIds.length} Product{sec.productIds.length === 1 ? "" : "s"}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="text-sm font-bold text-slate-900 truncate">
+                        <h4
+                          data-testid={`section-title-${sec.id}`}
+                          className="store-builder-card-title"
+                        >
                           {sec.heading}
                         </h4>
                         {sec.subtitle && (
-                          <p className="text-xs text-slate-500 truncate">
+                          <p
+                            data-testid={`section-subtitle-${sec.id}`}
+                            className="store-builder-card-subtitle"
+                          >
                             {sec.subtitle}
                           </p>
                         )}
@@ -824,13 +829,21 @@ export function StorePageSectionBuilder({
                     </div>
 
                     {/* Section Management Controls: Edit, Duplicate, Move Up, Move Down, Hide/Show, Delete */}
-                    <div className="flex flex-wrap items-center gap-1.5 flex-shrink-0">
+                    <div className="store-builder-card-actions">
                       <button
                         type="button"
                         data-testid={`section-edit-btn-${sec.id}`}
-                        onClick={() =>
-                          setEditingSectionId(isEditing ? null : sec.id)
-                        }
+                        onClick={() => {
+                          const nextId = isEditing ? null : sec.id;
+                          setEditingSectionId(nextId);
+                          if (nextId && typeof window !== "undefined" && window.innerWidth < 1280) {
+                            window.requestAnimationFrame(() => {
+                              document
+                                .getElementById("store-section-editor-panel")
+                                ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                            });
+                          }
+                        }}
                         className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition ${
                           isEditing
                             ? "bg-slate-900 text-white"
@@ -917,22 +930,23 @@ export function StorePageSectionBuilder({
         {/* Right Column: Section Editor */}
         {editingSection && (
           <div
+            id="store-section-editor-panel"
             data-testid="store-section-editor"
-            className="xl:col-span-7 p-6 rounded-2xl bg-white border border-slate-200 shadow-lg space-y-6 sticky top-4"
+            className="store-builder-editor-col p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-lg space-y-6"
           >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div>
+            <div className="flex items-start justify-between gap-3 pb-4 border-b border-slate-100">
+              <div className="min-w-0 flex-1">
                 <span className="text-[0.68rem] font-extrabold uppercase tracking-wider text-[#d4af37] block">
                   Editing Store Section • {formatSectionTypeBadge(editingSection)}
                 </span>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-slate-900 break-normal">
                   {editingSection.heading || "Untitled Section"}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingSectionId(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex-shrink-0"
                 aria-label="Close section editor"
               >
                 <X size={18} />
