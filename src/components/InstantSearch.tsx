@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { isAppleCatalogueProduct } from "../catalog/catalogueDiscovery";
 import { isProductUnavailable } from "../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { familyMatchesProduct, productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
@@ -73,10 +74,19 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
             results.map((product) => {
               const image = resolveProductImage(product);
               const stockLabel = normalizeDisplayBadge(product.stockStatus);
-              const resultType = isAppleCatalogueProduct(product) ? "Store" : "Marketplace";
+              const isApple = isAppleCatalogueProduct(product);
+              const resultType = isApple ? "Store" : "Marketplace";
+              const family = (["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[])
+                .find((f) => familyMatchesProduct(product, f)) ?? "accessories";
+              const buyPath = productBuyPath(family, product.slug);
+              const productPath = isApple ? buyPath : `/product/${product.slug}`;
+              const action = getPublicPurchaseAction(product);
+              const isEnquireOnly = action === "enquire";
+              const actionLabel = action === "buy" ? "Buy" : action === "view-pricing" ? "View Pricing" : "Enquire on WhatsApp";
+
               return (
               <article className="instant-search-result" key={product.id}>
-                <Link className="instant-search-product-link" to={`/product/${product.slug}`} onClick={onClose}>
+                <Link className="instant-search-product-link" to={productPath} onClick={onClose}>
                   {image ? <img src={image.src} alt={image.alt} loading="lazy" /> : <span className="instant-search-empty-image">No image</span>}
                   <span>
                     <b className={`instant-search-scope instant-search-scope-${resultType.toLowerCase()}`}>{resultType}</b>
@@ -86,17 +96,27 @@ export function InstantSearch({ open, onClose }: { open: boolean; onClose: () =>
                   <em className={productBadgeClass(stockLabel)}>{stockLabel}</em>
                 </Link>
                 <div className="instant-search-actions">
-                  {isProductUnavailable(product) ? <span>Unavailable</span> : <Link
-                    to={productBuyPath(
-                      (["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[])
-                        .find((family) => familyMatchesProduct(product, family)) ?? "accessories",
-                      product.slug,
-                    )}
-                    onClick={onClose}
-                  >Configure &amp; Buy</Link>}
-                  <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noopener noreferrer">
-                    <MessageCircle size={15} /> WhatsApp
-                  </a>
+                  {isEnquireOnly ? (
+                    <a
+                      href={productWhatsAppUrl(product, product.storage[0], product.colors[0])}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onClose}
+                    >
+                      <MessageCircle size={15} /> Enquire on WhatsApp
+                    </a>
+                  ) : isProductUnavailable(product) && action !== "view-pricing" ? (
+                    <span>Unavailable</span>
+                  ) : (
+                    <Link to={buyPath} onClick={onClose}>
+                      {actionLabel}
+                    </Link>
+                  )}
+                  {!isEnquireOnly && (
+                    <a href={productWhatsAppUrl(product, product.storage[0], product.colors[0])} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle size={15} /> WhatsApp
+                    </a>
+                  )}
                 </div>
               </article>
               );

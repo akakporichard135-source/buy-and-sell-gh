@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isProductPurchasable } from "../../../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../../../catalog/productPurchaseAction";
+import { whatsappUrl } from "../../../utils/whatsapp";
 import type { ProductFamilyKey } from "../../../catalog/productExperience";
 import type { Product } from "../../../types/product";
 import { formatGhs } from "../../../utils/format";
@@ -157,10 +159,9 @@ export function StoreCategoryCatalogGrid({
 
 function StoreCatalogProductCard({ product, family }: { product: Product; family: ProductFamilyKey }) {
   const isPurchasable = isProductPurchasable(product);
-  const isIphoneDuo = product.slug?.includes("iphone-duo") || product.name?.toLowerCase().includes("iphone duo");
   const priceDisplay = getCardPriceDisplay(product);
-  const isViewPricing = isIphoneDuo || priceDisplay.isEnquiry;
-  const primaryCta = isViewPricing ? "View Pricing" : (isPurchasable ? "Buy" : "View Pricing");
+  const action = getPublicPurchaseAction(product);
+  const primaryCta = action === "buy" ? "Buy" : action === "enquire" ? "Enquire on WhatsApp" : "View Pricing";
 
   const buyPath = getProductBuyPath(family, product.slug);
   const resolvedImg = resolveCatalogueProductImage(product) || resolveProductImage(product);
@@ -210,13 +211,9 @@ function StoreCatalogProductCard({ product, family }: { product: Product; family
         <div className="store-cat-grid-card-bottom">
           <span className="store-cat-grid-card-price">{priceDisplay.current}</span>
 
-          <Link
-            to={buyPath}
-            className="store-cat-grid-card-btn"
-            aria-label={`${primaryCta} ${product.name}`}
-          >
-            {primaryCta}
-          </Link>
+          {action === "enquire"
+            ? <a href={whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`)} target="_blank" rel="noopener noreferrer" className="store-cat-grid-card-btn" aria-label={`${primaryCta} ${product.name}`}>{primaryCta}</a>
+            : <Link to={buyPath} className="store-cat-grid-card-btn" aria-label={`${primaryCta} ${product.name}`}>{primaryCta}</Link>}
         </div>
       </div>
     </article>

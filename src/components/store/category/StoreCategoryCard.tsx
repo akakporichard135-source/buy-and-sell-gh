@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import type { CategoryFeaturedCardData } from "./categoryData";
 import { ProductImagePlaceholder } from "./ProductImagePlaceholder";
 import { useProductCatalog } from "../../../catalog/ProductCatalogContext";
+import { getPublicPurchaseAction } from "../../../catalog/productPurchaseAction";
+import { getProductFamily, productBuyPath } from "../../../catalog/productExperience";
 import { hasUsableLearnMoreContent } from "../../../cms/learnMoreRepository";
 import { getCardPriceDisplay } from "../../../utils/productPricing";
 import { resolveCatalogueProductImage } from "../../../utils/productImages";
+import { whatsappUrl } from "../../../utils/whatsapp";
 
 interface StoreCategoryCardProps {
   card: CategoryFeaturedCardData;
@@ -15,12 +18,11 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
   const { activeProducts } = useProductCatalog();
   const matchedProduct = activeProducts.find((p) => p.slug === card.id || card.buyPath.endsWith(`/${p.slug}`));
   const livePriceDisplay = matchedProduct ? getCardPriceDisplay(matchedProduct) : null;
-  const displayPrice = livePriceDisplay && !livePriceDisplay.isEnquiry ? livePriceDisplay.current : card.price;
+  const displayPrice = livePriceDisplay?.current ?? card.price;
 
-  // Strictly enforce iPhone Duo has NO "Buy" button (only "View Pricing")
-  const isIphoneDuo = card.id.includes("duo") || card.title.toLowerCase().includes("duo");
-  const isViewPricing = isIphoneDuo || card.isViewPricingOnly;
-  const primaryCtaText = isViewPricing ? "View Pricing" : (card.buyLabel || "Buy");
+  const action = matchedProduct ? getPublicPurchaseAction(matchedProduct) : undefined;
+  const primaryCtaText = action === "buy" ? "Buy" : action === "enquire" ? "Enquire on WhatsApp" : action === "view-pricing" ? "View Pricing" : (card.isViewPricingOnly ? "View Pricing" : card.buyLabel || "Buy");
+  const buyPath = matchedProduct ? productBuyPath(getProductFamily(matchedProduct), matchedProduct.slug) : card.buyPath;
   const productSlug = matchedProduct?.slug || card.id;
   const hasStory = card.storyPath ? hasUsableLearnMoreContent(productSlug) : false;
 
@@ -73,13 +75,9 @@ export function StoreCategoryCard({ card }: StoreCategoryCardProps) {
 
       {/* ZONE 3: BOTTOM ACTIONS ZONE */}
       <div className="store-cat-card-actions">
-        <Link
-          to={card.buyPath}
-          className="store-cat-btn-primary"
-          aria-label={`${primaryCtaText} ${card.title}`}
-        >
-          {primaryCtaText}
-        </Link>
+        {action === "enquire" && matchedProduct
+          ? <a href={whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${matchedProduct.name}. Please confirm availability and pricing.`)} target="_blank" rel="noopener noreferrer" className="store-cat-btn-primary" aria-label={`${primaryCtaText} ${card.title}`}>{primaryCtaText}</a>
+          : <Link to={buyPath} className="store-cat-btn-primary" aria-label={`${primaryCtaText} ${card.title}`}>{primaryCtaText}</Link>}
 
         {hasStory && card.storyPath && (
           <Link

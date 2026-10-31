@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../catalog/productCatalog";
 import {
   familyMatchesProduct,
   type ProductFamilyKey,
@@ -45,9 +46,11 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
     return <GenericBuyExperience family={family} slug={slug} />;
   }
 
-  // 1. iPhone Duo: Special VIEW PRICING Experience
+  // Keep the legacy enquiry page only while the published product is enquiry-only.
   if (slug === "iphone-duo") {
-    return <IphoneDuoPricingExperience />;
+    return primaryProduct && isProductOrderable(primaryProduct)
+      ? <GenericBuyExperience product={primaryProduct} family={family} slug={slug} />
+      : <IphoneDuoPricingExperience />;
   }
 
   // 2. iPhone 18 Pro & Pro Max

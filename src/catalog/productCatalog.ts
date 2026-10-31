@@ -52,7 +52,7 @@ export const getPrimaryImage = (product: Product) => {
 
 export const normalizeProduct = (product: Product): Product => {
   const seedPricing = initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug];
-  const variants = (product.variants && product.variants.length > 0) ? product.variants : (seedPricing?.variants ?? []);
+  const variants = product.variants !== undefined ? product.variants : (seedPricing?.variants ?? []);
   let price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
   if (variants.length > 0) {
     const activeVars = variants.filter((v) => v.available !== false && v.price > 0);
@@ -74,9 +74,7 @@ export const normalizeProduct = (product: Product): Product => {
   const warranty = product.warranty ?? product.warrantyInfo;
   const deliveryInfo = product.deliveryInfo ?? product.deliveryNote;
   const primaryImage = resolveProductImage(product);
-  const priceOnRequest = product.slug === "iphone-duo"
-    ? true
-    : (product.price <= 0 && seedPricing && seedPricing.price > 0)
+  const priceOnRequest = (product.price <= 0 && seedPricing && seedPricing.price > 0)
       ? false
       : (product.priceOnRequest !== undefined ? product.priceOnRequest : (price <= 0));
 

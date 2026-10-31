@@ -4,6 +4,8 @@ import { defaultStorePageSections } from "../../cms/defaultCmsData";
 import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { isProductPurchasable } from "../../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
+import { whatsappUrl } from "../../utils/whatsapp";
 import {
   getProductFamily,
   productBuyPath,
@@ -293,12 +295,9 @@ function StoreCustomProductCard({
   const resolvedImage =
     resolveCatalogueProductImage(product) || resolveProductImage(product);
   const isPurchasable = isProductPurchasable(product);
-  const isIphoneDuo =
-    product.slug?.includes("iphone-duo") ||
-    product.name?.toLowerCase().includes("iphone duo");
   const priceDisplay = getCardPriceDisplay(product);
-  const isViewPricing = isIphoneDuo || priceDisplay.isEnquiry || !isPurchasable;
-  const ctaLabel = isViewPricing ? "View Pricing" : "Buy";
+  const action = getPublicPurchaseAction(product);
+  const ctaLabel = action === "buy" ? "Buy" : action === "enquire" ? "Enquire on WhatsApp" : "View Pricing";
 
   return (
     <article
@@ -342,9 +341,9 @@ function StoreCustomProductCard({
         <Link to={learnMorePath} className="store-card-btn-secondary">
           Learn More
         </Link>
-        <Link to={buyPath} className="store-card-btn-primary">
-          {ctaLabel}
-        </Link>
+        {action === "enquire"
+          ? <a href={whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`)} target="_blank" rel="noopener noreferrer" className="store-card-btn-primary">{ctaLabel}</a>
+          : <Link to={buyPath} className="store-card-btn-primary">{ctaLabel}</Link>}
       </div>
     </article>
   );

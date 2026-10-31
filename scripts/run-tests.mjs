@@ -46,6 +46,29 @@ try {
   const storefrontTaxonomy = await bundle(path.join(projectRoot, "src/catalog/storefrontTaxonomy.ts"), path.join(outdir, "storefrontTaxonomy.mjs"));
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
+  const productCatalog = await bundle(path.join(projectRoot, "src/catalog/productCatalog.ts"), path.join(outdir, "productCatalog.mjs"));
+  const purchaseActions = await bundle(path.join(projectRoot, "src/catalog/productPurchaseAction.ts"), path.join(outdir, "productPurchaseAction.mjs"));
+  const duoSeed = productCatalog.seedCatalog.find((product) => product.slug === "iphone-duo");
+  assert.ok(duoSeed, "The canonical iPhone Duo seed must exist");
+  const duoEnquiry = productCatalog.normalizeProduct({ ...duoSeed, price: 28000, priceOnRequest: true, stockQuantity: 5, stockStatus: "In Stock", available: true, storage: ["256GB", "512GB", "1TB"], variants: [] });
+  assert.equal(duoEnquiry.variants.length, 0, "An empty published variant list must never be filled with seed variants");
+  assert.equal(duoEnquiry.priceOnRequest, true, "Duo normalization must honor the published enquiry setting");
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoEnquiry), "view-pricing", "Legacy enquiry records retain their pricing-page route");
+  const duoIncompleteBuy = productCatalog.normalizeProduct({ ...duoEnquiry, priceOnRequest: false, tags: purchaseActions.withProductPurchaseAction(duoEnquiry.tags, "buy") });
+  assert.match(purchaseActions.getBuyConfigurationError(duoIncompleteBuy), /variant for 256GB/, "Duo cannot publish Buy without priced storage variants");
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoIncompleteBuy), "view-pricing", "An incomplete Buy record never advertises a working Buy flow");
+  const duoVariants = duoIncompleteBuy.storage.map((storage, position) => ({
+    id: `qa-duo-${position}`, productId: duoIncompleteBuy.id, title: storage, storage,
+    condition: "Brand New", price: 28000 + position * 1000, stockStatus: "In Stock",
+    stockQuantity: 2, available: true, position,
+  }));
+  const duoBuy = productCatalog.normalizeProduct({ ...duoIncompleteBuy, variants: duoVariants });
+  assert.equal(purchaseActions.getBuyConfigurationError(duoBuy), null, "Complete priced variants permit Buy");
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoBuy), "buy", "Published Buy resolves to Buy");
+  const duoPricing = { ...duoBuy, tags: purchaseActions.withProductPurchaseAction(duoBuy.tags, "view-pricing") };
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoPricing), "view-pricing", "Published View Pricing resolves to the canonical page");
+  const duoWhatsApp = { ...duoPricing, priceOnRequest: true, tags: purchaseActions.withProductPurchaseAction(duoPricing.tags, "enquire") };
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoWhatsApp), "enquire", "Published enquiry action remains explicit");
   const editorialStories = await bundle(path.join(projectRoot, "src/catalog/editorialStories.ts"), path.join(outdir, "editorialStories.mjs"));
   const minimalEditorial = await bundle(path.join(projectRoot, "src/catalog/minimalEditorialSections.ts"), path.join(outdir, "minimalEditorialSections.mjs"));
   const learnMoreRepository = await bundle(path.join(projectRoot, "src/cms/learnMoreRepository.ts"), path.join(outdir, "learnMoreRepository.mjs"), "browser");

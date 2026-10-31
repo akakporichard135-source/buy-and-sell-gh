@@ -2,7 +2,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
+import { getProductFamily, productBuyPath } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
+import { whatsappUrl } from "../utils/whatsapp";
+import type { Product } from "../types/product";
 import "../styles/homepage-reference.css";
 
 type Action = { label: string; to: string };
@@ -143,17 +148,28 @@ function normalizeHomepageCampaign(campaign: Campaign): Campaign {
       mobileImage: isLegacySeedMobile ? "/products/homepage/iphone-18-pro-hero-mobile.jpg" : rawMobile,
     };
   }
-  if (normalized.id === "iphone-duo") return normalized;
-  if (normalized.secondary && normalized.secondary.label === "View pricing") {
-    return {
-      ...normalized,
-      secondary: {
-        ...normalized.secondary,
-        label: "Buy",
-      },
-    };
-  }
   return normalized;
+}
+
+function withPublishedProductAction(campaign: Campaign, products: Product[]): Campaign {
+  if (!campaign.secondary) return campaign;
+  const destinationSlug = campaign.secondary.to.split("?")[0].split("/").pop();
+  const product = products.find((item) =>
+    !item.archived && (item.slug === destinationSlug || item.slug === campaign.id || item.name.toLowerCase() === campaign.title.toLowerCase())
+  );
+  if (!product) {
+    return campaign.secondary.to.startsWith("/shop/buy-")
+      ? { ...campaign, secondary: { ...campaign.secondary, label: "View pricing" } }
+      : campaign;
+  }
+  const action = getPublicPurchaseAction(product);
+  const to = action === "enquire"
+    ? whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`)
+    : productBuyPath(getProductFamily(product), product.slug);
+  return {
+    ...campaign,
+    secondary: { label: action === "buy" ? "Buy" : action === "enquire" ? "Enquire on WhatsApp" : "View pricing", to },
+  };
 }
 
 const serviceFlyers = [
@@ -166,6 +182,7 @@ const serviceFlyers = [
 
 export function HomePage() {
   const { homepage, loading, hasVerifiedHomepage } = useCms();
+  const { products } = useProductCatalog();
 
   if (loading && !hasVerifiedHomepage) {
     return (
@@ -194,13 +211,13 @@ export function HomePage() {
     homepage?.heroes?.filter((h) => h.enabled) && homepage.heroes.filter((h) => h.enabled).length > 0
       ? (homepage.heroes.filter((h) => h.enabled) as Campaign[])
       : heroes;
-  const activeHeroes = rawHeroes.map(normalizeHomepageCampaign);
+  const activeHeroes = rawHeroes.map((campaign) => withPublishedProductAction(normalizeHomepageCampaign(campaign), products));
 
   const rawTiles: Campaign[] =
     homepage?.tiles?.filter((t) => t.enabled) && homepage.tiles.filter((t) => t.enabled).length > 0
       ? (homepage.tiles.filter((t) => t.enabled) as Campaign[])
       : tileRows.flat();
-  const activeTiles = rawTiles.map(normalizeHomepageCampaign);
+  const activeTiles = rawTiles.map((campaign) => withPublishedProductAction(normalizeHomepageCampaign(campaign), products));
 
   const tileGridRows: Campaign[][] = [];
   for (let i = 0; i < activeTiles.length; i += 2) {
@@ -268,7 +285,9 @@ function CampaignActions({ primary, secondary }: { primary: Action; secondary?: 
   return (
     <div className="home-ref-actions">
       <Link className="home-ref-button home-ref-button-primary" to={primary.to}>{primary.label}</Link>
-      {secondary && <Link className="home-ref-button home-ref-button-secondary" to={secondary.to}>{secondary.label}</Link>}
+      {secondary && (secondary.to.startsWith("https://wa.me/")
+        ? <a className="home-ref-button home-ref-button-secondary" href={secondary.to} target="_blank" rel="noopener noreferrer">{secondary.label}</a>
+        : <Link className="home-ref-button home-ref-button-secondary" to={secondary.to}>{secondary.label}</Link>)}
     </div>
   );
 }

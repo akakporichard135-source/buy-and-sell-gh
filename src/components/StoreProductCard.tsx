@@ -1,6 +1,7 @@
 import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { hasUsableLearnMoreContent } from "../cms/learnMoreRepository";
 import type { Product } from "../types/product";
@@ -8,13 +9,14 @@ import { formatGhs } from "../utils/format";
 import { getCardPriceDisplay } from "../utils/productPricing";
 import { storeCardFacts } from "../utils/storePresentation";
 import { ProductVisual } from "./ProductVisual";
+import { whatsappUrl } from "../utils/whatsapp";
 
 export function StoreProductCard({ product }: { product: Product }) {
   const priceDisplay = getCardPriceDisplay(product);
   const enquiry = priceDisplay.isEnquiry;
   const isPurchasable = isProductPurchasable(product);
-  // iPhone Duo is strictly View Pricing only, never direct Buy
-  const canDirectBuy = isPurchasable && product.slug !== "iphone-duo";
+  const action = getPublicPurchaseAction(product);
+  const canDirectBuy = action === "buy";
   const family = productFamilyForCard(product);
   const status = product.condition === "UK Used" ? "UK USED" : isPurchasable ? "IN STOCK" : "AVAILABLE ON REQUEST";
   const facts = storeCardFacts(product);
@@ -57,9 +59,9 @@ export function StoreProductCard({ product }: { product: Product }) {
 
         <div className="store-product-actions">
           <div className="store-product-actions-primary-group">
-            <Link className="btn-store-card-primary" to={buyPath}>
-              {canDirectBuy ? "Buy" : "View Pricing"}
-            </Link>
+            {action === "enquire"
+              ? <a className="btn-store-card-primary" href={whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`)} target="_blank" rel="noopener noreferrer">Enquire on WhatsApp</a>
+              : <Link className="btn-store-card-primary" to={buyPath}>{canDirectBuy ? "Buy" : "View Pricing"}</Link>}
 
             {canDirectBuy && (
               <Link

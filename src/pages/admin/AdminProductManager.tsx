@@ -39,7 +39,8 @@ import {
   stockStatuses,
 } from "../../catalog/productCatalog";
 import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
-import { uploadProductImage } from "../../catalog/supabaseProductRepository";
+import { getBuyConfigurationError, getProductPurchaseAction, withProductPurchaseAction, type ProductPurchaseAction } from "../../catalog/productPurchaseAction";
+import { uploadProductImage, upsertProductVariants } from "../../catalog/supabaseProductRepository";
 import type { Product, ProductImage, ProductVariant } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import {
@@ -69,6 +70,7 @@ interface ProductFormState {
   price: string;
   previousPrice: string;
   priceOnRequest: boolean;
+  purchaseAction: ProductPurchaseAction;
   stockQuantity: string;
   stockStatus: Product["stockStatus"];
   storage: string;
@@ -109,6 +111,7 @@ export const productToForm = (product: Product): ProductFormState => ({
       ? String(product.previousPrice ?? product.oldPrice)
       : "",
   priceOnRequest: product.priceOnRequest ?? false,
+  purchaseAction: getProductPurchaseAction(product),
   stockQuantity: String(product.stockQuantity),
   stockStatus: product.stockStatus,
   storage: listToText(product.storage),
@@ -375,6 +378,13 @@ export function AdminProductManager() {
       return;
     }
     const normalized = formToProduct(editing, products);
+    if (normalized.available && !normalized.archived && editing.purchaseAction === "buy") {
+      const purchaseError = getBuyConfigurationError(normalized);
+      if (purchaseError) {
+        setActionError(purchaseError);
+        return;
+      }
+    }
     if (!normalized.priceOnRequest && (!Number.isFinite(normalized.price) || normalized.price <= 0)) {
       setActionError(
         "Enter a confirmed Ghana cedi price greater than 0, or turn on Contact for Price before saving."
@@ -1269,13 +1279,47 @@ function ProductForm({
   onCancel: () => void;
   onOpenBuyGallery?: () => void;
 }) {
+  const { refreshProducts } = useProductCatalog();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [replacingIndex, setReplacingIndex] = useState<number | null>(null);
   const [showMediaLibraryPicker, setShowMediaLibraryPicker] = useState(false);
   const [pickingColorFinish, setPickingColorFinish] = useState<string | null>(null);
+  const [newVariantStorage, setNewVariantStorage] = useState("");
+  const [newVariantPrice, setNewVariantPrice] = useState("");
+  const [newVariantQuantity, setNewVariantQuantity] = useState("");
+  const [addingVariant, setAddingVariant] = useState(false);
+  const [variantError, setVariantError] = useState("");
   const existingProduct = products.find((p) => p.id === form.id);
   const existingVariants = existingProduct?.variants ?? [];
+
+  const addStorageVariant = async () => {
+    const storage = newVariantStorage.trim();
+    const price = Number(newVariantPrice);
+    const quantity = Number(newVariantQuantity);
+    if (!existingProduct) return setVariantError("Save this product before adding variants.");
+    if (!storage || !textToList(form.storage).includes(storage)) return setVariantError("Select a listed storage option.");
+    if (existingVariants.some((variant) => variant.storage?.toLowerCase() === storage.toLowerCase())) return setVariantError("This storage option already has a variant.");
+    if (!Number.isFinite(price) || price <= 0 || !Number.isInteger(quantity) || quantity < 0) return setVariantError("Enter a confirmed price and a whole-number stock quantity.");
+    setAddingVariant(true);
+    setVariantError("");
+    try {
+      await upsertProductVariants([{
+        id: crypto.randomUUID(), productId: existingProduct.id, title: `${existingProduct.name} ${storage}`,
+        storage, condition: form.condition, price, previousPrice: null, isSale: false,
+        stockStatus: quantity > 0 ? "In Stock" : "Out of Stock", stockQuantity: quantity,
+        available: quantity > 0, position: existingVariants.length + 1,
+      }]);
+      await refreshProducts();
+      setNewVariantStorage("");
+      setNewVariantPrice("");
+      setNewVariantQuantity("");
+    } catch (error) {
+      setVariantError(error instanceof Error ? error.message : "Variant could not be saved.");
+    } finally {
+      setAddingVariant(false);
+    }
+  };
 
   const handleMediaPickerSelect = (item: MediaItem) => {
     if (pickingColorFinish) {
@@ -1596,7 +1640,7 @@ function ProductForm({
             />
           </div>
 
-          {existingVariants.length > 0 && (
+          {existingProduct && (
             <div className="md:col-span-2 p-3 rounded-lg bg-amber-50/60 border border-amber-200/80">
               <div className="flex items-center mb-2">
                 <span className="font-bold text-slate-800 flex items-center gap-1.5">
@@ -1629,6 +1673,18 @@ function ProductForm({
                   />
                 ))}
               </div>
+              {textToList(form.storage).length > 0 && (
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
+                  <select aria-label="Storage for new variant" value={newVariantStorage} onChange={(event) => setNewVariantStorage(event.target.value)} className="rounded border border-slate-200 bg-white p-2 text-xs">
+                    <option value="">Select storage</option>
+                    {textToList(form.storage).filter((storage) => !existingVariants.some((variant) => variant.storage?.toLowerCase() === storage.toLowerCase())).map((storage) => <option key={storage} value={storage}>{storage}</option>)}
+                  </select>
+                  <input aria-label="New variant price in Ghana cedis" type="number" min="0.01" step="0.01" value={newVariantPrice} onChange={(event) => setNewVariantPrice(event.target.value)} placeholder="Price (GH₵)" className="rounded border border-slate-200 bg-white p-2 text-xs" />
+                  <input aria-label="New variant stock quantity" type="number" min="0" step="1" value={newVariantQuantity} onChange={(event) => setNewVariantQuantity(event.target.value)} placeholder="Stock quantity" className="rounded border border-slate-200 bg-white p-2 text-xs" />
+                  <button type="button" disabled={addingVariant || !newVariantStorage} onClick={() => void addStorageVariant()} className="admin-btn admin-btn-secondary admin-btn-sm">{addingVariant ? "Saving..." : "Add variant"}</button>
+                </div>
+              )}
+              {variantError && <p role="alert" className="mt-2 text-xs text-red-700">{variantError}</p>}
             </div>
           )}
 
@@ -1660,11 +1716,26 @@ function ProductForm({
           </div>
 
           <div className="md:col-span-2 flex flex-wrap gap-4 pt-1">
+            <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">
+              <span>Customer purchase action</span>
+              <select
+                value={form.purchaseAction}
+                onChange={(event) => {
+                  const purchaseAction = event.target.value as ProductPurchaseAction;
+                  setForm({ ...form, purchaseAction, priceOnRequest: purchaseAction === "buy" ? false : purchaseAction === "enquire" ? true : form.priceOnRequest });
+                }}
+                className="rounded border border-slate-200 bg-white p-2"
+              >
+                <option value="buy">Buy</option>
+                <option value="view-pricing">View Pricing</option>
+                <option value="enquire">Enquire on WhatsApp</option>
+              </select>
+            </label>
             <label className="flex items-center gap-2 text-xs font-semibold text-slate-700">
               <input
                 type="checkbox"
                 checked={form.priceOnRequest}
-                onChange={(e) => update("priceOnRequest", e.target.checked)}
+                onChange={(e) => setForm({ ...form, priceOnRequest: e.target.checked, purchaseAction: e.target.checked && form.purchaseAction === "buy" ? "view-pricing" : form.purchaseAction })}
                 className="rounded"
               />
               <span>Contact for Price (Disables direct checkout)</span>
@@ -2307,7 +2378,7 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     popular: form.popular,
     available: form.available && stockStatus !== "Sold",
     archived: form.archived,
-    tags: textToList(`${form.name},${form.model},${form.category},${form.storage},${form.colors}`),
+    tags: withProductPurchaseAction(textToList(`${form.name},${form.model},${form.category},${form.storage},${form.colors}`), form.purchaseAction),
     createdAt: form.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   } as Product);

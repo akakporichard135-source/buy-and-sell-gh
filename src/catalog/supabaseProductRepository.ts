@@ -142,7 +142,7 @@ export const rowToProduct = (row: ProductRow): Product => {
   let variants =
     row.product_variants && row.product_variants.length > 0
       ? row.product_variants.map(rowToVariant)
-      : undefined;
+      : [];
 
   // Harmonization guard: if effectivePrice > 0 and variants exist,
   // ensure the base variant's price matches effectivePrice if effectivePrice !== baseVariant.price
