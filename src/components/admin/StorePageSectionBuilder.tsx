@@ -26,7 +26,7 @@ import {
 import { useMemo, useState } from "react";
 import { isAppleCatalogueProduct } from "../../catalog/catalogueDiscovery";
 import { isProductPurchasable } from "../../catalog/productCatalog";
-import { defaultStorePageSections } from "../../cms/defaultCmsData";
+import { defaultMainStoreConfig, defaultStorePageSections } from "../../cms/defaultCmsData";
 import type {
   MainStoreConfig,
   MediaItem,
@@ -39,6 +39,7 @@ import { resolveCatalogueProductImage, resolveProductImage } from "../../utils/p
 import { getCardPriceDisplay } from "../../utils/productPricing";
 import { AdminMediaLibrary } from "../../pages/admin/AdminMediaLibrary";
 import { StorePageRenderer } from "../store/StorePageRenderer";
+import { ProductFamilyStripEditor } from "./ProductFamilyStripEditor";
 import "../../styles/store.css";
 
 export interface SectionTypeOption {
@@ -210,6 +211,10 @@ export function StorePageSectionBuilder({
   // Media Picker & Upload inside Section Editor
   const [mediaPickerField, setMediaPickerField] = useState<"desktopImage" | "mobileImage" | null>(null);
   const [uploadingField, setUploadingField] = useState<"desktopImage" | "mobileImage" | null>(null);
+
+  // Media Picker & Upload for Product Family Strip
+  const [uploadingFamilyIndex, setUploadingFamilyIndex] = useState<number | null>(null);
+  const [mediaPickerFamilyIndex, setMediaPickerFamilyIndex] = useState<number | null>(null);
 
   // Product selector search inside Section Editor
   const [productQuery, setProductQuery] = useState("");
@@ -407,6 +412,74 @@ export function StorePageSectionBuilder({
     } finally {
       setUploadingField(null);
     }
+  };
+
+  // File upload for Product Family Strip Category Image
+  const handleFamilyFileUpload = async (
+    index: number,
+    file: File,
+    label: string
+  ) => {
+    setUploadingFamilyIndex(index);
+    setStatusBanner(null);
+    try {
+      const uploaded = await uploadMedia(
+        file,
+        "storefront",
+        `${label} Category Image`
+      );
+      const currentFamilies = [
+        ...(mainStoreConfig.productFamilies ||
+          defaultMainStoreConfig.productFamilies),
+      ];
+      currentFamilies[index] = {
+        ...currentFamilies[index],
+        image: uploaded.url,
+        alt: uploaded.alt || `${label} category`,
+      };
+      setMainStoreConfig((prev) => ({
+        ...prev,
+        productFamilies: currentFamilies,
+      }));
+      setHasUnsavedEdits(true);
+      setStatusBanner({
+        type: "success",
+        message: `Updated ${label} image. Remember to click Publish Live or Save Draft.`,
+      });
+    } catch (err) {
+      setStatusBanner({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : `Failed to upload image for ${label}.`,
+      });
+    } finally {
+      setUploadingFamilyIndex(null);
+    }
+  };
+
+  // Reset Product Family Category Image to Approved Default
+  const handleResetFamilyImage = (index: number) => {
+    const currentFamilies = [
+      ...(mainStoreConfig.productFamilies ||
+        defaultMainStoreConfig.productFamilies),
+    ];
+    const defaultItem = defaultMainStoreConfig.productFamilies[index];
+    currentFamilies[index] = {
+      ...currentFamilies[index],
+      image: defaultItem?.image || "",
+      alt: defaultItem?.alt || "",
+    };
+    setMainStoreConfig((prev) => ({
+      ...prev,
+      productFamilies: currentFamilies,
+    }));
+    setHasUnsavedEdits(true);
+    setStatusBanner({
+      type: "info",
+      message: `Reset ${defaultItem?.name || "category"} to default image. Remember to click Publish Live.`,
+    });
   };
 
   // Toggle product selection in Section Editor
@@ -954,58 +1027,68 @@ export function StorePageSectionBuilder({
             </div>
 
             {/* Shortcut to built-in card editors if this is a built-in section */}
-            {editingSection.builtInKey && onSwitchSubTab && (
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs text-slate-600">
-                  This is a built-in Store section. You can customize its heading, subtitle, alignment, and visibility here, or edit its individual cards.
-                </span>
-                {editingSection.builtInKey === "latest-carousel" && (
-                  <button
-                    type="button"
-                    onClick={() => onSwitchSubTab("latest")}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Edit &ldquo;The Latest&rdquo; Cards →
-                  </button>
-                )}
-                {editingSection.builtInKey === "category-cards" && (
-                  <button
-                    type="button"
-                    onClick={() => onSwitchSubTab("categories")}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Edit Category Cards →
-                  </button>
-                )}
-                {editingSection.builtInKey === "more-to-love" && (
-                  <button
-                    type="button"
-                    onClick={() => onSwitchSubTab("moreToLove")}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Edit &ldquo;More to Love&rdquo; Cards →
-                  </button>
-                )}
-                {editingSection.builtInKey === "family-strip" && (
-                  <button
-                    type="button"
-                    onClick={() => onSwitchSubTab("families")}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Edit Product Family Icons →
-                  </button>
-                )}
-                {editingSection.builtInKey === "accessories-carousel" && (
-                  <button
-                    type="button"
-                    onClick={() => onSwitchSubTab("accessories")}
-                    className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Edit Featured Accessories →
-                  </button>
-                )}
+            {editingSection.builtInKey === "family-strip" ? (
+              <div
+                className="space-y-4"
+                data-testid="family-strip-section-editor"
+              >
+                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                  Replace category images for <strong>iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories</strong> below. Category names, store links, and public page layout remain unchanged. Click <strong>Publish Live</strong> when ready.
+                </div>
+
+                <ProductFamilyStripEditor
+                  productFamilies={mainStoreConfig.productFamilies}
+                  uploadingIndex={uploadingFamilyIndex}
+                  onUploadFile={handleFamilyFileUpload}
+                  onOpenMediaLibrary={(idx) => setMediaPickerFamilyIndex(idx)}
+                  onResetToDefault={handleResetFamilyImage}
+                />
               </div>
-            )}
+            ) : (
+              <>
+                {editingSection.builtInKey && onSwitchSubTab && (
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs text-slate-600">
+                      This is a built-in Store section. You can customize its heading, subtitle, alignment, and visibility here, or edit its individual cards.
+                    </span>
+                    {editingSection.builtInKey === "latest-carousel" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("latest")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit &ldquo;The Latest&rdquo; Cards →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "category-cards" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("categories")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Category Cards →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "more-to-love" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("moreToLove")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit &ldquo;More to Love&rdquo; Cards →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "accessories-carousel" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("accessories")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Featured Accessories →
+                      </button>
+                    )}
+                  </div>
+                )}
 
             {/* 1. Content & Copy Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1513,6 +1596,8 @@ export function StorePageSectionBuilder({
                 })}
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
       </div>
@@ -1675,6 +1760,63 @@ export function StorePageSectionBuilder({
                   imageAlt: editingSection.imageAlt || item.alt || item.title || editingSection.heading,
                 });
                 setMediaPickerField(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Media Library Picker Modal for Family Category */}
+      {mediaPickerFamilyIndex !== null && (
+        <div
+          data-testid="family-media-picker-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setMediaPickerFamilyIndex(null)}
+        >
+          <div
+            className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={18} className="text-[#d4af37]" />
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Select Image for &ldquo;
+                  {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies)[mediaPickerFamilyIndex]?.name}
+                  &rdquo;
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMediaPickerFamilyIndex(null)}
+                className="p-1 text-slate-400 hover:text-slate-900"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <AdminMediaLibrary
+              isPicker
+              onSelect={(item: MediaItem) => {
+                const currentFamilies = [
+                  ...(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies),
+                ];
+                const fam = currentFamilies[mediaPickerFamilyIndex];
+                currentFamilies[mediaPickerFamilyIndex] = {
+                  ...fam,
+                  image: item.url,
+                  alt: item.alt || item.title || `${fam.name} category`,
+                };
+                setMainStoreConfig((prev) => ({
+                  ...prev,
+                  productFamilies: currentFamilies,
+                }));
+                setHasUnsavedEdits(true);
+                setMediaPickerFamilyIndex(null);
+                setStatusBanner({
+                  type: "success",
+                  message: `Selected image for ${fam.name}. Remember to click Publish Live.`,
+                });
               }}
             />
           </div>

@@ -48,6 +48,7 @@ import { getCategoryRelevantAccessories } from "../../components/store/category/
 import { resolveAdminProductImage, resolveCatalogueProductImage, resolveProductImage } from "../../utils/productImages";
 import { formatGhs } from "../../utils/format";
 import type { Product, ProductImage } from "../../types/product";
+import { ProductFamilyStripEditor } from "../../components/admin/ProductFamilyStripEditor";
 import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
@@ -1242,153 +1243,100 @@ export function AdminStorefrontManager() {
 
           {/* 4. Product Family Strip (6 items) */}
           {activeMainStoreSection === "families" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Product Family Strip ({(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length} Items)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Top horizontal category icons representing iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories.
-                  </p>
+            <div className="space-y-5" data-testid="main-store-families-manager">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-[0.68rem] font-extrabold uppercase tracking-wider bg-[#d4af37]/20 text-amber-900">
+                        Product Family Strip
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      Product Family Strip Images (6 Categories)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Replace category images for iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories. Names and Store navigation links are preserved.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      data-testid="family-save-draft-btn"
+                      disabled={saving}
+                      onClick={async () => {
+                        setSaving(true);
+                        setSaveError("");
+                        setSaveSuccess(false);
+                        try {
+                          const saved = await saveMainStoreDraftConfig(mainStoreConfig);
+                          setMainStoreConfigRaw(saved);
+                          setSaveSuccess(true);
+                          setTimeout(() => setSaveSuccess(false), 4000);
+                        } catch (err) {
+                          setSaveError(err instanceof Error ? err.message : "Failed to save draft.");
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 transition"
+                    >
+                      <Save size={14} />
+                      <span>{saving ? "Saving..." : "Save Draft"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      data-testid="family-publish-live-btn"
+                      disabled={saving}
+                      onClick={async () => {
+                        setSaving(true);
+                        setSaveError("");
+                        setSaveSuccess(false);
+                        try {
+                          const published = await updateMainStore(mainStoreConfig);
+                          setMainStoreConfigRaw(published);
+                          setSaveSuccess(true);
+                          setTimeout(() => setSaveSuccess(false), 4000);
+                        } catch (err) {
+                          setSaveError(err instanceof Error ? err.message : "Failed to publish live.");
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                      className="admin-btn admin-btn-primary text-xs px-4 py-2.5"
+                    >
+                      <Sparkles size={14} />
+                      <span>{saving ? "Publishing..." : "Publish Live"}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).map((fam, idx) => {
-                  const defaultImg = defaultMainStoreConfig.productFamilies[idx]?.image || "";
-                  const isCustom = Boolean(fam.image && fam.image !== defaultImg);
-                  const isUploading = uploadingTarget === `ms-family-${idx}`;
-
-                  return (
-                    <div
-                      key={fam.id || idx}
-                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
-                    >
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
-                          Family #{idx + 1} • {fam.name}
-                        </span>
-                        {isCustom ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
-                            Custom Image
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
-                            Default Asset
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Live Preview Box */}
-                      <div className="h-32 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-3">
-                        {fam.image ? (
-                          <img
-                            src={fam.image}
-                            alt={fam.alt || fam.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-slate-400">No Image Assigned</span>
-                        )}
-                      </div>
-
-                      {/* Image Management Actions */}
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center gap-2">
-                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
-                            <Upload size={13} />
-                            <span>{isUploading ? "Uploading..." : "Upload Icon"}</span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
-                              disabled={uploadingTarget !== null}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void handleMainStoreFileUpload("family", idx, file, fam.name);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={() => setMediaPickerTarget({ type: "main-store-family", index: idx })}
-                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
-                          >
-                            <ImageIcon size={13} />
-                            <span>Media Library</span>
-                          </button>
-                        </div>
-
-                        {isCustom && (
-                          <button
-                            type="button"
-                            onClick={() => updateMainStoreFamily(idx, { image: defaultImg, alt: defaultMainStoreConfig.productFamilies[idx]?.alt || "" })}
-                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Reset to Default Icon</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Metadata Inputs */}
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Image URL
-                          </label>
-                          <input
-                            type="text"
-                            value={fam.image}
-                            placeholder={defaultImg}
-                            onChange={(e) => updateMainStoreFamily(idx, { image: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full font-mono"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Alt Text
-                          </label>
-                          <input
-                            type="text"
-                            value={fam.alt}
-                            placeholder={fam.name}
-                            onChange={(e) => updateMainStoreFamily(idx, { alt: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Name
-                            </label>
-                            <input
-                              type="text"
-                              value={fam.name}
-                              onChange={(e) => updateMainStoreFamily(idx, { name: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Path
-                            </label>
-                            <input
-                              type="text"
-                              value={fam.path}
-                              onChange={(e) => updateMainStoreFamily(idx, { path: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full font-mono"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                <ProductFamilyStripEditor
+                  productFamilies={mainStoreConfig.productFamilies}
+                  uploadingIndex={
+                    uploadingTarget?.startsWith("ms-family-")
+                      ? parseInt(uploadingTarget.replace("ms-family-", ""), 10)
+                      : null
+                  }
+                  onUploadFile={(idx, file, label) =>
+                    handleMainStoreFileUpload("family", idx, file, label)
+                  }
+                  onOpenMediaLibrary={(idx) =>
+                    setMediaPickerTarget({ type: "main-store-family", index: idx })
+                  }
+                  onResetToDefault={(idx) => {
+                    const defaultImg =
+                      defaultMainStoreConfig.productFamilies[idx]?.image || "";
+                    updateMainStoreFamily(idx, {
+                      image: defaultImg,
+                      alt: defaultMainStoreConfig.productFamilies[idx]?.alt || "",
+                    });
+                  }}
+                />
               </div>
             </div>
           )}
