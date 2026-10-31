@@ -60,6 +60,16 @@ try {
   };
   assert.match(purchaseActions.getBuyConfigurationError(duoIncompleteBuy), /confirmed price/, "Duo cannot publish Buy without a confirmed price");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoIncompleteBuy), "view-pricing", "An incomplete Buy record never advertises a working Buy flow");
+  const duoUnflagged = productCatalog.normalizeProduct({ ...duoEnquiry, priceOnRequest: false, tags: [] });
+  assert.match(purchaseActions.getBuyConfigurationError(duoUnflagged), /priced variants/, "A priced Duo without database variants is not orderable");
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoUnflagged), "view-pricing", "An untagged legacy Buy record without variants is guarded");
+  const unpricedDatabaseProduct = productCatalog.normalizeProduct({
+    ...duoSeed, price: 0, priceOnRequest: true, variants: [], stockQuantity: 0,
+    stockStatus: "Out of Stock", available: true,
+  }, false);
+  assert.equal(unpricedDatabaseProduct.price, 0, "Database-backed products never inherit seed prices");
+  assert.equal(unpricedDatabaseProduct.variants.length, 0, "Database-backed products never inherit seed variants");
+  assert.equal(productCatalog.createEmptyProduct([]).stockQuantity, 0, "New Admin products default to zero stock");
   const duoVariants = duoIncompleteBuy.storage.map((storage, position) => ({
     id: `qa-duo-${position}`, productId: duoIncompleteBuy.id, title: storage, storage,
     condition: "Brand New", price: 28000 + position * 1000, stockStatus: "In Stock",

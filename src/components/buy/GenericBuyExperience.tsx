@@ -6,6 +6,7 @@ import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
 import { isProductOrderable } from "../../catalog/productCatalog";
+import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
 import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
 import { resolveColorOptions } from "../../utils/productColors";
@@ -153,7 +154,7 @@ export function GenericBuyExperience({
 
   const configured = resolveConfiguredPrice(effectiveProduct, { storage });
   const purchasable = effectiveProduct
-    ? isProductOrderable(effectiveProduct) && configured.price > 0
+    ? isProductOrderable(effectiveProduct) && getPublicPurchaseAction(effectiveProduct) === "buy" && configured.price > 0
     : false;
   const priceLabel = configured.price > 0
     ? configured.formattedPrice

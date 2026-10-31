@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
-import { isProductOrderable } from "../catalog/productCatalog";
 import {
   familyMatchesProduct,
   type ProductFamilyKey,
@@ -45,10 +44,15 @@ export function ProductBuyPage({ family }: { family: ProductFamilyKey }) {
   if (!primaryProduct && backendStatus === "supabase") {
     return <GenericBuyExperience family={family} slug={slug} />;
   }
+  if (backendStatus === "supabase" && primaryProduct &&
+      ["apple-watch-series-12", "apple-watch-ultra-4", "ipad-air", "macbook-air", "mac-mini"].includes(slug) &&
+      (primaryProduct.priceOnRequest || primaryProduct.price <= 0)) {
+    return <GenericBuyExperience product={primaryProduct} family={family} slug={slug} />;
+  }
 
   // Keep the legacy enquiry page only while the published product is enquiry-only.
   if (slug === "iphone-duo") {
-    return primaryProduct && isProductOrderable(primaryProduct)
+    return primaryProduct && !primaryProduct.priceOnRequest && primaryProduct.price > 0
       ? <GenericBuyExperience product={primaryProduct} family={family} slug={slug} />
       : <IphoneDuoPricingExperience />;
   }

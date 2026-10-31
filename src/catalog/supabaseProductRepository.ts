@@ -124,12 +124,6 @@ export const rowToProduct = (row: ProductRow): Product => {
   const effectiveCondition = isAirpodsPro3 && (row.condition === "To Confirm" || !row.condition)
     ? "Brand New"
     : row.condition;
-  const effectiveStockStatus = isAirpodsPro3 && (row.stock_status === "Out of Stock" || row.stock_quantity === 0)
-    ? "In Stock"
-    : row.stock_status;
-  const effectiveStockQuantity = isAirpodsPro3 && row.stock_quantity === 0
-    ? 12
-    : row.stock_quantity;
   const effectiveImages = isAirpodsPro3 && (!row.images || row.images.length === 0)
     ? [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }]
     : (isIphone18Pro && (!row.images || row.images.length === 0)
@@ -203,8 +197,8 @@ export const rowToProduct = (row: ProductRow): Product => {
       batteryHealth: row.battery_health ?? "",
       warranty: row.warranty ?? "",
       warrantyInfo: row.warranty ?? "",
-      stockQuantity: effectiveStockQuantity,
-      stockStatus: effectiveStockStatus,
+      stockQuantity: row.stock_quantity,
+      stockStatus: row.stock_status,
       featured: row.featured,
       isFeatured: row.featured,
       newArrival: row.new_arrival,
@@ -228,11 +222,11 @@ export const rowToProduct = (row: ProductRow): Product => {
       updatedAt: row.updated_at,
       archived: row.archived,
       variants,
-    });
+    }, false);
   };
 
   export const productToRow = (product: Product): Partial<ProductRow> => {
-    const normalized = normalizeProduct(product);
+    const normalized = normalizeProduct(product, false);
     const baseTags = (normalized.tags || []).filter((t) => !t.startsWith("finish-img:"));
     const finishTags = Object.entries(normalized.colorImages || {}).map(
       ([cName, cUrl]) => `finish-img:${cName}=${encodeURIComponent(cUrl)}`

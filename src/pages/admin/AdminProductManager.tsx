@@ -2484,5 +2484,5 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     tags,
     createdAt: form.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  } as Product);
+  } as Product, false);
 }

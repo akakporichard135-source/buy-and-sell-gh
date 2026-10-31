@@ -50,8 +50,8 @@ export const getPrimaryImage = (product: Product) => {
   return resolveAdminProductImage(product);
 };
 
-export const normalizeProduct = (product: Product): Product => {
-  const seedPricing = initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug];
+export const normalizeProduct = (product: Product, useSeedPricing = true): Product => {
+  const seedPricing = useSeedPricing ? (initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug]) : undefined;
   const variants = product.variants !== undefined ? product.variants : (seedPricing?.variants ?? []);
   let price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
   if (variants.length > 0) {
@@ -113,7 +113,7 @@ export const normalizeProduct = (product: Product): Product => {
   };
 };
 
-export const seedCatalog = seedProducts.map(normalizeProduct);
+export const seedCatalog = seedProducts.map((product) => normalizeProduct(product));
 
 export const getProductBySlugFrom = (products: Product[], slug: string) =>
   products.find((product) => product.slug === slug && !product.archived);
@@ -149,8 +149,8 @@ export const createEmptyProduct = (existingProducts: Product[]): Product =>
     condition: "Brand New",
     colors: [],
     defaultColor: "",
-    stockQuantity: 1,
-    stockStatus: "In Stock",
+    stockQuantity: 0,
+    stockStatus: "Out of Stock",
     imageTone: "from-white via-zinc-100 to-yellow-100",
     badges: [],
     popular: false,
@@ -182,7 +182,7 @@ export const readStoredProducts = () => {
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed)) return null;
-    return parsed.filter((item): item is Product => Boolean(item && typeof item === "object" && typeof item.id === "string")).map(normalizeProduct);
+    return parsed.filter((item): item is Product => Boolean(item && typeof item === "object" && typeof item.id === "string")).map((product) => normalizeProduct(product));
   } catch {
     localStorage.removeItem(PRODUCT_CATALOG_STORAGE_KEY);
     return null;

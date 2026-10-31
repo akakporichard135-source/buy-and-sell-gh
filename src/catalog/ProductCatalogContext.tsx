@@ -124,7 +124,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       const raw = localStorage.getItem(ADMIN_TEST_PRODUCTS_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.map(normalizeProduct) : [];
+      return Array.isArray(parsed) ? parsed.map((product) => normalizeProduct(product)) : [];
     } catch {
       return [];
     }
@@ -133,12 +133,12 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
     if (typeof window === "undefined") return;
     try {
       if (items.length === 0) localStorage.removeItem(ADMIN_TEST_PRODUCTS_KEY);
-      else localStorage.setItem(ADMIN_TEST_PRODUCTS_KEY, JSON.stringify(items.map(normalizeProduct)));
+      else localStorage.setItem(ADMIN_TEST_PRODUCTS_KEY, JSON.stringify(items.map((product) => normalizeProduct(product))));
     } catch {}
   };
 
   const persistLocal = (nextProducts: Product[]) => {
-    const normalized = nextProducts.map(normalizeProduct);
+    const normalized = nextProducts.map((product) => normalizeProduct(product));
     setProducts(normalized);
     if (typeof window !== "undefined") {
       try {
@@ -209,7 +209,7 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       getProductBySlug: (slug) => getProductBySlugFrom(products, slug),
       createDraftProduct: () => createEmptyProduct(products),
       saveProduct: async (product) => {
-        const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() });
+        const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() }, backendStatus !== "supabase");
         if (backendStatus === "supabase") {
           if (isLocalAdminActive()) {
             const currentOverlay = readAdminTestProducts();

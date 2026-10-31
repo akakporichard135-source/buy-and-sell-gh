@@ -4,12 +4,8 @@ import { isProductPurchasable, isProductOrderable } from "./productCatalog";
 export type ProductPurchaseAction = "buy" | "view-pricing" | "enquire";
 const actionTag = "purchase-action:";
 
-function savedAction(product: Product): string | undefined {
-  return product.tags?.find((tag) => tag.startsWith(actionTag))?.slice(actionTag.length);
-}
-
 export function getProductPurchaseAction(product: Product): ProductPurchaseAction {
-  const saved = savedAction(product);
+  const saved = product.tags?.find((tag) => tag.startsWith(actionTag))?.slice(actionTag.length);
   if (saved === "buy" || saved === "view-pricing" || saved === "enquire") return saved;
   return isProductPurchasable(product) ? "buy" : "view-pricing";
 }
@@ -28,6 +24,9 @@ export function getBuyConfigurationError(product: Product): string | null {
   if (!isProductPurchasable(product)) {
     return "Buy requires an approved product image.";
   }
+  if (product.storage.length > 1 && (!product.variants || product.variants.length === 0)) {
+    return "Buy requires priced variants for the listed storage options.";
+  }
   if (product.variants && product.variants.length > 0) {
     const hasPricedStockedVariant = product.variants.some(
       (variant) => variant.available && variant.price > 0 && variant.stockQuantity > 0
@@ -41,7 +40,7 @@ export function getBuyConfigurationError(product: Product): string | null {
 
 export function getPublicPurchaseAction(product: Product): ProductPurchaseAction {
   const configured = getProductPurchaseAction(product);
-  return configured === "buy" && savedAction(product) === "buy" && getBuyConfigurationError(product)
+  return configured === "buy" && getBuyConfigurationError(product)
     ? "view-pricing"
     : configured;
 }

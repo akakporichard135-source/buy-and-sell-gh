@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import type { CartItem, Product, ProductVariant } from "../types/product";
 import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
 
@@ -86,13 +87,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast(`${liveProduct.name} is currently out of stock.`);
       return null;
     }
-    // Match variant by ID first, then by title, or retain the configured variant
+    if (getPublicPurchaseAction(liveProduct) !== "buy") {
+      setToast(`${liveProduct.name} is not configured for direct purchase yet.`);
+      return null;
+    }
+    // A configured variant must still exist under the canonical product ID.
     const liveVariant = variant
-      ? (liveProduct.variants?.find((candidate) => candidate.id === variant.id) ||
-         liveProduct.variants?.find((candidate) => candidate.title === variant.title))
+      ? liveProduct.variants?.find((candidate) => candidate.id === variant.id)
       : undefined;
     if (variant && !liveVariant && backendStatus === "supabase") {
       setToast("This product configuration is no longer available.");
+      return null;
+    }
+    if (backendStatus === "supabase" && liveProduct.storage.length > 1 && !liveVariant) {
+      setToast("Select an available priced variant before adding this product.");
       return null;
     }
 
