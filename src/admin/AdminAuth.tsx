@@ -59,8 +59,10 @@ const isPreviewMode = (): boolean => {
     return false;
   }
 };
-const isLocalAdminAllowed = () => import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true" || isPreviewMode();
-const LOCAL_ADMIN_ENABLED = isLocalAdminAllowed();
+const isLocalAdminAllowed = () => {
+  const envVal = import.meta.env.VITE_ENABLE_LOCAL_ADMIN;
+  return envVal === "true" || envVal === true || envVal === '"true"' || isPreviewMode();
+};
 const EMAIL_CHANGE_ACCOUNT_ID = "950ec818-3b39-4e28-a02c-01f0597b5455";
 const EMAIL_CHANGE_OLD = "akakporichard135@gmail.com";
 const EMAIL_CHANGE_NEW = "buyandsellgh@yahoo.com";
@@ -198,7 +200,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
         window.setTimeout(() => {
           if (!active) return;
-          if (!nextSession && LOCAL_ADMIN_ENABLED) {
+          if (!nextSession && isLocalAdminAllowed()) {
             try {
               if (localStorage.getItem(STORAGE_KEY)) return;
             } catch {}
@@ -248,21 +250,21 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
               setSession(validation.session);
               return { ok: true };
             }
-            if (!LOCAL_ADMIN_ENABLED) {
+            if (!isLocalAdminAllowed()) {
               return { ok: false, message: getAdminSessionFailureMessage(validation.reason) };
             }
-          } else if (!LOCAL_ADMIN_ENABLED) {
+          } else if (!isLocalAdminAllowed()) {
             return { ok: false, message: getAdminSignInErrorMessage(error) };
           }
         } catch {
-          if (!LOCAL_ADMIN_ENABLED) {
+          if (!isLocalAdminAllowed()) {
             await signOutInvalidSession();
             return { ok: false, message: "Unable to sign in right now. Try again." };
           }
         }
       }
 
-      if (!LOCAL_ADMIN_ENABLED) return { ok: false, message: "Secure admin authentication is not configured." };
+      if (!isLocalAdminAllowed()) return { ok: false, message: "Secure admin authentication is not configured." };
       const allowedEmail = import.meta.env.VITE_LOCAL_ADMIN_EMAIL;
       const allowedPassword = import.meta.env.VITE_LOCAL_ADMIN_PASSWORD;
       if (!allowedEmail || !allowedPassword || trimmedEmail !== allowedEmail || password !== allowedPassword) {
@@ -436,7 +438,7 @@ export const useAdminAuth = () => {
   return context;
 };
 
-export const isLocalAdminEnabled = () => LOCAL_ADMIN_ENABLED;
-export const isAdminLoginAvailable = () => isSupabaseConfigured() || LOCAL_ADMIN_ENABLED;
+export const isLocalAdminEnabled = () => isLocalAdminAllowed();
+export const isAdminLoginAvailable = () => isSupabaseConfigured() || isLocalAdminAllowed();
 
 export { isSupabaseConfigured };

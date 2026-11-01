@@ -17,7 +17,8 @@ export const isPreviewMode = (): boolean => {
 
 export const isLocalAdminActive = (): boolean => {
   if (typeof window === "undefined") return false;
-  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN !== "true" && !isPreviewMode()) return false;
+  const envVal = import.meta.env.VITE_ENABLE_LOCAL_ADMIN;
+  if (envVal !== "true" && envVal !== true && envVal !== '"true"' && !isPreviewMode()) return false;
   try {
     const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
     if (!saved) return false;
@@ -41,7 +42,8 @@ export const fetchAdminRole = async (userId: string): Promise<AdminRole | null> 
 };
 
 export const assertAdminAal2 = async (requiredRole?: AdminRole) => {
-  if (import.meta.env.VITE_ENABLE_LOCAL_ADMIN === "true" || isPreviewMode()) {
+  const envVal = import.meta.env.VITE_ENABLE_LOCAL_ADMIN;
+  if (envVal === "true" || envVal === true || envVal === '"true"' || isPreviewMode()) {
     try {
       const saved = localStorage.getItem("buyandsell-gh-temp-admin-session");
       if (saved) {
