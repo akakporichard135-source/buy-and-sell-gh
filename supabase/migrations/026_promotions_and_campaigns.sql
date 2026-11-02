@@ -278,6 +278,33 @@ INSERT INTO public.promotions (
   'Trade in your current device toward your next Apple upgrade in Accra.',
   true,
   true
+),
+(
+  'promo-ps5-slim-combo-offer',
+  'one-time-playstation-combo-offer',
+  'One-Time PlayStation Combo Offer',
+  'Neatly used PS5 Slim Disc Version bundled with brand-new EA Sports FC 25 and two brand-new controllers.',
+  'One-Time PlayStation Combo Offer featuring a neatly used PS5 Slim Standard Edition (Disc Version) bundled with a brand-new EA Sports FC 25 game and two brand-new PlayStation controllers. Confirmed availability and complete physical inspection at our Dome showroom in Accra.',
+  'bundle',
+  'draft',
+  false,
+  now(),
+  now() + interval '60 days',
+  8,
+  ARRAY['ps5-slim-combo-offer'],
+  'Game Consoles',
+  null, null, null, null,
+  1, 1, 0, 0,
+  '/products/campaigns/ps5-slim-combo-desktop.webp',
+  '/products/campaigns/ps5-slim-combo-mobile.webp',
+  'One-Time PlayStation Combo Offer: PS5 Slim Disc Edition with EA Sports FC 25 and 2 Controllers',
+  'Explore PlayStation Bundle',
+  '/product/ps5-slim-combo-offer',
+  5,
+  true,
+  'One-Time PlayStation Combo Offer: PS5 Slim + FC 25 + 2 Controllers for GH₵ 7,500.',
+  true,
+  true
 )
 ON CONFLICT (id) DO UPDATE SET
   title = EXCLUDED.title,

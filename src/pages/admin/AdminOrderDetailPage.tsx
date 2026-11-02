@@ -416,6 +416,16 @@ export function AdminOrderDetailPage() {
                       {item.colour ? `${item.colour} | ` : ""}
                       {item.condition || "Standard"}
                     </p>
+                    {(item.includedItems && item.includedItems.length > 0) && (
+                      <div className="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded text-[11px] text-slate-600">
+                        <strong className="text-slate-800">Bundle Contents:</strong>
+                        <ul className="mt-1 pl-3.5 list-disc space-y-0.5">
+                          {item.includedItems.map((inc, i) => (
+                            <li key={i}>{inc}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div className="mt-1 flex items-center gap-3 text-xs">
                       <span className="text-slate-600 font-semibold">
                         Qty: {item.quantity} {item.isFreeGift ? "(Complimentary Gift)" : `× ${formatGhs(item.unitPrice)}`}

@@ -100,6 +100,16 @@ export function BagReview() {
                     <p className="apple-bag-item-specs">
                       {[item.storage, item.color, item.product.condition].filter(Boolean).join(" · ")}
                     </p>
+                    {item.product.includedItems && item.product.includedItems.length > 0 && (
+                      <div className="bundle-included-items" style={{ marginTop: 6, fontSize: "0.82rem", color: "#475569", background: "#f8fafc", padding: "6px 10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontWeight: 600, color: "#0f172a", marginBottom: 3, fontSize: "0.78rem" }}>Includes {item.product.includedItems.length} items:</div>
+                        <ul style={{ margin: 0, paddingLeft: 14, lineHeight: 1.4 }}>
+                          {item.product.includedItems.map((inc, i) => (
+                            <li key={i}>{inc}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {options.length > 0 && (
                       <dl className="bag-line-options" style={{ marginTop: 6, fontSize: "0.82rem", color: "#6e6e73" }}>
                         {options.map(([name, value]) => (
@@ -352,6 +362,11 @@ export function BagDrawer() {
                           <p className="apple-bag-item-specs" style={{ fontSize: "0.85rem" }}>
                             {[item.storage, item.color].filter(Boolean).join(" · ")}
                           </p>
+                          {item.product.includedItems && item.product.includedItems.length > 0 && (
+                            <div style={{ marginTop: 4, fontSize: "0.76rem", color: "#64748b" }}>
+                              <strong>Includes:</strong> {item.product.includedItems.join(" • ")}
+                            </div>
+                          )}
                         </div>
                         <div className="apple-bag-item-price" style={{ fontSize: "1.05rem" }}>
                           {isGift ? (

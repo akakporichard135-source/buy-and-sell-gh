@@ -4,7 +4,10 @@ import {
   ArrowRight,
   BarChart3,
   Calendar,
+  Check,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Copy,
   DollarSign,
@@ -16,11 +19,12 @@ import {
   HelpCircle,
   Image as ImageIcon,
   Layers,
-  MousePointerClick,
+  Package,
   Percent,
   Plus,
   Power,
   RefreshCw,
+  RotateCcw,
   Search,
   ShieldCheck,
   ShoppingBag,
@@ -28,11 +32,14 @@ import {
   Tag,
   Trash2,
   TrendingUp,
+  Upload,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { createProductSlug } from "../../catalog/productCatalog";
+import { withProductPurchaseAction, type ProductPurchaseAction } from "../../catalog/productPurchaseAction";
 import { defaultPromotions } from "../../promotions/defaultPromotions";
 import {
   archivePromotion,
@@ -44,32 +51,71 @@ import {
   togglePromotionEnabled,
 } from "../../promotions/supabasePromotionsRepository";
 import type { PromotionCampaign, PromotionStatus, PromotionType } from "../../types/promotion";
+import type { Product, ProductCategory, ProductCondition } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 import type { MediaItem } from "../../cms/types";
+import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 
 type TabKey = "all" | "active" | "scheduled" | "draft" | "expired" | "archived";
+type EditorStep = "basics" | "type" | "product" | "rules" | "flyers" | "placement" | "preview";
+
+interface BundleItem {
+  id: string;
+  name: string;
+  condition?: string;
+  sku?: string;
+}
 
 export function AdminPromotionsPage() {
-  const { products } = useProductCatalog();
+  const { products, saveProduct, refreshProducts } = useProductCatalog();
   const [promotions, setPromotions] = useState<PromotionCampaign[]>(defaultPromotions);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
-  // Editor Modal State
+  // Editor State
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState<EditorStep>("basics");
   const [editingCampaign, setEditingCampaign] = useState<Partial<PromotionCampaign> | null>(null);
-  const [editorTab, setEditorTab] = useState<"info" | "target" | "benefits" | "flyers" | "scheduling" | "preview">("info");
   const [saving, setSaving] = useState(false);
   const [editorError, setEditorError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Product Selection Mode: "existing" vs "new_bundle"
+  const [productMode, setProductMode] = useState<"existing" | "new_bundle">("existing");
+  const [productSearch, setProductSearch] = useState("");
+  const [selectedExistingProduct, setSelectedExistingProduct] = useState<Product | null>(null);
+
+  // New Promotional Product / Custom Bundle In-place Form State
+  const [newProductData, setNewProductData] = useState({
+    name: "",
+    category: "Game Consoles" as ProductCategory,
+    brand: "Sony",
+    model: "",
+    condition: "UK Used" as ProductCondition,
+    price: 7500,
+    stockQuantity: 1,
+    description: "",
+    purchaseAction: "buy" as ProductPurchaseAction,
+    isStorefrontVisible: true,
+  });
+  const [bundleItems, setBundleItems] = useState<BundleItem[]>([
+    { id: "1", name: "One neatly used PS5 Slim Standard Edition (Disc Version)", condition: "UK Used" },
+    { id: "2", name: "One brand-new EA Sports FC 25 game", condition: "Brand New" },
+    { id: "3", name: "Two brand-new PlayStation controllers, exact model to be confirmed", condition: "Brand New" },
+  ]);
+  const [newBundleItemText, setNewBundleItemText] = useState("");
+  const [newBundleItemCondition, setNewBundleItemCondition] = useState<string>("Brand New");
 
   // Media Library Picker State
   const [mediaPickerTarget, setMediaPickerTarget] = useState<"desktop" | "mobile" | "gift" | null>(null);
+  const fileInputDesktopRef = useRef<HTMLInputElement>(null);
+  const fileInputMobileRef = useRef<HTMLInputElement>(null);
 
-  // Delete Confirmation Modal State
+  // Delete Candidate State
   const [deleteCandidate, setDeleteCandidate] = useState<PromotionCampaign | null>(null);
   const [deleteInput, setDeleteInput] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -108,48 +154,36 @@ export function AdminPromotionsPage() {
 
       // 3. Search query
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const str = `${promo.title} ${promo.slug} ${promo.shortDescription} ${promo.promotionType}`.toLowerCase();
-        if (!str.includes(q)) return false;
+        const q = searchQuery.toLowerCase();
+        const matchTitle = promo.title.toLowerCase().includes(q);
+        const matchDesc = promo.shortDescription.toLowerCase().includes(q);
+        const matchType = promo.promotionType.toLowerCase().includes(q);
+        const matchProducts = (promo.eligibleProductIds || []).some((id) => id.toLowerCase().includes(q));
+        if (!matchTitle && !matchDesc && !matchType && !matchProducts) return false;
       }
 
       return true;
-    }).sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    });
   }, [promotions, activeTab, typeFilter, searchQuery]);
 
-  // Aggregate Performance Metrics
-  const stats = useMemo(() => {
-    const totalCampaigns = promotions.length;
-    const activeCount = promotions.filter((p) => p.status === "active" && p.isEnabled).length;
-    const totalViews = promotions.reduce((sum, p) => sum + (p.viewCount || 0), 0);
-    const totalClicks = promotions.reduce((sum, p) => sum + (p.clickCount || 0), 0);
-    const totalOrders = promotions.reduce((sum, p) => sum + (p.ordersCount || 0), 0);
-    const totalDiscountGiven = promotions.reduce((sum, p) => sum + (p.totalDiscountGiven || 0), 0);
-    const totalGiftsAllocated = promotions.reduce((sum, p) => sum + (p.totalGiftsAllocated || 0), 0);
-    const totalAttributedSales = promotions.reduce((sum, p) => sum + (p.totalAttributedSales || 0), 0);
-
-    return {
-      totalCampaigns,
-      activeCount,
-      totalViews,
-      totalClicks,
-      totalOrders,
-      totalDiscountGiven,
-      totalGiftsAllocated,
-      totalAttributedSales,
-    };
+  // KPI Metrics
+  const metrics = useMemo(() => {
+    const active = promotions.filter((p) => p.status === "active" && p.isEnabled).length;
+    const drafts = promotions.filter((p) => p.status === "draft").length;
+    const totalRedemptions = promotions.reduce((sum, p) => sum + (p.currentRedemptions || 0), 0);
+    const totalSavings = promotions.reduce((sum, p) => sum + (p.totalDiscountGiven || 0), 0);
+    return { active, drafts, totalRedemptions, totalSavings };
   }, [promotions]);
 
-  // Handlers
+  // Open Create Promotion Modal
   const handleOpenCreate = () => {
-    const newId = `promo-${Date.now()}`;
     setEditingCampaign({
-      id: newId,
-      slug: `promo-campaign-${Date.now().toString().slice(-4)}`,
+      id: `promo-${Date.now()}`,
+      slug: "",
       title: "",
       shortDescription: "",
       detailedDescription: "",
-      promotionType: "free_gift",
+      promotionType: "bundle",
       status: "draft",
       isEnabled: true,
       startDate: new Date().toISOString().slice(0, 16),
@@ -162,38 +196,83 @@ export function AdminPromotionsPage() {
       eligibleVariantIds: [],
       eligibleStorageOptions: [],
       minOrderSubtotal: 0,
+      discountPercent: null,
+      discountAmount: null,
+      promotionalPrice: null,
       giftQuantityPerPurchase: 1,
       maxGiftsPerOrder: 1,
-      giftStockQuantity: 20,
-      giftStockAlertThreshold: 5,
-      ctaText: "Shop Eligible Items",
-      ctaDestination: "/store",
+      giftStockQuantity: 10,
+      giftStockAlertThreshold: 2,
+      desktopFlyerUrl: "/products/campaigns/ps5-slim-combo-desktop.webp",
+      mobileFlyerUrl: "/products/campaigns/ps5-slim-combo-mobile.webp",
+      ctaText: "Explore Offer",
+      ctaDestination: "/offers",
       displayOrder: promotions.length + 1,
-      showOnAnnouncementBar: false,
+      showOnAnnouncementBar: true,
       announcementBarText: "",
       showOnHomepageCarousel: true,
       showOnOffersPage: true,
       totalRedemptionLimit: null,
       customerRedemptionLimit: 1,
     });
-    setEditorTab("info");
+    setProductMode("new_bundle");
+    setNewProductData({
+      name: "PS5 Slim Combo Offer",
+      category: "Game Consoles",
+      brand: "Sony",
+      model: "PlayStation 5 Slim Standard Edition",
+      condition: "UK Used",
+      price: 7500,
+      stockQuantity: 1,
+      description: "One-Time PlayStation Combo Offer with EA Sports FC 25 and two controllers.",
+      purchaseAction: "buy",
+      isStorefrontVisible: true,
+    });
+    setBundleItems([
+      { id: "1", name: "One neatly used PS5 Slim Standard Edition (Disc Version)", condition: "UK Used" },
+      { id: "2", name: "One brand-new EA Sports FC 25 game", condition: "Brand New" },
+      { id: "3", name: "Two brand-new PlayStation controllers, exact model to be confirmed", condition: "Brand New" },
+    ]);
+    setSelectedExistingProduct(null);
+    setActiveStep("basics");
     setEditorError("");
     setSaveSuccess("");
+    setValidationErrors([]);
     setIsEditorOpen(true);
   };
 
+  // Open Edit Campaign
   const handleOpenEdit = (campaign: PromotionCampaign) => {
     setEditingCampaign({
       ...campaign,
       startDate: campaign.startDate ? campaign.startDate.slice(0, 16) : "",
       endDate: campaign.endDate ? campaign.endDate.slice(0, 16) : "",
     });
-    setEditorTab("info");
+
+    // Check if targeting an existing product
+    if (campaign.eligibleProductIds && campaign.eligibleProductIds.length > 0) {
+      const match = products.find((p) => campaign.eligibleProductIds.includes(p.id) || campaign.eligibleProductIds.includes(p.slug));
+      if (match) {
+        setSelectedExistingProduct(match);
+        setProductMode("existing");
+        if (match.includedItems && match.includedItems.length > 0) {
+          setBundleItems(match.includedItems.map((item, idx) => ({ id: String(idx + 1), name: item })));
+        }
+      } else {
+        setProductMode("existing");
+      }
+    } else {
+      setProductMode("existing");
+    }
+
+    setActiveStep("basics");
     setEditorError("");
     setSaveSuccess("");
+    setValidationErrors([]);
     setIsEditorOpen(true);
   };
 
+  // Quick Toggle Enabled
   const handleToggleEnabled = async (campaign: PromotionCampaign) => {
     try {
       await togglePromotionEnabled(campaign.id, !campaign.isEnabled);
@@ -203,6 +282,7 @@ export function AdminPromotionsPage() {
     }
   };
 
+  // Quick Duplicate
   const handleDuplicate = async (campaign: PromotionCampaign) => {
     try {
       await duplicatePromotion(campaign.id);
@@ -212,6 +292,7 @@ export function AdminPromotionsPage() {
     }
   };
 
+  // Quick Archive
   const handleArchive = async (campaign: PromotionCampaign) => {
     try {
       await archivePromotion(campaign.id);
@@ -221,6 +302,7 @@ export function AdminPromotionsPage() {
     }
   };
 
+  // Delete Confirm
   const handleDeleteConfirm = async () => {
     if (!deleteCandidate) return;
     if (deleteInput !== deleteCandidate.title) {
@@ -240,1148 +322,1872 @@ export function AdminPromotionsPage() {
     }
   };
 
-  const handleSaveCampaign = async (publishImmediately = false) => {
+  // Add Item to Custom Bundle
+  const handleAddBundleItem = () => {
+    if (!newBundleItemText.trim()) return;
+    setBundleItems((prev) => [
+      ...prev,
+      {
+        id: String(Date.now()),
+        name: newBundleItemText.trim(),
+        condition: newBundleItemCondition,
+      },
+    ]);
+    setNewBundleItemText("");
+  };
+
+  const handleRemoveBundleItem = (id: string) => {
+    setBundleItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handlePreloadPs5Combo = () => {
+    setNewProductData({
+      name: "PS5 Slim Combo Offer",
+      category: "Game Consoles",
+      brand: "Sony",
+      model: "PlayStation 5 Slim Standard Edition",
+      condition: "UK Used",
+      price: 7500,
+      stockQuantity: 1,
+      description: "One-Time PlayStation Combo Offer with EA Sports FC 25 and two controllers.",
+      purchaseAction: "buy",
+      isStorefrontVisible: true,
+    });
+    setBundleItems([
+      { id: "1", name: "One neatly used PS5 Slim Standard Edition (Disc Version)", condition: "UK Used" },
+      { id: "2", name: "One brand-new EA Sports FC 25 game", condition: "Brand New" },
+      { id: "3", name: "Two brand-new PlayStation controllers, exact model to be confirmed", condition: "Brand New" },
+    ]);
+    if (editingCampaign) {
+      setEditingCampaign({
+        ...editingCampaign,
+        title: "One-Time PlayStation Combo Offer",
+        shortDescription: "Neatly used PS5 Slim Disc Version with EA Sports FC 25 and two controllers.",
+        promotionType: "bundle",
+        promotionalPrice: 7500,
+        desktopFlyerUrl: "/products/campaigns/ps5-slim-combo-desktop.webp",
+        mobileFlyerUrl: "/products/campaigns/ps5-slim-combo-mobile.webp",
+        ctaText: "Explore PlayStation Bundle",
+        ctaDestination: "/product/ps5-slim-combo-offer",
+      });
+    }
+  };
+
+  // Validate Campaign
+  const validateCampaignForPublish = (): string[] => {
+    const errors: string[] = [];
+    if (!editingCampaign) return ["No campaign data found."];
+
+    if (!editingCampaign.title?.trim()) {
+      errors.push("Campaign Title is required.");
+    }
+    if (!editingCampaign.shortDescription?.trim()) {
+      errors.push("Short Summary / Headline is required.");
+    }
+
+    if (!editingCampaign.desktopFlyerUrl?.trim() && !editingCampaign.mobileFlyerUrl?.trim()) {
+      errors.push("At least one promotional flyer (Desktop or Mobile) must be uploaded or selected.");
+    }
+
+    // Type specific checks
+    const type = editingCampaign.promotionType || "bundle";
+    if (type === "bundle") {
+      const price = Number(editingCampaign.promotionalPrice || (productMode === "new_bundle" ? newProductData.price : 0));
+      if (!price || price <= 0) {
+        errors.push("Bundle price must be configured and greater than GH₵0.");
+      }
+      if (productMode === "new_bundle" && bundleItems.length === 0) {
+        errors.push("Please include at least one item in the bundle.");
+      }
+      if (productMode === "new_bundle" && Number(newProductData.stockQuantity) <= 0) {
+        errors.push("Confirmed bundle stock must be greater than 0 before publishing live.");
+      }
+    } else if (type === "free_gift") {
+      if (!editingCampaign.giftProductId && !editingCampaign.giftProductName) {
+        errors.push("Please select a free gift product from the catalog.");
+      }
+    } else if (type === "percentage_discount") {
+      const pct = Number(editingCampaign.discountPercent || 0);
+      if (pct <= 0 || pct > 100) {
+        errors.push("Percentage discount must be between 1% and 100%.");
+      }
+    } else if (type === "fixed_discount") {
+      const amt = Number(editingCampaign.discountAmount || 0);
+      if (amt <= 0) {
+        errors.push("Fixed discount cash amount must be greater than GH₵0.");
+      }
+    } else if (type === "promotional_price") {
+      const pr = Number(editingCampaign.promotionalPrice || 0);
+      if (pr <= 0) {
+        errors.push("Promotional price must be greater than GH₵0.");
+      }
+    }
+
+    return errors;
+  };
+
+  // Save Campaign (Draft or Live Publish)
+  const handleSaveCampaign = async (publishLive = false) => {
     if (!editingCampaign) return;
     setEditorError("");
     setSaveSuccess("");
+    setValidationErrors([]);
 
+    // Pre-flight checks
     if (!editingCampaign.title?.trim()) {
       setEditorError("Please enter a campaign title.");
-      setEditorTab("info");
+      setActiveStep("basics");
       return;
     }
 
-    if (!editingCampaign.slug?.trim()) {
-      setEditorError("Please enter a unique campaign URL slug.");
-      setEditorTab("info");
-      return;
-    }
-
-    // Validation per type
-    if (editingCampaign.promotionType === "free_gift") {
-      if (!editingCampaign.giftProductName && !editingCampaign.giftProductId) {
-        setEditorError("Free gift promotions require a selected gift product or name.");
-        setEditorTab("benefits");
-        return;
-      }
-      if ((editingCampaign.giftStockQuantity ?? 0) <= 0 && publishImmediately) {
-        setEditorError("Promotional gift stock must be greater than 0 to publish.");
-        setEditorTab("benefits");
-        return;
-      }
-    } else if (editingCampaign.promotionType === "percentage_discount") {
-      const pct = Number(editingCampaign.discountPercent);
-      if (!pct || pct <= 0 || pct > 100) {
-        setEditorError("Percentage discount must be between 1% and 100%.");
-        setEditorTab("benefits");
-        return;
-      }
-    } else if (editingCampaign.promotionType === "fixed_discount") {
-      const amt = Number(editingCampaign.discountAmount);
-      if (!amt || amt <= 0) {
-        setEditorError("Fixed discount amount must be greater than GH₵0.");
-        setEditorTab("benefits");
+    if (publishLive) {
+      const errors = validateCampaignForPublish();
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        setEditorError("Please fix the required items before publishing live.");
         return;
       }
     }
 
     setSaving(true);
     try {
-      const payload: Partial<PromotionCampaign> = {
+      let targetProductId = editingCampaign.eligibleProductIds?.[0] || "";
+
+      // If creating a new canonical product / bundle in-place
+      if (productMode === "new_bundle" && newProductData.name.trim()) {
+        const prodSlug = createProductSlug(newProductData.name, products);
+        const canonicalProduct: Product = {
+          id: prodSlug,
+          slug: prodSlug,
+          name: newProductData.name.trim(),
+          brand: newProductData.brand || "Sony",
+          category: newProductData.category,
+          model: newProductData.model || newProductData.name.trim(),
+          condition: newProductData.condition,
+          price: Number(newProductData.price),
+          priceOnRequest: false,
+          stockQuantity: Number(newProductData.stockQuantity),
+          stockStatus: Number(newProductData.stockQuantity) > 0 ? "In Stock" : "Out of Stock",
+          storage: ["Standard"],
+          colors: ["Standard"],
+          imageTone: "light",
+          images: [
+            {
+              src: editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl || "/products/campaigns/ps5-slim-combo-desktop.webp",
+              alt: newProductData.name.trim(),
+            },
+          ],
+          includedItems: bundleItems.map((item) => `${item.name}${item.condition ? ` (${item.condition})` : ""}`),
+          specs: [
+            `${newProductData.name.trim()}`,
+            `Condition: ${newProductData.condition}`,
+            `Includes ${bundleItems.length} verified components`,
+          ],
+          box: bundleItems.map((item) => item.name),
+          description: newProductData.description || editingCampaign.detailedDescription || editingCampaign.shortDescription || "",
+          tags: withProductPurchaseAction(
+            ["promotional", "bundle", "custom-bundle"],
+            newProductData.purchaseAction
+          ),
+          available: newProductData.isStorefrontVisible,
+          archived: false,
+        };
+
+        // Save into canonical product repository
+        await saveProduct(canonicalProduct);
+        targetProductId = prodSlug;
+        await refreshProducts();
+      }
+
+      // Build campaign to save
+      const campaignStatus: PromotionStatus = publishLive ? "active" : (editingCampaign.status || "draft");
+      const campaignEnabled = publishLive ? true : Boolean(editingCampaign.isEnabled);
+
+      const toSave: Partial<PromotionCampaign> = {
         ...editingCampaign,
-        status: publishImmediately ? "active" : editingCampaign.status || "draft",
-        startDate: editingCampaign.startDate ? new Date(editingCampaign.startDate).toISOString() : null,
-        endDate: editingCampaign.endDate ? new Date(editingCampaign.endDate).toISOString() : null,
+        status: campaignStatus,
+        isEnabled: campaignEnabled,
+        eligibleProductIds: targetProductId ? [targetProductId] : (editingCampaign.eligibleProductIds || []),
+        bundleRequiredProductIds: targetProductId ? [targetProductId] : (editingCampaign.bundleRequiredProductIds || []),
+        promotionalPrice: editingCampaign.promotionType === "bundle"
+          ? (productMode === "new_bundle" ? Number(newProductData.price) : Number(editingCampaign.promotionalPrice || 0))
+          : editingCampaign.promotionalPrice,
+        ctaDestination: editingCampaign.ctaDestination || (targetProductId ? `/product/${targetProductId}` : "/offers"),
+        updatedAt: new Date().toISOString(),
       };
 
-      await savePromotion(payload);
-      setSaveSuccess(publishImmediately ? "Campaign published successfully!" : "Draft saved successfully!");
+      const saved = await savePromotion(toSave);
+      setSaveSuccess(publishLive ? "Promotion published live successfully!" : "Promotion draft saved successfully.");
       await loadData();
+
       setTimeout(() => {
         setIsEditorOpen(false);
       }, 900);
     } catch (err: any) {
-      setEditorError(err.message || "Failed to save promotion campaign.");
+      setEditorError(err.message || "Could not save promotion.");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleSelectMedia = (item: MediaItem) => {
-    if (!editingCampaign || !mediaPickerTarget) return;
+  // Upload Flyer Image Handler
+  const handleFlyerFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "desktop" | "mobile") => {
+    const file = e.target.files?.[0];
+    if (!file || !editingCampaign) return;
 
-    if (mediaPickerTarget === "desktop") {
-      setEditingCampaign((prev) => ({
-        ...prev,
-        desktopFlyerUrl: item.url,
-        flyerAltText: prev?.flyerAltText || item.alt || prev?.title || "",
-      }));
-    } else if (mediaPickerTarget === "mobile") {
-      setEditingCampaign((prev) => ({
-        ...prev,
-        mobileFlyerUrl: item.url,
-      }));
-    } else if (mediaPickerTarget === "gift") {
-      setEditingCampaign((prev) => ({
-        ...prev,
-        giftProductImage: item.url,
-        giftProductName: prev?.giftProductName || item.title,
-      }));
+    try {
+      setSaving(true);
+      const uploaded = await uploadProductImage(file, `campaigns/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`);
+      if (target === "desktop") {
+        setEditingCampaign((prev) => ({ ...prev!, desktopFlyerUrl: uploaded.src }));
+      } else {
+        setEditingCampaign((prev) => ({ ...prev!, mobileFlyerUrl: uploaded.src }));
+      }
+    } catch (err: any) {
+      setEditorError(`Upload failed: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
-    setMediaPickerTarget(null);
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Card */}
-      <div className="admin-header-card">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
-              Marketing &amp; Growth
-            </span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
-            <span className="text-xs font-semibold text-slate-500">Live Campaign Engine</span>
+    <div className="space-y-6 pb-20">
+      {/* 1. Header with prominent + Create Promotion Button */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="p-2.5 bg-amber-50 text-amber-700 rounded-xl">
+                <Sparkles size={22} />
+              </span>
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Promotions & Campaigns</h1>
+            </div>
+            <p className="text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">
+              Launch combo bundle deals, free gifts, cash discounts, and promotional flyers across your storefront.
+              Easily create custom bundles and new promotional offers directly without leaving this screen.
+            </p>
           </div>
-          <h2>Promotions &amp; Campaigns</h2>
-          <p>
-            Create, schedule, and publish customer promotions, flyer carousels, free gift bundles, and instant checkout discounts.
-          </p>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              disabled={loading}
+              className="p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition border border-slate-200"
+              title="Refresh Campaigns"
+            >
+              <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="flex items-center gap-2 px-5 py-3 bg-[#1d1d1f] hover:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition active:scale-95"
+            >
+              <Plus size={18} />
+              <span>Create Promotion</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="admin-btn admin-btn-secondary"
-            onClick={loadData}
-            disabled={loading}
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-            <span>Refresh</span>
-          </button>
-          <button
-            type="button"
-            className="admin-btn admin-btn-primary"
-            onClick={handleOpenCreate}
-          >
-            <Plus size={16} />
-            <span>Create Campaign</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Performance Summary KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="admin-card">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Active Campaigns</span>
-            <Sparkles size={16} className="text-[#d4af37]" />
+        {/* KPI Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <span>Active Live</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{metrics.active}</div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{stats.activeCount}</div>
-          <p className="text-xs text-slate-500 mt-1">{stats.totalCampaigns} total registered</p>
-        </div>
-
-        <div className="admin-card">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Attributed Sales</span>
-            <TrendingUp size={16} className="text-emerald-600" />
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <span>Drafts & Scheduled</span>
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{metrics.drafts}</div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{formatGhs(stats.totalAttributedSales)}</div>
-          <p className="text-xs text-slate-500 mt-1">{stats.totalOrders} qualifying orders</p>
-        </div>
-
-        <div className="admin-card">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Discounts Awarded</span>
-            <Percent size={16} className="text-amber-600" />
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <span>Total Redemptions</span>
+              <ShoppingBag size={14} className="text-slate-400" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{metrics.totalRedemptions}</div>
           </div>
-          <div className="text-2xl font-black text-slate-900">{formatGhs(stats.totalDiscountGiven)}</div>
-          <p className="text-xs text-slate-500 mt-1">{stats.totalGiftsAllocated} free gifts granted</p>
-        </div>
-
-        <div className="admin-card">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Flyer Engagement</span>
-            <MousePointerClick size={16} className="text-blue-600" />
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+              <span>Gross Promo Savings</span>
+              <Tag size={14} className="text-emerald-500" />
+            </div>
+            <div className="text-2xl font-bold text-emerald-600 mt-1">{formatGhs(metrics.totalSavings)}</div>
           </div>
-          <div className="text-2xl font-black text-slate-900">
-            {stats.totalClicks} <span className="text-xs font-semibold text-slate-400">/ {stats.totalViews} views</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            {stats.totalViews > 0 ? Math.round((stats.totalClicks / stats.totalViews) * 100) : 0}% click-through rate
-          </p>
         </div>
       </div>
 
-      {/* 3. Filter Tabs & Search Bar */}
-      <div className="admin-card space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-          {/* Navigation Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {[
-              { id: "all", label: "All Campaigns", count: promotions.length },
-              { id: "active", label: "Active", count: promotions.filter((p) => p.status === "active" && p.isEnabled).length },
-              { id: "scheduled", label: "Scheduled", count: promotions.filter((p) => p.status === "scheduled").length },
-              { id: "draft", label: "Drafts", count: promotions.filter((p) => p.status === "draft").length },
-              { id: "expired", label: "Expired", count: promotions.filter((p) => p.status === "expired").length },
-              { id: "archived", label: "Archived", count: promotions.filter((p) => p.status === "archived").length },
-            ].map((tab) => (
+      {/* 2. Filters & Navigation Tabs */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {(
+              [
+                { key: "all", label: "All Campaigns", count: promotions.length },
+                { key: "active", label: "Active", count: promotions.filter((p) => p.status === "active" && p.isEnabled).length },
+                { key: "draft", label: "Drafts", count: promotions.filter((p) => p.status === "draft").length },
+                { key: "scheduled", label: "Scheduled", count: promotions.filter((p) => p.status === "scheduled").length },
+                { key: "expired", label: "Expired", count: promotions.filter((p) => p.status === "expired").length },
+                { key: "archived", label: "Archived", count: promotions.filter((p) => p.status === "archived").length },
+              ] as const
+            ).map((tab) => (
               <button
-                key={tab.id}
+                key={tab.key}
                 type="button"
-                className={`admin-btn admin-btn-sm ${
-                  activeTab === tab.id ? "admin-btn-primary" : "admin-btn-secondary"
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-3.5 py-2 text-xs font-semibold rounded-xl whitespace-nowrap transition flex items-center gap-1.5 ${
+                  activeTab === tab.key
+                    ? "bg-[#1d1d1f] text-white shadow-sm"
+                    : "text-slate-600 hover:bg-slate-100"
                 }`}
-                onClick={() => setActiveTab(tab.id as TabKey)}
               >
                 <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    activeTab === tab.id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-                  }`}
-                >
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                   {tab.count}
                 </span>
               </button>
             ))}
           </div>
 
-          <Link to="/offers" target="_blank" className="admin-btn admin-btn-sm admin-btn-secondary text-xs">
-            <ExternalLink size={13} />
-            <span>View Public /offers</span>
-          </Link>
-        </div>
+          {/* Search & Type Filter */}
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex-1 sm:w-60">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search offers or products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
 
-        {/* Search & Type filter */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-2 relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              className="admin-input pl-10"
-              placeholder="Search campaigns by title, description or slug..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div>
             <select
-              className="admin-input"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
+              className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:outline-none text-slate-700"
             >
-              <option value="all">All Promotion Types</option>
-              <option value="free_gift">Buy Product, Get Free Gift</option>
-              <option value="percentage_discount">Percentage Discount (%)</option>
-              <option value="fixed_discount">Fixed Amount Discount (GH₵)</option>
-              <option value="promotional_price">Promotional Product Price</option>
-              <option value="bundle">Bundle Offer</option>
-              <option value="advertising">Advertising-Only Campaign</option>
+              <option value="all">All Types</option>
+              <option value="bundle">Bundle Offers</option>
+              <option value="free_gift">Free Gifts</option>
+              <option value="percentage_discount">% Discounts</option>
+              <option value="fixed_discount">Fixed Discounts</option>
+              <option value="promotional_price">Special Prices</option>
+              <option value="advertising">Advertising</option>
             </select>
           </div>
         </div>
-      </div>
 
-      {/* 4. Campaigns Listing Table */}
-      <div className="admin-card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="admin-data-table w-full text-left">
-            <thead>
-              <tr>
-                <th style={{ width: 60 }}>Flyer</th>
-                <th>Campaign &amp; Offer</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Schedule</th>
-                <th>Performance</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredPromotions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-slate-500">
-                    <Sparkles size={32} className="mx-auto text-slate-300 mb-2" />
-                    <p className="font-semibold text-slate-700">No campaigns found matching criteria.</p>
-                    <p className="text-xs text-slate-400 mt-1">Try resetting filters or create a new campaign.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredPromotions.map((promo) => {
-                  const flyerUrl = promo.desktopFlyerUrl || promo.mobileFlyerUrl;
-                  const isLive = promo.status === "active" && promo.isEnabled;
+        {/* 3. Campaign Cards Grid */}
+        <div className="divide-y divide-slate-100 border-t border-slate-100 pt-2">
+          {filteredPromotions.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl grid place-items-center mx-auto mb-3">
+                <Tag size={26} />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900">No campaigns found</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                {searchQuery || typeFilter !== "all"
+                  ? "Try clearing filters to find what you are looking for."
+                  : "Launch a promotional offer or combo bundle to boost customer orders."}
+              </p>
+              <button
+                type="button"
+                onClick={handleOpenCreate}
+                className="mt-4 px-4 py-2 bg-[#1d1d1f] hover:bg-black text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-sm"
+              >
+                <Plus size={15} />
+                <span>Create First Promotion</span>
+              </button>
+            </div>
+          ) : (
+            filteredPromotions.map((promo) => {
+              const flyer = promo.desktopFlyerUrl || promo.mobileFlyerUrl;
+              const isBundle = promo.promotionType === "bundle";
+              const isGift = promo.promotionType === "free_gift";
 
-                  return (
-                    <tr key={promo.id} className="hover:bg-slate-50/70 transition-colors">
-                      {/* Flyer Thumbnail */}
-                      <td className="py-3 px-4">
-                        <div className="w-14 h-10 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center">
-                          {flyerUrl ? (
-                            <img src={flyerUrl} alt={promo.title} className="w-full h-full object-cover" />
-                          ) : (
-                            <ImageIcon size={18} className="text-slate-400" />
-                          )}
-                        </div>
-                      </td>
+              return (
+                <div key={promo.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+                  <div className="flex items-start gap-4">
+                    {/* Thumbnail */}
+                    <div className="w-20 h-20 sm:w-24 sm:h-20 bg-slate-100 border border-slate-200 rounded-xl overflow-hidden shrink-0 grid place-items-center relative">
+                      {flyer ? (
+                        <img src={flyer} alt={promo.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon size={22} className="text-slate-400" />
+                      )}
+                      {promo.showOnAnnouncementBar && (
+                        <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-blue-500 border border-white" title="Active on Announcement Bar" />
+                      )}
+                    </div>
 
-                      {/* Title & Description */}
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-slate-900 text-sm">{promo.title}</div>
-                        <div className="text-xs text-slate-500 line-clamp-1">{promo.shortDescription}</div>
-                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">/{promo.slug}</div>
-                      </td>
-
-                      {/* Type Badge */}
-                      <td className="py-3 px-4">
+                    {/* Information */}
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className={`admin-badge text-xs px-2.5 py-0.5 ${
-                            promo.promotionType === "free_gift"
-                              ? "admin-badge-amber"
-                              : promo.promotionType === "percentage_discount" || promo.promotionType === "fixed_discount"
-                              ? "admin-badge-emerald"
-                              : "admin-badge-blue"
+                          className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md ${
+                            promo.status === "active" && promo.isEnabled
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : promo.status === "draft"
+                              ? "bg-slate-100 text-slate-700 border border-slate-200"
+                              : promo.status === "scheduled"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
                           }`}
                         >
-                          {promo.promotionType === "free_gift"
-                            ? "Free Gift"
-                            : promo.promotionType === "percentage_discount"
-                            ? `${promo.discountPercent}% Off`
-                            : promo.promotionType === "fixed_discount"
-                            ? `Save GH₵${promo.discountAmount}`
-                            : promo.promotionType === "promotional_price"
-                            ? `GH₵${promo.promotionalPrice}`
-                            : promo.promotionType === "bundle"
-                            ? "Bundle"
-                            : "Announcement"}
+                          {promo.status === "active" && !promo.isEnabled ? "Paused" : promo.status}
                         </span>
-                      </td>
 
-                      {/* Status */}
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleEnabled(promo)}
-                            title={promo.isEnabled ? "Click to disable" : "Click to enable"}
-                            className={`w-7 h-4 flex items-center rounded-full p-0.5 transition-colors ${
-                              promo.isEnabled ? "bg-emerald-500 justify-end" : "bg-slate-300 justify-start"
-                            }`}
-                          >
-                            <span className="w-3 h-3 rounded-full bg-white shadow-sm" />
-                          </button>
-                          <span
-                            className={`text-xs font-semibold ${
-                              isLive
-                                ? "text-emerald-700"
-                                : promo.status === "archived"
-                                ? "text-rose-600"
-                                : "text-slate-500"
-                            }`}
-                          >
-                            {isLive ? "Active" : !promo.isEnabled ? "Disabled" : promo.status}
+                        <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          {isBundle ? <Package size={11} /> : isGift ? <Gift size={11} /> : <Tag size={11} />}
+                          <span>{promo.promotionType.replace(/_/g, " ")}</span>
+                        </span>
+
+                        {promo.promotionalPrice && (
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            {formatGhs(promo.promotionalPrice)}
                           </span>
-                        </div>
-                      </td>
-
-                      {/* Schedule */}
-                      <td className="py-3 px-4 text-xs text-slate-600">
-                        {promo.endDate ? (
-                          <div>
-                            <div>Until {new Date(promo.endDate).toLocaleDateString("en-GH", { month: "short", day: "numeric" })}</div>
-                            <div className="text-[10px] text-slate-400">Timezone: GMT</div>
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">Ongoing</span>
                         )}
-                      </td>
+                      </div>
 
-                      {/* Performance */}
-                      <td className="py-3 px-4 text-xs">
-                        <div className="font-bold text-slate-900">{promo.ordersCount} orders</div>
-                        <div className="text-[11px] text-slate-500">
-                          {promo.promotionType === "free_gift"
-                            ? `${promo.totalGiftsAllocated} gifts granted`
-                            : `Saved ${formatGhs(promo.totalDiscountGiven)}`}
-                        </div>
-                      </td>
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-black transition">
+                        {promo.title}
+                      </h4>
 
-                      {/* Actions */}
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
-                            title="Edit campaign"
-                            onClick={() => handleOpenEdit(promo)}
-                          >
-                            <Edit3 size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
-                            title="Duplicate as new draft"
-                            onClick={() => handleDuplicate(promo)}
-                          >
-                            <Copy size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
-                            title={promo.status === "archived" ? "Restore from archive" : "Archive campaign"}
-                            onClick={() => handleArchive(promo)}
-                          >
-                            <Archive size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            className="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50"
-                            title="Delete campaign"
-                            onClick={() => {
-                              setDeleteCandidate(promo);
-                              setDeleteInput("");
-                            }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                      <p className="text-xs text-slate-500 line-clamp-1 max-w-xl">
+                        {promo.shortDescription || promo.detailedDescription}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <ShoppingBag size={12} />
+                          <span>{promo.currentRedemptions || 0} claimed</span>
+                        </span>
+                        {promo.startDate && promo.endDate && (
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            <span>{new Date(promo.startDate).toLocaleDateString()} – {new Date(promo.endDate).toLocaleDateString()}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Actions */}
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    {/* Enable/Disable Toggle */}
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleEnabled(promo)}
+                      className={`p-2 rounded-xl border transition ${
+                        promo.isEnabled
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                          : "bg-slate-100 text-slate-400 border-slate-200 hover:text-slate-700"
+                      }`}
+                      title={promo.isEnabled ? "Unpublish Campaign" : "Publish Live"}
+                    >
+                      <Power size={16} />
+                    </button>
+
+                    {/* Edit */}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(promo)}
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-1.5"
+                    >
+                      <Edit3 size={14} />
+                      <span>Edit</span>
+                    </button>
+
+                    {/* Duplicate */}
+                    <button
+                      type="button"
+                      onClick={() => void handleDuplicate(promo)}
+                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
+                      title="Duplicate Offer"
+                    >
+                      <Copy size={15} />
+                    </button>
+
+                    {/* Archive */}
+                    <button
+                      type="button"
+                      onClick={() => void handleArchive(promo)}
+                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
+                      title={promo.status === "archived" ? "Restore Campaign" : "Archive Campaign"}
+                    >
+                      <Archive size={15} />
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteCandidate(promo);
+                        setDeleteInput("");
+                      }}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200 transition"
+                      title="Delete Permanently"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* 5. Campaign Editor Drawer / Modal */}
+      {/* 4. THE REDESIGNED PROMOTION EDITOR (Spacious & Intuitive Modal) */}
       {isEditorOpen && editingCampaign && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <header className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
-                  {editingCampaign.id?.startsWith("promo-") && !promotions.some((p) => p.id === editingCampaign.id)
-                    ? "New Campaign"
-                    : "Edit Campaign"}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900">
-                  {editingCampaign.title || "Untitled Promotion"}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-slate-900">
+                    {editingCampaign.title ? `Edit: ${editingCampaign.title}` : "Create New Promotion"}
+                  </h2>
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      editingCampaign.status === "active"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    {editingCampaign.status || "draft"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Configure promotion details, target products, bundle items, flyers, and publishing settings.
+                </p>
               </div>
+
               <button
                 type="button"
-                className="p-2 text-slate-400 hover:text-slate-700 rounded-lg"
                 onClick={() => setIsEditorOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-200/60 transition"
               >
                 <X size={20} />
               </button>
-            </header>
+            </div>
 
-            {/* Sub-tabs */}
-            <div className="flex border-b border-slate-200 bg-white px-4 text-xs font-bold overflow-x-auto">
-              {[
-                { id: "info", label: "1. Info & Type" },
-                { id: "target", label: "2. Eligibility" },
-                { id: "benefits", label: "3. Benefits & Gifts" },
-                { id: "flyers", label: "4. Flyers & Media" },
-                { id: "scheduling", label: "5. Schedule & Placements" },
-                { id: "preview", label: "6. Preview" },
-              ].map((tab) => (
+            {/* Step Breadcrumb Bar */}
+            <div className="px-6 py-2.5 bg-slate-100/70 border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs font-semibold scrollbar-none">
+              {(
+                [
+                  { key: "basics", label: "1. Details" },
+                  { key: "type", label: "2. Offer Type" },
+                  { key: "product", label: "3. Product / Bundle" },
+                  { key: "rules", label: "4. Rules & Stock" },
+                  { key: "flyers", label: "5. Flyers & Media" },
+                  { key: "placement", label: "6. Placement" },
+                  { key: "preview", label: "7. Review & Publish" },
+                ] as const
+              ).map((step) => (
                 <button
-                  key={tab.id}
+                  key={step.key}
                   type="button"
-                  className={`py-3 px-3.5 border-b-2 whitespace-nowrap ${
-                    editorTab === tab.id
-                      ? "border-[#d4af37] text-slate-900"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
+                  onClick={() => setActiveStep(step.key)}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+                    activeStep === step.key
+                      ? "bg-white text-slate-900 shadow-sm border border-slate-200 font-bold"
+                      : "text-slate-600 hover:text-slate-900"
                   }`}
-                  onClick={() => setEditorTab(tab.id as any)}
                 >
-                  {tab.label}
+                  {step.label}
                 </button>
               ))}
             </div>
 
-            {/* Error & Success Alerts */}
+            {/* Error / Alert Banner */}
             {editorError && (
-              <div className="p-3 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
-                <AlertCircle size={15} />
-                <span>{editorError}</span>
+              <div className="mx-6 mt-4 p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start gap-2.5">
+                <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold">{editorError}</div>
+                  {validationErrors.length > 0 && (
+                    <ul className="list-disc pl-4 mt-1 space-y-0.5 text-rose-700">
+                      {validationErrors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             )}
+
             {saveSuccess && (
-              <div className="p-3 bg-emerald-50 border-b border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 size={15} />
+              <div className="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                 <span>{saveSuccess}</span>
               </div>
             )}
 
-            {/* Tab Form Contents */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              {/* TAB 1: INFO & TYPE */}
-              {editorTab === "info" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="admin-label">Campaign Title *</label>
-                    <input
-                      type="text"
-                      className="admin-input"
-                      placeholder="e.g. Free MagSafe Case with iPhone"
-                      value={editingCampaign.title || ""}
-                      onChange={(e) => {
-                        const title = e.target.value;
-                        const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-                        setEditingCampaign((prev) => ({
-                          ...prev,
-                          title,
-                          slug: prev?.slug ? prev.slug : slug,
-                        }));
-                      }}
-                    />
+            {/* Modal Scrollable Body */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+              {/* STEP 1: BASICS */}
+              {activeStep === "basics" && (
+                <div className="space-y-5">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-base font-bold text-slate-900">Promotion Details</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Give your promotion a clear, catchy headline and brief summary for flyers and announcement bars.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="admin-label">URL Slug *</label>
-                    <div className="flex items-center gap-1 text-slate-400 text-xs font-mono">
-                      <span>buyandsellgh.com/offers#</span>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Campaign Title <span className="text-rose-500">*</span>
+                      </label>
                       <input
                         type="text"
-                        className="admin-input flex-1 font-mono"
-                        value={editingCampaign.slug || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, slug: e.target.value }))}
+                        placeholder="e.g. One-Time PlayStation Combo Offer"
+                        value={editingCampaign.title || ""}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, title: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Headline / Short Summary <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Neatly used PS5 Slim Disc Edition with EA Sports FC 25 and 2 controllers for GH₵ 7,500."
+                        value={editingCampaign.shortDescription || ""}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, shortDescription: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                      <span className="text-[11px] text-slate-400 mt-1 block">Displayed on flyer cards, badges, and search results.</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Detailed Description & Terms
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Explain offer conditions, showroom physical inspection details, what is included, and warranty information."
+                        value={editingCampaign.detailedDescription || ""}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, detailedDescription: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black leading-relaxed"
                       />
                     </div>
                   </div>
+                </div>
+              )}
 
-                  <div>
-                    <label className="admin-label">Promotion Type *</label>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {[
-                        { id: "free_gift", title: "Free Gift", desc: "Buy device, get free accessory" },
-                        { id: "percentage_discount", title: "Percentage Off", desc: "e.g. 10% off accessories" },
-                        { id: "fixed_discount", title: "Fixed Discount", desc: "e.g. Save GH₵200 on Mac mini" },
-                        { id: "promotional_price", title: "Promotional Price", desc: "Temporary special price" },
-                        { id: "bundle", title: "Bundle Offer", desc: "Buy phone + accessory together" },
-                        { id: "advertising", title: "Advertising Event", desc: "Flyer / announcement only" },
-                      ].map((t) => (
+              {/* STEP 2: PROMOTION TYPE */}
+              {activeStep === "type" && (
+                <div className="space-y-5">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-base font-bold text-slate-900">Choose Offer Model</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Pick how your campaign benefits customers. The editor dynamically displays only the settings relevant to this model.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                    {(
+                      [
+                        {
+                          type: "bundle",
+                          title: "Bundle Offer",
+                          desc: "Package deal combining console, games, or accessories at a single combo price.",
+                          icon: Package,
+                          color: "amber",
+                        },
+                        {
+                          type: "free_gift",
+                          title: "Free Gift",
+                          desc: "Complimentary gift item automatically added to customer's bag at GH₵ 0.",
+                          icon: Gift,
+                          color: "purple",
+                        },
+                        {
+                          type: "percentage_discount",
+                          title: "Percentage Discount",
+                          desc: "Deduct e.g. 10% or 15% off qualifying catalogue products.",
+                          icon: Percent,
+                          color: "blue",
+                        },
+                        {
+                          type: "fixed_discount",
+                          title: "Fixed Discount",
+                          desc: "Instant cash reduction (e.g. Save GH₵ 200) applied at checkout.",
+                          icon: Tag,
+                          color: "emerald",
+                        },
+                        {
+                          type: "promotional_price",
+                          title: "Promotional Price",
+                          desc: "Set an explicit promotional price for a specific product with comparison strikethrough.",
+                          icon: Sparkles,
+                          color: "rose",
+                        },
+                        {
+                          type: "advertising",
+                          title: "Advertising Only",
+                          desc: "Promotional flyer or announcement linking to a page without discount math.",
+                          icon: Eye,
+                          color: "slate",
+                        },
+                      ] as const
+                    ).map((item) => {
+                      const isSelected = editingCampaign.promotionType === item.type;
+                      const Icon = item.icon;
+
+                      return (
                         <div
-                          key={t.id}
-                          onClick={() => setEditingCampaign((prev) => ({ ...prev, promotionType: t.id as PromotionType }))}
-                          className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                            editingCampaign.promotionType === t.id
-                              ? "border-[#d4af37] bg-[#fefce8] text-slate-900"
-                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          key={item.type}
+                          onClick={() => {
+                            setEditingCampaign({ ...editingCampaign, promotionType: item.type });
+                            if (item.type === "bundle") {
+                              setProductMode("new_bundle");
+                            }
+                          }}
+                          className={`p-4 rounded-xl border cursor-pointer transition flex flex-col justify-between ${
+                            isSelected
+                              ? "bg-slate-900 text-white border-black shadow-md ring-2 ring-black/20"
+                              : "bg-slate-50 text-slate-800 border-slate-200 hover:border-slate-300 hover:bg-white"
                           }`}
                         >
-                          <div className="font-bold text-xs">{t.title}</div>
-                          <div className="text-[11px] text-slate-500 mt-0.5">{t.desc}</div>
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <span className={`p-2 rounded-lg ${isSelected ? "bg-white/20 text-white" : "bg-white text-slate-700 shadow-sm"}`}>
+                                <Icon size={18} />
+                              </span>
+                              {isSelected && <Check size={16} className="text-emerald-400" />}
+                            </div>
+                            <h4 className="font-bold text-sm mt-3">{item.title}</h4>
+                            <p className={`text-xs mt-1 leading-relaxed ${isSelected ? "text-slate-300" : "text-slate-500"}`}>
+                              {item.desc}
+                            </p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="admin-label">Short Summary (for Cards &amp; Sliders)</label>
-                    <textarea
-                      rows={2}
-                      className="admin-input"
-                      placeholder="One-sentence teaser of the offer..."
-                      value={editingCampaign.shortDescription || ""}
-                      onChange={(e) => setEditingCampaign((prev) => ({ ...prev, shortDescription: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="admin-label">Detailed Terms &amp; Explanation (for /offers)</label>
-                    <textarea
-                      rows={3}
-                      className="admin-input"
-                      placeholder="Full description, redemption instructions, and showroom details..."
-                      value={editingCampaign.detailedDescription || ""}
-                      onChange={(e) => setEditingCampaign((prev) => ({ ...prev, detailedDescription: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="admin-label">Call to Action Text</label>
-                      <input
-                        type="text"
-                        className="admin-input"
-                        placeholder="e.g. Shop Eligible iPhones"
-                        value={editingCampaign.ctaText || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, ctaText: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="admin-label">CTA Destination URL</label>
-                      <input
-                        type="text"
-                        className="admin-input"
-                        placeholder="e.g. /iphone or /store"
-                        value={editingCampaign.ctaDestination || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, ctaDestination: e.target.value }))}
-                      />
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: TARGET & ELIGIBILITY */}
-              {editorTab === "target" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="admin-label">Target Category</label>
-                    <select
-                      className="admin-input"
-                      value={editingCampaign.eligibleCategory || "all"}
-                      onChange={(e) => setEditingCampaign((prev) => ({ ...prev, eligibleCategory: e.target.value }))}
+              {/* STEP 3: PRODUCT SELECTION OR CREATE NEW BUNDLE */}
+              {activeStep === "product" && (
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">Target Product or Custom Bundle</h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Select an existing catalog product, or create a new promotional product/bundle without leaving this screen.
+                      </p>
+                    </div>
+
+                    {editingCampaign.promotionType === "bundle" && (
+                      <button
+                        type="button"
+                        onClick={handlePreloadPs5Combo}
+                        className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition"
+                      >
+                        ⚡ Preload PS5 Combo Data
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Mode Selector Toggle */}
+                  <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setProductMode("existing")}
+                      className={`py-2 text-xs font-bold rounded-lg transition ${
+                        productMode === "existing"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
                     >
-                      <option value="all">All Categories</option>
-                      <option value="iPhones">iPhones</option>
-                      <option value="iPads">iPads</option>
-                      <option value="MacBooks">MacBooks / Macs</option>
-                      <option value="Apple Watches">Apple Watches</option>
-                      <option value="AirPods">AirPods</option>
-                      <option value="Accessories">Accessories</option>
-                    </select>
+                      Option A: Select Existing Product
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductMode("new_bundle")}
+                      className={`py-2 text-xs font-bold rounded-lg transition ${
+                        productMode === "new_bundle"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      Option B: Create New Promotional Product or Bundle
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="admin-label">Eligible Products (Multi-select)</label>
-                    <p className="text-xs text-slate-500 mb-2">
-                      Leave empty to apply to all products in the selected category, or select specific eligible models:
-                    </p>
-                    <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl p-2 space-y-1">
-                      {products.map((prod) => {
-                        const isSelected = editingCampaign.eligibleProductIds?.includes(prod.id) ||
-                          editingCampaign.eligibleProductIds?.includes(prod.slug);
+                  {/* OPTION A: SELECT EXISTING PRODUCT */}
+                  {productMode === "existing" && (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search product by name, brand, or category..."
+                          value={productSearch}
+                          onChange={(e) => setProductSearch(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                      </div>
 
-                        return (
-                          <label
-                            key={prod.id}
-                            className={`flex items-center gap-2.5 p-2 rounded-lg text-xs cursor-pointer ${
-                              isSelected ? "bg-amber-50 font-bold text-slate-900" : "hover:bg-slate-50 text-slate-700"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={Boolean(isSelected)}
-                              onChange={(e) => {
-                                const current = editingCampaign.eligibleProductIds || [];
-                                const next = e.target.checked
-                                  ? [...current, prod.id]
-                                  : current.filter((id) => id !== prod.id && id !== prod.slug);
-                                setEditingCampaign((prev) => ({ ...prev, eligibleProductIds: next }));
-                              }}
+                      {/* Selected product banner */}
+                      {selectedExistingProduct && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={selectedExistingProduct.images[0]?.src || "/placeholder.webp"}
+                              alt={selectedExistingProduct.name}
+                              className="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200"
                             />
-                            <span>{prod.name}</span>
-                            <span className="text-[10px] text-slate-400 font-mono">({prod.category})</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">{selectedExistingProduct.name}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {selectedExistingProduct.category} · {formatGhs(selectedExistingProduct.price)} · {selectedExistingProduct.stockStatus}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                            Selected
+                          </span>
+                        </div>
+                      )}
 
-                  <div>
-                    <label className="admin-label">Eligible Storage Options (Optional)</label>
-                    <p className="text-xs text-slate-500 mb-2">
-                      If selected, only matching storage configurations will trigger this promotion:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {["64GB", "128GB", "256GB", "512GB", "1TB", "2TB"].map((cap) => {
-                        const isSelected = editingCampaign.eligibleStorageOptions?.includes(cap);
-                        return (
-                          <button
-                            key={cap}
-                            type="button"
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
-                              isSelected ? "bg-[#d4af37] text-white border-[#d4af37]" : "border-slate-200 text-slate-700"
-                            }`}
-                            onClick={() => {
-                              const current = editingCampaign.eligibleStorageOptions || [];
-                              const next = isSelected ? current.filter((c) => c !== cap) : [...current, cap];
-                              setEditingCampaign((prev) => ({ ...prev, eligibleStorageOptions: next }));
-                            }}
+                      {/* Products List */}
+                      <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                        {products
+                          .filter((p) => {
+                            if (!productSearch.trim()) return true;
+                            const q = productSearch.toLowerCase();
+                            return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+                          })
+                          .slice(0, 15)
+                          .map((p) => {
+                            const isChosen = selectedExistingProduct?.id === p.id || editingCampaign.eligibleProductIds?.includes(p.id);
+                            return (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedExistingProduct(p);
+                                  setEditingCampaign({
+                                    ...editingCampaign,
+                                    eligibleProductIds: [p.id],
+                                    bundleRequiredProductIds: [p.id],
+                                  });
+                                }}
+                                className={`p-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition ${
+                                  isChosen ? "bg-slate-50 font-bold" : ""
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <img
+                                    src={p.images[0]?.src || "/placeholder.webp"}
+                                    alt={p.name}
+                                    className="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0"
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-semibold text-slate-900 truncate">{p.name}</div>
+                                    <div className="text-[11px] text-slate-400">{p.category} · {formatGhs(p.price)}</div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition ${
+                                    isChosen ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                  }`}
+                                >
+                                  {isChosen ? "Selected" : "Select"}
+                                </button>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OPTION B: CREATE NEW PRODUCT OR BUNDLE */}
+                  {productMode === "new_bundle" && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-5">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <Package size={16} className="text-amber-600" />
+                            <span>New Product or Custom Bundle Creator</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            This will create a real canonical catalog product in Supabase and link it automatically.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Product Name, Category, Condition */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Product / Bundle Name *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. PS5 Slim Combo Offer"
+                            value={newProductData.name}
+                            onChange={(e) => setNewProductData({ ...newProductData, name: e.target.value })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                          <select
+                            value={newProductData.category}
+                            onChange={(e) => setNewProductData({ ...newProductData, category: e.target.value as ProductCategory })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
                           >
-                            {cap}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+                            <option value="Game Consoles">Game Consoles</option>
+                            <option value="iPhones">iPhones</option>
+                            <option value="MacBooks">MacBooks</option>
+                            <option value="iPads">iPads</option>
+                            <option value="Apple Watches">Apple Watches</option>
+                            <option value="AirPods">AirPods</option>
+                            <option value="Accessories">Accessories</option>
+                            <option value="Electronics">Electronics</option>
+                          </select>
+                        </div>
 
-                  <div>
-                    <label className="admin-label">Minimum Order Subtotal (GH₵)</label>
-                    <input
-                      type="number"
-                      className="admin-input"
-                      placeholder="0 for no minimum"
-                      value={editingCampaign.minOrderSubtotal ?? 0}
-                      onChange={(e) => setEditingCampaign((prev) => ({ ...prev, minOrderSubtotal: Number(e.target.value) }))}
-                    />
-                  </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Condition *</label>
+                          <select
+                            value={newProductData.condition}
+                            onChange={(e) => setNewProductData({ ...newProductData, condition: e.target.value as ProductCondition })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          >
+                            <option value="Brand New">Brand New</option>
+                            <option value="UK Used">UK Used</option>
+                            <option value="Excellent">Excellent</option>
+                            <option value="Very Good">Very Good</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Price, Stock, Purchase Action */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Bundle / Product Price (GH₵) *</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="7500"
+                            value={newProductData.price || ""}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setNewProductData({ ...newProductData, price: val });
+                              setEditingCampaign({ ...editingCampaign, promotionalPrice: val });
+                            }}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold text-slate-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Confirmed Stock Quantity *</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="1"
+                            value={newProductData.stockQuantity || ""}
+                            onChange={(e) => setNewProductData({ ...newProductData, stockQuantity: Number(e.target.value) })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Purchase Action</label>
+                          <select
+                            value={newProductData.purchaseAction}
+                            onChange={(e) => setNewProductData({ ...newProductData, purchaseAction: e.target.value as ProductPurchaseAction })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          >
+                            <option value="buy">Buy (Direct Add to Bag)</option>
+                            <option value="view-pricing">View Pricing</option>
+                            <option value="enquire">WhatsApp Enquiry</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* INCLUDED ITEMS BUILDER (FOR BUNDLES) */}
+                      <div className="space-y-3 pt-2 border-t border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <Layers size={14} className="text-slate-500" />
+                            <span>Included Package Items ({bundleItems.length})</span>
+                          </label>
+                          <span className="text-[11px] text-slate-400">Checkout charges the single bundle price GH₵{newProductData.price.toLocaleString()} once.</span>
+                        </div>
+
+                        {/* Items list */}
+                        <div className="space-y-2">
+                          {bundleItems.map((item, idx) => (
+                            <div key={item.id} className="p-2.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold grid place-items-center text-[10px] shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="font-semibold text-slate-900 truncate">{item.name}</span>
+                                {item.condition && (
+                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
+                                    {item.condition}
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveBundleItem(item.id)}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                title="Remove item"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Add Item Row */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <input
+                            type="text"
+                            placeholder="Add included item (e.g. EA Sports FC 25 Game, 2 DualSense Controllers)..."
+                            value={newBundleItemText}
+                            onChange={(e) => setNewBundleItemText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddBundleItem();
+                              }
+                            }}
+                            className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                          <select
+                            value={newBundleItemCondition}
+                            onChange={(e) => setNewBundleItemCondition(e.target.value)}
+                            className="px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
+                          >
+                            <option value="Brand New">Brand New</option>
+                            <option value="UK Used">UK Used</option>
+                            <option value="Excellent">Excellent</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={handleAddBundleItem}
+                            className="px-3 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-black transition shrink-0 flex items-center gap-1"
+                          >
+                            <Plus size={14} />
+                            <span>Add</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* TAB 3: BENEFITS & GIFTS */}
-              {editorTab === "benefits" && (
-                <div className="space-y-4">
+              {/* STEP 4: OFFER RULES & STOCK (SHOWING ONLY RELEVANT FIELDS) */}
+              {activeStep === "rules" && (
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-base font-bold text-slate-900">Configure Benefits & Pricing</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Showing only the rules and constraints applicable to <strong>{editingCampaign.promotionType?.replace(/_/g, " ")}</strong>.
+                    </p>
+                  </div>
+
+                  {/* BUNDLE OFFER RULES */}
+                  {editingCampaign.promotionType === "bundle" && (
+                    <div className="bg-amber-50/50 border border-amber-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                        <Package size={17} className="text-amber-700" />
+                        <span>Bundle Price & Availability</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Combo Bundle Price (GH₵) *
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="7500"
+                            value={editingCampaign.promotionalPrice || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, promotionalPrice: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold"
+                          />
+                          <span className="text-[11px] text-slate-500 mt-1 block">
+                            Customer checkout will charge this exact total once for the complete package.
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Total Bundle Redemptions Allowed
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            placeholder="e.g. 1 (for one-time bundle)"
+                            value={editingCampaign.totalRedemptionLimit || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, totalRedemptionLimit: e.target.value ? Number(e.target.value) : null })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                          <span className="text-[11px] text-slate-500 mt-1 block">
+                            Leave empty for unlimited redemptions up to confirmed inventory.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* FREE GIFT RULES */}
                   {editingCampaign.promotionType === "free_gift" && (
-                    <div className="space-y-4 p-4 rounded-xl bg-amber-50/70 border border-amber-200">
-                      <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
-                        <Gift size={16} />
+                    <div className="bg-purple-50/50 border border-purple-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-purple-900 font-bold text-sm">
+                        <Gift size={17} className="text-purple-700" />
                         <span>Free Gift Configuration</span>
                       </div>
 
-                      <div>
-                        <label className="admin-label">Gift Product Name *</label>
-                        <input
-                          type="text"
-                          className="admin-input"
-                          placeholder="e.g. Apple iPhone Case with MagSafe"
-                          value={editingCampaign.giftProductName || ""}
-                          onChange={(e) => setEditingCampaign((prev) => ({ ...prev, giftProductName: e.target.value }))}
-                        />
-                      </div>
-
-                      <div>
-                        <label className="admin-label">Gift Product SKU or ID (In Catalog)</label>
-                        <select
-                          className="admin-input"
-                          value={editingCampaign.giftProductId || ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const matched = products.find((p) => p.id === val || p.slug === val);
-                            setEditingCampaign((prev) => ({
-                              ...prev,
-                              giftProductId: val,
-                              giftProductSlug: matched?.slug || val,
-                              giftProductName: prev?.giftProductName || matched?.name || "",
-                              giftProductImage: prev?.giftProductImage || matched?.images[0]?.src || "",
-                            }));
-                          }}
-                        >
-                          <option value="">Select from catalog or custom gift</option>
-                          {products
-                            .filter((p) => p.category === "Accessories")
-                            .map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="admin-label">Available Promotional Stock *</label>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Gift Item Name *</label>
                           <input
-                            type="number"
-                            className="admin-input"
-                            value={editingCampaign.giftStockQuantity ?? 0}
-                            onChange={(e) => setEditingCampaign((prev) => ({ ...prev, giftStockQuantity: Math.max(0, Number(e.target.value)) }))}
+                            type="text"
+                            placeholder="e.g. Apple iPhone Case with MagSafe"
+                            value={editingCampaign.giftProductName || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, giftProductName: e.target.value })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
                           />
                         </div>
-                        <div>
-                          <label className="admin-label">Low Stock Alert Threshold</label>
-                          <input
-                            type="number"
-                            className="admin-input"
-                            value={editingCampaign.giftStockAlertThreshold ?? 5}
-                            onChange={(e) => setEditingCampaign((prev) => ({ ...prev, giftStockAlertThreshold: Math.max(0, Number(e.target.value)) }))}
-                          />
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="admin-label">Gifts Per Qualifying Purchase</label>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Allocated Gift Stock Quantity *</label>
                           <input
                             type="number"
-                            className="admin-input"
-                            value={editingCampaign.giftQuantityPerPurchase ?? 1}
-                            onChange={(e) => setEditingCampaign((prev) => ({ ...prev, giftQuantityPerPurchase: Math.max(1, Number(e.target.value)) }))}
+                            min="0"
+                            placeholder="50"
+                            value={editingCampaign.giftStockQuantity || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, giftStockQuantity: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
                           />
-                        </div>
-                        <div>
-                          <label className="admin-label">Max Gifts Per Order</label>
-                          <input
-                            type="number"
-                            className="admin-input"
-                            value={editingCampaign.maxGiftsPerOrder ?? 1}
-                            onChange={(e) => setEditingCampaign((prev) => ({ ...prev, maxGiftsPerOrder: Math.max(1, Number(e.target.value)) }))}
-                          />
+                          <span className="text-[11px] text-slate-500 mt-1 block">
+                            Gifts are automatically suppressed if stock reaches 0.
+                          </span>
                         </div>
                       </div>
                     </div>
                   )}
 
+                  {/* PERCENTAGE DISCOUNT RULES */}
                   {editingCampaign.promotionType === "percentage_discount" && (
-                    <div>
-                      <label className="admin-label">Discount Percentage (%) *</label>
-                      <input
-                        type="number"
-                        className="admin-input"
-                        placeholder="e.g. 10"
-                        min={1}
-                        max={100}
-                        value={editingCampaign.discountPercent ?? ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, discountPercent: Number(e.target.value) }))}
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Calculates discount from the published variant price.</p>
+                    <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-blue-900 font-bold text-sm">
+                        <Percent size={17} className="text-blue-700" />
+                        <span>Percentage Discount Rules</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Discount Percent (%) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            placeholder="10"
+                            value={editingCampaign.discountPercent || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, discountPercent: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Minimum Order Subtotal (GH₵)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={editingCampaign.minOrderSubtotal || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, minOrderSubtotal: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
 
+                  {/* FIXED DISCOUNT RULES */}
                   {editingCampaign.promotionType === "fixed_discount" && (
-                    <div>
-                      <label className="admin-label">Fixed Discount Amount (GH₵) *</label>
-                      <input
-                        type="number"
-                        className="admin-input"
-                        placeholder="e.g. 200"
-                        min={1}
-                        value={editingCampaign.discountAmount ?? ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, discountAmount: Number(e.target.value) }))}
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Will never exceed the item's unit selling price.</p>
+                    <div className="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm">
+                        <Tag size={17} className="text-emerald-700" />
+                        <span>Fixed Cash Discount Rules</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Cash Discount Amount (GH₵) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            placeholder="200"
+                            value={editingCampaign.discountAmount || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, discountAmount: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Minimum Order Subtotal (GH₵)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            value={editingCampaign.minOrderSubtotal || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, minOrderSubtotal: Number(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
 
+                  {/* PROMOTIONAL PRICE RULES */}
                   {editingCampaign.promotionType === "promotional_price" && (
-                    <div>
-                      <label className="admin-label">Temporary Promotional Price (GH₵) *</label>
-                      <input
-                        type="number"
-                        className="admin-input"
-                        placeholder="e.g. 12500"
-                        min={1}
-                        value={editingCampaign.promotionalPrice ?? ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, promotionalPrice: Number(e.target.value) }))}
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Original price is preserved and restored upon campaign expiry.</p>
-                    </div>
-                  )}
+                    <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-rose-900 font-bold text-sm">
+                        <Sparkles size={17} className="text-rose-700" />
+                        <span>Special Promotional Price</span>
+                      </div>
 
-                  {editingCampaign.promotionType === "advertising" && (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
-                      <strong>Advertising-Only Campaign:</strong> This flyer or announcement directs customers to your configured CTA destination without applying checkout discounts.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* TAB 4: FLYERS & MEDIA */}
-              {editorTab === "flyers" && (
-                <div className="space-y-4">
-                  {/* Desktop Flyer */}
-                  <div>
-                    <label className="admin-label">Desktop Promotional Flyer URL</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="admin-input flex-1"
-                        placeholder="https://... or /products/campaigns/..."
-                        value={editingCampaign.desktopFlyerUrl || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, desktopFlyerUrl: e.target.value }))}
-                      />
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn-secondary shrink-0"
-                        onClick={() => setMediaPickerTarget("desktop")}
-                      >
-                        <ImageIcon size={15} />
-                        <span>Media Library</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Mobile Flyer */}
-                  <div>
-                    <label className="admin-label">Mobile Promotional Flyer URL (Optional)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="admin-input flex-1"
-                        placeholder="Optimized 9:16 or square mobile flyer..."
-                        value={editingCampaign.mobileFlyerUrl || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, mobileFlyerUrl: e.target.value }))}
-                      />
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn-secondary shrink-0"
-                        onClick={() => setMediaPickerTarget("mobile")}
-                      >
-                        <ImageIcon size={15} />
-                        <span>Media Library</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="admin-label">Flyer Alt Text (Accessibility &amp; SEO)</label>
-                    <input
-                      type="text"
-                      className="admin-input"
-                      placeholder="e.g. Promotional flyer: Buy an eligible iPhone and get a free case"
-                      value={editingCampaign.flyerAltText || ""}
-                      onChange={(e) => setEditingCampaign((prev) => ({ ...prev, flyerAltText: e.target.value }))}
-                    />
-                  </div>
-
-                  {/* Preview of uploaded image */}
-                  {(editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl) && (
-                    <div className="border border-slate-200 rounded-xl p-3 bg-slate-50">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
-                        Flyer Asset Preview
-                      </span>
-                      <div className="rounded-lg overflow-hidden border border-slate-200 bg-white max-h-56">
-                        <img
-                          src={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl}
-                          alt="Flyer preview"
-                          className="w-full h-auto object-cover"
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Promotional Price (GH₵) *</label>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="4500"
+                          value={editingCampaign.promotionalPrice || ""}
+                          onChange={(e) => setEditingCampaign({ ...editingCampaign, promotionalPrice: Number(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold"
                         />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ADVERTISING ONLY RULES */}
+                  {editingCampaign.promotionType === "advertising" && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                        <Eye size={17} className="text-slate-700" />
+                        <span>Advertising Call-To-Action</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Button CTA Text *</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Explore Offers, Trade In Now"
+                            value={editingCampaign.ctaText || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, ctaText: e.target.value })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Destination URL / Route *</label>
+                          <input
+                            type="text"
+                            placeholder="/store or /sell-or-trade"
+                            value={editingCampaign.ctaDestination || ""}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, ctaDestination: e.target.value })}
+                            className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* TAB 5: SCHEDULING & PLACEMENTS */}
-              {editorTab === "scheduling" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="admin-label">Start Date &amp; Time (GMT / Ghana Time)</label>
-                      <input
-                        type="datetime-local"
-                        className="admin-input"
-                        value={editingCampaign.startDate || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, startDate: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="admin-label">End Date &amp; Time (GMT / Ghana Time)</label>
-                      <input
-                        type="datetime-local"
-                        className="admin-input"
-                        value={editingCampaign.endDate || ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, endDate: e.target.value }))}
-                      />
-                    </div>
+              {/* STEP 5: FLYERS & MEDIA (UPLOAD, REPLACE, PREVIEW) */}
+              {activeStep === "flyers" && (
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-base font-bold text-slate-900">Promotional Artwork & Flyers</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Upload high quality promotional graphics or pick from the existing Media Library. No manual URL typing required.
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="admin-label">Total Redemptions Limit</label>
-                      <input
-                        type="number"
-                        className="admin-input"
-                        placeholder="Leave empty for unlimited"
-                        value={editingCampaign.totalRedemptionLimit ?? ""}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, totalRedemptionLimit: e.target.value ? Number(e.target.value) : null }))}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* DESKTOP FLYER */}
+                    <div className="border border-slate-200 rounded-2xl p-5 space-y-3 bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <ImageIcon size={15} />
+                          <span>Desktop Flyer (1200 × 500)</span>
+                        </label>
+                        {editingCampaign.desktopFlyerUrl && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                            Configured
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Preview Box */}
+                      <div className="w-full aspect-[2.4/1] bg-slate-100 rounded-xl border border-slate-200 overflow-hidden relative grid place-items-center">
+                        {editingCampaign.desktopFlyerUrl ? (
+                          <img
+                            src={editingCampaign.desktopFlyerUrl}
+                            alt="Desktop flyer preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center p-4">
+                            <ImageIcon size={26} className="text-slate-400 mx-auto mb-1" />
+                            <span className="text-xs text-slate-400">No desktop flyer set</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          ref={fileInputDesktopRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => void handleFlyerFileUpload(e, "desktop")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputDesktopRef.current?.click()}
+                          className="flex-1 py-2 bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5"
+                        >
+                          <Upload size={14} />
+                          <span>Upload File</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget("desktop")}
+                          className="flex-1 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5"
+                        >
+                          <ImageIcon size={14} />
+                          <span>Media Library</span>
+                        </button>
+                        {editingCampaign.desktopFlyerUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingCampaign({ ...editingCampaign, desktopFlyerUrl: "" })}
+                            className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition border border-slate-200"
+                            title="Remove"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <label className="admin-label">Display Priority (Higher = Evaluated First)</label>
-                      <input
-                        type="number"
-                        className="admin-input"
-                        value={editingCampaign.priority ?? 5}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, priority: Number(e.target.value) }))}
-                      />
+
+                    {/* MOBILE FLYER */}
+                    <div className="border border-slate-200 rounded-2xl p-5 space-y-3 bg-slate-50/50">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          <ImageIcon size={15} />
+                          <span>Mobile Flyer (Square / 600 × 600)</span>
+                        </label>
+                        {editingCampaign.mobileFlyerUrl && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                            Configured
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Preview Box */}
+                      <div className="w-full aspect-[2.4/1] bg-slate-100 rounded-xl border border-slate-200 overflow-hidden relative grid place-items-center">
+                        {editingCampaign.mobileFlyerUrl ? (
+                          <img
+                            src={editingCampaign.mobileFlyerUrl}
+                            alt="Mobile flyer preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center p-4">
+                            <ImageIcon size={26} className="text-slate-400 mx-auto mb-1" />
+                            <span className="text-xs text-slate-400">No mobile flyer set</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          ref={fileInputMobileRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => void handleFlyerFileUpload(e, "mobile")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputMobileRef.current?.click()}
+                          className="flex-1 py-2 bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5"
+                        >
+                          <Upload size={14} />
+                          <span>Upload File</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMediaPickerTarget("mobile")}
+                          className="flex-1 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5"
+                        >
+                          <ImageIcon size={14} />
+                          <span>Media Library</span>
+                        </button>
+                        {editingCampaign.mobileFlyerUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingCampaign({ ...editingCampaign, mobileFlyerUrl: "" })}
+                            className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition border border-slate-200"
+                            title="Remove"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* Surface Placements */}
-                  <div className="space-y-2 pt-2 border-t border-slate-100">
-                    <span className="text-xs font-bold text-slate-700 block mb-1">
-                      Storefront Surface Visibility
-                    </span>
+              {/* STEP 6: PLACEMENT & DATES */}
+              {activeStep === "placement" && (
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="text-base font-bold text-slate-900">Placement & Scheduling</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Choose where this promotion appears across the storefront and its active flight duration.
+                    </p>
+                  </div>
 
-                    <label className="flex items-center gap-2.5 text-xs text-slate-800 cursor-pointer">
+                  {/* Placement Toggles */}
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-slate-800 block">Where Should This Promotion Appear?</label>
+
+                    <label className="p-3.5 border border-slate-200 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
                       <input
                         type="checkbox"
                         checked={editingCampaign.showOnHomepageCarousel !== false}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, showOnHomepageCarousel: e.target.checked }))}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, showOnHomepageCarousel: e.target.checked })}
+                        className="rounded text-black focus:ring-black w-4 h-4"
                       />
-                      <span>Feature in Homepage Flyer Carousel (&ldquo;Special Offers. More to Love.&rdquo;)</span>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">Homepage Carousel ("Special Offers. More to Love.")</div>
+                        <div className="text-[11px] text-slate-500">Show high-resolution flyer in the edge-to-edge homepage slider.</div>
+                      </div>
                     </label>
 
-                    <label className="flex items-center gap-2.5 text-xs text-slate-800 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={editingCampaign.showOnOffersPage !== false}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, showOnOffersPage: e.target.checked }))}
-                      />
-                      <span>Display on dedicated public /offers directory</span>
-                    </label>
-
-                    <label className="flex items-center gap-2.5 text-xs text-slate-800 cursor-pointer">
+                    <label className="p-3.5 border border-slate-200 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
                       <input
                         type="checkbox"
                         checked={Boolean(editingCampaign.showOnAnnouncementBar)}
-                        onChange={(e) => setEditingCampaign((prev) => ({ ...prev, showOnAnnouncementBar: e.target.checked }))}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, showOnAnnouncementBar: e.target.checked })}
+                        className="rounded text-black focus:ring-black w-4 h-4"
                       />
-                      <span>Include in Homepage Rotating Top Announcement Bar</span>
+                      <div className="flex-1">
+                        <div className="text-xs font-bold text-slate-900">Homepage Announcement Bar</div>
+                        <div className="text-[11px] text-slate-500">Rotate in the slim top announcement bar above the navigation.</div>
+                      </div>
                     </label>
 
                     {editingCampaign.showOnAnnouncementBar && (
-                      <div className="pt-2 pl-6">
-                        <label className="admin-label">Announcement Bar Text</label>
+                      <div className="pl-7">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">Announcement Ticker Text</label>
                         <input
                           type="text"
-                          className="admin-input"
-                          placeholder="e.g. Buy an eligible iPhone and get a free case."
+                          placeholder="e.g. One-Time PlayStation Combo Offer: PS5 Slim + FC 25 + 2 Controllers for GH₵ 7,500."
                           value={editingCampaign.announcementBarText || ""}
-                          onChange={(e) => setEditingCampaign((prev) => ({ ...prev, announcementBarText: e.target.value }))}
+                          onChange={(e) => setEditingCampaign({ ...editingCampaign, announcementBarText: e.target.value })}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
                         />
                       </div>
                     )}
+
+                    <label className="p-3.5 border border-slate-200 rounded-xl flex items-center gap-3 cursor-pointer hover:bg-slate-50 transition">
+                      <input
+                        type="checkbox"
+                        checked={editingCampaign.showOnOffersPage !== false}
+                        onChange={(e) => setEditingCampaign({ ...editingCampaign, showOnOffersPage: e.target.checked })}
+                        className="rounded text-black focus:ring-black w-4 h-4"
+                      />
+                      <div>
+                        <div className="text-xs font-bold text-slate-900">Dedicated Offers Directory (/offers)</div>
+                        <div className="text-[11px] text-slate-500">Include in the public offers index with full condition explanation.</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Dates & Presets */}
+                  <div className="pt-2 border-t border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800">Campaign Flight Dates</label>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            const end = new Date(now.getTime() + 7 * 86400000);
+                            setEditingCampaign({
+                              ...editingCampaign,
+                              startDate: now.toISOString().slice(0, 16),
+                              endDate: end.toISOString().slice(0, 16),
+                            });
+                          }}
+                          className="text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md"
+                        >
+                          +7 Days
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const now = new Date();
+                            const end = new Date(now.getTime() + 30 * 86400000);
+                            setEditingCampaign({
+                              ...editingCampaign,
+                              startDate: now.toISOString().slice(0, 16),
+                              endDate: end.toISOString().slice(0, 16),
+                            });
+                          }}
+                          className="text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-md"
+                        >
+                          +30 Days
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">Start Date & Time</label>
+                        <input
+                          type="datetime-local"
+                          value={editingCampaign.startDate || ""}
+                          onChange={(e) => setEditingCampaign({ ...editingCampaign, startDate: e.target.value })}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">End Date & Time</label>
+                        <input
+                          type="datetime-local"
+                          value={editingCampaign.endDate || ""}
+                          onChange={(e) => setEditingCampaign({ ...editingCampaign, endDate: e.target.value })}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 6: PREVIEW */}
-              {editorTab === "preview" && (
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                      Offer Card Preview (/offers)
-                    </span>
-                    <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
-                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full inline-block">
-                        {editingCampaign.promotionType}
-                      </span>
-                      <h4 className="font-bold text-slate-900 text-base">{editingCampaign.title || "Offer Title"}</h4>
-                      <p className="text-xs text-slate-600">{editingCampaign.shortDescription || "Short description will appear here..."}</p>
-                      <button type="button" className="admin-btn admin-btn-sm admin-btn-primary mt-2">
-                        <span>{editingCampaign.ctaText || "Claim Offer"}</span>
-                        <ArrowRight size={13} />
-                      </button>
+              {/* STEP 7: REVIEW, VALIDATION & LIVE PREVIEW */}
+              {activeStep === "preview" && (
+                <div className="space-y-6">
+                  <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900">Campaign Preview & Verification</h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Review how the offer will display to shoppers across the storefront before publishing.
+                      </p>
                     </div>
                   </div>
 
-                  <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl text-xs text-emerald-800 space-y-1.5">
-                    <span className="font-bold block">Checkout Calculation Check:</span>
-                    <div>
-                      &bull; Type: <strong>{editingCampaign.promotionType}</strong>
+                  {/* Pre-flight Checklist */}
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+                    <div className="text-xs font-bold text-slate-800">Pre-Publishing Verification</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        {editingCampaign.title?.trim() ? (
+                          <CheckCircle2 size={14} className="text-emerald-600" />
+                        ) : (
+                          <X size={14} className="text-rose-500" />
+                        )}
+                        <span className={editingCampaign.title?.trim() ? "text-slate-800" : "text-rose-600 font-semibold"}>
+                          Title configured
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl ? (
+                          <CheckCircle2 size={14} className="text-emerald-600" />
+                        ) : (
+                          <X size={14} className="text-rose-500" />
+                        )}
+                        <span className={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl ? "text-slate-800" : "text-rose-600 font-semibold"}>
+                          Promotional flyer attached
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {(editingCampaign.promotionalPrice || newProductData.price) > 0 ? (
+                          <CheckCircle2 size={14} className="text-emerald-600" />
+                        ) : (
+                          <CheckCircle2 size={14} className="text-slate-400" />
+                        )}
+                        <span>Price configured (GH₵{(editingCampaign.promotionalPrice || newProductData.price).toLocaleString()})</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {editingCampaign.promotionType === "bundle" ? (
+                          bundleItems.length > 0 ? (
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                          ) : (
+                            <X size={14} className="text-rose-500" />
+                          )
+                        ) : (
+                          <CheckCircle2 size={14} className="text-emerald-600" />
+                        )}
+                        <span>
+                          {editingCampaign.promotionType === "bundle"
+                            ? `${bundleItems.length} bundle items confirmed`
+                            : "Eligibility configured"}
+                        </span>
+                      </div>
                     </div>
-                    {editingCampaign.promotionType === "free_gift" && (
-                      <div>
-                        &bull; Qualifying purchase will append <strong>{editingCampaign.giftQuantityPerPurchase || 1} × {editingCampaign.giftProductName || "Free Gift"}</strong> at GH₵ 0.
+                  </div>
+
+                  {/* Live Visual Card Preview */}
+                  <div className="space-y-3">
+                    <div className="text-xs font-bold text-slate-800">Storefront Carousel Flyer Preview</div>
+
+                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md max-w-xl mx-auto">
+                      <div className="w-full aspect-[2/1] bg-slate-900 relative">
+                        <img
+                          src={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl || "/products/campaigns/ps5-slim-combo-desktop.webp"}
+                          alt={editingCampaign.title || "Offer preview"}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-5 text-white">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                            {editingCampaign.promotionType?.replace(/_/g, " ")}
+                          </span>
+                          <h3 className="text-lg font-bold mt-1 text-white">{editingCampaign.title || "Untitled Offer"}</h3>
+                          <p className="text-xs text-slate-200 line-clamp-1 mt-0.5">
+                            {editingCampaign.shortDescription || "Special offer headline"}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-sm font-extrabold text-white">
+                              {editingCampaign.promotionalPrice ? formatGhs(editingCampaign.promotionalPrice) : ""}
+                            </span>
+                            <span className="px-3 py-1 bg-white text-slate-900 rounded-full text-xs font-bold inline-flex items-center gap-1">
+                              <span>{editingCampaign.ctaText || "Explore Offer"}</span>
+                              <ArrowRight size={12} />
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                    {editingCampaign.promotionType === "percentage_discount" && (
-                      <div>
-                        &bull; Eligible items will automatically receive <strong>{editingCampaign.discountPercent || 0}% deduction</strong> at checkout.
-                      </div>
-                    )}
-                    {editingCampaign.promotionType === "fixed_discount" && (
-                      <div>
-                        &bull; Order will automatically receive <strong>GH₵ {editingCampaign.discountAmount || 0} deduction</strong>.
-                      </div>
-                    )}
+
+                      {/* Included items breakdown if bundle */}
+                      {editingCampaign.promotionType === "bundle" && bundleItems.length > 0 && (
+                        <div className="p-4 bg-slate-50 border-t border-slate-100 text-xs text-slate-600">
+                          <div className="font-bold text-slate-800 mb-1.5">Includes {bundleItems.length} verified items:</div>
+                          <ul className="list-disc pl-4 space-y-1">
+                            {bundleItems.map((item, i) => (
+                              <li key={i}>{item.name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Modal Footer Controls */}
-            <footer className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-              <button
-                type="button"
-                className="admin-btn admin-btn-secondary text-xs"
-                onClick={() => setIsEditorOpen(false)}
-                disabled={saving}
-              >
-                Cancel
-              </button>
+            {/* Modal Sticky Footer with Simple Publishing Controls */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {activeStep !== "basics" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const steps: EditorStep[] = ["basics", "type", "product", "rules", "flyers", "placement", "preview"];
+                      const idx = steps.indexOf(activeStep);
+                      if (idx > 0) setActiveStep(steps[idx - 1]);
+                    }}
+                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-1"
+                  >
+                    <ChevronLeft size={14} />
+                    <span>Back</span>
+                  </button>
+                )}
 
+                {activeStep !== "preview" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const steps: EditorStep[] = ["basics", "type", "product", "rules", "flyers", "placement", "preview"];
+                      const idx = steps.indexOf(activeStep);
+                      if (idx < steps.length - 1) setActiveStep(steps[idx + 1]);
+                    }}
+                    className="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition flex items-center gap-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Action Buttons: Save Draft, Preview, Publish Live, Unpublish */}
               <div className="flex items-center gap-2.5">
                 <button
                   type="button"
-                  className="admin-btn admin-btn-secondary text-xs font-bold"
-                  onClick={() => void handleSaveCampaign(false)}
+                  onClick={() => setActiveStep("preview")}
+                  className="px-3 py-2 text-slate-700 hover:text-black hover:bg-slate-200/60 text-xs font-semibold rounded-xl transition"
+                >
+                  Preview Offer
+                </button>
+
+                {(editingCampaign.status === "active" || editingCampaign.isEnabled) && (
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => {
+                      setEditingCampaign((prev) => (prev ? { ...prev, status: "draft", isEnabled: false } : null));
+                      void handleSaveCampaign(false);
+                    }}
+                    className="px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition"
+                  >
+                    Unpublish
+                  </button>
+                )}
+
+                <button
+                  type="button"
                   disabled={saving}
+                  onClick={() => void handleSaveCampaign(false)}
+                  className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl border border-slate-200 transition shadow-sm"
                 >
                   {saving ? "Saving..." : "Save Draft"}
                 </button>
+
                 <button
                   type="button"
-                  className="admin-btn admin-btn-primary text-xs font-bold"
-                  onClick={() => void handleSaveCampaign(true)}
                   disabled={saving}
+                  onClick={() => void handleSaveCampaign(true)}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-1.5"
                 >
-                  <Sparkles size={14} />
-                  <span>{saving ? "Publishing..." : "Publish Campaign"}</span>
+                  <Check size={14} />
+                  <span>{saving ? "Publishing..." : "Publish Live"}</span>
                 </button>
               </div>
-            </footer>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Media Picker Modal */}
+      {/* 5. MEDIA LIBRARY PICKER MODAL */}
       {mediaPickerTarget && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <ImageIcon size={17} className="text-[#d4af37]" />
-                <span>Select Asset from Media Library</span>
-              </h3>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Select Promotional Flyer from Media Library</h3>
+                <p className="text-xs text-slate-500">Pick an uploaded graphic or upload a new asset directly.</p>
+              </div>
               <button
                 type="button"
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
                 onClick={() => setMediaPickerTarget(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
               >
                 <X size={18} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <AdminMediaLibrary onSelect={handleSelectMedia} isPicker={true} />
+            <div className="p-4 overflow-y-auto flex-1">
+              <AdminMediaLibrary
+                isPicker
+                onSelect={(item: MediaItem) => {
+                  if (editingCampaign) {
+                    if (mediaPickerTarget === "desktop") {
+                      setEditingCampaign({ ...editingCampaign, desktopFlyerUrl: item.url });
+                    } else if (mediaPickerTarget === "mobile") {
+                      setEditingCampaign({ ...editingCampaign, mobileFlyerUrl: item.url });
+                    }
+                  }
+                  setMediaPickerTarget(null);
+                }}
+              />
             </div>
           </div>
         </div>
       )}
 
-      {/* Permanent Delete Confirmation Dialog */}
+      {/* 6. PERMANENT DELETE CONFIRMATION MODAL */}
       {deleteCandidate && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-rose-200 p-6 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 grid place-items-center">
               <Trash2 size={24} />
-              <h3 className="font-bold text-slate-900 text-base">Delete Campaign Permanently?</h3>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              This action cannot be undone. To permanently delete the campaign &ldquo;{deleteCandidate.title}&rdquo;, type the exact title below:
-            </p>
+
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Permanently Delete Promotion?</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                This action cannot be undone. To prevent accidental loss, please type the exact campaign title:
+                <strong className="text-slate-800 block mt-1 font-mono">{deleteCandidate.title}</strong>
+              </p>
+            </div>
+
             <input
               type="text"
-              className="admin-input text-xs font-semibold"
-              placeholder={deleteCandidate.title}
+              placeholder="Type campaign title to confirm..."
               value={deleteInput}
               onChange={(e) => setDeleteInput(e.target.value)}
+              className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium"
             />
+
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
-                className="admin-btn admin-btn-secondary text-xs"
-                onClick={() => setDeleteCandidate(null)}
+                onClick={() => {
+                  setDeleteCandidate(null);
+                  setDeleteInput("");
+                }}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="admin-btn bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold"
-                disabled={deleteInput !== deleteCandidate.title || deleting}
-                onClick={handleDeleteConfirm}
+                disabled={deleting || deleteInput !== deleteCandidate.title}
+                onClick={() => void handleDeleteConfirm()}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition"
               >
-                {deleting ? "Deleting..." : "Confirm Permanent Deletion"}
+                {deleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>
           </div>

@@ -336,6 +336,11 @@ export function AppleCheckout() {
                         <p className="apple-checkout-mini-specs">
                           {item.quantity} × {[item.storage, item.color].filter(Boolean).join(" · ")}
                         </p>
+                        {item.product.includedItems && item.product.includedItems.length > 0 && (
+                          <div style={{ marginTop: 4, fontSize: "0.74rem", color: "#64748b", lineHeight: 1.3 }}>
+                            <strong style={{ color: "#334155" }}>Includes:</strong> {item.product.includedItems.join(" • ")}
+                          </div>
+                        )}
                       </div>
                       <div className="apple-checkout-mini-price">
                         {isGift ? (

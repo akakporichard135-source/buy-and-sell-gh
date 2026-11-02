@@ -10,6 +10,7 @@ import { testOrderManagement } from "./test-order-management.mjs";
 import { testArchiveAndDeleteNotifications } from "./test-archive-and-notifications.mjs";
 import { testWordBreaksAndResponsive } from "./test-word-breaks-and-responsive.mjs";
 import { testPromotionsSystem } from "./test-promotions-system.mjs";
+import { testSimplifiedPromotionsAndBundles } from "./test-simplified-promotions-and-bundles.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -713,6 +714,7 @@ try {
 
   await testWordBreaksAndResponsive(projectRoot);
   await testPromotionsSystem(projectRoot, bundle, outdir);
+  await testSimplifiedPromotionsAndBundles(projectRoot, bundle, outdir);
 
   console.log("All tests passed");
 } finally {

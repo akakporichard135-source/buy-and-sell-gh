@@ -45,6 +45,7 @@ export interface OrderRequestItem {
   colour: string;
   condition: string;
   specifications?: Record<string, string>;
+  includedItems?: string[];
   batteryHealth?: string;
   warranty?: string;
   quantity: number;
@@ -126,6 +127,7 @@ export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
       colour: item.color,
       condition: item.product.condition,
       specifications: item.options,
+      includedItems: item.product.includedItems,
       batteryHealth: item.product.batteryHealth,
       warranty: item.product.warranty ?? item.product.warrantyInfo,
       quantity: item.quantity,
