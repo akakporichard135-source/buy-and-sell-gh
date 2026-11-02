@@ -7,6 +7,7 @@ import { build } from "esbuild";
 import { testMarketplace } from "./test-marketplace.mjs";
 import { testStore } from "./test-store.mjs";
 import { testOrderManagement } from "./test-order-management.mjs";
+import { testArchiveAndDeleteNotifications } from "./test-archive-and-notifications.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -436,6 +437,7 @@ try {
     cardSource: await readFile(path.join(projectRoot, "src/components/StoreProductCard.tsx"), "utf8"),
   });
   await testOrderManagement(projectRoot);
+  await testArchiveAndDeleteNotifications(projectRoot);
 
   const notificationStorageData = new Map();
   const notificationStorage = {

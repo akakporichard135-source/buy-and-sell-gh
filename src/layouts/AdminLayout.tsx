@@ -22,6 +22,7 @@ import {
 import { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../admin/AdminAuth";
+import { AdminNotificationBell } from "../admin/AdminNotificationBell";
 import {
   AdminOrderNotificationStack,
   AdminOrderSoundButton,
@@ -239,7 +240,8 @@ export function AdminLayout() {
             </div>
           </div>
 
-          <div className="admin-topbar-actions">
+          <div className="admin-topbar-actions flex items-center gap-2">
+            <AdminNotificationBell userId={session?.userId ?? "admin"} />
             <AdminOrderSoundButton enabled={soundEnabled} onToggle={toggleSound} />
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

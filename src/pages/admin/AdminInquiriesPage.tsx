@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
+  AlertTriangle,
+  Archive,
+  CheckCircle2,
   Clock,
   ExternalLink,
   Gift,
@@ -10,15 +13,20 @@ import {
   PackageCheck,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
   Share2,
   Tag,
+  Trash2,
   Wrench,
   X,
 } from "lucide-react";
 import {
+  archiveServiceRequest,
+  deleteServiceRequest,
   listServiceRequests,
   logDirectServiceRequest,
+  restoreServiceRequest,
   updateServiceRequest,
   type ServiceRequest,
   type ServiceStatus,
@@ -27,6 +35,7 @@ import {
 
 type Mode = "service-requests" | "trade-ins" | "device-requests" | "contact-messages";
 type DisplayRequest = ServiceRequest & { legacy?: boolean };
+type ViewTab = "active" | "archived";
 
 const serviceNames: Record<ServiceType, string> = {
   installment: "Installment Payment",
@@ -86,6 +95,7 @@ function readLegacy(): DisplayRequest[] {
           admin_notes: String(item.adminNotes ?? ""),
           source: "Legacy browser entry",
           created_at: String(item.createdAt ?? new Date(0).toISOString()),
+          archived_at: item.status === "Archived" ? new Date().toISOString() : null,
           legacy: true,
         };
       });
@@ -102,6 +112,11 @@ function saveLegacyField(id: string, field: "status" | "adminNotes", value: stri
       rows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
     )
   );
+}
+
+function deleteLegacyItem(id: string) {
+  const rows = JSON.parse(localStorage.getItem(legacyKey) ?? "[]") as Record<string, unknown>[];
+  localStorage.setItem(legacyKey, JSON.stringify(rows.filter((row) => row.id !== id)));
 }
 
 function whatsappCustomerUrl(phone: string) {
@@ -126,6 +141,7 @@ export function AdminInquiriesPage({
 }) {
   const [remote, setRemote] = useState<ServiceRequest[]>([]);
   const [legacy, setLegacy] = useState<DisplayRequest[]>(readLegacy);
+  const [viewTab, setViewTab] = useState<ViewTab>("active");
   const [categoryTab, setCategoryTab] = useState<"all" | ServiceType>(() => {
     if (mode === "trade-ins") return "trade-in";
     if (mode === "device-requests") return "pre-order";
@@ -137,9 +153,22 @@ export function AdminInquiriesPage({
   const [selected, setSelected] = useState<DisplayRequest | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showManual, setShowManual] = useState(false);
+
+  // Two-step permanent delete modal states
+  const [deleteTarget, setDeleteTarget] = useState<DisplayRequest | null>(null);
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  const showNotification = (msg: string) => {
+    setSuccessMessage(msg);
+    window.setTimeout(() => setSuccessMessage(""), 4000);
+  };
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -165,10 +194,23 @@ export function AdminInquiriesPage({
     );
   }, [remote, legacy]);
 
-  // Counts by category
+  // Partition into Active and Archived
+  const activeItems = useMemo(
+    () => allItems.filter((i) => !i.archived_at),
+    [allItems]
+  );
+
+  const archivedItems = useMemo(
+    () => allItems.filter((i) => Boolean(i.archived_at)),
+    [allItems]
+  );
+
+  const currentTabPool = viewTab === "active" ? activeItems : archivedItems;
+
+  // Counts by category within the current active pool
   const counts = useMemo(() => {
     const map: Record<string, number> = {
-      all: allItems.length,
+      all: currentTabPool.length,
       installment: 0,
       "trade-in": 0,
       repair: 0,
@@ -177,7 +219,7 @@ export function AdminInquiriesPage({
       referral: 0,
       contact: 0,
     };
-    allItems.forEach((i) => {
+    currentTabPool.forEach((i) => {
       if (i.service_type === "upgrade") {
         map["trade-in"] = (map["trade-in"] || 0) + 1;
       } else if (map[i.service_type] !== undefined) {
@@ -185,11 +227,11 @@ export function AdminInquiriesPage({
       }
     });
     return map;
-  }, [allItems]);
+  }, [currentTabPool]);
 
   // Filtered list
   const entries = useMemo<DisplayRequest[]>(() => {
-    return allItems.filter((item) => {
+    return currentTabPool.filter((item) => {
       if (categoryTab !== "all") {
         if (categoryTab === "trade-in") {
           if (!["trade-in", "upgrade"].includes(item.service_type)) return false;
@@ -206,7 +248,7 @@ export function AdminInquiriesPage({
       }
       return true;
     });
-  }, [allItems, categoryTab, statusFilter, search]);
+  }, [currentTabPool, categoryTab, statusFilter, search]);
 
   const open = (item: DisplayRequest) => {
     setSelected(item);
@@ -242,10 +284,91 @@ export function AdminInquiriesPage({
         setRemote((rows) => rows.map((row) => (row.id === saved.id ? saved : row)));
       }
       setSelected(saved);
+      showNotification("Request details updated successfully.");
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Update could not be saved.");
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // Archive action
+  const handleArchive = async (item: DisplayRequest) => {
+    if (updating) return;
+    setUpdating(true);
+    setError("");
+    try {
+      if (item.legacy) {
+        saveLegacyField(item.id, "status", "Archived");
+        setLegacy(readLegacy());
+      } else {
+        const archived = await archiveServiceRequest(item);
+        setRemote((rows) => rows.map((r) => (r.id === item.id ? archived : r)));
+      }
+      if (selected?.id === item.id) setSelected(null);
+      showNotification(`Request ${item.reference} moved to Archived list.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to archive request.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Restore action
+  const handleRestore = async (item: DisplayRequest) => {
+    if (updating) return;
+    setUpdating(true);
+    setError("");
+    try {
+      if (item.legacy) {
+        saveLegacyField(item.id, "status", "In Review");
+        setLegacy(readLegacy());
+      } else {
+        const restored = await restoreServiceRequest(item);
+        setRemote((rows) => rows.map((r) => (r.id === item.id ? restored : r)));
+      }
+      if (selected?.id === item.id) setSelected(null);
+      showNotification(`Request ${item.reference} restored to Active list.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to restore request.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Open permanent delete dialog
+  const promptDelete = (item: DisplayRequest) => {
+    setDeleteTarget(item);
+    setDeleteConfirmationText("");
+    setDeleteReason("");
+    setDeleteError("");
+  };
+
+  // Confirm permanent deletion
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || deleteBusy) return;
+    if (deleteConfirmationText.trim().toUpperCase() !== "DELETE") {
+      setDeleteError('Please type "DELETE" to confirm permanent deletion.');
+      return;
+    }
+
+    setDeleteBusy(true);
+    setDeleteError("");
+    try {
+      if (deleteTarget.legacy) {
+        deleteLegacyItem(deleteTarget.id);
+        setLegacy(readLegacy());
+      } else {
+        await deleteServiceRequest(deleteTarget, { reason: deleteReason.trim() });
+        setRemote((rows) => rows.filter((r) => r.id !== deleteTarget.id));
+      }
+      if (selected?.id === deleteTarget.id) setSelected(null);
+      setDeleteTarget(null);
+      showNotification(`Request ${deleteTarget.reference} permanently deleted.`);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete request from database.");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -266,6 +389,7 @@ export function AdminInquiriesPage({
       });
       setRemote((rows) => [saved, ...rows]);
       setShowManual(false);
+      showNotification(`Direct request ${saved.reference} created successfully.`);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Direct request could not be saved.");
     } finally {
@@ -326,11 +450,74 @@ export function AdminInquiriesPage({
         </div>
       )}
 
+      {/* Success Notification Banner */}
+      {successMessage && (
+        <div
+          role="status"
+          className="flex items-center gap-2.5 p-3 rounded-xl border border-emerald-300 bg-emerald-50 text-xs font-semibold text-emerald-800"
+        >
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
       {error && (
         <p role="alert" className="p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700">
           {error}
         </p>
       )}
+
+      {/* Active vs Archived View Tabs */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewTab("active")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              viewTab === "active"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            <Inbox size={15} />
+            <span>Active Requests</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[0.65rem] font-black ${
+                viewTab === "active" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+              }`}
+            >
+              {activeItems.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewTab("archived")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              viewTab === "archived"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            <Archive size={15} />
+            <span>Archived Requests</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[0.65rem] font-black ${
+                viewTab === "archived" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+              }`}
+            >
+              {archivedItems.length}
+            </span>
+          </button>
+        </div>
+
+        {viewTab === "archived" && (
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+            <Archive size={14} />
+            <span>Archived records are kept safe and can be restored anytime.</span>
+          </div>
+        )}
+      </div>
 
       {/* Category Navigation Pills */}
       <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/90 border border-slate-200 text-xs font-bold">
@@ -342,7 +529,7 @@ export function AdminInquiriesPage({
           }`}
         >
           <Inbox size={14} />
-          <span>All Requests</span>
+          <span>All {viewTab === "active" ? "Active" : "Archived"}</span>
           <span className="ml-1 px-1.5 py-0.2 rounded-full bg-slate-200/80 text-[0.65rem] font-black">
             {counts.all}
           </span>
@@ -463,7 +650,7 @@ export function AdminInquiriesPage({
           onChange={(event) => setStatusFilter(event.target.value as ServiceStatus | "All")}
           className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
         >
-          <option value="All">All statuses ({allItems.length})</option>
+          <option value="All">All statuses ({currentTabPool.length})</option>
           {statuses.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -504,7 +691,7 @@ export function AdminInquiriesPage({
                 <th>Device &amp; Plan Details</th>
                 <th>Status</th>
                 <th>Date &amp; Time</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -518,7 +705,7 @@ export function AdminInquiriesPage({
               ) : entries.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-500 text-sm">
-                    No customer requests found matching these filters.
+                    No {viewTab === "active" ? "active" : "archived"} customer requests found matching these filters.
                   </td>
                 </tr>
               ) : (
@@ -531,6 +718,11 @@ export function AdminInquiriesPage({
                       <div className="text-[0.72rem] font-bold text-slate-700 mt-0.5">
                         {serviceNames[item.service_type]}
                       </div>
+                      {item.archived_at && (
+                        <span className="inline-block mt-1 px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 text-[0.62rem] font-bold">
+                          Archived
+                        </span>
+                      )}
                     </td>
                     <td>
                       <div className="font-bold text-slate-900 text-xs">{item.customer_name}</div>
@@ -596,13 +788,50 @@ export function AdminInquiriesPage({
                       })}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        onClick={() => open(item)}
-                        className="admin-btn admin-btn-secondary admin-btn-sm text-xs font-bold"
-                      >
-                        View &amp; Manage
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => open(item)}
+                          className="admin-btn admin-btn-secondary admin-btn-sm text-xs font-bold"
+                          title="View customer responses and update notes"
+                        >
+                          View
+                        </button>
+
+                        {viewTab === "active" ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleArchive(item)}
+                            disabled={updating}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:border-amber-400 hover:bg-amber-50 text-slate-600 hover:text-amber-700 transition"
+                            title="Move to Archived list"
+                            aria-label={`Archive ${item.reference}`}
+                          >
+                            <Archive size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => void handleRestore(item)}
+                            disabled={updating}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 transition"
+                            title="Restore to Active list"
+                            aria-label={`Restore ${item.reference}`}
+                          >
+                            <RotateCcw size={14} />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => promptDelete(item)}
+                          className="p-1.5 rounded-lg border border-slate-200 hover:border-rose-400 hover:bg-rose-50 text-slate-500 hover:text-rose-700 transition"
+                          title="Permanently Delete Request"
+                          aria-label={`Permanently delete ${item.reference}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -618,9 +847,16 @@ export function AdminInquiriesPage({
           <div className="admin-modal-box max-w-2xl" onClick={(event) => event.stopPropagation()}>
             <div className="admin-modal-header">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#b17d12]">
-                  {serviceNames[selected.service_type]} / {selected.reference}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#b17d12]">
+                    {serviceNames[selected.service_type]} / {selected.reference}
+                  </span>
+                  {selected.archived_at && (
+                    <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[0.65rem] font-bold">
+                      Archived
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-slate-900 mt-0.5">{selected.customer_name}</h3>
               </div>
               <button
@@ -640,23 +876,58 @@ export function AdminInquiriesPage({
                 </p>
               )}
 
-              {/* Action Buttons: WhatsApp outreach & Phone call */}
-              <div className="flex flex-wrap items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                <a
-                  href={whatsappCustomerUrl(selected.phone)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="admin-btn admin-btn-primary admin-btn-sm"
-                >
-                  <MessageCircle size={15} />
-                  <span>Contact on WhatsApp ({selected.phone})</span>
-                </a>
-                <a
-                  href={`tel:${selected.phone}`}
-                  className="admin-btn admin-btn-secondary admin-btn-sm"
-                >
-                  <span>Call {selected.phone}</span>
-                </a>
+              {/* Action Buttons: WhatsApp outreach, Phone call, Archive, Delete */}
+              <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={whatsappCustomerUrl(selected.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-btn admin-btn-primary admin-btn-sm"
+                  >
+                    <MessageCircle size={15} />
+                    <span>WhatsApp ({selected.phone})</span>
+                  </a>
+                  <a
+                    href={`tel:${selected.phone}`}
+                    className="admin-btn admin-btn-secondary admin-btn-sm"
+                  >
+                    <span>Call {selected.phone}</span>
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {!selected.archived_at ? (
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => void handleArchive(selected)}
+                      className="admin-btn admin-btn-secondary admin-btn-sm text-amber-800 border-amber-300 hover:bg-amber-50"
+                    >
+                      <Archive size={14} />
+                      <span>Archive Request</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={updating}
+                      onClick={() => void handleRestore(selected)}
+                      className="admin-btn admin-btn-secondary admin-btn-sm text-emerald-800 border-emerald-300 hover:bg-emerald-50"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Restore to Active</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => promptDelete(selected)}
+                    className="admin-btn admin-btn-secondary admin-btn-sm text-rose-700 border-rose-200 hover:bg-rose-50"
+                  >
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
 
               <div className="text-[0.72rem] text-slate-500 flex items-center justify-between">
@@ -730,6 +1001,112 @@ export function AdminInquiriesPage({
                   className="admin-btn admin-btn-secondary admin-btn-sm"
                 >
                   {updating ? "Saving..." : "Save Notes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Two-Step Permanent Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="admin-modal-overlay" onClick={() => !deleteBusy && setDeleteTarget(null)}>
+          <div className="admin-modal-box max-w-md border-rose-300" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header bg-rose-50/70 border-b border-rose-100">
+              <div className="flex items-center gap-2 text-rose-800">
+                <AlertTriangle size={20} className="text-rose-600 shrink-0" />
+                <h3 className="text-base font-bold text-rose-900">Permanently Delete Request</h3>
+              </div>
+              <button
+                type="button"
+                disabled={deleteBusy}
+                onClick={() => setDeleteTarget(null)}
+                aria-label="Cancel deletion"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-900"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="admin-modal-body space-y-4 p-5 text-xs text-slate-700">
+              {deleteError && (
+                <div role="alert" className="p-3 rounded-lg border border-rose-300 bg-rose-50 text-xs font-semibold text-rose-800">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="flex justify-between font-mono font-bold text-slate-900">
+                  <span>{deleteTarget.reference}</span>
+                  <span className="text-[#b17d12]">{serviceNames[deleteTarget.service_type]}</span>
+                </div>
+                <div className="font-semibold text-slate-800">Customer: {deleteTarget.customer_name} ({deleteTarget.phone})</div>
+                <div className="text-slate-500 text-[0.7rem]">
+                  Submitted on {new Date(deleteTarget.created_at).toLocaleString("en-GH")}
+                </div>
+              </div>
+
+              <div className="space-y-1 text-slate-600">
+                <p className="font-bold text-rose-700">
+                  Warning: This action cannot be undone.
+                </p>
+                <p>
+                  The request will be permanently purged from the database and will no longer appear in Active or Archived lists.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Reason for permanent deletion (audit log):
+                </label>
+                <input
+                  type="text"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="e.g. Test submission, Duplicate entry, Customer request"
+                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                <label className="block font-bold text-slate-800">
+                  Type <span className="font-mono text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">DELETE</span> to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmationText}
+                  onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                  placeholder="Type DELETE here"
+                  className="w-full rounded-lg border border-rose-300 bg-white p-2.5 text-xs font-mono font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={deleteBusy}
+                  onClick={() => setDeleteTarget(null)}
+                  className="admin-btn admin-btn-secondary admin-btn-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteBusy || deleteConfirmationText.trim().toUpperCase() !== "DELETE"}
+                  onClick={() => void handleConfirmDelete()}
+                  className="admin-btn admin-btn-sm bg-rose-600 hover:bg-rose-700 text-white font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                >
+                  {deleteBusy ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin mr-1" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} className="mr-1" />
+                      Permanently Delete
+                    </>
+                  )}
                 </button>
               </div>
             </div>
