@@ -292,6 +292,8 @@ export function OffersPage() {
                               ? `${offer.discountPercent}% Discount`
                               : offer.promotionType === "fixed_discount"
                               ? `Save ${formatGhs(offer.discountAmount || 0)}`
+                              : offer.promotionType === "bundle"
+                              ? (offer.promotionalPrice ? `Special Bundle · ${formatGhs(offer.promotionalPrice)}` : "Special Bundle")
                               : "Special Campaign"}
                           </span>
 
@@ -320,6 +322,21 @@ export function OffersPage() {
                         >
                           {offer.title}
                         </h2>
+
+                        {offer.promotionalPrice ? (
+                          <div
+                            style={{
+                              fontSize: "1.25rem",
+                              fontWeight: 700,
+                              color: "#1d1d1f",
+                              letterSpacing: "-0.015em",
+                              marginTop: 6,
+                              marginBottom: 4,
+                            }}
+                          >
+                            Special Price: {formatGhs(offer.promotionalPrice)}
+                          </div>
+                        ) : null}
 
                         <p
                           style={{
@@ -355,6 +372,9 @@ export function OffersPage() {
                                 Includes {offer.giftQuantityPerPurchase} × {offer.giftProductName || "Free Gift"} (automatic checkout addition).
                               </li>
                             )}
+                            {offer.promotionalPrice ? (
+                              <li>Special package bundle price: {formatGhs(offer.promotionalPrice)}.</li>
+                            ) : null}
                             {offer.eligibleProductIds.length > 0 && (
                               <li>
                                 Eligible devices: {offer.eligibleProductIds.slice(0, 4).join(", ")}
