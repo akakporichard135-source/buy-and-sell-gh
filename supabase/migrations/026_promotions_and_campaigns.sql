@@ -131,18 +131,30 @@ ALTER TABLE public.order_items
 ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotion_redemptions ENABLE ROW LEVEL SECURITY;
 
--- Public can read active and enabled promotions within valid dates
+-- Separate anon and auth read policies to avoid evaluating is_admin() for anon
 DROP POLICY IF EXISTS "promotions_public_read" ON public.promotions;
-CREATE POLICY "promotions_public_read" ON public.promotions
-  FOR SELECT TO anon, authenticated
+DROP POLICY IF EXISTS "promotions_admin_all" ON public.promotions;
+DROP POLICY IF EXISTS "promotions_anon_read" ON public.promotions;
+DROP POLICY IF EXISTS "promotions_auth_read" ON public.promotions;
+DROP POLICY IF EXISTS "promotions_admin_write" ON public.promotions;
+
+CREATE POLICY "promotions_anon_read" ON public.promotions
+  FOR SELECT TO anon
+  USING (
+    status = 'active' 
+    AND is_enabled = true 
+    AND (start_date IS NULL OR start_date <= clock_timestamp()) 
+    AND (end_date IS NULL OR end_date >= clock_timestamp())
+  );
+
+CREATE POLICY "promotions_auth_read" ON public.promotions
+  FOR SELECT TO authenticated
   USING (
     (status = 'active' AND is_enabled = true AND (start_date IS NULL OR start_date <= clock_timestamp()) AND (end_date IS NULL OR end_date >= clock_timestamp()))
     OR (public.is_admin())
   );
 
--- Admins have full access to promotions
-DROP POLICY IF EXISTS "promotions_admin_all" ON public.promotions;
-CREATE POLICY "promotions_admin_all" ON public.promotions
+CREATE POLICY "promotions_admin_write" ON public.promotions
   FOR ALL TO authenticated
   USING (public.is_admin())
   WITH CHECK (public.is_admin());
@@ -162,8 +174,10 @@ INSERT INTO public.promotions (
   id, slug, title, short_description, detailed_description,
   promotion_type, status, is_enabled, start_date, end_date, priority,
   eligible_product_ids, eligible_category,
+  discount_percent, discount_amount, promotional_price,
   gift_product_id, gift_product_name, gift_product_slug, gift_product_image,
   gift_quantity_per_purchase, max_gifts_per_order, gift_stock_quantity, gift_stock_alert_threshold,
+  bundle_required_product_ids, bundle_discount_amount, bundle_discount_percent,
   desktop_flyer_url, mobile_flyer_url, flyer_alt_text,
   cta_text, cta_destination, display_order,
   show_on_announcement_bar, announcement_bar_text,
@@ -182,17 +196,19 @@ INSERT INTO public.promotions (
   10,
   ARRAY['iphone-16', 'iphone-16-pro', 'iphone-16-pro-max', 'iphone-16-plus', 'iphone-18-pro', 'iphone-18-pro-max'],
   'iPhones',
+  null, null, null,
   'apple-magsafe-iphone-case',
   'Apple iPhone Case with MagSafe',
   'apple-magsafe-iphone-case',
   '/products/campaigns/accessory-magsafe-case.webp',
   1, 1, 50, 5,
+  ARRAY[]::text[], null, null,
   '/products/campaigns/flyer-free-case-desktop.webp',
   '/products/campaigns/flyer-free-case-mobile.webp',
   'Promotional flyer: Buy an eligible iPhone and get an Apple MagSafe Case free',
   'Shop Eligible iPhones',
   '/iphone',
-  1,
+  2,
   true,
   'Buy an eligible iPhone and receive a free Apple MagSafe Case.',
   true,
@@ -212,14 +228,16 @@ INSERT INTO public.promotions (
   5,
   ARRAY['apple-20w-usb-c-power-adapter', 'apple-30w-usb-c-power-adapter', 'apple-70w-usb-c-power-adapter', 'apple-magsafe-charger'],
   'Accessories',
+  10.00, null, null,
   null, null, null, null,
   1, 1, 0, 0,
+  ARRAY[]::text[], null, null,
   '/products/campaigns/flyer-accessories-desktop.webp',
   '/products/campaigns/flyer-accessories-mobile.webp',
   'Promotional flyer: 10% off original Apple charging and power adapters',
   'Explore Power Accessories',
   '/accessories',
-  2,
+  3,
   true,
   'Special accessory offer: 10% off authentic Apple power adapters.',
   true,
@@ -239,14 +257,16 @@ INSERT INTO public.promotions (
   5,
   ARRAY['mac-mini'],
   'MacBooks',
+  null, 200.00, null,
   null, null, null, null,
   1, 1, 0, 0,
+  ARRAY[]::text[], null, null,
   '/products/campaigns/flyer-mac-mini-desktop.webp',
   '/products/campaigns/flyer-mac-mini-mobile.webp',
   'Promotional flyer: Save GH₵200 on new Mac mini configurations',
   'Configure Mac mini',
   '/shop/buy-mac/mac-mini',
-  3,
+  4,
   false,
   'Save GH₵200 on Mac mini configurations for a limited time.',
   true,
@@ -266,14 +286,16 @@ INSERT INTO public.promotions (
   1,
   ARRAY[]::text[],
   'all',
+  null, null, null,
   null, null, null, null,
   1, 1, 0, 0,
+  ARRAY[]::text[], null, null,
   '/products/campaigns/flyer-tradein-desktop.webp',
   '/products/campaigns/flyer-tradein-mobile.webp',
   'Promotional flyer: Trade in your old device and upgrade today',
   'Calculate Trade-In Value',
   '/sell-or-trade',
-  4,
+  5,
   true,
   'Trade in your current device toward your next Apple upgrade in Accra.',
   true,
@@ -286,21 +308,23 @@ INSERT INTO public.promotions (
   'Neatly used PS5 Slim Disc Version bundled with brand-new EA Sports FC 25 and two brand-new controllers.',
   'One-Time PlayStation Combo Offer featuring a neatly used PS5 Slim Standard Edition (Disc Version) bundled with a brand-new EA Sports FC 25 game and two brand-new PlayStation controllers. Confirmed availability and complete physical inspection at our Dome showroom in Accra.',
   'bundle',
-  'draft',
-  false,
-  now(),
+  'active',
+  true,
+  now() - interval '1 day',
   now() + interval '60 days',
-  8,
+  10,
   ARRAY['ps5-slim-combo-offer'],
   'Game Consoles',
+  null, null, 7500.00,
   null, null, null, null,
   1, 1, 0, 0,
-  '/products/campaigns/ps5-slim-combo-desktop.webp',
-  '/products/campaigns/ps5-slim-combo-mobile.webp',
+  ARRAY['ps5-slim-combo-offer'], null, null,
+  'https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/product-images/campaigns-1793654921855-ps5-combo-offer-flyer-png/1793654922317-ps5-combo-offer-flyer.png',
+  'https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/product-images/campaigns-1793654921855-ps5-combo-offer-flyer-png/1793654922317-ps5-combo-offer-flyer.png',
   'One-Time PlayStation Combo Offer: PS5 Slim Disc Edition with EA Sports FC 25 and 2 Controllers',
   'Explore PlayStation Bundle',
   '/product/ps5-slim-combo-offer',
-  5,
+  1,
   true,
   'One-Time PlayStation Combo Offer: PS5 Slim + FC 25 + 2 Controllers for GH₵ 7,500.',
   true,
@@ -313,7 +337,15 @@ ON CONFLICT (id) DO UPDATE SET
   promotion_type = EXCLUDED.promotion_type,
   status = EXCLUDED.status,
   is_enabled = EXCLUDED.is_enabled,
+  start_date = EXCLUDED.start_date,
+  end_date = EXCLUDED.end_date,
+  priority = EXCLUDED.priority,
   eligible_product_ids = EXCLUDED.eligible_product_ids,
+  eligible_category = EXCLUDED.eligible_category,
+  discount_percent = EXCLUDED.discount_percent,
+  discount_amount = EXCLUDED.discount_amount,
+  promotional_price = EXCLUDED.promotional_price,
+  bundle_required_product_ids = EXCLUDED.bundle_required_product_ids,
   desktop_flyer_url = EXCLUDED.desktop_flyer_url,
   mobile_flyer_url = EXCLUDED.mobile_flyer_url,
   cta_text = EXCLUDED.cta_text,
@@ -323,6 +355,48 @@ ON CONFLICT (id) DO UPDATE SET
   show_on_homepage_carousel = EXCLUDED.show_on_homepage_carousel,
   show_on_offers_page = EXCLUDED.show_on_offers_page,
   updated_at = now();
+
+-- 5b. REALTIME PUBLICATION & ANALYTICS RPCS
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'promotions'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.promotions;
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.increment_promotion_view(promo_id text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  UPDATE public.promotions
+  SET view_count = view_count + 1,
+      updated_at = now()
+  WHERE id = promo_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.increment_promotion_click(promo_id text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  UPDATE public.promotions
+  SET click_count = click_count + 1,
+      updated_at = now()
+  WHERE id = promo_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.increment_promotion_view(text) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.increment_promotion_click(text) TO anon, authenticated;
 
 -- 6. HARDEN CREATE_ORDER_REQUEST_VALIDATED WITH PROMOTIONS & FREE GIFTS
 CREATE OR REPLACE FUNCTION public.create_order_request_validated(

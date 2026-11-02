@@ -1012,7 +1012,7 @@ export const products: Product[] = [
     badges: ["Combo Offer", "Special Bundle"],
     isPopular: true,
     tags: ["playstation", "ps5", "game console", "bundle", "promotional", "purchase-action:buy"],
-    images: [{ src: "/products/campaigns/ps5-slim-combo-desktop.webp", alt: "PS5 Slim Combo Offer with EA Sports FC 25 and two controllers" }],
+    images: [{ src: "https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/product-images/campaigns-1793654921855-ps5-combo-offer-flyer-png/1793654922317-ps5-combo-offer-flyer.png", alt: "PS5 Slim Combo Offer with EA Sports FC 25 and two controllers" }],
     warrantyInfo: "Warranty and physical inspection confirmed at our Dome showroom.",
     deliveryNote: "In-store pickup in Dome, Accra or fast tracked doorstep delivery.",
     conditionReport: ["PS5 console in neat condition", "Original cables and packaging included", "Games and controllers tested"],

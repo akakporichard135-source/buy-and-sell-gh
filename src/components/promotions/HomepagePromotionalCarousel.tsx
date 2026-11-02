@@ -7,12 +7,17 @@ import { isPromotionCurrentlyActive } from "../../promotions/promotionEngine";
 import { recordPromotionClick, recordPromotionView } from "../../promotions/supabasePromotionsRepository";
 
 export function HomepagePromotionalCarousel() {
-  const { promotions } = useCart();
+  const { promotions, refreshPromotions } = useCart();
   const trackRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchDelta, setTouchDelta] = useState(0);
+
+  // Revalidate fresh promotions on mount
+  useEffect(() => {
+    void refreshPromotions();
+  }, [refreshPromotions]);
 
   // Filter only active campaigns configured for homepage carousel that have a flyer
   const flyerCampaigns = useMemo(() => {

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import type { CartItem, Product, ProductVariant } from "../types/product";
@@ -46,6 +46,7 @@ interface CartContextValue {
   totalItems: number;
   promotions: PromotionCampaign[];
   promotionResult: CartPromotionResult;
+  refreshPromotions: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -65,14 +66,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   });
   const [toast, setToast] = useState<string | null>(null);
 
+  const refreshPromotions = useCallback(async () => {
+    const fresh = await fetchPromotions(false);
+    setPromotions(fresh);
+  }, []);
+
   // Load and subscribe to promotions
   useEffect(() => {
-    void fetchPromotions(false).then(setPromotions);
+    void refreshPromotions();
     const unsubscribe = subscribeToPromotions(() => {
-      void fetchPromotions(false).then(setPromotions);
+      void refreshPromotions();
     });
     return unsubscribe;
-  }, []);
+  }, [refreshPromotions]);
 
   useEffect(() => {
     try {
@@ -299,8 +305,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       totalItems,
       promotions,
       promotionResult,
+      refreshPromotions,
     }),
-    [items, effectiveItems, toast, subtotal, rawSubtotal, promotionResult, totalItems, promotions, cartActions],
+    [items, effectiveItems, toast, subtotal, rawSubtotal, promotionResult, totalItems, promotions, cartActions, refreshPromotions],
   );
 
   return (

@@ -10,10 +10,15 @@ import { recordPromotionClick, recordPromotionView } from "../promotions/supabas
 import { formatGhs } from "../utils/format";
 
 export function OffersPage() {
-  const { promotions } = useCart();
+  const { promotions, refreshPromotions } = useCart();
   const { products } = useProductCatalog();
   const location = useLocation();
   const [filterType, setFilterType] = useState<string>("all");
+
+  // Revalidate promotions fresh from Supabase on mount
+  useEffect(() => {
+    void refreshPromotions();
+  }, [refreshPromotions]);
 
   // Check if hash matches a specific promotion (e.g. #free-magsafe-case-with-iphone)
   const targetSlug = location.hash ? location.hash.replace(/^#/, "") : "";

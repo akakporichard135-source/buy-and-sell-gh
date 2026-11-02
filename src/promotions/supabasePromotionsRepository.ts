@@ -1,5 +1,5 @@
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
-import { assertAdminAal2 } from "../admin/adminAuthorization";
+import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import { defaultPromotions } from "./defaultPromotions";
 import type { PromotionCampaign, PromotionStatus } from "../types/promotion";
 
@@ -8,9 +8,31 @@ const PROMOTIONS_STORAGE_KEY = "buyandsell_promotions_cache_v1";
 // Cache listeners for reactive UI across components
 type PromotionsListener = () => void;
 const listeners: Set<PromotionsListener> = new Set();
+let realtimeChannel: any = null;
 
 export const subscribeToPromotions = (listener: PromotionsListener) => {
   listeners.add(listener);
+
+  // Set up Supabase Realtime listener to broadcast changes across all tabs and devices
+  if (!realtimeChannel && supabase) {
+    try {
+      realtimeChannel = supabase
+        .channel("promotions-realtime-sync")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "promotions" },
+          () => {
+            void fetchPromotions(false).then(() => {
+              notifyListeners();
+            });
+          }
+        )
+        .subscribe();
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
   return () => {
     listeners.delete(listener);
   };
@@ -157,8 +179,7 @@ function mapCampaignToRow(c: Partial<PromotionCampaign>) {
 }
 
 export const fetchPromotions = async (includeAll = false): Promise<PromotionCampaign[]> => {
-  const cached = readLocalPromotions();
-  if (!supabase) return cached;
+  if (!supabase) return readLocalPromotions();
 
   try {
     let query = supabase.from("promotions").select("*").order("display_order", { ascending: true });
@@ -168,16 +189,29 @@ export const fetchPromotions = async (includeAll = false): Promise<PromotionCamp
     }
 
     const { data, error } = await query;
-    if (!error && Array.isArray(data) && data.length > 0) {
-      const mapped = data.map(mapRowToCampaign);
+    if (!error && Array.isArray(data)) {
+      const now = new Date();
+      const mapped = data
+        .map(mapRowToCampaign)
+        .filter((c) => {
+          if (includeAll) return true;
+          if (!c.isEnabled || c.status !== "active") return false;
+          if (c.startDate && new Date(c.startDate) > now) return false;
+          if (c.endDate && new Date(c.endDate) < now) return false;
+          return true;
+        });
+
       writeLocalPromotions(mapped);
       return mapped;
     }
-  } catch {
-    // Graceful fallback to cache
+    if (error) {
+      console.warn("[PromotionsRepository] Supabase fetch error:", error.message);
+    }
+  } catch (err: any) {
+    console.warn("[PromotionsRepository] Network error:", err?.message);
   }
 
-  return cached;
+  return readLocalPromotions();
 };
 
 export const savePromotion = async (campaign: Partial<PromotionCampaign>): Promise<PromotionCampaign> => {
@@ -202,25 +236,27 @@ export const savePromotion = async (campaign: Partial<PromotionCampaign>): Promi
     .single();
 
   if (error) {
-    // If Supabase table isn't migrated yet, update local cache safely
-    const current = readLocalPromotions();
-    const existingIndex = current.findIndex((c) => c.id === id);
-    const updatedCampaign: PromotionCampaign = {
-      ...(existingIndex >= 0 ? current[existingIndex] : defaultPromotions[0]),
-      ...toSave,
-      id,
-      slug,
-      updatedAt: new Date().toISOString(),
-    } as PromotionCampaign;
+    if (isLocalAdminActive()) {
+      const current = readLocalPromotions();
+      const existingIndex = current.findIndex((c) => c.id === id);
+      const updatedCampaign: PromotionCampaign = {
+        ...(existingIndex >= 0 ? current[existingIndex] : defaultPromotions[0]),
+        ...toSave,
+        id,
+        slug,
+        updatedAt: new Date().toISOString(),
+      } as PromotionCampaign;
 
-    if (existingIndex >= 0) {
-      current[existingIndex] = updatedCampaign;
-    } else {
-      current.push(updatedCampaign);
+      if (existingIndex >= 0) {
+        current[existingIndex] = updatedCampaign;
+      } else {
+        current.push(updatedCampaign);
+      }
+      writeLocalPromotions(current);
+      notifyListeners();
+      return updatedCampaign;
     }
-    writeLocalPromotions(current);
-    notifyListeners();
-    return updatedCampaign;
+    throw new Error(`Database error saving promotion: ${error.message}`);
   }
 
   const result = mapRowToCampaign(data);
@@ -237,10 +273,9 @@ export const deletePromotion = async (id: string): Promise<void> => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
 
-  try {
-    await client.from("promotions").delete().eq("id", id);
-  } catch {
-    // ignore
+  const { error } = await client.from("promotions").delete().eq("id", id);
+  if (error && !isLocalAdminActive()) {
+    throw new Error(`Database error deleting promotion: ${error.message}`);
   }
 
   const current = readLocalPromotions().filter((c) => c.id !== id);
@@ -260,11 +295,17 @@ export const archivePromotion = async (id: string): Promise<void> => {
 
 export const togglePromotionEnabled = async (id: string, enabled: boolean): Promise<void> => {
   await assertAdminAal2();
-  const current = readLocalPromotions();
-  const target = current.find((c) => c.id === id);
-  if (!target) return;
+  const client = getSupabaseOrThrow();
 
-  await savePromotion({ ...target, isEnabled: enabled });
+  const { data: existing, error: readError } = await client.from("promotions").select("*").eq("id", id).single();
+  if (readError && !isLocalAdminActive()) {
+    throw new Error(`Could not fetch campaign: ${readError.message}`);
+  }
+
+  const campaign = existing ? mapRowToCampaign(existing) : readLocalPromotions().find((c) => c.id === id);
+  if (!campaign) throw new Error("Campaign not found.");
+
+  await savePromotion({ ...campaign, isEnabled: enabled });
 };
 
 export const duplicatePromotion = async (id: string): Promise<PromotionCampaign> => {

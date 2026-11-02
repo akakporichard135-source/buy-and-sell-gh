@@ -192,8 +192,8 @@ export async function testSimplifiedPromotionsAndBundles(
   );
   assert.ok(ps5Promo, "One-Time PlayStation Combo Offer promotion must exist in defaultPromotions");
   assert.equal(ps5Promo.title, "One-Time PlayStation Combo Offer");
-  assert.equal(ps5Promo.status, "draft", "First campaign must be saved in DRAFT status until confirmed");
-  assert.equal(ps5Promo.isEnabled, false, "Draft campaign must not be enabled yet");
+  assert.equal(ps5Promo.status, "active", "Published campaign must have active status");
+  assert.equal(ps5Promo.isEnabled, true, "Published campaign must be enabled");
   assert.equal(ps5Promo.promotionType, "bundle");
   assert.equal(ps5Promo.promotionalPrice, 7500);
   assert.ok(
@@ -217,8 +217,8 @@ export async function testSimplifiedPromotionsAndBundles(
   );
   assert.match(
     migration026,
-    /'draft'/,
-    "Migration 026 must seed promo-ps5-slim-combo-offer as draft"
+    /'active'/,
+    "Migration 026 must seed promo-ps5-slim-combo-offer as active"
   );
 
   // 5. Cart, Checkout & Order Payload Bundle Integrity
