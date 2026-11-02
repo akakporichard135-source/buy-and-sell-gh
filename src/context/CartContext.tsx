@@ -2,10 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import type { CartItem, Product, ProductVariant } from "../types/product";
-import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut } from "./cartOperations";
+import type { CartPromotionResult, PromotionCampaign } from "../types/promotion";
+import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut, getItemEffectivePrice } from "./cartOperations";
+import { evaluateCartPromotions, freeGiftToCartItem } from "../promotions/promotionEngine";
+import { fetchPromotions, subscribeToPromotions } from "../promotions/supabasePromotionsRepository";
 
 interface CartContextValue {
   items: CartItem[];
+  effectiveItems: CartItem[];
   addItem: (
     product: Product,
     storage?: string,
@@ -37,7 +41,11 @@ interface CartContextValue {
   toast: string | null;
   dismissToast: () => void;
   subtotal: number;
+  rawSubtotal: number;
+  discountAmount: number;
   totalItems: number;
+  promotions: PromotionCampaign[];
+  promotionResult: CartPromotionResult;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -45,6 +53,7 @@ const STORAGE_KEY = "buyandsell-gh-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { getProductBySlug, backendStatus, loading } = useProductCatalog();
+  const [promotions, setPromotions] = useState<PromotionCampaign[]>([]);
   const [items, setItems] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -55,6 +64,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
   const [toast, setToast] = useState<string | null>(null);
+
+  // Load and subscribe to promotions
+  useEffect(() => {
+    void fetchPromotions(false).then(setPromotions);
+    const unsubscribe = subscribeToPromotions(() => {
+      void fetchPromotions(false).then(setPromotions);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     try {
@@ -222,20 +240,67 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((current) => updateCartQuantity(current, productId, storage, color, quantity, variantId));
   };
 
-  const value = useMemo(
+  const promotionResult = useMemo(() => {
+    return evaluateCartPromotions(items, promotions);
+  }, [items, promotions]);
+
+  const effectiveItems = useMemo(() => {
+    // 1. Map standard items with any calculated discount
+    const enrichedStandardItems = items.map((item) => {
+      const key = cartItemKey(item);
+      const discount = promotionResult.itemDiscounts[key] || 0;
+      if (discount > 0) {
+        return {
+          ...item,
+          promotionalDiscount: discount,
+          originalPrice: item.configuredPrice || item.product.price,
+        } as CartItem;
+      }
+      return item;
+    });
+
+    // 2. Append free gifts
+    const giftCartItems = promotionResult.freeGifts.map((gift) => {
+      const catalogProd = getProductBySlug(gift.productSlug);
+      return freeGiftToCartItem(gift, catalogProd);
+    });
+
+    return [...enrichedStandardItems, ...giftCartItems];
+  }, [items, promotionResult, getProductBySlug]);
+
+  const rawSubtotal = useMemo(() => cartSubtotal(items), [items]);
+  const subtotal = promotionResult.finalSubtotal;
+  const totalItems = useMemo(() => cartTotalItems(items), [items]);
+
+  const cartActions = useMemo(
     () => ({
-      items,
       addItem,
       replaceItem,
       removeItem,
       updateQuantity,
+    }),
+    [getProductBySlug, backendStatus, loading, items, toast],
+  );
+
+  const value = useMemo(
+    () => ({
+      items,
+      effectiveItems,
+      addItem: cartActions.addItem,
+      replaceItem: cartActions.replaceItem,
+      removeItem: cartActions.removeItem,
+      updateQuantity: cartActions.updateQuantity,
       clearCart: () => setItems([]),
       toast,
       dismissToast: () => setToast(null),
-      subtotal: cartSubtotal(items),
-      totalItems: cartTotalItems(items),
+      subtotal,
+      rawSubtotal,
+      discountAmount: promotionResult.totalDiscount,
+      totalItems,
+      promotions,
+      promotionResult,
     }),
-    [getProductBySlug, backendStatus, loading, items, toast],
+    [items, effectiveItems, toast, subtotal, rawSubtotal, promotionResult, totalItems, promotions, cartActions],
   );
 
   return (

@@ -59,7 +59,7 @@ const navGroups: NavGroup[] = [
       { label: "Store Page", to: "/admin/storefront", icon: Grid },
       { label: "Services", to: "/admin/services", icon: Wrench },
       { label: "Pages & Content", to: "/admin/pages", icon: FileText },
-      { label: "Promotions", to: "/admin/promotions", icon: Sparkles },
+      { label: "Promotions & Campaigns", to: "/admin/promotions", icon: Sparkles },
     ],
   },
   {
@@ -97,7 +97,7 @@ const pageTitles: Record<string, string> = {
   "/admin/service-requests": "Service Requests",
   "/admin/device-requests": "Device Pre-Orders",
   "/admin/contact-messages": "Customer Contact Messages",
-  "/admin/promotions": "Promotions & Discounts",
+  "/admin/promotions": "Promotions & Campaigns",
   "/admin/reviews": "Customer Review Moderation",
   "/admin/settings": "Business & Store Settings",
   "/admin/account": "Admin Account & Security",

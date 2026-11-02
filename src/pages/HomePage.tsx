@@ -6,6 +6,8 @@ import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { getProductFamily, productBuyPath } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
+import { PromotionalAnnouncementBar } from "../components/promotions/PromotionalAnnouncementBar";
+import { HomepagePromotionalCarousel } from "../components/promotions/HomepagePromotionalCarousel";
 import { whatsappUrl } from "../utils/whatsapp";
 import type { Product } from "../types/product";
 import "../styles/homepage-reference.css";
@@ -238,15 +240,7 @@ export function HomePage() {
         description="Shop original devices and get trusted trade-in, repair, installment and customer support from Buy & Sell GH in Accra."
       />
       <main className="storefront-home home-reference">
-        {announcement?.enabled !== false && (
-          <div className="home-ref-announcement">
-            {announcement?.text || "Trade in your current device toward your next one."}{" "}
-            <Link to={announcement?.linkTo || "/sell-or-trade?mode=upgrade"}>
-              {announcement?.linkText || "Explore trade-in"}{" "}
-              <span aria-hidden="true">›</span>
-            </Link>
-          </div>
-        )}
+        <PromotionalAnnouncementBar />
         {heroes.map((fallbackCampaign, index) => {
           if (index >= activeHeroes.length) return null;
           const campaign = activeHeroes[index] || fallbackCampaign;
@@ -275,6 +269,7 @@ export function HomePage() {
             </div>
           ))}
         </div>
+        <HomepagePromotionalCarousel />
         <ServiceFlyerCarousel />
       </main>
     </>

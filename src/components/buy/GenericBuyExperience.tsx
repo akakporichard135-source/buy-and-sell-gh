@@ -4,6 +4,7 @@ import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
+import { ProductPromotionalBadge } from "../promotions/ProductPromotionalBadge";
 import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
 import { isProductOrderable } from "../../catalog/productCatalog";
 import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
@@ -224,6 +225,14 @@ export function GenericBuyExperience({
           {effectiveProduct?.shortDescription || effectiveProduct?.description || "Original Apple device verified and backed by Buy & Sell GH."}
         </p>
       </div>
+
+      {effectiveProduct && (
+        <ProductPromotionalBadge
+          product={effectiveProduct}
+          selectedVariant={configured.variant}
+          selectedStorage={storage}
+        />
+      )}
 
       {/* Storage / Capacity Option */}
       {effectiveProduct && effectiveProduct.storage && effectiveProduct.storage.length > 0 && (

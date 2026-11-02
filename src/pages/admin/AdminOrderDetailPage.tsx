@@ -405,6 +405,11 @@ export function AdminOrderDetailPage() {
                   )}
 
                   <div className="min-w-0 flex-1">
+                    {item.isFreeGift && (
+                      <span className="admin-badge admin-badge-amber text-[10px] px-2 py-0.5 mb-1 inline-block">
+                        Promotional Free Gift
+                      </span>
+                    )}
                     <h4 className="font-bold text-slate-900 text-sm">{item.productName}</h4>
                     <p className="text-xs text-slate-500 mt-0.5">
                       {item.storage ? `${item.storage} | ` : ""}
@@ -413,13 +418,17 @@ export function AdminOrderDetailPage() {
                     </p>
                     <div className="mt-1 flex items-center gap-3 text-xs">
                       <span className="text-slate-600 font-semibold">
-                        Qty: {item.quantity} &times; {formatGhs(item.unitPrice)}
+                        Qty: {item.quantity} {item.isFreeGift ? "(Complimentary Gift)" : `× ${formatGhs(item.unitPrice)}`}
                       </span>
                     </div>
                   </div>
 
                   <div className="font-extrabold text-slate-900 text-sm">
-                    {formatGhs(item.lineTotal)}
+                    {item.isFreeGift ? (
+                      <span className="text-emerald-600 font-bold">GH₵ 0</span>
+                    ) : (
+                      formatGhs(item.lineTotal)
+                    )}
                   </div>
                 </div>
               ))}
@@ -427,10 +436,24 @@ export function AdminOrderDetailPage() {
 
             {/* Price Breakdown */}
             <div className="pt-3 border-t border-slate-100 space-y-2 text-xs">
+              {order.promotionSnapshot && (
+                <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between font-semibold">
+                  <span>Promotion Applied: {order.promotionSnapshot.title}</span>
+                  <span>{order.promotionSnapshot.type}</span>
+                </div>
+              )}
               <div className="flex justify-between text-slate-600">
                 <span>Items Subtotal</span>
-                <span className="font-semibold text-slate-900">{formatGhs(order.subtotal)}</span>
+                <span className="font-semibold text-slate-900">
+                  {formatGhs(order.subtotal + (order.discountAmount || 0))}
+                </span>
               </div>
+              {order.discountAmount && order.discountAmount > 0 ? (
+                <div className="flex justify-between text-emerald-600 font-semibold">
+                  <span>Promotional Discount</span>
+                  <span>-{formatGhs(order.discountAmount)}</span>
+                </div>
+              ) : null}
               <div className="flex justify-between text-slate-600">
                 <span>Delivery Charge</span>
                 <span className="font-semibold text-slate-900">

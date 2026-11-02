@@ -50,6 +50,10 @@ export interface OrderRequestItem {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  isFreeGift?: boolean;
+  promotionalDiscount?: number;
+  appliedPromotionId?: string;
+  qualifyingProductId?: string;
 }
 
 export interface OrderRequestPayload {
@@ -57,11 +61,21 @@ export interface OrderRequestPayload {
   customer: OrderCustomerDetails;
   items: OrderRequestItem[];
   subtotal: number;
+  discountAmount?: number;
   deliveryFee: number | null;
   total: number;
   paymentStatus: PaymentStatus;
   status: OrderStatus;
   adminNote: string;
+  appliedPromotionId?: string | null;
+  promotionSnapshot?: {
+    id: string;
+    title: string;
+    type: string;
+    discount?: number;
+    giftProductName?: string;
+    giftQuantity?: number;
+  } | null;
   createdAt: string;
 }
 
@@ -77,6 +91,7 @@ export interface StoredOrderRequest extends OrderRequestPayload {
 export interface OrderSubmissionInput {
   submissionToken: string;
   customer: OrderCustomerDetails;
+  promotionId?: string;
   items: Array<{
     productId: string;
     productSlug: string;
@@ -84,13 +99,24 @@ export interface OrderSubmissionInput {
     selectedColour: string;
     quantity: number;
     variantId?: string;
+    isFreeGift?: boolean;
+    promotionalDiscount?: number;
+    appliedPromotionId?: string;
+    qualifyingProductId?: string;
   }>;
 }
 
 export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
   items.map((item) => {
     const resolvedImageSrc = resolveCartItemThumbnail(item);
-    const unitPrice = typeof item.configuredPrice === "number" && item.configuredPrice > 0 ? item.configuredPrice : item.product.price;
+    const unitPrice =
+      (item as any).isFreeGift
+        ? 0
+        : typeof item.configuredPrice === "number" && item.configuredPrice > 0
+        ? item.configuredPrice
+        : item.product.price;
+    const discount = (item as any).promotionalDiscount || 0;
+    const effectiveUnitPrice = Math.max(0, unitPrice - discount);
     return {
       productId: item.product.id,
       productSlug: item.product.slug,
@@ -104,7 +130,11 @@ export const cartItemsToOrderItems = (items: CartItem[]): OrderRequestItem[] =>
       warranty: item.product.warranty ?? item.product.warrantyInfo,
       quantity: item.quantity,
       unitPrice,
-      lineTotal: unitPrice * item.quantity,
+      lineTotal: effectiveUnitPrice * item.quantity,
+      isFreeGift: Boolean((item as any).isFreeGift),
+      promotionalDiscount: discount,
+      appliedPromotionId: (item as any).appliedPromotionId,
+      qualifyingProductId: (item as any).qualifyingProductId,
     };
   });
 

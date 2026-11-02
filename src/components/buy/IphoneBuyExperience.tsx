@@ -4,6 +4,7 @@ import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
+import { ProductPromotionalBadge } from "../promotions/ProductPromotionalBadge";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
   BuyLayout,
@@ -204,6 +205,14 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
           Precision-engineered titanium unibody, advanced triple Pro camera system, and all-day endurance.
         </p>
       </div>
+
+      {activeProduct && (
+        <ProductPromotionalBadge
+          product={activeProduct}
+          selectedVariant={configured.variant}
+          selectedStorage={storage}
+        />
+      )}
 
       {/* Step 1: Model Selection */}
       <section className="apple-buy-step">

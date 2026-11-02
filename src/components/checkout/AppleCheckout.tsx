@@ -45,7 +45,7 @@ function itemImage(item: CartItem): string {
 
 export function AppleCheckout() {
   const navigate = useNavigate();
-  const { items, subtotal, totalItems } = useCart();
+  const { items, effectiveItems, subtotal, rawSubtotal, discountAmount, promotionResult, totalItems } = useCart();
   const {
     customer,
     updateCustomer,
@@ -70,7 +70,7 @@ export function AppleCheckout() {
     }
   };
 
-  if (items.length === 0) {
+  if (effectiveItems.length === 0) {
     return (
       <div className="apple-checkout-page">
         <div className="apple-checkout-shell">
@@ -298,25 +298,58 @@ export function AppleCheckout() {
           {/* Right Column: Sticky Order Summary & Submit Button */}
           <aside className="apple-checkout-review-sidebar">
             <div className="apple-checkout-review-card">
-              <h3 className="apple-bag-summary-title">Order Review ({totalItems} {totalItems === 1 ? "item" : "items"})</h3>
+              <h3 className="apple-bag-summary-title">Order Review ({effectiveItems.length} {effectiveItems.length === 1 ? "item" : "items"})</h3>
+
+              {promotionResult.savingsExplanation.length > 0 && (
+                <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, marginBottom: 16 }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#166534", textTransform: "uppercase" }}>
+                    Special Offers Active
+                  </div>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 16, fontSize: "0.82rem", color: "#15803d" }}>
+                    {promotionResult.savingsExplanation.map((expl, idx) => (
+                      <li key={idx}>{expl}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="apple-checkout-items-list">
-                {items.map((item) => {
+                {effectiveItems.map((item) => {
                   const key = cartItemKey(item);
                   const img = itemImage(item);
+                  const isGift = Boolean((item as any).isFreeGift);
+                  const promoDiscount = (item as any).promotionalDiscount || 0;
+                  const effectivePrice = isGift ? 0 : getItemEffectivePrice(item);
+
                   return (
-                    <div key={key} className="apple-checkout-mini-item">
+                    <div key={key} className={`apple-checkout-mini-item ${isGift ? "is-free-gift-mini" : ""}`}>
                       <div className="apple-checkout-mini-thumb">
                         {img ? <img key={img} src={img} alt={item.product.name} /> : <ShoppingBag size={20} color="#86868b" />}
                       </div>
                       <div className="apple-checkout-mini-details">
+                        {isGift && (
+                          <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.7rem", fontWeight: 700, padding: "1px 6px", borderRadius: 999, marginBottom: 2 }}>
+                            Free Gift
+                          </span>
+                        )}
                         <h4 className="apple-checkout-mini-title">{item.product.name}</h4>
                         <p className="apple-checkout-mini-specs">
                           {item.quantity} × {[item.storage, item.color].filter(Boolean).join(" · ")}
                         </p>
                       </div>
                       <div className="apple-checkout-mini-price">
-                        {formatGhs(getItemEffectivePrice(item) * item.quantity)}
+                        {isGift ? (
+                          <span style={{ color: "#16a34a", fontWeight: 700 }}>GH₵ 0</span>
+                        ) : promoDiscount > 0 ? (
+                          <div>
+                            <span>{formatGhs(effectivePrice * item.quantity)}</span>
+                            <div style={{ fontSize: "0.74rem", color: "#16a34a", fontWeight: 600 }}>
+                              Save {formatGhs(promoDiscount)}
+                            </div>
+                          </div>
+                        ) : (
+                          formatGhs(effectivePrice * item.quantity)
+                        )}
                       </div>
                     </div>
                   );
@@ -326,8 +359,14 @@ export function AppleCheckout() {
               <div className="apple-bag-summary-rows">
                 <div className="apple-bag-summary-row">
                   <span>Subtotal</span>
-                  <span>{formatGhs(subtotal)}</span>
+                  <span>{formatGhs(rawSubtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="apple-bag-summary-row" style={{ color: "#16a34a", fontWeight: 600 }}>
+                    <span>Promotional Savings</span>
+                    <span>-{formatGhs(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="apple-bag-summary-row">
                   <span>Fulfillment</span>
                   <span>{customer.fulfilmentType === "pickup" ? "Free In-Store Pickup" : "Doorstep Delivery"}</span>

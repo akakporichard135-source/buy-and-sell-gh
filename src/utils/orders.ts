@@ -22,20 +22,26 @@ export const buildOrderRequestPayload = (
   items: CartItem[],
   customer: OrderCustomerDetails,
   referenceNumber = generateOrderReference(),
+  discountAmount = 0,
+  promotionSnapshot: OrderRequestPayload["promotionSnapshot"] = null,
 ): OrderRequestPayload => {
   const orderItems = cartItemsToOrderItems(items);
-  const subtotal = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const rawSubtotal = orderItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+  const effectiveSubtotal = Math.max(0, rawSubtotal - discountAmount);
 
   return {
     referenceNumber,
     customer,
     items: orderItems,
-    subtotal,
+    subtotal: effectiveSubtotal,
+    discountAmount,
     deliveryFee: null,
-    total: subtotal,
+    total: effectiveSubtotal,
     paymentStatus: "Unpaid",
     status: "Pending",
     adminNote: "",
+    appliedPromotionId: promotionSnapshot?.id ?? null,
+    promotionSnapshot,
     createdAt: new Date().toISOString(),
   };
 };
@@ -44,9 +50,11 @@ export const buildOrderSubmissionInput = (
   items: CartItem[],
   customer: OrderCustomerDetails,
   submissionToken: string,
+  promotionId?: string,
 ): OrderSubmissionInput => ({
   submissionToken,
   customer,
+  promotionId,
   items: items.map((item) => ({
     productId: item.product.id,
     productSlug: item.product.slug,
@@ -54,6 +62,10 @@ export const buildOrderSubmissionInput = (
     selectedColour: item.color,
     quantity: item.quantity,
     variantId: item.variantId,
+    isFreeGift: Boolean((item as any).isFreeGift),
+    promotionalDiscount: (item as any).promotionalDiscount || 0,
+    appliedPromotionId: (item as any).appliedPromotionId,
+    qualifyingProductId: (item as any).qualifyingProductId,
   })),
 });
 

@@ -36,6 +36,7 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
       { label: "Shop Apple Watch", to: "/watch" },
       { label: "Shop AirPods", to: "/airpods" },
       { label: "Shop Accessories", to: "/accessories" },
+      { label: "Special Offers & Deals", to: "/offers" },
       { label: "View All Store", to: "/store" },
     ],
   },

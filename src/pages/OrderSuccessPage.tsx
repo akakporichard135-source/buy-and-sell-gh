@@ -105,16 +105,25 @@ export function OrderSuccessPage() {
                     <div className="apple-bag-item-content">
                       <div className="apple-bag-item-top">
                         <div>
+                          {item.isFreeGift && (
+                            <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 8px", borderRadius: 999, marginBottom: 4 }}>
+                              Free Promotional Gift
+                            </span>
+                          )}
                           <h4 className="apple-bag-item-name" style={{ fontSize: "1.1rem" }}>{item.productName}</h4>
                           <p className="apple-bag-item-specs">
                             {[item.storage, item.colour, item.condition].filter(Boolean).join(" · ")}
                           </p>
                           <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#6e6e73" }}>
-                            Quantity: <strong>{item.quantity}</strong> × {formatGhs(item.unitPrice)}
+                            Quantity: <strong>{item.quantity}</strong> {item.isFreeGift ? "(Included)" : `× ${formatGhs(item.unitPrice)}`}
                           </p>
                         </div>
                         <div className="apple-bag-item-price" style={{ fontSize: "1.1rem" }}>
-                          {formatGhs(item.lineTotal)}
+                          {item.isFreeGift ? (
+                            <span style={{ color: "#16a34a", fontWeight: 700 }}>GH₵ 0</span>
+                          ) : (
+                            formatGhs(item.lineTotal)
+                          )}
                         </div>
                       </div>
                     </div>
@@ -149,10 +158,22 @@ export function OrderSuccessPage() {
                     <span style={{ textAlign: "right", maxWidth: 180 }}>{fulfilment}</span>
                   </div>
                 )}
+                {order.promotionSnapshot && (
+                  <div className="apple-bag-summary-row" style={{ color: "#166534", background: "#f0fdf4", padding: "6px 8px", borderRadius: 8 }}>
+                    <span>Promotion Applied</span>
+                    <strong style={{ fontSize: "0.85rem" }}>{order.promotionSnapshot.title}</strong>
+                  </div>
+                )}
                 <div className="apple-bag-summary-row">
                   <span>Subtotal</span>
-                  <span>{formatGhs(order.subtotal)}</span>
+                  <span>{formatGhs(order.subtotal + (order.discountAmount || 0))}</span>
                 </div>
+                {order.discountAmount && order.discountAmount > 0 ? (
+                  <div className="apple-bag-summary-row" style={{ color: "#16a34a", fontWeight: 600 }}>
+                    <span>Promotional Savings</span>
+                    <span>-{formatGhs(order.discountAmount)}</span>
+                  </div>
+                ) : null}
                 <div className="apple-bag-summary-row">
                   <span>Delivery Fee</span>
                   <span>{order.deliveryFee === null ? "Confirmed on review" : formatGhs(order.deliveryFee)}</span>

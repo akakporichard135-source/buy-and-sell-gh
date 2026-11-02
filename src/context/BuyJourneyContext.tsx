@@ -116,7 +116,7 @@ function cartEditKey(item: CartItem): string {
 
 export function BuyJourneyProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const { items, addItem, replaceItem, clearCart, dismissToast } = useCart();
+  const { items, effectiveItems, discountAmount, promotionResult, addItem, replaceItem, clearCart, dismissToast } = useCart();
   const [customer, setCustomer] = useState<CustomerDraft>(readCustomerDraft);
   const [errors, setErrors] = useState<CustomerErrors>({});
   const [quantity, setQuantity] = useState(1);
@@ -195,8 +195,29 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
     setPlacingOrder(true);
     setOrderError("");
     const details = customerDraftToOrderDetails(customer);
-    const preview = buildOrderRequestPayload(items, details);
-    const input = buildOrderSubmissionInput(items, details, submissionToken.current);
+    const primaryPromo = promotionResult.appliedCampaigns[0] ?? null;
+    const promoSnapshot = primaryPromo ? {
+      id: primaryPromo.id,
+      title: primaryPromo.title,
+      type: primaryPromo.promotionType,
+      discount: discountAmount,
+      giftProductName: primaryPromo.giftProductName ?? undefined,
+      giftQuantity: promotionResult.freeGifts[0]?.quantity ?? undefined,
+    } : null;
+
+    const preview = buildOrderRequestPayload(
+      effectiveItems,
+      details,
+      undefined,
+      discountAmount,
+      promoSnapshot
+    );
+    const input = buildOrderSubmissionInput(
+      effectiveItems,
+      details,
+      submissionToken.current,
+      primaryPromo?.id
+    );
     const result = await submitOrderRequest(preview, input);
     setPlacingOrder(false);
     submissionInFlight.current = false;

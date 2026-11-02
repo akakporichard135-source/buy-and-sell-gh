@@ -42,6 +42,7 @@ const SellTradePage = lazy(() => import("./pages/SellTradePage").then((module) =
 const ShopPage = lazy(() => import("./pages/ShopPage").then((module) => ({ default: module.ShopPage })));
 const ShoppingInformationPage = lazy(() => import("./pages/ShoppingInformationPage").then((module) => ({ default: module.ShoppingInformationPage })));
 const MacLaunchPage = lazy(() => import("./pages/MacLaunchPage").then((module) => ({ default: module.MacLaunchPage })));
+const OffersPage = lazy(() => import("./pages/OffersPage").then((module) => ({ default: module.OffersPage })));
 
 import { CmsProvider } from "./cms/CmsContext";
 
@@ -187,6 +188,8 @@ function PublicShell() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/support" element={<Navigate to="/contact" replace />} />
+          <Route path="/offers" element={<OffersPage />} />
+          <Route path="/special-offers" element={<Navigate to="/offers" replace />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/shopping-information" element={<ShoppingInformationPage />} />
           <Route path="/account" element={<AccountPage />} />

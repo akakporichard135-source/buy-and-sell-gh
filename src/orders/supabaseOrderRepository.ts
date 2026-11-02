@@ -18,6 +18,10 @@ interface OrderRpcItem {
   quantity: number;
   unit_price: number;
   line_total: number;
+  is_free_gift?: boolean;
+  promotional_discount?: number;
+  applied_promotion_id?: string | null;
+  qualifying_product_id?: string | null;
 }
 
 interface OrderRpcResponse {
@@ -34,12 +38,15 @@ interface OrderRpcResponse {
   landmark: string | null;
   customer_notes: string | null;
   subtotal: number;
+  discount_amount?: number | null;
   delivery_fee: number | null;
   total_amount: number;
   payment_method: string;
   payment_status: StoredOrderRequest["paymentStatus"];
   order_status: StoredOrderRequest["status"];
   admin_note?: string | null;
+  applied_promotion_id?: string | null;
+  promotion_snapshot?: StoredOrderRequest["promotionSnapshot"];
   created_at: string;
   updated_at: string;
   items: OrderRpcItem[];
@@ -59,12 +66,15 @@ interface OrderRow {
   landmark: string | null;
   customer_notes: string | null;
   subtotal: number;
+  discount_amount?: number | null;
   delivery_fee: number | null;
   total_amount: number;
   payment_method: string;
   payment_status: StoredOrderRequest["paymentStatus"];
   order_status: StoredOrderRequest["status"];
   admin_note?: string | null;
+  applied_promotion_id?: string | null;
+  promotion_snapshot?: StoredOrderRequest["promotionSnapshot"];
   archived_at?: string | null;
   archived_by?: string | null;
   deleted_at?: string | null;
@@ -169,6 +179,10 @@ const itemFromResponse = (item: OrderRpcItem): OrderRequestItem => ({
   quantity: item.quantity,
   unitPrice: Number(item.unit_price),
   lineTotal: Number(item.line_total),
+  isFreeGift: Boolean(item.is_free_gift),
+  promotionalDiscount: item.promotional_discount ? Number(item.promotional_discount) : undefined,
+  appliedPromotionId: item.applied_promotion_id ?? undefined,
+  qualifyingProductId: item.qualifying_product_id ?? undefined,
 });
 
 export const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrderRequest => {
@@ -179,11 +193,14 @@ export const orderFromResponse = (row: OrderRpcResponse | OrderRow): StoredOrder
     customer: customerFromResponse(row),
     items: items.map(itemFromResponse),
     subtotal: Number(row.subtotal),
+    discountAmount: row.discount_amount ? Number(row.discount_amount) : 0,
     deliveryFee: row.delivery_fee === null ? null : Number(row.delivery_fee),
     total: Number(row.total_amount),
     paymentStatus: row.payment_status,
     status: row.order_status,
     adminNote: (row.admin_note ?? "").trim(),
+    appliedPromotionId: row.applied_promotion_id ?? null,
+    promotionSnapshot: row.promotion_snapshot ?? null,
     archivedAt: "archived_at" in row ? (row.archived_at ?? null) : null,
     archivedBy: "archived_by" in row ? (row.archived_by ?? null) : null,
     deletedAt: "deleted_at" in row ? (row.deleted_at ?? null) : null,
@@ -287,6 +304,10 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
         selected_colour: item.selectedColour,
         quantity: item.quantity,
         variant_id: resolvedVariantId,
+        is_free_gift: Boolean(item.isFreeGift),
+        promotional_discount: item.promotionalDiscount || 0,
+        applied_promotion_id: item.appliedPromotionId || null,
+        qualifying_product_id: item.qualifyingProductId || null,
       };
     })
   );
