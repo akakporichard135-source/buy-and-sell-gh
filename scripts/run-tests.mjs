@@ -33,6 +33,40 @@ const bundle = async (entry, outfile, platform = "node") => {
 };
 
 try {
+  const servicePayload = await bundle(path.join(projectRoot, "src/services/serviceRequestPayload.ts"), path.join(outdir, "serviceRequestPayload.mjs"));
+  const installment = new FormData();
+  installment.set("name", "  Ama  ");
+  installment.set("phone", " 024 000 0000 ");
+  installment.set("model", "iPhone 18 Pro");
+  installment.set("planDuration", "8 weeks");
+  installment.set("paymentFrequency", "Every 2 weeks");
+  installment.set("depositPreference", "Discuss with team");
+  installment.set("website", "");
+  const payload = servicePayload.buildServiceRequestPayload(installment, "installment");
+  assert.equal(payload.name, "Ama");
+  assert.equal(payload.phone, "024 000 0000");
+  assert.equal(payload.details.planDuration, "8 weeks");
+  assert.equal(payload.details.paymentFrequency, "Every 2 weeks");
+  assert.equal(payload.details.depositPreference, "Discuss with team");
+  assert.equal(payload.details.website, undefined, "Honeypot never becomes customer detail");
+  const signature = servicePayload.serviceRequestSignature(payload);
+  installment.set("planDuration", "12 weeks");
+  assert.notEqual(servicePayload.serviceRequestSignature(servicePayload.buildServiceRequestPayload(installment, "installment")), signature, "An edited request gets a new idempotency signature");
+  const referral = new FormData();
+  referral.set("yourName", "Kwame"); referral.set("yourPhone", "0240000000"); referral.set("friendName", "Kojo");
+  assert.equal(servicePayload.buildServiceRequestPayload(referral, "referral").details.friendName, "Kojo");
+  const serviceSql = await readFile(path.join(projectRoot, "supabase/migrations/024_service_requests.sql"), "utf8");
+  assert.match(serviceSql, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(serviceSql, /SECURITY DEFINER SET search_path = ''/);
+  assert.match(serviceSql, /pg_advisory_xact_lock/);
+  assert.match(serviceSql, /GRANT EXECUTE ON FUNCTION public\.submit_service_request/);
+  const serviceFormSource = await readFile(path.join(projectRoot, "src/components/SuccessForm.tsx"), "utf8");
+  assert.match(serviceFormSource, /await submitServiceRequest/);
+  assert.doesNotMatch(serviceFormSource, /setTimeout\(/, "A timer cannot signal a successful submission");
+  for (const [page, type] of Object.entries({ InstallmentPage: "installment", RepairsPage: "repair", SellTradePage: "trade-in", GiftCardsPage: "visa-card", DeviceRequestPage: "pre-order", ReferFriendPage: "referral", ContactPage: "contact" })) {
+    const source = await readFile(path.join(projectRoot, `src/pages/${page}.tsx`), "utf8");
+    assert.ok(source.includes(`serviceType="${type}"`) || (page === "SellTradePage" && source.includes('"trade-in"')), `${page} submits its service type`);
+  }
   const cart = await bundle(path.join(projectRoot, "src/context/cartOperations.ts"), path.join(outdir, "cartOperations.mjs"));
   const buyJourney = await bundle(path.join(projectRoot, "src/context/BuyJourneyContext.tsx"), path.join(outdir, "buyJourney.mjs"));
   const whatsapp = await bundle(path.join(projectRoot, "src/utils/whatsapp.ts"), path.join(outdir, "whatsapp.mjs"));
@@ -47,7 +81,21 @@ try {
   const catalogueDiscovery = await bundle(path.join(projectRoot, "src/catalog/catalogueDiscovery.ts"), path.join(outdir, "catalogueDiscovery.mjs"));
   const productExperience = await bundle(path.join(projectRoot, "src/catalog/productExperience.ts"), path.join(outdir, "productExperience.mjs"));
   const productCatalog = await bundle(path.join(projectRoot, "src/catalog/productCatalog.ts"), path.join(outdir, "productCatalog.mjs"));
+  const catalogContext = await bundle(path.join(projectRoot, "src/catalog/ProductCatalogContext.tsx"), path.join(outdir, "productCatalogContext.mjs"));
   const purchaseActions = await bundle(path.join(projectRoot, "src/catalog/productPurchaseAction.ts"), path.join(outdir, "productPurchaseAction.mjs"));
+  const productPricing = await bundle(path.join(projectRoot, "src/utils/productPricing.ts"), path.join(outdir, "productPricing.mjs"));
+  const presentSlugs = new Set(["iphone-18-pro", "iphone-duo", "airpods-pro-3"]);
+  const existingHomepage = productCatalog.seedCatalog.filter((product) => presentSlugs.has(product.slug));
+  const reconciledHomepage = catalogContext.reconcileCanonicalProducts(existingHomepage);
+  assert.equal(reconciledHomepage.length, 8, "Missing homepage identities are available in Admin without duplicating existing records");
+  for (const slug of ["apple-watch-series-12", "apple-watch-ultra-4", "ipad-air", "macbook-air", "mac-mini"]) {
+    const placeholder = reconciledHomepage.find((product) => product.slug === slug);
+    assert.ok(placeholder, `${slug} has an Admin-visible placeholder`);
+    assert.equal(placeholder.price, 0, `${slug} has no invented price`);
+    assert.equal(placeholder.stockQuantity, 0, `${slug} has no invented stock`);
+    assert.deepEqual(placeholder.variants, [], `${slug} has no invented variants`);
+    assert.equal(purchaseActions.getPublicPurchaseAction(placeholder), "enquire", `${slug} remains enquiry-only`);
+  }
   const duoSeed = productCatalog.seedCatalog.find((product) => product.slug === "iphone-duo");
   assert.ok(duoSeed, "The canonical iPhone Duo seed must exist");
   const duoEnquiry = productCatalog.normalizeProduct({ ...duoSeed, price: 28000, priceOnRequest: true, stockQuantity: 5, stockStatus: "In Stock", available: true, storage: ["256GB", "512GB", "1TB"], variants: [] });
@@ -61,8 +109,9 @@ try {
   assert.match(purchaseActions.getBuyConfigurationError(duoIncompleteBuy), /confirmed price/, "Duo cannot publish Buy without a confirmed price");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoIncompleteBuy), "view-pricing", "An incomplete Buy record never advertises a working Buy flow");
   const duoUnflagged = productCatalog.normalizeProduct({ ...duoEnquiry, priceOnRequest: false, tags: [] });
-  assert.match(purchaseActions.getBuyConfigurationError(duoUnflagged), /priced variants/, "A priced Duo without database variants is not orderable");
-  assert.equal(purchaseActions.getPublicPurchaseAction(duoUnflagged), "view-pricing", "An untagged legacy Buy record without variants is guarded");
+  assert.equal(purchaseActions.getBuyConfigurationError(duoUnflagged), null, "A stocked base-priced product does not require variant rows");
+  assert.equal(purchaseActions.getPublicPurchaseAction(duoUnflagged), "buy", "A base-priced product can use its canonical Buy route");
+  assert.equal(productPricing.resolveConfiguredPrice(duoUnflagged, { storage: "512GB" }).price, 28000, "Products without variants use their saved base price");
   const unpricedDatabaseProduct = productCatalog.normalizeProduct({
     ...duoSeed, price: 0, priceOnRequest: true, variants: [], stockQuantity: 0,
     stockStatus: "Out of Stock", available: true,
@@ -78,6 +127,14 @@ try {
   const duoBuy = productCatalog.normalizeProduct({ ...duoIncompleteBuy, priceOnRequest: false, variants: duoVariants });
   assert.equal(purchaseActions.getBuyConfigurationError(duoBuy), null, "Complete priced variants permit Buy");
   assert.equal(purchaseActions.getPublicPurchaseAction(duoBuy), "buy", "Published Buy resolves to Buy");
+  const distinctPrices = productCatalog.normalizeProduct({ ...duoBuy, price: 27000, variants: duoVariants }, false);
+  assert.equal(distinctPrices.price, 27000, "Database-backed base prices are not rewritten from variant prices");
+  assert.equal(productPricing.resolveConfiguredPrice(distinctPrices, { storage: "256GB" }).price, 28000, "A selected variant keeps its own published price");
+  assert.equal(productPricing.getCardPriceDisplay(distinctPrices).current, "From GH₵ 28,000", "Store cards use the lowest configured variant price");
+  const invalidVariant = { ...duoVariants[0], price: 0 };
+  assert.match(purchaseActions.getBuyConfigurationError({ ...duoBuy, variants: [invalidVariant, ...duoVariants.slice(1)] }), /Variant.*needs a price/, "Active unpriced variants name the missing field");
+  const unstockedVariant = { ...duoVariants[0], stockQuantity: 0, stockStatus: "Out of Stock" };
+  assert.match(purchaseActions.getBuyConfigurationError({ ...duoBuy, variants: [unstockedVariant] }), /Variant.*Stock Quantity/, "An existing unstocked variant names the field blocking Buy");
   const duoPricing = { ...duoBuy, tags: purchaseActions.withProductPurchaseAction(duoBuy.tags, "view-pricing") };
   assert.equal(purchaseActions.getPublicPurchaseAction(duoPricing), "view-pricing", "Published View Pricing resolves to the canonical page");
   const duoWhatsApp = { ...duoPricing, priceOnRequest: true, tags: purchaseActions.withProductPurchaseAction(duoPricing.tags, "enquire") };
@@ -141,8 +198,31 @@ try {
   const macStudio = await bundle(path.join(projectRoot, "src/data/macStudioStory.ts"), path.join(outdir, "macStudioStory.mjs"));
   const marketplace = await bundle(path.join(projectRoot, "src/catalog/marketplaceCatalogue.ts"), path.join(outdir, "marketplace.mjs"));
   const productEditor = await bundle(path.join(projectRoot, "src/pages/admin/AdminProductManager.tsx"), path.join(outdir, "productEditor.mjs"));
+  for (const slug of ["apple-watch-series-12", "apple-watch-ultra-4", "ipad-air", "macbook-air", "mac-mini"]) {
+    const placeholder = reconciledHomepage.find((product) => product.slug === slug);
+    const form = productEditor.productToForm(placeholder);
+    const confirmed = productEditor.formToProduct({ ...form, price: "1", stockQuantity: "1", stockStatus: "In Stock", purchaseAction: "buy" }, reconciledHomepage);
+    assert.equal(confirmed.price, 1, `${slug} keeps an explicitly entered base price`);
+    assert.equal(confirmed.stockQuantity, 1, `${slug} keeps an explicitly entered stock quantity`);
+    assert.equal(purchaseActions.getBuyConfigurationError(confirmed), null, `${slug} can use Buy after real price and stock are entered`);
+    for (const action of ["view-pricing", "enquire"]) {
+      const changed = productEditor.formToProduct({ ...form, purchaseAction: action }, reconciledHomepage);
+      assert.equal(purchaseActions.getProductPurchaseAction(changed), action, `${slug} keeps the selected ${action} action`);
+    }
+  }
   const repository = await bundle(path.join(projectRoot, "src/catalog/supabaseProductRepository.ts"), path.join(outdir, "repository.mjs"));
+  const pricedRoundTrip = repository.rowToProduct({
+    ...repository.productToRow(distinctPrices),
+    product_variants: duoVariants.map(repository.variantToRow),
+  });
+  assert.equal(pricedRoundTrip.price, 27000, "Supabase mapping preserves the Admin-entered base price");
+  assert.equal(pricedRoundTrip.variants[0].price, 28000, "Supabase mapping preserves the first variant price independently");
+  assert.equal(repository.rowToVariant({ stock_quantity: null, available: false }).stockQuantity, 0, "A missing variant quantity never becomes assumed stock");
   const productImages = await bundle(path.join(projectRoot, "src/utils/productImages.ts"), path.join(outdir, "productImages.mjs"));
+  for (const slug of ["apple-watch-series-12", "apple-watch-ultra-4", "ipad-air", "macbook-air", "mac-mini"]) {
+    const placeholder = reconciledHomepage.find((product) => product.slug === slug);
+    assert.equal(productImages.isProductImageEligible(placeholder), true, `${slug} has an approved image for an Admin-published listing`);
+  }
   const storePresentation = await bundle(path.join(projectRoot, "src/utils/storePresentation.ts"), path.join(outdir, "storePresentation.mjs"));
   const adminOrderNotifications = await bundle(path.join(projectRoot, "src/admin/adminOrderNotificationState.ts"), path.join(outdir, "adminOrderNotifications.mjs"));
 

@@ -54,7 +54,7 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
   const seedPricing = useSeedPricing ? (initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug]) : undefined;
   const variants = product.variants !== undefined ? product.variants : (seedPricing?.variants ?? []);
   let price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
-  if (variants.length > 0) {
+  if (useSeedPricing && variants.length > 0) {
     const activeVars = variants.filter((v) => v.available !== false && v.price > 0);
     const minVarPrice = activeVars.length > 0 ? Math.min(...activeVars.map((v) => v.price)) : 0;
     if (minVarPrice > 0 && (price <= 0 || price > minVarPrice || (product.slug === "iphone-18-pro" && price === 30000))) {

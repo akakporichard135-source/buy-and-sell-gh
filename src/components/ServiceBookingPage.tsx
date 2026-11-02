@@ -24,7 +24,7 @@ export function ServiceBookingPage({ category, title, description, guidance, ass
         <div className="service-booking-layout">
           <div className="service-booking-primary">
             {children}
-            <p className="service-booking-form-note">Your details are prepared for WhatsApp. Nothing is sent until you continue in the chat.</p>
+            <p className="service-booking-form-note">Submitting saves your request for our team. WhatsApp is optional after confirmation.</p>
           </div>
           <aside className="service-booking-aside" aria-label={`${category} information and assistance`}>
             <section>
@@ -48,7 +48,7 @@ export function ServicePhotoField() {
     <label className="service-booking-photo-field">
       Device photos <span>(optional)</span>
       <input name="images" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple />
-      <small>Select up to six photos. Attach them in WhatsApp after preparing your enquiry; they are not uploaded here.</small>
+      <small>Photos are not uploaded with this form. Attach up to six in WhatsApp separately if you choose to continue there.</small>
     </label>
   );
 }

@@ -24,7 +24,7 @@ export function DeviceRequestPage() {
         <img src={preOrderArtwork} alt="Premium reserved device pre-order artwork" loading="eager" decoding="async" />
       </section>
       <section className="service-request-layout">
-        <SuccessForm buttonLabel="Prepare Pre-Order" successIntent="request">
+        <SuccessForm serviceType="pre-order" buttonLabel="Submit Pre-Order">
           <FormField label="Device model" name="model" required defaultValue={requestedModel} maxLength={160} />
           <FormField label="Storage" name="storage" defaultValue={requestedStorage} maxLength={80} />
           <FormField label="Colour" name="color" defaultValue={requestedColor} maxLength={80} />

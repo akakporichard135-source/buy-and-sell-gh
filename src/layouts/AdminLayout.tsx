@@ -64,6 +64,7 @@ const navGroups: NavGroup[] = [
   {
     title: "Customer Inboxes",
     items: [
+      { label: "Service Requests", to: "/admin/service-requests", icon: Inbox },
       { label: "Trade-In Requests", to: "/admin/trade-ins", icon: Tag },
       { label: "Device Requests", to: "/admin/device-requests", icon: Inbox },
       { label: "Contact Messages", to: "/admin/contact-messages", icon: MessageSquare },
@@ -92,6 +93,7 @@ const pageTitles: Record<string, string> = {
   "/admin/services": "Services & Trade-In",
   "/admin/pages": "Pages, Contact & Policy Management",
   "/admin/trade-ins": "Trade-In Inquiries",
+  "/admin/service-requests": "Service Requests",
   "/admin/device-requests": "Device Pre-Orders",
   "/admin/contact-messages": "Customer Contact Messages",
   "/admin/promotions": "Promotions & Discounts",

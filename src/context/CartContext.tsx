@@ -70,7 +70,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const resolveSelection = (product: Product, variant?: ProductVariant) => {
+  const resolveSelection = (product: Product, storage: string, variant?: ProductVariant) => {
     if (loading || (import.meta.env.PROD && backendStatus !== "supabase")) {
       setToast("Please wait for current product availability to load.");
       return null;
@@ -99,8 +99,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast("This product configuration is no longer available.");
       return null;
     }
-    if (backendStatus === "supabase" && liveProduct.storage.length > 1 && !liveVariant) {
+    if (backendStatus === "supabase" && (liveProduct.variants?.length ?? 0) > 0 && !liveVariant) {
       setToast("Select an available priced variant before adding this product.");
+      return null;
+    }
+    if (liveVariant && (
+      liveVariant.available === false || liveVariant.stockQuantity <= 0 ||
+      !Number.isFinite(liveVariant.price) || liveVariant.price <= 0 ||
+      (liveVariant.storage && storage && liveVariant.storage.toLowerCase() !== storage.toLowerCase())
+    )) {
+      setToast("The selected variant is unavailable or does not match the chosen storage.");
       return null;
     }
 
@@ -142,7 +150,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     colorImageSrc?: string,
     options?: Record<string, string>,
   ) => {
-    const selection = resolveSelection(product, variant);
+    const selection = resolveSelection(product, storage, variant);
     if (!selection) return false;
     const { product: currentProduct, variant: currentVariant } = selection;
     const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
@@ -177,7 +185,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast("This item is no longer in your bag. Review your bag before adding it again.");
       return false;
     }
-    const selection = resolveSelection(product, variant);
+    const selection = resolveSelection(product, storage, variant);
     if (!selection) return false;
     const { product: currentProduct, variant: currentVariant } = selection;
     const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);

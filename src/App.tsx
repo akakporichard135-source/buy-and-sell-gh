@@ -74,6 +74,7 @@ export default function App() {
                   <Route path="services" element={<AdminSectionPage section="services" />} />
                   <Route path="pages" element={<AdminSectionPage section="pages" />} />
                   <Route path="trade-ins" element={<AdminSectionPage section="trade-ins" />} />
+                  <Route path="service-requests" element={<AdminSectionPage section="service-requests" />} />
                   <Route path="device-requests" element={<AdminSectionPage section="device-requests" />} />
                   <Route path="contact-messages" element={<AdminSectionPage section="contact-messages" />} />
                   <Route path="reviews" element={<AdminSectionPage section="reviews" />} />
@@ -171,9 +172,11 @@ function PublicShell() {
           <Route path="/mac-mini" element={<MacLaunchPage product="mac-mini" />} />
           <Route path="/mac-studio" element={<MacLaunchPage product="mac-studio" />} />
           <Route path="/installment" element={<InstallmentPage />} />
+          <Route path="/installments" element={<Navigate to="/installment" replace />} />
           <Route path="/repairs" element={<RepairsPage />} />
           <Route path="/gift-cards" element={<GiftCardsPage />} />
           <Route path="/refer-a-friend" element={<ReferFriendPage />} />
+          <Route path="/refer-friend" element={<Navigate to="/refer-a-friend" replace />} />
           <Route path="/product/:slug" element={<ProductDetailsPage />} />
           <Route path="/sell-or-trade" element={<SellTradePage />} />
           <Route path="/trade-in" element={<Navigate to="/sell-or-trade" replace />} />

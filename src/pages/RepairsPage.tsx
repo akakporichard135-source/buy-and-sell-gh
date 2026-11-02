@@ -29,7 +29,7 @@ export function RepairsPage() {
         guidance={guidance}
         assistance={assistance}
       >
-        <SuccessForm buttonLabel="Prepare Repair Enquiry" successIntent="general">
+        <SuccessForm serviceType="repair" buttonLabel="Submit Repair Enquiry">
           <FormField label="Customer name" name="name" required maxLength={120} placeholder="Your full name" />
           <FormField label="Phone number" name="phone" required maxLength={32} placeholder="Your contact number" />
           <FormField label="Device type" name="deviceType" options={["Mobile phone", "Laptop", "Game console", "Tablet", "Other"]} required />

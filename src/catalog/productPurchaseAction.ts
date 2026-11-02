@@ -18,20 +18,41 @@ export function getBuyConfigurationError(product: Product): string | null {
   if (product.priceOnRequest || !Number.isFinite(product.price) || product.price <= 0) {
     return "Buy requires a confirmed price and Contact for Price must be off.";
   }
+  if (product.stockQuantity <= 0) {
+    return "Stock Quantity must be greater than 0 to use Buy.";
+  }
+  if (product.stockStatus !== "In Stock" && product.stockStatus !== "Low Stock") {
+    return "Stock Status must be In Stock or Low Stock to use Buy.";
+  }
   if (!isProductOrderable(product)) {
-    return "Buy requires a published product with confirmed available stock.";
+    return "Publish this product on the storefront before selecting Buy.";
   }
   if (!isProductPurchasable(product)) {
     return "Buy requires an approved product image.";
   }
-  if (product.storage.length > 1 && (!product.variants || product.variants.length === 0)) {
-    return "Buy requires priced variants for the listed storage options.";
-  }
   if (product.variants && product.variants.length > 0) {
+    const unpricedVariant = product.variants.find(
+      (variant) => variant.available && variant.stockQuantity > 0 && (!Number.isFinite(variant.price) || variant.price <= 0)
+    );
+    if (unpricedVariant) {
+      return `Variant ${unpricedVariant.title || unpricedVariant.storage || unpricedVariant.id} needs a price greater than 0.`;
+    }
+    const unavailableStatus = product.variants.find(
+      (variant) => variant.available && variant.stockQuantity > 0 &&
+        variant.price > 0 && variant.stockStatus !== "In Stock" && variant.stockStatus !== "Low Stock"
+    );
+    if (unavailableStatus) {
+      return `Variant ${unavailableStatus.title || unavailableStatus.storage || unavailableStatus.id} needs In Stock or Low Stock status.`;
+    }
     const hasPricedStockedVariant = product.variants.some(
-      (variant) => variant.available && variant.price > 0 && variant.stockQuantity > 0
+      (variant) => variant.available && variant.price > 0 && variant.stockQuantity > 0 &&
+        (variant.stockStatus === "In Stock" || variant.stockStatus === "Low Stock")
     );
     if (!hasPricedStockedVariant) {
+      const pricedVariant = product.variants.find((variant) => variant.available && variant.price > 0);
+      if (pricedVariant) {
+        return `Variant ${pricedVariant.title || pricedVariant.storage || pricedVariant.id} needs Stock Quantity above 0 and In Stock or Low Stock status.`;
+      }
       return "Buy requires at least one active, priced variant in stock.";
     }
   }

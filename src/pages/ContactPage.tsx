@@ -40,7 +40,7 @@ export function ContactPage() {
           <WhatsAppButton className="w-full">Open WhatsApp</WhatsAppButton>
         </aside>
         <div>
-          <SuccessForm buttonLabel="Prepare contact message" successIntent="general">
+          <SuccessForm serviceType="contact" buttonLabel="Submit contact message">
             <FormField label="Name" name="name" required maxLength={120} />
             <FormField label="Phone number" name="phone" required maxLength={32} />
             <FormField label="Subject" name="subject" maxLength={160} />

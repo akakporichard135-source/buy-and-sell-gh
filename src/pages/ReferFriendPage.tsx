@@ -18,7 +18,7 @@ export function ReferFriendPage() {
         <img src={referralCampaign} alt="Premium smartphones with a clean sharing symbol" loading="eager" decoding="async" />
       </section>
       <section className="section service-layout">
-        <SuccessForm buttonLabel="Prepare Referral" successIntent="general">
+        <SuccessForm serviceType="referral" buttonLabel="Submit Referral">
           <FormField label="Your name" name="yourName" required maxLength={120} />
           <FormField label="Your phone number" name="yourPhone" required maxLength={32} />
           <FormField label="Friend's name" name="friendName" required maxLength={120} />

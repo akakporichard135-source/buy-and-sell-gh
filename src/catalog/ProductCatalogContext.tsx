@@ -66,39 +66,40 @@ const CANONICAL_HOMEPAGE_SLUGS = [
   "mac-mini",
 ];
 
-function reconcileCanonicalProducts(remoteProducts: Product[]): Product[] {
+export function reconcileCanonicalProducts(remoteProducts: Product[]): Product[] {
   const result = [...remoteProducts];
   for (const slug of CANONICAL_HOMEPAGE_SLUGS) {
     const exists = result.some((p) => p.slug === slug || p.id === slug);
     if (!exists) {
       const seed = seedCatalog.find((p) => p.slug === slug || p.id === slug);
       if (seed) {
-        if (slug === "ipad-air" || slug === "macbook-air") {
-          // Requirement 6: For generic iPad Air and MacBook Air promotions, use unpriced, non-purchasable family-level records.
-          // Requirement 10: Do not invent prices, variants, or stock.
-          result.push(
-            normalizeProduct(
-              {
-                ...seed,
-                id: slug,
-                slug,
-                price: 0,
-                previousPrice: undefined,
-                oldPrice: undefined,
-                priceOnRequest: true,
-                variants: [],
-                stockQuantity: 0,
-                stockStatus: "In Stock",
-                available: true,
-                archived: false,
-                tags: withProductPurchaseAction(seed.tags ?? [], "view-pricing"),
-              },
-              false
-            )
-          );
-        } else {
-          result.push(seed);
-        }
+        result.push(normalizeProduct({
+          ...seed,
+          id: slug,
+          slug,
+          price: 0,
+          previousPrice: undefined,
+          oldPrice: undefined,
+          priceOnRequest: true,
+          condition: "To Confirm",
+          generation: "",
+          description: seed.name,
+          shortDescription: seed.name,
+          storage: [],
+          colors: [],
+          defaultColor: "",
+          variants: [],
+          specifications: [],
+          specs: [],
+          includedItems: [],
+          box: [],
+          badges: [],
+          stockQuantity: 0,
+          stockStatus: "Out of Stock",
+          available: true,
+          archived: false,
+          tags: withProductPurchaseAction([], "enquire"),
+        }, false));
       }
     }
   }
@@ -274,22 +275,10 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
             broadcastPublishedUpdate("product", normalized.id);
             return normalized;
           }
-          try {
-            const saved = await upsertProduct(normalized);
-            await loadProducts();
-            broadcastPublishedUpdate("product", saved.id);
-            return saved;
-          } catch {
-            const currentOverlay = readAdminTestProducts();
-            const existsInOverlay = currentOverlay.some((item) => item.id === normalized.id || item.slug === normalized.slug);
-            const nextOverlay = existsInOverlay
-              ? currentOverlay.map((item) => (item.id === normalized.id || item.slug === normalized.slug ? normalized : item))
-              : [normalized, ...currentOverlay];
-            writeAdminTestProducts(nextOverlay);
-            await loadProducts();
-            broadcastPublishedUpdate("product", normalized.id);
-            return normalized;
-          }
+          const saved = await upsertProduct(normalized);
+          await loadProducts();
+          broadcastPublishedUpdate("product", saved.id);
+          return saved;
         }
         if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
         const exists = products.some((item) => item.id === normalized.id || item.slug === normalized.slug);
@@ -311,18 +300,10 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
             const updatedVariants = product.variants!.map((v) =>
               v.id === variantId ? { ...v, ...fields } : v
             );
-            // Recompute product base price if variant price changed
-            const activePrices = updatedVariants
-              .filter((v) => v.available !== false && v.price > 0)
-              .map((v) => v.price);
-            const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : product.price;
-            const lowestVar = updatedVariants.find((v) => v.price === minPrice);
             return normalizeProduct({
               ...product,
-              price: minPrice,
-              previousPrice: lowestVar?.previousPrice ?? product.previousPrice,
               variants: updatedVariants,
-            });
+            }, false);
         });
         persistLocal(next);
       },

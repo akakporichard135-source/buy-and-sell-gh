@@ -21,6 +21,7 @@ export type AdminSection =
   | "storefront"
   | "services"
   | "pages"
+  | "service-requests"
   | "trade-ins"
   | "device-requests"
   | "contact-messages"
@@ -47,6 +48,8 @@ export function AdminSectionPage({ section }: { section: AdminSection }) {
       return <AdminServicesManager />;
     case "pages":
       return <AdminPagesManager />;
+    case "service-requests":
+      return <AdminInquiriesPage mode="service-requests" />;
     case "trade-ins":
       return <AdminInquiriesPage mode="trade-ins" />;
     case "device-requests":

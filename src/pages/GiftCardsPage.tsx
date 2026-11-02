@@ -18,7 +18,7 @@ export function GiftCardsPage() {
         <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="eager" decoding="async" />
       </section>
       <section className="section service-layout">
-        <SuccessForm buttonLabel="Prepare Visa Card Enquiry" successIntent="general">
+        <SuccessForm serviceType="visa-card" buttonLabel="Submit Visa Card Enquiry">
           <FormField label="Customer name" name="name" required maxLength={120} />
           <FormField label="Phone number" name="phone" required maxLength={32} />
           <FormField label="Card type" name="cardType" placeholder="Example: Visa card" required maxLength={120} />

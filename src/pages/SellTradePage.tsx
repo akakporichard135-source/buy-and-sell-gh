@@ -43,7 +43,7 @@ export function SellTradePage() {
         assistance={assistance}
         intent="trade"
       >
-        <SuccessForm buttonLabel={isUpgradeMode ? "Request Upgrade Assessment" : "Request Device Valuation"} successIntent="trade">
+        <SuccessForm serviceType={isUpgradeMode ? "upgrade" : "trade-in"} buttonLabel={isUpgradeMode ? "Request Upgrade Assessment" : "Request Device Valuation"}>
           <FormField label="Customer name" name="name" required maxLength={120} placeholder="Your full name" />
           <FormField label="Phone number" name="phone" required maxLength={32} placeholder="Your contact number" />
           <FormField label="Device type" name="deviceType" options={["Mobile phone", "Tablet", "Laptop", "Game console", "Other"]} />

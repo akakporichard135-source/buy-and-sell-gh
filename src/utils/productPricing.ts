@@ -138,15 +138,8 @@ export function resolveConfiguredPrice(
     }
 
     if (bestVariant && highestScore > 0) {
-      const isBaseVariant = variants.length > 0 && variants[0]?.id === bestVariant.id;
-      const effectivePrice =
-        isBaseVariant && product.price > 0 && product.price < bestVariant.price
-          ? product.price
-          : bestVariant.price;
-      const effectivePrevPrice =
-        isBaseVariant && product.price > 0 && product.price < bestVariant.price
-          ? (product.previousPrice ?? product.oldPrice ?? bestVariant.previousPrice ?? null)
-          : (bestVariant.previousPrice ?? null);
+      const effectivePrice = bestVariant.price;
+      const effectivePrevPrice = bestVariant.previousPrice ?? null;
       const isSale = Boolean(
         bestVariant.isSale ||
           (effectivePrevPrice && effectivePrevPrice > effectivePrice)
@@ -167,15 +160,8 @@ export function resolveConfiguredPrice(
     // Default to the first available variant if options did not match explicitly
     const firstActive = variants.find((v) => v.available !== false) ?? variants[0];
     if (firstActive) {
-      const isBaseVariant = variants.length > 0 && variants[0]?.id === firstActive.id;
-      const effectivePrice =
-        isBaseVariant && product.price > 0 && product.price < firstActive.price
-          ? product.price
-          : firstActive.price;
-      const effectivePrevPrice =
-        isBaseVariant && product.price > 0 && product.price < firstActive.price
-          ? (product.previousPrice ?? product.oldPrice ?? firstActive.previousPrice ?? null)
-          : (firstActive.previousPrice ?? null);
+      const effectivePrice = firstActive.price;
+      const effectivePrevPrice = firstActive.previousPrice ?? null;
       const isSale = Boolean(
         firstActive.isSale ||
           (effectivePrevPrice && effectivePrevPrice > effectivePrice)
@@ -231,18 +217,13 @@ export function getCardPriceDisplay(product: Product): CardPriceDisplay {
   let minPrice = product.price;
   let previousPrice: number | undefined = product.previousPrice ?? product.oldPrice;
 
-  if (hasMultipleVariants) {
+  if (variants.length > 0) {
     const prices = variants.map((v) => v.price).filter((p) => p > 0);
     if (prices.length > 0) {
       const variantMin = Math.min(...prices);
-      // Harmonize: if product base price is defined and positive, never hide a lower base price
-      minPrice = product.price > 0 ? Math.min(product.price, variantMin) : variantMin;
+      minPrice = variantMin;
       const lowestVariant = variants.find((v) => v.price === minPrice);
-      if (lowestVariant?.previousPrice) {
-        previousPrice = lowestVariant.previousPrice;
-      } else if (minPrice === product.price && (product.previousPrice ?? product.oldPrice)) {
-        previousPrice = product.previousPrice ?? product.oldPrice;
-      }
+      previousPrice = lowestVariant?.previousPrice ?? undefined;
     }
   }
 

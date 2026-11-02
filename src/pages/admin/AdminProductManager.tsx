@@ -1669,7 +1669,7 @@ function ProductForm({
             <label className="block font-bold text-slate-700 mb-1">
               Base Price (GH₵) *
               <span className="block text-[11px] font-normal text-slate-500">
-                Applies to the base tier &amp; sets the starting storefront card price
+                Used when no variant is selected; configured variants keep their own prices
               </span>
             </label>
             <input
@@ -1715,23 +1715,6 @@ function ProductForm({
                   <VariantPricingEditor
                     key={variant.id}
                     variant={variant}
-                    onSaved={(fields) => {
-                      const variants = existingVariants.map((item) =>
-                        item.id === variant.id ? { ...item, ...fields } : item
-                      );
-                      const active = variants.filter((item) => item.available && item.price > 0);
-                      const lowest = active.reduce<ProductVariant | null>(
-                        (current, item) => !current || item.price < current.price ? item : current,
-                        null
-                      );
-                      if (lowest) {
-                        setForm({
-                          ...form,
-                          price: String(lowest.price),
-                          previousPrice: lowest.previousPrice ? String(lowest.previousPrice) : "",
-                        });
-                      }
-                    }}
                   />
                 ))}
               </div>
@@ -2327,13 +2310,7 @@ function getBackendLabel(status: string) {
   return "Seed Fallback";
 }
 
-function VariantPricingEditor({
-  variant,
-  onSaved,
-}: {
-  variant: ProductVariant;
-  onSaved: (fields: Pick<ProductVariant, "price" | "previousPrice" | "isSale" | "stockStatus" | "stockQuantity" | "available">) => void;
-}) {
+function VariantPricingEditor({ variant }: { variant: ProductVariant }) {
   const { updateVariantPriceAndStock, backendStatus } = useProductCatalog();
   const [price, setPrice] = useState(String(variant.price));
   const [previousPrice, setPreviousPrice] = useState(variant.previousPrice == null ? "" : String(variant.previousPrice));
@@ -2377,7 +2354,6 @@ function VariantPricingEditor({
     setMessage("");
     try {
       await updateVariantPriceAndStock(variant.id, fields);
-      onSaved(fields);
       setMessage("Saved");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Variant could not be saved.");
