@@ -95,7 +95,9 @@
   font-size: clamp(3.2rem, 5.2vw, 4.5rem);
   line-height: 1.05;
   font-weight: 760;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 .editorial-hero-tagline {
   font-size: clamp(1.1rem, 1.4vw, 1.25rem);

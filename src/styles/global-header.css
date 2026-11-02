@@ -344,6 +344,9 @@
     text-align: left !important;
     cursor: pointer !important;
     transition: color 0.15s ease;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 
   .global-curtain-heading-btn:hover,

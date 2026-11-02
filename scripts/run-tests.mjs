@@ -8,6 +8,7 @@ import { testMarketplace } from "./test-marketplace.mjs";
 import { testStore } from "./test-store.mjs";
 import { testOrderManagement } from "./test-order-management.mjs";
 import { testArchiveAndDeleteNotifications } from "./test-archive-and-notifications.mjs";
+import { testWordBreaksAndResponsive } from "./test-word-breaks-and-responsive.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -708,6 +709,8 @@ try {
   assert.doesNotMatch(adminAuthSource, /totp\.secret/, "AdminAuth never returns raw TOTP secret to UI state");
   assert.match(adminAuthSource, /resolvedFriendlyName/, "AdminAuth deduplicates TOTP friendly names during enrollment");
   assert.match(adminAuthSource, /verifiedTotp\.length < 2/, "AdminAuth prevents removing the last remaining verified MFA factor");
+
+  await testWordBreaksAndResponsive(projectRoot);
 
   console.log("All tests passed");
 } finally {

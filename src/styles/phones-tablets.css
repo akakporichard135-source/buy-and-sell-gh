@@ -97,7 +97,8 @@
 
 .phones-tablets-page .phone-brand-card strong {
   font-size: 16px;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .phones-tablets-page .marketplace-filter-shell {
@@ -146,7 +147,8 @@
 .phones-tablets-page .marketplace-listing-body h2 {
   font-size: 17px;
   font-weight: 750;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .phones-tablets-page .marketplace-listing-facts span {

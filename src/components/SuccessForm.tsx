@@ -63,7 +63,15 @@ export function SuccessForm({ children, serviceType, buttonLabel = "Submit reque
   return (
     <form className="rounded-lg border border-black/7 bg-white p-5 shadow-card sm:p-7" noValidate onSubmit={handleSubmit}>
       <div className="grid gap-5 sm:grid-cols-2">{children}</div>
-      <input name="website" type="text" autoComplete="off" tabIndex={-1} aria-hidden="true" className="sr-only" />
+      <input
+        name="website"
+        type="text"
+        autoComplete="off"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0, 0, 0, 0)", border: 0 }}
+      />
       {error && <p className="form-error mt-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">{error}</p>}
       <button className="btn-primary mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" type="submit" disabled={submitting || Boolean(reference)}>
         <Send size={17} /> {submitting ? "Submitting..." : reference ? "Request submitted" : buttonLabel}

@@ -950,6 +950,8 @@
 }
 
 .apple-buy-mobile-btn {
+  white-space: nowrap;
+  word-break: keep-all;
   padding: 10px 22px;
   background: var(--brand-gold);
   color: #000000;

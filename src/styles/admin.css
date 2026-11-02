@@ -95,6 +95,14 @@
   text-decoration: none;
   transition: all 150ms ease;
   user-select: none;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.admin-nav-link span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-nav-link:hover {
@@ -154,6 +162,8 @@
 }
 
 .admin-logout-btn {
+  white-space: nowrap;
+  word-break: keep-all;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,7 +452,7 @@
 
 .admin-data-table {
   width: 100%;
-  min-width: 680px;
+  min-width: 860px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.875rem;
@@ -462,6 +472,7 @@
   border-bottom: 1px solid var(--admin-border);
   text-align: left;
   white-space: nowrap;
+  word-break: keep-all;
 }
 
 .admin-data-table td {
@@ -469,6 +480,8 @@
   color: var(--admin-text-main);
   border-bottom: 1px solid var(--admin-border-subtle);
   vertical-align: middle;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .admin-data-table tr:last-child td {
@@ -965,3 +978,21 @@
 }
 
 
+
+
+/* Word wrapping and label safeguards */
+.admin-modal-header h3,
+.admin-modal-title,
+.admin-dialog-title,
+.admin-card-title {
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+label.admin-label,
+.admin-form-group label,
+label {
+  word-break: normal;
+  overflow-wrap: break-word;
+}

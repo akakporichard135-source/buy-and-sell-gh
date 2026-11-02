@@ -71,6 +71,33 @@ body {
   -webkit-touch-callout: none;
 }
 
+/* Universal Typography & Word-Breaking Integrity Safeguards */
+h1, h2, h3, h4, h5, h6, p, span, a, button, label, dt, dd, li, th, td {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  hyphens: none;
+}
+
+button, .btn, .admin-btn, .admin-nav-link, .badge, .status-badge, nav a, .action-pill, .pill, .home-ref-button {
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
+}
+
 /* Strict exceptions: form fields, editable content, search, checkout remain fully selectable & editable */
 input,
 textarea,
@@ -2154,7 +2181,9 @@ body.instant-search-open .cart-toast {
 .contact-card {
   min-width: 0;
   height: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
 }
 
 .category-card {
@@ -2529,12 +2558,14 @@ body.instant-search-open .cart-toast {
 
 .footer-line {
   align-items: flex-start;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 footer a,
 footer p {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .faq-item summary {
@@ -2858,7 +2889,8 @@ input[type="file"]::file-selector-button {
 
 .admin-mfa-secret {
   width: 100%;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: break-all;
   border-radius: 0.55rem;
   background: #fff;
   padding: 0.8rem;

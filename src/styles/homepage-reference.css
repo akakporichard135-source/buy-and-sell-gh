@@ -106,6 +106,8 @@
 }
 
 .home-ref-button {
+  white-space: nowrap;
+  word-break: keep-all;
   min-height: 34px;
   display: inline-flex;
   align-items: center;

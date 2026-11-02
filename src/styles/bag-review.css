@@ -53,7 +53,7 @@
 .bag-line { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 16px; min-width: 0; border-bottom: 1px solid #ececef; padding-bottom: 20px; }
 .bag-line-image { display: grid; place-items: center; width: 104px; height: 112px; overflow: hidden; background: #f8f8f9; color: #7a7a80; font-size: .7rem; text-align: center; }
 .bag-line-image img { width: 100%; height: 100%; object-fit: contain; }
-.bag-line-details { min-width: 0; overflow-wrap: anywhere; }
+.bag-line-details { min-width: 0; overflow-wrap: break-word; word-break: normal; }
 .bag-line-details h3 { margin: 0; font-size: 1rem; font-weight: 750; }
 .bag-line-details > p { margin: 5px 0 0; color: #66686e; font-size: .82rem; line-height: 1.45; }
 .bag-line-options { display: grid; gap: 3px; margin: 8px 0 0; font-size: .77rem; }
@@ -71,7 +71,7 @@
 .bag-customer dl { display: grid; gap: 8px; margin: 0 0 12px; }
 .bag-customer dl > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: .82rem; }
 .bag-customer dt { color: #6b6d73; }
-.bag-customer dd { margin: 0; overflow-wrap: anywhere; font-weight: 650; }
+.bag-customer dd { margin: 0; overflow-wrap: break-word; word-break: normal; font-weight: 650; }
 .bag-attention,
 .bag-error { color: #9f2424; font-size: .82rem; line-height: 1.45; }
 .bag-footer { display: grid; gap: 8px; border-top: 1px solid #e6e6e9; padding-top: 18px; }
