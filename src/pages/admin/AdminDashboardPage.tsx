@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Clock,
   DollarSign,
+  Inbox,
   Package,
   PackageCheck,
   PackageX,
@@ -12,12 +13,14 @@ import {
   Sparkles,
   Tag,
   TrendingUp,
+  Wrench,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { isProductImageEligible, normalizeStockStatus } from "../../catalog/productCatalog";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { fetchAdminOrders } from "../../orders/supabaseOrderRepository";
+import { listServiceRequests, type ServiceRequest } from "../../services/serviceRequestRepository";
 import type { StoredOrderRequest } from "../../types/order";
 import { isTestOrder } from "../../types/order";
 import { formatGhs } from "../../utils/format";
@@ -27,6 +30,8 @@ export function AdminDashboardPage() {
   const [orders, setOrders] = useState<StoredOrderRequest[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
 
   const loadOrders = () => {
     setOrdersLoading(true);
@@ -43,8 +48,21 @@ export function AdminDashboardPage() {
       });
   };
 
+  const loadRequests = () => {
+    setRequestsLoading(true);
+    listServiceRequests()
+      .then((data) => {
+        setServiceRequests(data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setRequestsLoading(false);
+      });
+  };
+
   useEffect(() => {
     loadOrders();
+    loadRequests();
   }, []);
 
   // Compute live business metrics from verified data (excluding dev/test orders)
@@ -192,9 +210,9 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* 2. Core Business Overview (5 Key Metrics) */}
+      {/* 2. Core Business Overview (6 Key Metrics) */}
       <section aria-label="Business Overview Metrics" className="space-y-2">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
           {/* 1. Products on Store */}
           <Link
             to="/admin/products"
@@ -239,7 +257,31 @@ export function AdminDashboardPage() {
             </div>
           </Link>
 
-          {/* 3. Low Stock */}
+          {/* 3. Service Inquiries */}
+          <Link
+            to="/admin/service-requests"
+            className="admin-metric-card hover:border-[#d4af37]/70 transition"
+            title="View Customer Service Requests & Inquiries"
+          >
+            <div className="admin-metric-header">
+              <span className="admin-metric-label">Service Inquiries</span>
+              <div className="admin-metric-icon bg-[#d4af37]/10 text-[#d4af37]">
+                <Inbox size={17} />
+              </div>
+            </div>
+            <div className="admin-metric-value text-slate-900">
+              {requestsLoading ? "..." : serviceRequests.length}
+            </div>
+            <div className="admin-metric-hint text-[#b17d12] font-semibold">
+              {requestsLoading
+                ? "Checking inquiries..."
+                : `${serviceRequests.filter((r) => r.status === "New").length} new incoming submission${
+                    serviceRequests.filter((r) => r.status === "New").length === 1 ? "" : "s"
+                  }`}
+            </div>
+          </Link>
+
+          {/* 4. Low Stock */}
           <Link
             to="/admin/products?stock=Low%20Stock"
             className="admin-metric-card hover:border-amber-500/70 transition"
@@ -259,7 +301,7 @@ export function AdminDashboardPage() {
             </div>
           </Link>
 
-          {/* 4. Out of Stock */}
+          {/* 5. Out of Stock */}
           <Link
             to="/admin/products?stock=Out%20of%20Stock"
             className="admin-metric-card hover:border-rose-500/70 transition"
@@ -279,7 +321,7 @@ export function AdminDashboardPage() {
             </div>
           </Link>
 
-          {/* 5. Order Pipeline */}
+          {/* 6. Order Pipeline */}
           <Link
             to="/admin/orders"
             className="admin-metric-card hover:border-[#d4af37]/70 transition"
@@ -309,7 +351,15 @@ export function AdminDashboardPage() {
           Quick Management Actions
         </h3>
         <div className="flex flex-wrap gap-2.5">
-          <Link to="/admin/products?action=new" className="admin-btn admin-btn-primary">
+          <Link to="/admin/service-requests" className="admin-btn admin-btn-primary">
+            <Inbox size={16} />
+            <span>Service Requests ({serviceRequests.length})</span>
+          </Link>
+          <Link to="/admin/services" className="admin-btn admin-btn-secondary">
+            <Wrench size={16} />
+            <span>Services &amp; Inquiries Manager</span>
+          </Link>
+          <Link to="/admin/products?action=new" className="admin-btn admin-btn-secondary">
             <Plus size={16} />
             <span>Add New Product</span>
           </Link>

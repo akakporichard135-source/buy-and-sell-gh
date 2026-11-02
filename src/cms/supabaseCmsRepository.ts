@@ -1024,11 +1024,14 @@ export const fetchPageContent = async (): Promise<PageContentRegistry> => {
       .select("id, content");
 
     if (!error && data && data.length > 0) {
-      const merged = { ...defaultPageContent };
+      const merged: PageContentRegistry = { ...defaultPageContent, ...local };
       data.forEach((row) => {
-        if (row.id === "about") merged.about = row.content;
-        if (row.id === "repairs") merged.repairs = row.content;
-        if (row.id === "tradeIn") merged.tradeIn = row.content;
+        if (row.id in merged && row.content) {
+          (merged as unknown as Record<string, unknown>)[row.id] = {
+            ...((defaultPageContent as unknown as Record<string, unknown>)[row.id] || {}),
+            ...row.content,
+          };
+        }
       });
       writeLocal(CMS_STORAGE_KEY_PAGES, merged);
       return merged;

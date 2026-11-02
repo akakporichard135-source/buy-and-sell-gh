@@ -183,10 +183,73 @@ export interface TradeInPageContent {
   upgradeGuidance: string;
 }
 
+export interface InstallmentPlanConfig {
+  title: string;
+  description: string;
+  guidance: string;
+  assistance: string;
+  depositPercentage: number;
+  depositLabel: string;
+  planHeading: string;
+  planNotice: string;
+  planDurations: string[];
+  paymentFrequencies: string[];
+  ghanaCardOptions: string[];
+  disclaimer: string;
+  explanatoryNote?: string;
+}
+
+export interface VisaCardPageContent {
+  title: string;
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+  image: string;
+  sideCardHeading: string;
+  sideCardText: string;
+  whatsappLabel: string;
+}
+
+export interface PreOrderPageContent {
+  title: string;
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+  image: string;
+  howItWorksHeading: string;
+  steps: string[];
+  whatsappLabel: string;
+}
+
+export interface ReferralPageContent {
+  title: string;
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+  image: string;
+  sideCardHeading: string;
+  sideCardText: string;
+  whatsappLabel: string;
+}
+
+export interface ContactPageContent {
+  title: string;
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+  visitHeading: string;
+  visitNotice: string;
+}
+
 export interface PageContentRegistry {
   about: AboutPageContent;
   repairs: RepairsPageContent;
   tradeIn: TradeInPageContent;
+  installment: InstallmentPlanConfig;
+  visaCard: VisaCardPageContent;
+  preOrder: PreOrderPageContent;
+  referral: ReferralPageContent;
+  contact: ContactPageContent;
 }
 
 export interface MainStoreFamilyItem {

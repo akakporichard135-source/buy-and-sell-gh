@@ -1,21 +1,47 @@
 import { Gift } from "lucide-react";
+import { useCms } from "../cms/CmsContext";
+import { defaultPageContent } from "../cms/defaultCmsData";
 import { FormField } from "../components/FormField";
 import { SEO } from "../components/SEO";
 import { SuccessForm } from "../components/SuccessForm";
 import { WhatsAppButton } from "../components/WhatsAppButton";
-import visaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
+import defaultVisaCardCampaign from "../assets/homepage/homepage-visa-card-single.webp";
 
 export function GiftCardsPage() {
+  const { pages } = useCms();
+  const visaCard = pages?.visaCard || defaultPageContent.visaCard;
+
+  const title = visaCard?.title || "Visa Card Trading Enquiry";
+  const eyebrow = visaCard?.eyebrow || "Visa Card Trading";
+  const heading = visaCard?.heading || "Check a supported card.";
+  const subtitle =
+    visaCard?.subtitle ||
+    "Send details for review. Buy & Sell GH confirms accepted card types and value before any next step.";
+  const image = visaCard?.image || defaultVisaCardCampaign;
+  const sideCardHeading = visaCard?.sideCardHeading || "No rate promise online";
+  const sideCardText =
+    visaCard?.sideCardText ||
+    "Rates, acceptance and next steps are confirmed directly by Buy & Sell GH. This page does not guarantee a value.";
+  const whatsappLabel = visaCard?.whatsappLabel || "Check on WhatsApp";
+
   return (
     <>
-      <SEO title="Visa Card Trading Enquiry" description="Contact Buy & Sell GH to check supported Visa card trading options. Values and accepted cards are confirmed directly." />
+      <SEO
+        title={title}
+        description="Contact Buy & Sell GH to check supported Visa card trading options. Values and accepted cards are confirmed directly."
+      />
       <section className="service-hero service-hero-dark">
         <div>
-          <p className="campaign-eyebrow">Visa Card Trading</p>
-          <h1>Check a supported card.</h1>
-          <p>Send details for review. Buy & Sell GH confirms accepted card types and value before any next step.</p>
+          <p className="campaign-eyebrow">{eyebrow}</p>
+          <h1>{heading}</h1>
+          <p>{subtitle}</p>
         </div>
-        <img src={visaCardCampaign} alt="One original unbranded black and gold card for supported card review" loading="eager" decoding="async" />
+        <img
+          src={image}
+          alt={heading}
+          loading="eager"
+          decoding="async"
+        />
       </section>
       <section className="section service-layout">
         <SuccessForm serviceType="visa-card" buttonLabel="Submit Visa Card Enquiry">
@@ -29,9 +55,9 @@ export function GiftCardsPage() {
         </SuccessForm>
         <aside className="service-side-card">
           <Gift size={24} />
-          <h2>No rate promise online</h2>
-          <p>Rates, acceptance and next steps are confirmed directly by Buy & Sell GH. This page does not guarantee a value.</p>
-          <WhatsAppButton className="mt-6 w-full">Check on WhatsApp</WhatsAppButton>
+          <h2>{sideCardHeading}</h2>
+          <p>{sideCardText}</p>
+          <WhatsAppButton className="mt-6 w-full">{whatsappLabel}</WhatsAppButton>
         </aside>
       </section>
     </>
