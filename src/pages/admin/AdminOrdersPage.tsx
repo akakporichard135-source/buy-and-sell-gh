@@ -555,11 +555,11 @@ export function AdminOrdersPage() {
 
       {/* 2. Top-level View Tabs: Active Queue vs Archived Vault */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setViewTab("active")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
               viewTab === "active"
                 ? "bg-slate-900 text-white shadow-sm"
                 : "bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -572,7 +572,7 @@ export function AdminOrdersPage() {
           <button
             type="button"
             onClick={() => setViewTab("archived")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
               viewTab === "archived"
                 ? "bg-amber-600 text-white shadow-sm"
                 : "bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -584,11 +584,11 @@ export function AdminOrdersPage() {
         </div>
 
         {/* Genuine vs Test Filter */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setOrderCategory("genuine")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               orderCategory === "genuine"
                 ? "bg-slate-800 text-white"
                 : "text-slate-600 hover:bg-slate-100"
@@ -599,7 +599,7 @@ export function AdminOrdersPage() {
           <button
             type="button"
             onClick={() => setOrderCategory("test")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               orderCategory === "test"
                 ? "bg-slate-800 text-white"
                 : "text-slate-600 hover:bg-slate-100"
@@ -610,7 +610,7 @@ export function AdminOrdersPage() {
           <button
             type="button"
             onClick={() => setOrderCategory("all")}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`shrink-0 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               orderCategory === "all"
                 ? "bg-slate-800 text-white"
                 : "text-slate-600 hover:bg-slate-100"
@@ -632,74 +632,76 @@ export function AdminOrdersPage() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">
-            Status:
-          </span>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("All")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              statusFilter === "All"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            All ({countsByStatus.All})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter("Pending")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              statusFilter === "Pending"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            Pending {countsByStatus.Pending > 0 && `(${countsByStatus.Pending})`}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter("Processing")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              statusFilter === "Processing"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            Processing {countsByStatus.Processing > 0 && `(${countsByStatus.Processing})`}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter("Completed")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              statusFilter === "Completed"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            Completed {countsByStatus.Completed > 0 && `(${countsByStatus.Completed})`}
-          </button>
-
-          {ORDER_STATUSES.filter(
-            (st) => !["Pending", "Processing", "Delivered", "Completed"].includes(st)
-          ).map((st) => (
+        <div className="w-full overflow-x-auto scrollbar-none pb-0.5">
+          <div className="flex items-center gap-1.5 min-w-max">
+            <span className="shrink-0 text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">
+              Status:
+            </span>
             <button
-              key={st}
               type="button"
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                statusFilter === st
+              onClick={() => setStatusFilter("All")}
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === "All"
                   ? "bg-slate-900 text-white shadow-sm"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
               }`}
             >
-              {st} {countsByStatus[st] > 0 && `(${countsByStatus[st]})`}
+              All ({countsByStatus.All})
             </button>
-          ))}
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Pending")}
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === "Pending"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              Pending {countsByStatus.Pending > 0 && `(${countsByStatus.Pending})`}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Processing")}
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === "Processing"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              Processing {countsByStatus.Processing > 0 && `(${countsByStatus.Processing})`}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter("Completed")}
+              className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === "Completed"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              Completed {countsByStatus.Completed > 0 && `(${countsByStatus.Completed})`}
+            </button>
+
+            {ORDER_STATUSES.filter(
+              (st) => !["Pending", "Processing", "Delivered", "Completed"].includes(st)
+            ).map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setStatusFilter(st)}
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  statusFilter === st
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                {st} {countsByStatus[st] > 0 && `(${countsByStatus[st]})`}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

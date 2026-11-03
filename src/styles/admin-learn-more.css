@@ -268,6 +268,8 @@
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.12s ease;
 }
 

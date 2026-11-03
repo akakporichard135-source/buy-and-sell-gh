@@ -407,21 +407,23 @@ export function AdminMediaLibrary({ onSelect, isPicker = false }: AdminMediaLibr
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         {/* Category Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200">
-          {categories.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setActiveCategory(c.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                activeCategory === c.id
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+        <div className="overflow-x-auto scrollbar-none pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200 min-w-max">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setActiveCategory(c.id)}
+                className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  activeCategory === c.id
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search */}

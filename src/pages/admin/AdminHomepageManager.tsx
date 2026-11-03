@@ -149,58 +149,60 @@ export function AdminHomepageManager() {
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab("heroes")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "heroes"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Layout size={15} />
-          <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
-        </button>
+      <div className="w-full overflow-x-auto scrollbar-none pb-1">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
+          <button
+            type="button"
+            onClick={() => setActiveTab("heroes")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "heroes"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Layout size={15} />
+            <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("tiles")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "tiles"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Grid size={15} />
-          <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("tiles")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "tiles"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Grid size={15} />
+            <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("flyers")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "flyers"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Layers size={15} />
-          <span>Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("flyers")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "flyers"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Layers size={15} />
+            <span>Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("announcement")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "announcement"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Volume2 size={15} />
-          <span>Announcement Bar</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("announcement")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "announcement"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Volume2 size={15} />
+            <span>Announcement Bar</span>
+          </button>
+        </div>
       </div>
 
       {/* SECTION 1: HERO CAROUSEL */}

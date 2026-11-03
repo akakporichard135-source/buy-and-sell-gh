@@ -93,20 +93,16 @@ export function AdminPromotionsPage() {
   const [newProductData, setNewProductData] = useState({
     name: "",
     category: "Game Consoles" as ProductCategory,
-    brand: "Sony",
+    brand: "",
     model: "",
-    condition: "UK Used" as ProductCondition,
-    price: 7500,
+    condition: "Brand New" as ProductCondition,
+    price: 0,
     stockQuantity: 1,
     description: "",
     purchaseAction: "buy" as ProductPurchaseAction,
     isStorefrontVisible: true,
   });
-  const [bundleItems, setBundleItems] = useState<BundleItem[]>([
-    { id: "1", name: "One neatly used PS5 Slim Standard Edition (Disc Version)", condition: "UK Used" },
-    { id: "2", name: "One brand-new EA Sports FC 25 game", condition: "Brand New" },
-    { id: "3", name: "Two brand-new PlayStation controllers, exact model to be confirmed", condition: "Brand New" },
-  ]);
+  const [bundleItems, setBundleItems] = useState<BundleItem[]>([]);
   const [newBundleItemText, setNewBundleItemText] = useState("");
   const [newBundleItemCondition, setNewBundleItemCondition] = useState<string>("Brand New");
 
@@ -183,7 +179,7 @@ export function AdminPromotionsPage() {
       title: "",
       shortDescription: "",
       detailedDescription: "",
-      promotionType: "bundle",
+      promotionType: "percentage_discount",
       status: "draft",
       isEnabled: true,
       startDate: new Date().toISOString().slice(0, 16),
@@ -196,16 +192,16 @@ export function AdminPromotionsPage() {
       eligibleVariantIds: [],
       eligibleStorageOptions: [],
       minOrderSubtotal: 0,
-      discountPercent: null,
+      discountPercent: 10,
       discountAmount: null,
       promotionalPrice: null,
       giftQuantityPerPurchase: 1,
       maxGiftsPerOrder: 1,
       giftStockQuantity: 10,
       giftStockAlertThreshold: 2,
-      desktopFlyerUrl: "/products/campaigns/ps5-slim-combo-desktop.webp",
-      mobileFlyerUrl: "/products/campaigns/ps5-slim-combo-mobile.webp",
-      ctaText: "Explore Offer",
+      desktopFlyerUrl: "",
+      mobileFlyerUrl: "",
+      ctaText: "Explore Offers",
       ctaDestination: "/offers",
       displayOrder: promotions.length + 1,
       showOnAnnouncementBar: true,
@@ -215,24 +211,20 @@ export function AdminPromotionsPage() {
       totalRedemptionLimit: null,
       customerRedemptionLimit: 1,
     });
-    setProductMode("new_bundle");
+    setProductMode("existing");
     setNewProductData({
-      name: "PS5 Slim Combo Offer",
+      name: "",
       category: "Game Consoles",
-      brand: "Sony",
-      model: "PlayStation 5 Slim Standard Edition",
-      condition: "UK Used",
-      price: 7500,
+      brand: "",
+      model: "",
+      condition: "Brand New",
+      price: 0,
       stockQuantity: 1,
-      description: "One-Time PlayStation Combo Offer with EA Sports FC 25 and two controllers.",
+      description: "",
       purchaseAction: "buy",
       isStorefrontVisible: true,
     });
-    setBundleItems([
-      { id: "1", name: "One neatly used PS5 Slim Standard Edition (Disc Version)", condition: "UK Used" },
-      { id: "2", name: "One brand-new EA Sports FC 25 game", condition: "Brand New" },
-      { id: "3", name: "Two brand-new PlayStation controllers, exact model to be confirmed", condition: "Brand New" },
-    ]);
+    setBundleItems([]);
     setSelectedExistingProduct(null);
     setActiveStep("basics");
     setEditorError("");
@@ -249,20 +241,48 @@ export function AdminPromotionsPage() {
       endDate: campaign.endDate ? campaign.endDate.slice(0, 16) : "",
     });
 
-    // Check if targeting an existing product
-    if (campaign.eligibleProductIds && campaign.eligibleProductIds.length > 0) {
-      const match = products.find((p) => campaign.eligibleProductIds.includes(p.id) || campaign.eligibleProductIds.includes(p.slug));
-      if (match) {
-        setSelectedExistingProduct(match);
-        setProductMode("existing");
-        if (match.includedItems && match.includedItems.length > 0) {
-          setBundleItems(match.includedItems.map((item, idx) => ({ id: String(idx + 1), name: item })));
+    if (campaign.promotionType === "bundle") {
+      // Check if targeting an existing product
+      if (campaign.eligibleProductIds && campaign.eligibleProductIds.length > 0) {
+        const match = products.find((p) => campaign.eligibleProductIds.includes(p.id) || campaign.eligibleProductIds.includes(p.slug));
+        if (match) {
+          setSelectedExistingProduct(match);
+          setProductMode("existing");
+          if (match.includedItems && match.includedItems.length > 0) {
+            setBundleItems(match.includedItems.map((item, idx) => ({ id: String(idx + 1), name: item })));
+          } else {
+            setBundleItems([]);
+          }
+        } else {
+          setProductMode("existing");
+          setBundleItems([]);
         }
       } else {
         setProductMode("existing");
+        setBundleItems([]);
       }
     } else {
+      // Non-bundle campaigns should not have bundle items or new bundle form data
       setProductMode("existing");
+      setBundleItems([]);
+      setNewProductData({
+        name: "",
+        category: "Game Consoles",
+        brand: "",
+        model: "",
+        condition: "Brand New",
+        price: 0,
+        stockQuantity: 1,
+        description: "",
+        purchaseAction: "buy",
+        isStorefrontVisible: true,
+      });
+      if (campaign.eligibleProductIds && campaign.eligibleProductIds.length > 0) {
+        const match = products.find((p) => campaign.eligibleProductIds.includes(p.id) || campaign.eligibleProductIds.includes(p.slug));
+        setSelectedExistingProduct(match || null);
+      } else {
+        setSelectedExistingProduct(null);
+      }
     }
 
     setActiveStep("basics");
@@ -451,10 +471,12 @@ export function AdminPromotionsPage() {
 
     setSaving(true);
     try {
-      let targetProductId = editingCampaign.eligibleProductIds?.[0] || "";
+      let targetProductId = "";
+      const isBundle = editingCampaign.promotionType === "bundle";
+      const isDiscount = editingCampaign.promotionType === "percentage_discount" || editingCampaign.promotionType === "fixed_discount";
 
-      // If creating a new canonical product / bundle in-place
-      if (productMode === "new_bundle" && newProductData.name.trim()) {
+      // If creating a new canonical product / bundle in-place (ONLY for bundle offers)
+      if (isBundle && productMode === "new_bundle" && newProductData.name.trim()) {
         const prodSlug = createProductSlug(newProductData.name, products);
         const canonicalProduct: Product = {
           id: prodSlug,
@@ -473,7 +495,7 @@ export function AdminPromotionsPage() {
           imageTone: "light",
           images: [
             {
-              src: editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl || "/products/campaigns/ps5-slim-combo-desktop.webp",
+              src: editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl || "/placeholder.webp",
               alt: newProductData.name.trim(),
             },
           ],
@@ -503,16 +525,58 @@ export function AdminPromotionsPage() {
       const campaignStatus: PromotionStatus = publishLive ? "active" : (editingCampaign.status || "draft");
       const campaignEnabled = publishLive ? true : Boolean(editingCampaign.isEnabled);
 
+      // Resolve eligible and bundle product IDs based on promotion type
+      let resolvedEligibleProductIds: string[] = [];
+      let resolvedBundleRequiredIds: string[] = [];
+      let resolvedCta = editingCampaign.ctaDestination || "/offers";
+
+      if (isBundle) {
+        if (targetProductId) {
+          resolvedEligibleProductIds = [targetProductId];
+          resolvedBundleRequiredIds = [targetProductId];
+          resolvedCta = editingCampaign.ctaDestination || `/product/${targetProductId}`;
+        } else if (selectedExistingProduct) {
+          resolvedEligibleProductIds = [selectedExistingProduct.id];
+          resolvedBundleRequiredIds = [selectedExistingProduct.id];
+          resolvedCta = editingCampaign.ctaDestination || `/product/${selectedExistingProduct.id}`;
+        } else if (editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0) {
+          resolvedEligibleProductIds = editingCampaign.eligibleProductIds;
+          resolvedBundleRequiredIds = editingCampaign.eligibleProductIds;
+        }
+      } else if (isDiscount) {
+        // Percentage or fixed discount: preserve all selected qualifying products
+        resolvedEligibleProductIds = editingCampaign.eligibleProductIds || [];
+        resolvedBundleRequiredIds = [];
+        if (resolvedEligibleProductIds.length === 1 && !editingCampaign.ctaDestination) {
+          resolvedCta = `/product/${resolvedEligibleProductIds[0]}`;
+        } else {
+          resolvedCta = editingCampaign.ctaDestination || "/offers";
+        }
+      } else {
+        // Other types (free gift, promotional price, advertising)
+        if (selectedExistingProduct) {
+          resolvedEligibleProductIds = [selectedExistingProduct.id];
+        } else {
+          resolvedEligibleProductIds = editingCampaign.eligibleProductIds || [];
+        }
+        resolvedBundleRequiredIds = [];
+        if (resolvedEligibleProductIds.length === 1 && !editingCampaign.ctaDestination) {
+          resolvedCta = `/product/${resolvedEligibleProductIds[0]}`;
+        } else {
+          resolvedCta = editingCampaign.ctaDestination || "/offers";
+        }
+      }
+
       const toSave: Partial<PromotionCampaign> = {
         ...editingCampaign,
         status: campaignStatus,
         isEnabled: campaignEnabled,
-        eligibleProductIds: targetProductId ? [targetProductId] : (editingCampaign.eligibleProductIds || []),
-        bundleRequiredProductIds: targetProductId ? [targetProductId] : (editingCampaign.bundleRequiredProductIds || []),
-        promotionalPrice: editingCampaign.promotionType === "bundle"
+        eligibleProductIds: resolvedEligibleProductIds,
+        bundleRequiredProductIds: resolvedBundleRequiredIds,
+        promotionalPrice: isBundle
           ? (productMode === "new_bundle" ? Number(newProductData.price) : Number(editingCampaign.promotionalPrice || 0))
-          : editingCampaign.promotionalPrice,
-        ctaDestination: editingCampaign.ctaDestination || (targetProductId ? `/product/${targetProductId}` : "/offers"),
+          : (editingCampaign.promotionType === "promotional_price" ? Number(editingCampaign.promotionalPrice || 0) : null),
+        ctaDestination: resolvedCta,
         updatedAt: new Date().toISOString(),
       };
 
@@ -624,10 +688,10 @@ export function AdminPromotionsPage() {
       </div>
 
       {/* 2. Filters & Navigation Tabs */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          {/* Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+        {/* Full-width scrollable Tabs Row */}
+        <div className="w-full overflow-x-auto scrollbar-none pb-1 pt-0.5">
+          <div className="flex items-center gap-2 min-w-max">
             {(
               [
                 { key: "all", label: "All Campaigns", count: promotions.length },
@@ -642,54 +706,57 @@ export function AdminPromotionsPage() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-3.5 py-2 text-xs font-semibold rounded-xl whitespace-nowrap transition flex items-center gap-1.5 ${
+                className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-xs font-semibold rounded-xl transition flex items-center gap-2 ${
                   activeTab === tab.key
                     ? "bg-[#1d1d1f] text-white shadow-sm"
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                <span className={`shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold leading-none ${activeTab === tab.key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                   {tab.count}
                 </span>
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Search & Type Filter */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex-1 sm:w-60">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search offers or products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
+        {/* Search & Type Filter Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
+          <div className="relative flex-1 max-w-md">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search offers, campaigns, or products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
 
+          <div className="shrink-0 flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-500 hidden sm:inline">Filter Type:</span>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:outline-none text-slate-700"
+              className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:outline-none text-slate-700 font-medium"
             >
-              <option value="all">All Types</option>
+              <option value="all">All Promotion Types</option>
               <option value="bundle">Bundle Offers</option>
               <option value="free_gift">Free Gifts</option>
               <option value="percentage_discount">% Discounts</option>
               <option value="fixed_discount">Fixed Discounts</option>
               <option value="promotional_price">Special Prices</option>
-              <option value="advertising">Advertising</option>
+              <option value="advertising">Advertising Only</option>
             </select>
           </div>
         </div>
@@ -907,7 +974,7 @@ export function AdminPromotionsPage() {
                   key={step.key}
                   type="button"
                   onClick={() => setActiveStep(step.key)}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
+                  className={`shrink-0 px-3 py-1.5 rounded-lg whitespace-nowrap transition ${
                     activeStep === step.key
                       ? "bg-white text-slate-900 shadow-sm border border-slate-200 font-bold"
                       : "text-slate-600 hover:text-slate-900"
@@ -1062,9 +1129,22 @@ export function AdminPromotionsPage() {
                         <div
                           key={item.type}
                           onClick={() => {
-                            setEditingCampaign({ ...editingCampaign, promotionType: item.type });
-                            if (item.type === "bundle") {
+                            const nextType = item.type;
+                            setEditingCampaign((prev) => {
+                              if (!prev) return prev;
+                              return {
+                                ...prev,
+                                promotionType: nextType,
+                                ...(nextType !== "bundle" ? { bundleRequiredProductIds: [] } : {}),
+                                ...(nextType === "percentage_discount" && (!prev.discountPercent || prev.discountPercent <= 0) ? { discountPercent: 10 } : {}),
+                                ...(nextType === "fixed_discount" && (!prev.discountAmount || prev.discountAmount <= 0) ? { discountAmount: 100 } : {}),
+                              };
+                            });
+                            if (nextType === "bundle") {
                               setProductMode("new_bundle");
+                            } else {
+                              setProductMode("existing");
+                              setBundleItems([]);
                             }
                           }}
                           className={`p-4 rounded-xl border cursor-pointer transition flex flex-col justify-between ${
@@ -1092,318 +1172,609 @@ export function AdminPromotionsPage() {
                 </div>
               )}
 
-              {/* STEP 3: PRODUCT SELECTION OR CREATE NEW BUNDLE */}
+              {/* STEP 3: PRODUCT SELECTION OR CREATE NEW BUNDLE / DISCOUNT SCOPE */}
               {activeStep === "product" && (
                 <div className="space-y-6">
-                  <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900">Target Product or Custom Bundle</h3>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Select an existing catalog product, or create a new promotional product/bundle without leaving this screen.
-                      </p>
-                    </div>
-
-                    {editingCampaign.promotionType === "bundle" && (
-                      <button
-                        type="button"
-                        onClick={handlePreloadPs5Combo}
-                        className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition"
-                      >
-                        ⚡ Preload PS5 Combo Data
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Mode Selector Toggle */}
-                  <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setProductMode("existing")}
-                      className={`py-2 text-xs font-bold rounded-lg transition ${
-                        productMode === "existing"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      Option A: Select Existing Product
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setProductMode("new_bundle")}
-                      className={`py-2 text-xs font-bold rounded-lg transition ${
-                        productMode === "new_bundle"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-600 hover:text-slate-900"
-                      }`}
-                    >
-                      Option B: Create New Promotional Product or Bundle
-                    </button>
-                  </div>
-
-                  {/* OPTION A: SELECT EXISTING PRODUCT */}
-                  {productMode === "existing" && (
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          placeholder="Search product by name, brand, or category..."
-                          value={productSearch}
-                          onChange={(e) => setProductSearch(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
-                        />
+                  {/* FOR PERCENTAGE AND FIXED DISCOUNTS */}
+                  {(editingCampaign.promotionType === "percentage_discount" || editingCampaign.promotionType === "fixed_discount") ? (
+                    <div className="space-y-6">
+                      <div className="border-b border-slate-100 pb-3">
+                        <h3 className="text-base font-bold text-slate-900">Qualifying Products &amp; Discount Scope</h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Choose which products or categories qualify for this {editingCampaign.promotionType === "percentage_discount" ? "percentage" : "cash"} discount, and configure qualifying constraints.
+                        </p>
                       </div>
 
-                      {/* Selected product banner */}
-                      {selectedExistingProduct && (
-                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={selectedExistingProduct.images[0]?.src || "/placeholder.webp"}
-                              alt={selectedExistingProduct.name}
-                              className="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200"
-                            />
-                            <div>
-                              <div className="text-xs font-bold text-slate-900">{selectedExistingProduct.name}</div>
-                              <div className="text-[11px] text-slate-500">
-                                {selectedExistingProduct.category} · {formatGhs(selectedExistingProduct.price)} · {selectedExistingProduct.stockStatus}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg">
-                            Selected
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Products List */}
-                      <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
-                        {products
-                          .filter((p) => {
-                            if (!productSearch.trim()) return true;
-                            const q = productSearch.toLowerCase();
-                            return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
-                          })
-                          .slice(0, 15)
-                          .map((p) => {
-                            const isChosen = selectedExistingProduct?.id === p.id || editingCampaign.eligibleProductIds?.includes(p.id);
-                            return (
-                              <div
-                                key={p.id}
-                                onClick={() => {
-                                  setSelectedExistingProduct(p);
-                                  setEditingCampaign({
-                                    ...editingCampaign,
-                                    eligibleProductIds: [p.id],
-                                    bundleRequiredProductIds: [p.id],
-                                  });
-                                }}
-                                className={`p-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition ${
-                                  isChosen ? "bg-slate-50 font-bold" : ""
-                                }`}
-                              >
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <img
-                                    src={p.images[0]?.src || "/placeholder.webp"}
-                                    alt={p.name}
-                                    className="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0"
-                                  />
-                                  <div className="min-w-0">
-                                    <div className="text-xs font-semibold text-slate-900 truncate">{p.name}</div>
-                                    <div className="text-[11px] text-slate-400">{p.category} · {formatGhs(p.price)}</div>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition ${
-                                    isChosen ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                  }`}
-                                >
-                                  {isChosen ? "Selected" : "Select"}
-                                </button>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* OPTION B: CREATE NEW PRODUCT OR BUNDLE */}
-                  {productMode === "new_bundle" && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-5">
-                      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                        <div>
-                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Package size={16} className="text-amber-600" />
-                            <span>New Product or Custom Bundle Creator</span>
-                          </h4>
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            This will create a real canonical catalog product in Supabase and link it automatically.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Product Name, Category, Condition */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Product / Bundle Name *</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. PS5 Slim Combo Offer"
-                            value={newProductData.name}
-                            onChange={(e) => setNewProductData({ ...newProductData, name: e.target.value })}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
-                          <select
-                            value={newProductData.category}
-                            onChange={(e) => setNewProductData({ ...newProductData, category: e.target.value as ProductCategory })}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                      {/* Scope Options */}
+                      <div className="space-y-3">
+                        <label className="block text-xs font-bold text-slate-700">1. Select Application Scope</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCampaign({
+                                ...editingCampaign,
+                                eligibleCategory: "all",
+                                eligibleProductIds: [],
+                              });
+                            }}
+                            className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                              (editingCampaign.eligibleCategory === "all" || !editingCampaign.eligibleCategory) && (!editingCampaign.eligibleProductIds || editingCampaign.eligibleProductIds.length === 0)
+                                ? "bg-slate-900 text-white border-black shadow-sm"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-white"
+                            }`}
                           >
-                            <option value="Game Consoles">Game Consoles</option>
+                            <div className="font-bold text-xs">Storewide (All Products)</div>
+                            <div className={`text-[11px] mt-1 ${
+                              (editingCampaign.eligibleCategory === "all" || !editingCampaign.eligibleCategory) && (!editingCampaign.eligibleProductIds || editingCampaign.eligibleProductIds.length === 0)
+                                ? "text-slate-300"
+                                : "text-slate-500"
+                            }`}>
+                              Applies automatically to any product added to bag.
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCampaign({
+                                ...editingCampaign,
+                                eligibleCategory: editingCampaign.eligibleCategory && editingCampaign.eligibleCategory !== "all" ? editingCampaign.eligibleCategory : "Smartphones",
+                                eligibleProductIds: [],
+                              });
+                            }}
+                            className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                              editingCampaign.eligibleCategory && editingCampaign.eligibleCategory !== "all" && (!editingCampaign.eligibleProductIds || editingCampaign.eligibleProductIds.length === 0)
+                                ? "bg-slate-900 text-white border-black shadow-sm"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-white"
+                            }`}
+                          >
+                            <div className="font-bold text-xs">By Category</div>
+                            <div className={`text-[11px] mt-1 ${
+                              editingCampaign.eligibleCategory && editingCampaign.eligibleCategory !== "all" && (!editingCampaign.eligibleProductIds || editingCampaign.eligibleProductIds.length === 0)
+                                ? "text-slate-300"
+                                : "text-slate-500"
+                            }`}>
+                              Applies to all products within a specific category.
+                            </div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCampaign({
+                                ...editingCampaign,
+                                eligibleCategory: "all",
+                              });
+                            }}
+                            className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                              editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0
+                                ? "bg-slate-900 text-white border-black shadow-sm"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-white"
+                            }`}
+                          >
+                            <div className="font-bold text-xs">Specific Products ({editingCampaign.eligibleProductIds?.length || 0})</div>
+                            <div className={`text-[11px] mt-1 ${
+                              editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0
+                                ? "text-slate-300"
+                                : "text-slate-500"
+                            }`}>
+                              Hand-pick qualifying items with live search.
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* If Category Scope is active */}
+                      {editingCampaign.eligibleCategory && editingCampaign.eligibleCategory !== "all" && (!editingCampaign.eligibleProductIds || editingCampaign.eligibleProductIds.length === 0) && (
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                          <label className="block text-xs font-bold text-slate-700">Select Qualifying Category</label>
+                          <select
+                            value={editingCampaign.eligibleCategory}
+                            onChange={(e) => setEditingCampaign({ ...editingCampaign, eligibleCategory: e.target.value })}
+                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-semibold text-slate-900"
+                          >
+                            <option value="Smartphones">Smartphones</option>
                             <option value="iPhones">iPhones</option>
                             <option value="MacBooks">MacBooks</option>
                             <option value="iPads">iPads</option>
                             <option value="Apple Watches">Apple Watches</option>
                             <option value="AirPods">AirPods</option>
+                            <option value="Game Consoles">Game Consoles</option>
                             <option value="Accessories">Accessories</option>
                             <option value="Electronics">Electronics</option>
                           </select>
                         </div>
+                      )}
 
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Condition *</label>
-                          <select
-                            value={newProductData.condition}
-                            onChange={(e) => setNewProductData({ ...newProductData, condition: e.target.value as ProductCondition })}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-                          >
-                            <option value="Brand New">Brand New</option>
-                            <option value="UK Used">UK Used</option>
-                            <option value="Excellent">Excellent</option>
-                            <option value="Very Good">Very Good</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Price, Stock, Purchase Action */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Bundle / Product Price (GH₵) *</label>
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="7500"
-                            value={newProductData.price || ""}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              setNewProductData({ ...newProductData, price: val });
-                              setEditingCampaign({ ...editingCampaign, promotionalPrice: val });
-                            }}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold text-slate-900"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Confirmed Stock Quantity *</label>
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="1"
-                            value={newProductData.stockQuantity || ""}
-                            onChange={(e) => setNewProductData({ ...newProductData, stockQuantity: Number(e.target.value) })}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-700 mb-1">Purchase Action</label>
-                          <select
-                            value={newProductData.purchaseAction}
-                            onChange={(e) => setNewProductData({ ...newProductData, purchaseAction: e.target.value as ProductPurchaseAction })}
-                            className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
-                          >
-                            <option value="buy">Buy (Direct Add to Bag)</option>
-                            <option value="view-pricing">View Pricing</option>
-                            <option value="enquire">WhatsApp Enquiry</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* INCLUDED ITEMS BUILDER (FOR BUNDLES) */}
-                      <div className="space-y-3 pt-2 border-t border-slate-200">
+                      {/* Multi-Product Picker */}
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                            <Layers size={14} className="text-slate-500" />
-                            <span>Included Package Items ({bundleItems.length})</span>
+                          <label className="block text-xs font-bold text-slate-700">
+                            2. Hand-Pick Qualifying Products (Optional or Specific Scope)
                           </label>
-                          <span className="text-[11px] text-slate-400">Checkout charges the single bundle price GH₵{newProductData.price.toLocaleString()} once.</span>
+                          {editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setEditingCampaign({ ...editingCampaign, eligibleProductIds: [] })}
+                              className="text-xs text-rose-600 hover:text-rose-700 font-semibold"
+                            >
+                              Clear all ({editingCampaign.eligibleProductIds.length})
+                            </button>
+                          )}
                         </div>
 
-                        {/* Items list */}
-                        <div className="space-y-2">
-                          {bundleItems.map((item, idx) => (
-                            <div key={item.id} className="p-2.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-3 text-xs">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold grid place-items-center text-[10px] shrink-0">
-                                  {idx + 1}
-                                </span>
-                                <span className="font-semibold text-slate-900 truncate">{item.name}</span>
-                                {item.condition && (
-                                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
-                                    {item.condition}
-                                  </span>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveBundleItem(item.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
-                                title="Remove item"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Add Item Row */}
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="relative">
+                          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
                             type="text"
-                            placeholder="Add included item (e.g. EA Sports FC 25 Game, 2 DualSense Controllers)..."
-                            value={newBundleItemText}
-                            onChange={(e) => setNewBundleItemText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleAddBundleItem();
-                              }
-                            }}
-                            className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                            placeholder="Search catalog by product name, model, or brand..."
+                            value={productSearch}
+                            onChange={(e) => setProductSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
                           />
-                          <select
-                            value={newBundleItemCondition}
-                            onChange={(e) => setNewBundleItemCondition(e.target.value)}
-                            className="px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
-                          >
-                            <option value="Brand New">Brand New</option>
-                            <option value="UK Used">UK Used</option>
-                            <option value="Excellent">Excellent</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={handleAddBundleItem}
-                            className="px-3 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-black transition shrink-0 flex items-center gap-1"
-                          >
-                            <Plus size={14} />
-                            <span>Add</span>
-                          </button>
+                        </div>
+
+                        {/* Selected chips bar */}
+                        {editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0 && (
+                          <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
+                            <div className="text-[11px] font-bold text-blue-900 mb-2">
+                              {editingCampaign.eligibleProductIds.length} Products Qualifying for Discount:
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                              {editingCampaign.eligibleProductIds.map((pid) => {
+                                const prod = products.find((p) => p.id === pid || p.slug === pid);
+                                return (
+                                  <span
+                                    key={pid}
+                                    className="inline-flex items-center gap-1.5 bg-white border border-blue-200 px-2 py-1 rounded-lg text-xs font-semibold text-blue-900 shadow-2xs"
+                                  >
+                                    <span>{prod?.name || pid}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingCampaign({
+                                          ...editingCampaign,
+                                          eligibleProductIds: editingCampaign.eligibleProductIds?.filter((id) => id !== pid) || [],
+                                        });
+                                      }}
+                                      className="text-blue-400 hover:text-rose-600"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Product list */}
+                        <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                          {products
+                            .filter((p) => {
+                              if (!productSearch.trim()) return true;
+                              const q = productSearch.toLowerCase();
+                              return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+                            })
+                            .slice(0, 20)
+                            .map((p) => {
+                              const isSelected = editingCampaign.eligibleProductIds?.includes(p.id) || editingCampaign.eligibleProductIds?.includes(p.slug);
+                              return (
+                                <div
+                                  key={p.id}
+                                  onClick={() => {
+                                    const currentList = editingCampaign.eligibleProductIds || [];
+                                    const nextList = isSelected
+                                      ? currentList.filter((id) => id !== p.id && id !== p.slug)
+                                      : [...currentList, p.id];
+                                    setEditingCampaign({
+                                      ...editingCampaign,
+                                      eligibleProductIds: nextList,
+                                      // If user picks specific products, clear category restriction
+                                      eligibleCategory: nextList.length > 0 ? "all" : editingCampaign.eligibleCategory,
+                                    });
+                                  }}
+                                  className={`p-2.5 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition ${
+                                    isSelected ? "bg-blue-50/50 font-semibold" : ""
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={Boolean(isSelected)}
+                                      onChange={() => {}} // handled by row click
+                                      className="w-4 h-4 rounded text-black border-slate-300 focus:ring-black"
+                                    />
+                                    <img
+                                      src={p.images[0]?.src || "/placeholder.webp"}
+                                      alt={p.name}
+                                      className="w-9 h-9 rounded-lg object-cover bg-slate-100 shrink-0"
+                                    />
+                                    <div className="min-w-0">
+                                      <div className="text-xs font-semibold text-slate-900 truncate">{p.name}</div>
+                                      <div className="text-[11px] text-slate-400">{p.category} · {formatGhs(p.price)}</div>
+                                    </div>
+                                  </div>
+                                  <span className={`text-[11px] px-2 py-0.5 rounded-md font-semibold ${
+                                    isSelected ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"
+                                  }`}>
+                                    {isSelected ? "Qualifying" : "Click to Add"}
+                                  </span>
+                                </div>
+                              );
+                            })}
                         </div>
                       </div>
+
+                      {/* 3. Storage Option Constraints (Chips) */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <label className="block text-xs font-bold text-slate-700">
+                          3. Storage / Capacity Constraints (Optional)
+                        </label>
+                        <p className="text-[11px] text-slate-500">
+                          Leave empty to apply to all capacities. Or select specific storage tiers that qualify:
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {["64GB", "128GB", "256GB", "512GB", "1TB", "2TB"].map((cap) => {
+                            const isCapSelected = editingCampaign.eligibleStorageOptions?.includes(cap);
+                            return (
+                              <button
+                                key={cap}
+                                type="button"
+                                onClick={() => {
+                                  const current = editingCampaign.eligibleStorageOptions || [];
+                                  const next = isCapSelected
+                                    ? current.filter((c) => c !== cap)
+                                    : [...current, cap];
+                                  setEditingCampaign({ ...editingCampaign, eligibleStorageOptions: next });
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                                  isCapSelected
+                                    ? "bg-slate-900 text-white shadow-sm"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                }`}
+                              >
+                                {isCapSelected && <Check size={12} />}
+                                <span>{cap}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* 4. Minimum Qualifying Price / Order Subtotal */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <label className="block text-xs font-bold text-slate-700">
+                          4. Minimum Qualifying Order Subtotal (GH₵)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={editingCampaign.minOrderSubtotal || ""}
+                          onChange={(e) => setEditingCampaign({ ...editingCampaign, minOrderSubtotal: Number(e.target.value) })}
+                          className="w-full sm:w-64 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-semibold"
+                        />
+                        <p className="text-[11px] text-slate-500">
+                          Customers only receive this discount if the qualifying cart items meet or exceed this amount (enter 0 for no minimum).
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* FOR BUNDLES & OTHER OFFER MODELS */
+                    <div className="space-y-6">
+                      <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">Target Product or Custom Bundle</h3>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Select an existing catalog product, or create a new promotional product/bundle without leaving this screen.
+                          </p>
+                        </div>
+
+                        {editingCampaign.promotionType === "bundle" && (
+                          <button
+                            type="button"
+                            onClick={handlePreloadPs5Combo}
+                            className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl border border-amber-200 transition"
+                          >
+                            ⚡ Preload PS5 Combo Data
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Mode Selector Toggle */}
+                      <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setProductMode("existing")}
+                          className={`py-2 text-xs font-bold rounded-lg transition ${
+                            productMode === "existing"
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          Option A: Select Existing Product
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setProductMode("new_bundle")}
+                          className={`py-2 text-xs font-bold rounded-lg transition ${
+                            productMode === "new_bundle"
+                              ? "bg-white text-slate-900 shadow-sm"
+                              : "text-slate-600 hover:text-slate-900"
+                          }`}
+                        >
+                          Option B: Create New Promotional Product or Bundle
+                        </button>
+                      </div>
+
+                      {/* OPTION A: SELECT EXISTING PRODUCT */}
+                      {productMode === "existing" && (
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              type="text"
+                              placeholder="Search product by name, brand, or category..."
+                              value={productSearch}
+                              onChange={(e) => setProductSearch(e.target.value)}
+                              className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                            />
+                          </div>
+
+                          {/* Selected product banner */}
+                          {selectedExistingProduct && (
+                            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={selectedExistingProduct.images[0]?.src || "/placeholder.webp"}
+                                  alt={selectedExistingProduct.name}
+                                  className="w-12 h-12 rounded-lg object-cover bg-white border border-slate-200"
+                                />
+                                <div>
+                                  <div className="text-xs font-bold text-slate-900">{selectedExistingProduct.name}</div>
+                                  <div className="text-[11px] text-slate-500">
+                                    {selectedExistingProduct.category} · {formatGhs(selectedExistingProduct.price)} · {selectedExistingProduct.stockStatus}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                                Selected
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Products List */}
+                          <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-white">
+                            {products
+                              .filter((p) => {
+                                if (!productSearch.trim()) return true;
+                                const q = productSearch.toLowerCase();
+                                return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q);
+                              })
+                              .slice(0, 15)
+                              .map((p) => {
+                                const isChosen = selectedExistingProduct?.id === p.id || editingCampaign.eligibleProductIds?.includes(p.id);
+                                return (
+                                  <div
+                                    key={p.id}
+                                    onClick={() => {
+                                      setSelectedExistingProduct(p);
+                                      setEditingCampaign({
+                                        ...editingCampaign,
+                                        eligibleProductIds: [p.id],
+                                        bundleRequiredProductIds: [p.id],
+                                      });
+                                    }}
+                                    className={`p-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition ${
+                                      isChosen ? "bg-slate-50 font-bold" : ""
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <img
+                                        src={p.images[0]?.src || "/placeholder.webp"}
+                                        alt={p.name}
+                                        className="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0"
+                                      />
+                                      <div className="min-w-0">
+                                        <div className="text-xs font-semibold text-slate-900 truncate">{p.name}</div>
+                                        <div className="text-[11px] text-slate-400">{p.category} · {formatGhs(p.price)}</div>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition ${
+                                        isChosen ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                      }`}
+                                    >
+                                      {isChosen ? "Selected" : "Select"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* OPTION B: CREATE NEW PRODUCT OR BUNDLE */}
+                      {productMode === "new_bundle" && (
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-5">
+                          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <Package size={16} className="text-amber-600" />
+                                <span>New Product or Custom Bundle Creator</span>
+                              </h4>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                This will create a real canonical catalog product in Supabase and link it automatically.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Product Name, Category, Condition */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Product / Bundle Name *</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. PS5 Slim Combo Offer"
+                                value={newProductData.name}
+                                onChange={(e) => setNewProductData({ ...newProductData, name: e.target.value })}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                              <select
+                                value={newProductData.category}
+                                onChange={(e) => setNewProductData({ ...newProductData, category: e.target.value as ProductCategory })}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              >
+                                <option value="Game Consoles">Game Consoles</option>
+                                <option value="iPhones">iPhones</option>
+                                <option value="MacBooks">MacBooks</option>
+                                <option value="iPads">iPads</option>
+                                <option value="Apple Watches">Apple Watches</option>
+                                <option value="AirPods">AirPods</option>
+                                <option value="Accessories">Accessories</option>
+                                <option value="Electronics">Electronics</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Condition *</label>
+                              <select
+                                value={newProductData.condition}
+                                onChange={(e) => setNewProductData({ ...newProductData, condition: e.target.value as ProductCondition })}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              >
+                                <option value="Brand New">Brand New</option>
+                                <option value="UK Used">UK Used</option>
+                                <option value="Excellent">Excellent</option>
+                                <option value="Very Good">Very Good</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Price, Stock, Purchase Action */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Bundle / Product Price (GH₵) *</label>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="7500"
+                                value={newProductData.price || ""}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setNewProductData({ ...newProductData, price: val });
+                                  setEditingCampaign({ ...editingCampaign, promotionalPrice: val });
+                                }}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-bold text-slate-900"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Confirmed Stock Quantity *</label>
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="1"
+                                value={newProductData.stockQuantity || ""}
+                                onChange={(e) => setNewProductData({ ...newProductData, stockQuantity: Number(e.target.value) })}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">Purchase Action</label>
+                              <select
+                                value={newProductData.purchaseAction}
+                                onChange={(e) => setNewProductData({ ...newProductData, purchaseAction: e.target.value as ProductPurchaseAction })}
+                                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              >
+                                <option value="buy">Buy (Direct Add to Bag)</option>
+                                <option value="view-pricing">View Pricing</option>
+                                <option value="enquire">WhatsApp Enquiry</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* INCLUDED ITEMS BUILDER (FOR BUNDLES) */}
+                          <div className="space-y-3 pt-2 border-t border-slate-200">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <Layers size={14} className="text-slate-500" />
+                                <span>Included Package Items ({bundleItems.length})</span>
+                              </label>
+                              <span className="text-[11px] text-slate-400">Checkout charges the single bundle price GH₵{newProductData.price.toLocaleString()} once.</span>
+                            </div>
+
+                            {/* Items list */}
+                            <div className="space-y-2">
+                              {bundleItems.map((item, idx) => (
+                                <div key={item.id} className="p-2.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold grid place-items-center text-[10px] shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="font-semibold text-slate-900 truncate">{item.name}</span>
+                                    {item.condition && (
+                                      <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full shrink-0">
+                                        {item.condition}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveBundleItem(item.id)}
+                                    className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                    title="Remove item"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Add Item Row */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <input
+                                type="text"
+                                placeholder="Add included item (e.g. EA Sports FC 25 Game, 2 DualSense Controllers)..."
+                                value={newBundleItemText}
+                                onChange={(e) => setNewBundleItemText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleAddBundleItem();
+                                  }
+                                }}
+                                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black"
+                              />
+                              <select
+                                value={newBundleItemCondition}
+                                onChange={(e) => setNewBundleItemCondition(e.target.value)}
+                                className="px-2.5 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none"
+                              >
+                                <option value="Brand New">Brand New</option>
+                                <option value="UK Used">UK Used</option>
+                                <option value="Excellent">Excellent</option>
+                              </select>
+                              <button
+                                type="button"
+                                onClick={handleAddBundleItem}
+                                className="px-3 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-black transition shrink-0 flex items-center gap-1"
+                              >
+                                <Plus size={14} />
+                                <span>Add</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1953,12 +2324,26 @@ export function AdminPromotionsPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {(editingCampaign.promotionalPrice || newProductData.price) > 0 ? (
-                          <CheckCircle2 size={14} className="text-emerald-600" />
+                        {editingCampaign.promotionType === "percentage_discount" ? (
+                          <>
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span>Discount configured ({editingCampaign.discountPercent || 0}% OFF)</span>
+                          </>
+                        ) : editingCampaign.promotionType === "fixed_discount" ? (
+                          <>
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span>Cash discount configured (Save GH₵{(editingCampaign.discountAmount || 0).toLocaleString()})</span>
+                          </>
                         ) : (
-                          <CheckCircle2 size={14} className="text-slate-400" />
+                          <>
+                            {(editingCampaign.promotionalPrice || (editingCampaign.promotionType === "bundle" ? newProductData.price : 0)) > 0 ? (
+                              <CheckCircle2 size={14} className="text-emerald-600" />
+                            ) : (
+                              <CheckCircle2 size={14} className="text-slate-400" />
+                            )}
+                            <span>Price configured (GH₵{(editingCampaign.promotionalPrice || (editingCampaign.promotionType === "bundle" ? newProductData.price : 0)).toLocaleString()})</span>
+                          </>
                         )}
-                        <span>Price configured (GH₵{(editingCampaign.promotionalPrice || newProductData.price).toLocaleString()})</span>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -1974,6 +2359,12 @@ export function AdminPromotionsPage() {
                         <span>
                           {editingCampaign.promotionType === "bundle"
                             ? `${bundleItems.length} bundle items confirmed`
+                            : editingCampaign.promotionType === "percentage_discount" || editingCampaign.promotionType === "fixed_discount"
+                            ? (editingCampaign.eligibleCategory !== "all" && editingCampaign.eligibleCategory
+                                ? `Category scope: ${editingCampaign.eligibleCategory}`
+                                : (editingCampaign.eligibleProductIds && editingCampaign.eligibleProductIds.length > 0)
+                                ? `${editingCampaign.eligibleProductIds.length} specific qualifying products`
+                                : "Storewide eligibility (all products)")
                             : "Eligibility configured"}
                         </span>
                       </div>
@@ -1985,13 +2376,21 @@ export function AdminPromotionsPage() {
                     <div className="text-xs font-bold text-slate-800">Storefront Carousel Flyer Preview</div>
 
                     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md max-w-xl mx-auto">
-                      <div className="w-full aspect-[2/1] bg-slate-900 relative">
-                        <img
-                          src={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl || "/products/campaigns/ps5-slim-combo-desktop.webp"}
-                          alt={editingCampaign.title || "Offer preview"}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-5 text-white">
+                      <div className="w-full aspect-[2/1] bg-gradient-to-br from-slate-900 via-slate-800 to-black relative">
+                        {editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl ? (
+                          <img
+                            src={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl}
+                            alt={editingCampaign.title || "Offer preview"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center">
+                            <Sparkles size={28} className="text-amber-400 mb-2 opacity-80" />
+                            <span className="text-xs font-medium text-slate-300">Custom promotional flyer preview</span>
+                            <span className="text-[11px] text-slate-500 mt-0.5">Upload a desktop or mobile flyer in Step 5</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-5 text-white">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
                             {editingCampaign.promotionType?.replace(/_/g, " ")}
                           </span>
@@ -2001,7 +2400,13 @@ export function AdminPromotionsPage() {
                           </p>
                           <div className="mt-3 flex items-center justify-between">
                             <span className="text-sm font-extrabold text-white">
-                              {editingCampaign.promotionalPrice ? formatGhs(editingCampaign.promotionalPrice) : ""}
+                              {editingCampaign.promotionType === "percentage_discount"
+                                ? `${editingCampaign.discountPercent || 0}% OFF`
+                                : editingCampaign.promotionType === "fixed_discount"
+                                ? `Save ${formatGhs(editingCampaign.discountAmount || 0)}`
+                                : editingCampaign.promotionalPrice
+                                ? formatGhs(editingCampaign.promotionalPrice)
+                                : ""}
                             </span>
                             <span className="px-3 py-1 bg-white text-slate-900 rounded-full text-xs font-bold inline-flex items-center gap-1">
                               <span>{editingCampaign.ctaText || "Explore Offer"}</span>

@@ -106,58 +106,60 @@ export function AdminPagesManager() {
       )}
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab("contact")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "contact"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Building2 size={15} />
-          <span>Store &amp; Contact Details</span>
-        </button>
+      <div className="w-full overflow-x-auto scrollbar-none pb-1">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
+          <button
+            type="button"
+            onClick={() => setActiveTab("contact")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "contact"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Building2 size={15} />
+            <span>Store &amp; Contact Details</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("about")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "about"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Users size={15} />
-          <span>About Us Page</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("about")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "about"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Users size={15} />
+            <span>About Us Page</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("faqs")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "faqs"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <HelpCircle size={15} />
-          <span>Frequently Asked Questions ({faqList.length})</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("faqs")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "faqs"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <HelpCircle size={15} />
+            <span>Frequently Asked Questions ({faqList.length})</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("policies")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "policies"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <FileText size={15} />
-          <span>Policies &amp; Notices</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("policies")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "policies"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <FileText size={15} />
+            <span>Policies &amp; Notices</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: STORE & CONTACT */}

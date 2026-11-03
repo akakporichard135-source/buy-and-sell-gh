@@ -204,123 +204,125 @@ export function AdminServicesManager() {
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 text-xs">
-        <button
-          type="button"
-          onClick={() => setActiveTab("inbox")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "inbox"
-              ? "bg-[#1d1d1f] text-white shadow-sm"
-              : "text-slate-700 hover:text-slate-900"
-          }`}
-        >
-          <Inbox size={15} className={activeTab === "inbox" ? "text-[#d4af37]" : ""} />
-          <span>All Requests Inbox</span>
-        </button>
+      <div className="w-full overflow-x-auto scrollbar-none pb-1">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 text-xs min-w-max">
+          <button
+            type="button"
+            onClick={() => setActiveTab("inbox")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "inbox"
+                ? "bg-[#1d1d1f] text-white shadow-sm"
+                : "text-slate-700 hover:text-slate-900"
+            }`}
+          >
+            <Inbox size={15} className={activeTab === "inbox" ? "text-[#d4af37]" : ""} />
+            <span>All Requests Inbox</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("installment")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "installment"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Clock size={15} className="text-[#d4af37]" />
-          <span>Installment Plan</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("installment")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "installment"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Clock size={15} className="text-[#d4af37]" />
+            <span>Installment Plan</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("repairs")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "repairs"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Wrench size={15} />
-          <span>Repairs</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("repairs")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "repairs"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Wrench size={15} />
+            <span>Repairs</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("trade-in")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "trade-in"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <RefreshCw size={15} />
-          <span>Trade-In &amp; Upgrade</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("trade-in")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "trade-in"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <RefreshCw size={15} />
+            <span>Trade-In &amp; Upgrade</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("visa-card")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "visa-card"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <CreditCard size={15} />
-          <span>Visa Card Trading</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("visa-card")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "visa-card"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <CreditCard size={15} />
+            <span>Visa Card Trading</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("pre-order")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "pre-order"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <PackageCheck size={15} />
-          <span>Pre-Order</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("pre-order")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "pre-order"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <PackageCheck size={15} />
+            <span>Pre-Order</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("referral")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "referral"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Share2 size={15} />
-          <span>Refer a Friend</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("referral")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "referral"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Share2 size={15} />
+            <span>Refer a Friend</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("contact")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "contact"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <MapPin size={15} />
-          <span>Contact &amp; Store Info</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("contact")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "contact"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <MapPin size={15} />
+            <span>Contact &amp; Store Info</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("flyers")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
-            activeTab === "flyers"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Layers size={15} />
-          <span>Promotional Flyers ({serviceFlyers.length})</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("flyers")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg font-bold transition-all ${
+              activeTab === "flyers"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Layers size={15} />
+            <span>Promotional Flyers ({serviceFlyers.length})</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB 0: ALL REQUESTS INBOX (EMBEDDED) */}

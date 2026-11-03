@@ -147,74 +147,76 @@ export function AdminSettingsPage() {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab("notifications")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "notifications"
-              ? "bg-slate-900 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Bell size={15} />
-          <span>Notification Alerts &amp; Sound</span>
-          {repeatingSoundActive && (
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-          )}
-        </button>
+      <div className="w-full overflow-x-auto scrollbar-none pb-1">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
+          <button
+            type="button"
+            onClick={() => setActiveTab("notifications")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "notifications"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Bell size={15} />
+            <span>Notification Alerts &amp; Sound</span>
+            {repeatingSoundActive && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("profile")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "profile"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Building2 size={15} />
-          <span>Store Profile &amp; Contact</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("profile")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "profile"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Building2 size={15} />
+            <span>Store Profile &amp; Contact</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("content")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "content"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Globe size={15} />
-          <span>Website Content &amp; Banners</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("content")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "content"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Globe size={15} />
+            <span>Website Content &amp; Banners</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("policies")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "policies"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <FileText size={15} />
-          <span>Store Policies &amp; Terms</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("policies")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "policies"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <FileText size={15} />
+            <span>Store Policies &amp; Terms</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab("infrastructure")}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-            activeTab === "infrastructure"
-              ? "bg-white text-slate-900 shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Server size={15} />
-          <span>Hosting &amp; Security</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("infrastructure")}
+            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "infrastructure"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Server size={15} />
+            <span>Hosting &amp; Security</span>
+          </button>
+        </div>
       </div>
 
       {/* TAB: Notification Alerts & Sound */}

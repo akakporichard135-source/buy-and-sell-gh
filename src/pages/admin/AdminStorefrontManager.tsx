@@ -519,42 +519,44 @@ export function AdminStorefrontManager() {
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
           1. Select Category / Department
         </label>
-        <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200">
-          <button
-            type="button"
-            onClick={() => setSelectedDeptKey("main-store")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
-              selectedDeptKey === "main-store"
-                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Sparkles size={14} className={selectedDeptKey === "main-store" ? "text-[#d4af37]" : "text-slate-400"} />
-            <span>Main Store Page</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
-              35 Images
-            </span>
-          </button>
+        <div className="w-full overflow-x-auto scrollbar-none pb-1">
+          <div className="flex items-center gap-2 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
+            <button
+              type="button"
+              onClick={() => setSelectedDeptKey("main-store")}
+              className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                selectedDeptKey === "main-store"
+                  ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Sparkles size={14} className={selectedDeptKey === "main-store" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Main Store Page</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
+                35 Images
+              </span>
+            </button>
 
-          {(["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[]).map((key) => {
-            const dept = departments[key] || CATEGORY_DEPARTMENTS[key];
-            const isSelected = selectedDeptKey === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSelectedDeptKey(key)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
-                  isSelected
-                    ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>{dept?.label || key.toUpperCase()}</span>
-              </button>
-            );
-          })}
+            {(["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[]).map((key) => {
+              const dept = departments[key] || CATEGORY_DEPARTMENTS[key];
+              const isSelected = selectedDeptKey === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedDeptKey(key)}
+                  className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                    isSelected
+                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
+                  <span>{dept?.label || key.toUpperCase()}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -565,154 +567,158 @@ export function AdminStorefrontManager() {
         </label>
 
         {selectedDeptKey === "main-store" ? (
-          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
-            <button
-              type="button"
-              data-testid="main-store-tab-sections"
-              onClick={() => setActiveMainStoreSection("sections")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "sections"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Layers size={14} className={activeMainStoreSection === "sections" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Store Page Sections (Builder)</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "sections" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.sections || defaultMainStoreConfig.sections || []).length}
-              </span>
-            </button>
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              <button
+                type="button"
+                data-testid="main-store-tab-sections"
+                onClick={() => setActiveMainStoreSection("sections")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "sections"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Layers size={14} className={activeMainStoreSection === "sections" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Store Page Sections (Builder)</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "sections" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.sections || defaultMainStoreConfig.sections || []).length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              data-testid="main-store-tab-latest"
-              onClick={() => setActiveMainStoreSection("latest")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "latest"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Sparkles size={14} className={activeMainStoreSection === "latest" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>The Latest (What&apos;s New)</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "latest" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length}
-              </span>
-            </button>
+              <button
+                type="button"
+                data-testid="main-store-tab-latest"
+                onClick={() => setActiveMainStoreSection("latest")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "latest"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Sparkles size={14} className={activeMainStoreSection === "latest" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>The Latest (What&apos;s New)</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "latest" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveMainStoreSection("categories")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "categories"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Grid size={14} className={activeMainStoreSection === "categories" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Shop by Category</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "categories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainStoreSection("categories")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "categories"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Grid size={14} className={activeMainStoreSection === "categories" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Shop by Category</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "categories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveMainStoreSection("moreToLove")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "moreToLove"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Sparkles size={14} className={activeMainStoreSection === "moreToLove" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>More to Love</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "moreToLove" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainStoreSection("moreToLove")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "moreToLove"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Sparkles size={14} className={activeMainStoreSection === "moreToLove" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>More to Love</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "moreToLove" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveMainStoreSection("families")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "families"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Layers size={14} className={activeMainStoreSection === "families" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Product Family Strip</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "families" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainStoreSection("families")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "families"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Layers size={14} className={activeMainStoreSection === "families" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Product Family Strip</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "families" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveMainStoreSection("accessories")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeMainStoreSection === "accessories"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Package size={14} className={activeMainStoreSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Featured Accessories</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveMainStoreSection("accessories")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeMainStoreSection === "accessories"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Package size={14} className={activeMainStoreSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Featured Accessories</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length}
+                </span>
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
-            <button
-              type="button"
-              onClick={() => setActiveSection("featured")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeSection === "featured"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Sparkles size={14} className={activeSection === "featured" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Featured Lineup Carousel</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "featured" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {currentDept.featuredCards.length}
-              </span>
-            </button>
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              <button
+                type="button"
+                onClick={() => setActiveSection("featured")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeSection === "featured"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Sparkles size={14} className={activeSection === "featured" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Featured Lineup Carousel</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "featured" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {currentDept.featuredCards.length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveSection("listings")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeSection === "listings"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Grid size={14} className={activeSection === "listings" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>All Product Listings Grid</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "listings" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {categoryProducts.length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection("listings")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeSection === "listings"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Grid size={14} className={activeSection === "listings" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>All Product Listings Grid</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "listings" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {categoryProducts.length}
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveSection("accessories")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeSection === "accessories"
-                  ? "bg-slate-900 text-white shadow"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              <Package size={14} className={activeSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
-              <span>Essential Accessories Rail</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                {categoryAccessories.length}
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveSection("accessories")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  activeSection === "accessories"
+                    ? "bg-slate-900 text-white shadow"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <Package size={14} className={activeSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
+                <span>Essential Accessories Rail</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                  {categoryAccessories.length}
+                </span>
+              </button>
+            </div>
           </div>
         )}
       </div>
