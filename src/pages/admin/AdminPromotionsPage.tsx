@@ -1524,6 +1524,7 @@ export function AdminPromotionsPage() {
                             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                               type="text"
+                              id="product-search-input"
                               placeholder="Search catalog by product name, model, category, brand, or SKU..."
                               value={productSearch}
                               onChange={(e) => setProductSearch(e.target.value)}
