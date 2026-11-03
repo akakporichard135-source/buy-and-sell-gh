@@ -14,6 +14,7 @@ import { testSimplifiedPromotionsAndBundles } from "./test-simplified-promotions
 import { testLivePublishingAndRealtimePromotions } from "./test-live-publishing-and-realtime-promotions.mjs";
 import { testPs5PromotionAndPdpPolish } from "./test-ps5-promotion-and-pdp-polish.mjs";
 import { testPromotionsEditorAndAdminText } from "./test-promotions-editor-and-admin-text.mjs";
+import { testCompletePromotionsAdminAndTiers } from "./test-complete-promotions-admin-and-tiers.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -721,6 +722,7 @@ try {
   await testLivePublishingAndRealtimePromotions(projectRoot, bundle, outdir);
   await testPs5PromotionAndPdpPolish(projectRoot);
   await testPromotionsEditorAndAdminText(projectRoot, bundle, outdir);
+  await testCompletePromotionsAdminAndTiers(projectRoot, bundle, outdir);
 
   console.log("All tests passed");
 } finally {

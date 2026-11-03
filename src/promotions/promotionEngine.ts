@@ -35,14 +35,45 @@ export function isItemEligibleForPromotion(
   // Free gifts themselves are not eligible for further discounts
   if ((item as any).isFreeGift) return false;
 
-  // 1. Check Product ID / Slug
+  // 1. Check Product Exclusions
+  if (promo.excludedProductIds && promo.excludedProductIds.length > 0) {
+    if (
+      promo.excludedProductIds.includes(item.product.id) ||
+      promo.excludedProductIds.includes(item.product.slug)
+    ) {
+      return false;
+    }
+  }
+
+  // 2. Check Category Exclusions
+  if (promo.excludedCategories && promo.excludedCategories.length > 0) {
+    const itemCat = (item.product.category || "").toLowerCase();
+    if (promo.excludedCategories.some((c) => c.toLowerCase() === itemCat)) {
+      return false;
+    }
+  }
+
+  // 3. Check Verified Price (Products with missing/unverified prices <= 0 receive NO discounts)
+  const unitPrice = getItemEffectivePrice(item);
+  if (typeof unitPrice !== "number" || Number.isNaN(unitPrice) || unitPrice <= 0) {
+    return false;
+  }
+
+  // 4. Check Minimum Qualifying Product Price (individual item threshold e.g. > GH₵2,000)
+  if (typeof promo.minQualifyingItemPrice === "number" && promo.minQualifyingItemPrice > 0) {
+    if (unitPrice < promo.minQualifyingItemPrice) {
+      return false;
+    }
+  }
+
+  // 5. Check Product ID / Slug
   if (promo.eligibleProductIds && promo.eligibleProductIds.length > 0) {
     const matchesId = promo.eligibleProductIds.includes(item.product.id);
     const matchesSlug = promo.eligibleProductIds.includes(item.product.slug);
     if (!matchesId && !matchesSlug) return false;
   }
 
-  // 2. Check Category if specified and not 'all'
+  // 6. Check Category if specified and not 'all'
   if (promo.eligibleCategory && promo.eligibleCategory !== "all") {
     const cat = item.product.category || "";
     if (cat.toLowerCase() !== promo.eligibleCategory.toLowerCase()) {
@@ -50,14 +81,14 @@ export function isItemEligibleForPromotion(
     }
   }
 
-  // 3. Check Variant ID if configured
+  // 7. Check Variant ID if configured
   if (promo.eligibleVariantIds && promo.eligibleVariantIds.length > 0) {
     if (!item.variantId || !promo.eligibleVariantIds.includes(item.variantId)) {
       return false;
     }
   }
 
-  // 4. Check Storage Option if configured
+  // 8. Check Storage Option if configured
   if (promo.eligibleStorageOptions && promo.eligibleStorageOptions.length > 0) {
     if (!item.storage || !promo.eligibleStorageOptions.includes(item.storage)) {
       return false;
@@ -65,6 +96,63 @@ export function isItemEligibleForPromotion(
   }
 
   return true;
+}
+
+/**
+ * Resolves the applicable percentage discount for a specific item, accounting for:
+ * 1. Product-specific overrides
+ * 2. Variant/storage overrides
+ * 3. Category overrides
+ * 4. Price range tiers (e.g. GH₵2,000-4,000 = 10%, GH₵4,001+ = 15%)
+ * 5. Global campaign percentage fallback
+ */
+export function resolveItemDiscountPercentage(
+  item: CartItem,
+  promo: PromotionCampaign
+): number {
+  const unitPrice = getItemEffectivePrice(item);
+
+  // 1. Product-specific percentage assignment
+  if (promo.productDiscounts) {
+    const specific = promo.productDiscounts[item.product.id] ?? promo.productDiscounts[item.product.slug];
+    if (typeof specific === "number") return Math.max(0, specific);
+  }
+
+  // 2. Variant / Storage assignment
+  if (promo.variantDiscounts) {
+    if (item.storage && typeof promo.variantDiscounts[item.storage] === "number") {
+      return Math.max(0, promo.variantDiscounts[item.storage]);
+    }
+    if (item.variantId && typeof promo.variantDiscounts[item.variantId] === "number") {
+      return Math.max(0, promo.variantDiscounts[item.variantId]);
+    }
+  }
+
+  // 3. Category assignment
+  if (promo.categoryDiscounts && item.product.category) {
+    const catPercent = promo.categoryDiscounts[item.product.category];
+    if (typeof catPercent === "number") return Math.max(0, catPercent);
+  }
+
+  // 4. Discount by Price Range Tiers
+  if (
+    promo.discountCalculationMode === "price_tiers" ||
+    (promo.discountTiers && promo.discountTiers.length > 0)
+  ) {
+    const sortedTiers = [...(promo.discountTiers || [])].sort((a, b) => b.minPrice - a.minPrice);
+    for (const tier of sortedTiers) {
+      if (unitPrice >= tier.minPrice) {
+        if (tier.maxPrice === null || tier.maxPrice === undefined || unitPrice <= tier.maxPrice) {
+          return Math.max(0, tier.percent);
+        }
+      }
+    }
+    // If tiers are configured and item didn't match any tier, 0%
+    return 0;
+  }
+
+  // 5. Fallback to standard discountPercent
+  return Math.max(0, promo.discountPercent || 0);
 }
 
 /**
@@ -115,16 +203,33 @@ export function evaluateCartPromotions(
     // Deterministic selection: Pick best discount if stacking not allowed
     let bestDiscount = 0;
     let selectedCampaign: PromotionCampaign | null = null;
+    let appliedPercent: number | null = null;
 
     for (const promo of matchingCampaigns) {
       let candidateDiscount = 0;
-      if (promo.promotionType === "percentage_discount" && promo.discountPercent) {
-        candidateDiscount = Math.round((unitPrice * (promo.discountPercent / 100))) * item.quantity;
-      } else if (promo.promotionType === "fixed_discount" && promo.discountAmount) {
-        candidateDiscount = Math.min(promo.discountAmount, unitPrice) * item.quantity;
+      let effectivePercentForExplanation: number | null = null;
+
+      if (promo.promotionType === "percentage_discount") {
+        const pct = resolveItemDiscountPercentage(item, promo);
+        if (pct > 0) {
+          effectivePercentForExplanation = pct;
+          candidateDiscount = Math.round((unitPrice * (pct / 100))) * item.quantity;
+        }
+      } else if (promo.promotionType === "fixed_discount") {
+        let baseAmount = promo.discountAmount || 0;
+        if (promo.productDiscounts) {
+          const specific = promo.productDiscounts[item.product.id] ?? promo.productDiscounts[item.product.slug];
+          if (typeof specific === "number") baseAmount = specific;
+        }
+        candidateDiscount = Math.min(baseAmount, unitPrice) * item.quantity;
       } else if (promo.promotionType === "promotional_price" && promo.promotionalPrice) {
         const diff = Math.max(0, unitPrice - promo.promotionalPrice);
         candidateDiscount = diff * item.quantity;
+      }
+
+      // Apply maximum discount amount cap if configured on campaign
+      if (promo.maxDiscountAmount && promo.maxDiscountAmount > 0) {
+        candidateDiscount = Math.min(candidateDiscount, promo.maxDiscountAmount);
       }
 
       candidateDiscount = Math.min(candidateDiscount, itemTotal);
@@ -132,14 +237,16 @@ export function evaluateCartPromotions(
       if (candidateDiscount > bestDiscount) {
         bestDiscount = candidateDiscount;
         selectedCampaign = promo;
+        appliedPercent = effectivePercentForExplanation;
       }
     }
 
     if (bestDiscount > 0 && selectedCampaign) {
       itemDiscounts[key] = bestDiscount;
       appliedCampaignMap.set(selectedCampaign.id, selectedCampaign);
+      const percentNotice = appliedPercent ? ` (${appliedPercent}% off)` : "";
       savingsExplanation.push(
-        `${selectedCampaign.title}: Saved GH₵ ${bestDiscount.toLocaleString()} on ${item.product.name}`
+        `${selectedCampaign.title}: Saved GH₵ ${bestDiscount.toLocaleString()}${percentNotice} on ${item.product.name}`
       );
     }
   }

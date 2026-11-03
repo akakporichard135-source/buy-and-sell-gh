@@ -14,6 +14,19 @@ export type PromotionStatus =
   | "archived"
   | "disabled";
 
+export type DiscountCalculationMode =
+  | "single_percent"
+  | "price_tiers"
+  | "product_specific";
+
+export interface DiscountTier {
+  id?: string;
+  minPrice: number;
+  maxPrice?: number | null; // null or undefined means "and above"
+  percent: number;
+  label?: string;
+}
+
 export interface PromotionCampaign {
   id: string;
   slug: string;
@@ -35,11 +48,22 @@ export interface PromotionCampaign {
   eligibleVariantIds?: string[];
   eligibleStorageOptions?: string[];
   minOrderSubtotal: number;
+  minQualifyingItemPrice?: number | null; // Minimum individual item price (e.g. > GH₵2,000)
+  excludedProductIds?: string[]; // Specifically excluded product IDs / slugs
+  excludedCategories?: string[]; // Specifically excluded categories
 
   // Benefits
   discountPercent?: number | null;
   discountAmount?: number | null;
   promotionalPrice?: number | null;
+  maxDiscountAmount?: number | null; // Capped discount amount per item/order
+
+  // Advanced Tiered & Product-Specific Discount Rules
+  discountCalculationMode?: DiscountCalculationMode;
+  discountTiers?: DiscountTier[];
+  productDiscounts?: Record<string, number>; // productId/slug -> percentage or cash discount
+  variantDiscounts?: Record<string, number>; // variantId or storage -> percentage
+  categoryDiscounts?: Record<string, number>; // category -> percentage
 
   // Free Gift
   giftProductId?: string | null;
@@ -60,6 +84,8 @@ export interface PromotionCampaign {
   desktopFlyerUrl: string;
   mobileFlyerUrl?: string;
   flyerAltText?: string;
+  imagePosition?: string; // "center" | "top" | "bottom"
+  additionalImages?: string[]; // Extra promotional shots / media gallery
   ctaText: string;
   ctaDestination: string;
   displayOrder: number;
