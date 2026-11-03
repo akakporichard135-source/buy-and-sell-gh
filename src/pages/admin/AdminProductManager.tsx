@@ -43,8 +43,8 @@ import {
 } from "../../catalog/productCatalog";
 import { getBrandOptions } from "../../catalog/storefrontTaxonomy";
 import { getBuyConfigurationError, getProductPurchaseAction, withProductPurchaseAction, type ProductPurchaseAction } from "../../catalog/productPurchaseAction";
-import { uploadProductImage, upsertProductVariants } from "../../catalog/supabaseProductRepository";
-import type { Product, ProductImage, ProductVariant } from "../../types/product";
+import { getProductSectionFallback, uploadProductImage, upsertProductVariants } from "../../catalog/supabaseProductRepository";
+import type { MainWebsiteSection, Product, ProductImage, ProductVariant } from "../../types/product";
 import { formatGhs } from "../../utils/format";
 import {
   hasOwnerUploadedProductImages,
@@ -66,6 +66,7 @@ interface ProductFormState {
   name: string;
   category: Product["category"];
   subcategory: string;
+  mainWebsiteSection: MainWebsiteSection;
   brand: Product["brand"];
   model: string;
   generation: string;
@@ -104,6 +105,7 @@ export const productToForm = (product: Product): ProductFormState => ({
   name: product.name,
   category: product.category,
   subcategory: product.subcategory ?? "",
+  mainWebsiteSection: product.mainWebsiteSection ?? getProductSectionFallback(product),
   brand: product.brand,
   model: product.model,
   generation: product.generation ?? "",
@@ -165,6 +167,7 @@ export function AdminProductManager() {
   });
   const [query, setQuery] = useState(searchParams.get("search") ?? "");
   const [brand, setBrand] = useState("All");
+  const [section, setSection] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");
   const [stock, setStock] = useState(searchParams.get("stock") ?? "All");
@@ -197,7 +200,7 @@ export function AdminProductManager() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [query, brand, category, condition, stock, statusTab]);
+  }, [query, brand, section, category, condition, stock, statusTab]);
 
   const [editing, setEditing] = useState<ProductFormState | null>(null);
   const [editorTab, setEditorTab] = useState<"details" | "buy-gallery">("details");
@@ -293,6 +296,7 @@ export function AdminProductManager() {
         product.slug,
         product.model,
         product.brand,
+        product.mainWebsiteSection ?? "",
         product.category,
         product.subcategory ?? "",
         product.condition,
@@ -305,12 +309,13 @@ export function AdminProductManager() {
       return (
         terms.every((term) => searchable.includes(term)) &&
         (brand === "All" || product.brand === brand) &&
+        (section === "All" || (product.mainWebsiteSection ?? getProductSectionFallback(product)) === section) &&
         (category === "All" || product.category === category) &&
         (condition === "All" || product.condition === condition) &&
         (stock === "All" || product.stockStatus === stock)
       );
     });
-  }, [brand, category, condition, statusTab, products, query, stock]);
+  }, [brand, section, category, condition, statusTab, products, query, stock]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paginatedProducts = useMemo(() => {
@@ -740,6 +745,22 @@ export function AdminProductManager() {
 
         <div className="flex flex-wrap items-center gap-2">
           <select
+            value={section}
+            onChange={(e) => setSection(e.target.value)}
+            className="admin-select"
+            title="Filter by Main Website Section"
+          >
+            <option value="All">All Sections</option>
+            <option value="iPhone">iPhone</option>
+            <option value="Mac">Mac</option>
+            <option value="iPad">iPad</option>
+            <option value="Watch">Watch</option>
+            <option value="AirPods">AirPods</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Others">Others</option>
+          </select>
+
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="admin-select"
@@ -902,7 +923,12 @@ export function AdminProductManager() {
                         </div>
                       </td>
                       <td>
-                        <span className="admin-badge admin-badge-slate">{product.category}</span>
+                        <div className="flex flex-col gap-0.5 items-start">
+                          <span className="admin-badge admin-badge-slate">{product.category}</span>
+                          <span className="text-[10px] font-semibold text-slate-500">
+                            Section: {product.mainWebsiteSection ?? getProductSectionFallback(product)}
+                          </span>
+                        </div>
                       </td>
                       <td>
                         <span
@@ -1114,6 +1140,7 @@ export function AdminProductManager() {
 
                 <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="admin-badge admin-badge-slate text-[0.68rem]">{product.category}</span>
+                  <span className="text-[10px] text-slate-500 font-medium">({product.mainWebsiteSection ?? getProductSectionFallback(product)})</span>
                   <span
                     className={`admin-badge text-[0.68rem] ${
                       product.condition.includes("Brand New")
@@ -1782,19 +1809,85 @@ function ProductForm({
             </datalist>
           </div>
 
+          <div className="md:col-span-2 p-3.5 rounded-xl border border-amber-200 bg-amber-50/70">
+            <label className="block font-bold text-slate-800 mb-1.5 flex flex-wrap items-center justify-between gap-1">
+              <span className="text-sm text-slate-900 font-bold">Main Website Section *</span>
+              <span className="text-[11px] font-normal text-slate-500">
+                Determines where this product appears on the public storefront
+              </span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 mt-1">
+              {(["iPhone", "Mac", "iPad", "Watch", "AirPods", "Accessories", "Others"] as MainWebsiteSection[]).map((sec) => {
+                const isSelected = form.mainWebsiteSection === sec;
+                return (
+                  <button
+                    key={sec}
+                    type="button"
+                    onClick={() => {
+                      let nextCategory = form.category;
+                      if (sec === "Others") {
+                        nextCategory = "Others";
+                      } else if (sec === "iPhone" && form.category !== "iPhones") {
+                        nextCategory = "iPhones";
+                      } else if (sec === "Mac" && form.category !== "MacBooks") {
+                        nextCategory = "MacBooks";
+                      } else if (sec === "iPad" && form.category !== "iPads") {
+                        nextCategory = "iPads";
+                      } else if (sec === "Watch" && form.category !== "Apple Watches") {
+                        nextCategory = "Apple Watches";
+                      } else if (sec === "AirPods" && form.category !== "AirPods") {
+                        nextCategory = "AirPods";
+                      } else if (sec === "Accessories" && form.category !== "Accessories") {
+                        nextCategory = "Accessories";
+                      }
+                      setForm({
+                        ...form,
+                        mainWebsiteSection: sec,
+                        category: nextCategory,
+                      });
+                    }}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center ${
+                      isSelected
+                        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50"
+                    }`}
+                  >
+                    {sec}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-600">
+              {form.mainWebsiteSection === "Others"
+                ? "✨ This product will appear in the unified Others marketplace grid (/others). Any brand, console, speaker, or accessory is welcomed."
+                : `This product is routed to the ${form.mainWebsiteSection} storefront section.`}
+            </p>
+          </div>
+
           <div>
             <label className="block font-bold text-slate-700 mb-1">Category *</label>
             <select
               value={form.category}
-              onChange={(e) =>
+              onChange={(e) => {
+                const newCat = e.target.value as Product["category"];
+                let newSection = form.mainWebsiteSection;
+                if (newCat === "Others") newSection = "Others";
+                else if (newCat === "iPhones") newSection = "iPhone";
+                else if (newCat === "MacBooks") newSection = "Mac";
+                else if (newCat === "iPads") newSection = "iPad";
+                else if (newCat === "Apple Watches") newSection = "Watch";
+                else if (newCat === "AirPods") newSection = "AirPods";
+                else if (newCat === "Accessories") newSection = "Accessories";
+
                 setForm({
                   ...form,
-                  category: e.target.value as Product["category"],
-                  subcategory: ["Phones & Tablets", "Electronics"].includes(e.target.value)
+                  category: newCat,
+                  mainWebsiteSection: newSection,
+                  subcategory: ["Phones & Tablets", "Electronics"].includes(newCat)
                     ? ""
                     : form.subcategory,
-                })
-              }
+                });
+              }}
               className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
             >
               {categories.map((c) => (
@@ -1805,7 +1898,17 @@ function ProductForm({
             </select>
           </div>
 
-          {form.category === "Phones & Tablets" ? (
+          {form.mainWebsiteSection === "Others" || form.category === "Others" ? (
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Subcategory / Tag (Optional)</label>
+              <input
+                value={form.subcategory}
+                onChange={(event) => update("subcategory", event.target.value)}
+                placeholder="e.g. Video Game Consoles, Audio, Smart Tech, Power Banks..."
+                className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+              />
+            </div>
+          ) : form.category === "Phones & Tablets" ? (
             <div>
               <label className="block font-bold text-slate-700 mb-1">Marketplace category</label>
               <select
@@ -2124,7 +2227,9 @@ function ProductForm({
               {form.slug && (
                 <a
                   href={
-                    form.category === "iPhones"
+                    form.mainWebsiteSection === "Others" || form.category === "Others"
+                      ? `/product/${form.slug}`
+                      : form.category === "iPhones"
                       ? `/shop/buy-iphone/${form.slug}`
                       : form.category === "MacBooks"
                       ? `/shop/buy-mac/${form.slug}`
@@ -2140,7 +2245,7 @@ function ProductForm({
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
-                  <span>Preview Buy Page</span>
+                  <span>{form.mainWebsiteSection === "Others" || form.category === "Others" ? "Preview Product Page" : "Preview Buy Page"}</span>
                   <span>↗</span>
                 </a>
               )}
@@ -2692,6 +2797,7 @@ export function formToProduct(form: ProductFormState, products: Product[]): Prod
     brand: form.brand.trim(),
     category: form.category,
     subcategory: form.subcategory,
+    mainWebsiteSection: form.mainWebsiteSection,
     model: form.model,
     generation: form.generation,
     price: Number(form.price) || 0,

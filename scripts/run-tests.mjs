@@ -16,6 +16,7 @@ import { testPs5PromotionAndPdpPolish } from "./test-ps5-promotion-and-pdp-polis
 import { testPromotionsEditorAndAdminText } from "./test-promotions-editor-and-admin-text.mjs";
 import { testCompletePromotionsAdminAndTiers } from "./test-complete-promotions-admin-and-tiers.mjs";
 import { testProductDraftAndPublishWorkflow } from "./test-product-draft-and-publish-workflow.mjs";
+import { testOthersMarketplace } from "./test-others-marketplace.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -482,7 +483,7 @@ try {
   const siteStyles = await readFile(path.join(projectRoot, "src/index.css"), "utf8");
   assert.match(siteStyles, /\.admin-product-editor\s*\{[\s\S]*scroll-margin-top:\s*calc\(var\(--admin-sticky-offset/, "Product editor uses the measured sticky-header offset");
   const headerSource = await readFile(path.join(projectRoot, "src/components/Header.tsx"), "utf8");
-  const navLabels = ["Store", "Mac", "iPad", "iPhone", "Watch", "AirPods", "Accessories", "Support"];
+  const navLabels = ["Store", "Mac", "iPad", "iPhone", "Watch", "AirPods", "Accessories", "Others", "Support"];
   for (let i = 0; i < navLabels.length - 1; i++) {
     const current = `label: "${navLabels[i]}"`;
     const next = `label: "${navLabels[i + 1]}"`;
@@ -491,7 +492,7 @@ try {
       `${navLabels[i]} appears before ${navLabels[i + 1]} in the global navigation order`
     );
   }
-  assert.doesNotMatch(headerSource, /label: "(?:Others|Services)"/, "Global navigation omits obsolete multi-tier dropdowns");
+  assert.doesNotMatch(headerSource, /label: "Services"/, "Global navigation omits obsolete multi-tier dropdowns");
   assert.doesNotMatch(headerSource, /site-promo-bar/, "Global navigation omits stacked promotional banners");
   const homepageSource = await readFile(path.join(projectRoot, "src/pages/HomePage.tsx"), "utf8");
   const iphoneShowcase = await bundle(path.join(projectRoot, "src/components/IphoneCinematicShowcase.tsx"), path.join(outdir, "iphoneShowcase.mjs"));
@@ -725,6 +726,7 @@ try {
   await testPromotionsEditorAndAdminText(projectRoot, bundle, outdir);
   await testCompletePromotionsAdminAndTiers(projectRoot, bundle, outdir);
   await testProductDraftAndPublishWorkflow();
+  await testOthersMarketplace();
 
   console.log("All tests passed");
 } finally {

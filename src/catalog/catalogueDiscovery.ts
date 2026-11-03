@@ -27,8 +27,17 @@ const appleOnlyCategories = new Set(["iphones", "ipads", "macbooks", "apple watc
 const normalize = (value?: string) => value?.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() ?? "";
 const normalizeBrand = (value: string) => value.trim().toLowerCase();
 
-export function isAppleCatalogueProduct(product: Pick<Product, "brand" | "category">) {
-  if (["phones tablets", "electronics"].includes(normalize(product.category))) return false;
+export function isOthersProduct(product: Pick<Product, "brand" | "category" | "mainWebsiteSection">) {
+  if (product.mainWebsiteSection) {
+    return product.mainWebsiteSection.trim().toLowerCase() === "others";
+  }
+  const cat = normalize(product.category);
+  return cat === "others" || cat === "game consoles";
+}
+
+export function isAppleCatalogueProduct(product: Pick<Product, "brand" | "category" | "mainWebsiteSection">) {
+  if (isOthersProduct(product)) return false;
+  if (["phones tablets", "electronics", "others"].includes(normalize(product.category))) return false;
   return normalize(product.brand) === "apple" || appleOnlyCategories.has(normalize(product.category));
 }
 

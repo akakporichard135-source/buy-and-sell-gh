@@ -1,6 +1,7 @@
 import { ArrowRight, Eye, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { isProductPurchasable } from "../catalog/productCatalog";
+import { isOthersProduct } from "../catalog/catalogueDiscovery";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { hasUsableLearnMoreContent } from "../cms/learnMoreRepository";
@@ -17,11 +18,12 @@ export function StoreProductCard({ product }: { product: Product }) {
   const isPurchasable = isProductPurchasable(product);
   const action = getPublicPurchaseAction(product);
   const canDirectBuy = action === "buy";
+  const isOthers = isOthersProduct(product);
   const family = productFamilyForCard(product);
   const status = product.condition === "UK Used" ? "UK USED" : isPurchasable ? "IN STOCK" : "AVAILABLE ON REQUEST";
   const facts = storeCardFacts(product);
-  const hasStory = hasUsableLearnMoreContent(product.slug);
-  const buyPath = productBuyPath(family, product.slug);
+  const hasStory = !isOthers && hasUsableLearnMoreContent(product.slug);
+  const buyPath = isOthers ? `/product/${product.slug}` : productBuyPath(family, product.slug);
   const storyPath = productStoryPath(family, product.slug);
   const targetPath = hasStory ? storyPath : buyPath;
 

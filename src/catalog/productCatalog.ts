@@ -141,6 +141,7 @@ export const createEmptyProduct = (existingProducts: Product[]): Product =>
     brand: "Apple",
     category: "iPhones",
     subcategory: "",
+    mainWebsiteSection: "iPhone",
     model: "",
     generation: "",
     price: 0,

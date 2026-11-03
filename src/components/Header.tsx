@@ -124,6 +124,15 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
     ],
   },
   {
+    id: "others",
+    label: "Others",
+    to: "/others",
+    matchPrefixes: ["/others"],
+    subitems: [
+      { label: "Explore Others Marketplace", to: "/others", isExplore: true },
+    ],
+  },
+  {
     id: "support",
     label: "Support",
     to: "/contact",

@@ -1,6 +1,6 @@
 import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supabase";
 import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
-import type { Product, ProductCondition, ProductImage, ProductVariant } from "../types/product";
+import type { MainWebsiteSection, Product, ProductCondition, ProductImage, ProductVariant } from "../types/product";
 import { normalizeProduct } from "./productCatalog";
 
 export interface VariantRow {
@@ -81,6 +81,7 @@ interface ProductRow {
   brand: Product["brand"];
   category: Product["category"];
   subcategory: string | null;
+  main_website_section?: string | null;
   model: string;
   generation: string | null;
   description: string;
@@ -116,6 +117,41 @@ const productSelectWithVariants = "*, product_variants(*)";
 const productSelect = "*";
 
 export const isProductDatabaseConfigured = () => Boolean(supabase);
+
+export function getProductSectionFallback(item: {
+  category?: string;
+  brand?: string;
+  name?: string;
+  subcategory?: string | null;
+  mainWebsiteSection?: string | null;
+  main_website_section?: string | null;
+}): MainWebsiteSection {
+  const explicit = item.mainWebsiteSection || item.main_website_section;
+  if (explicit) {
+    const norm = explicit.trim().toLowerCase();
+    if (norm === "others") return "Others";
+    if (norm === "iphone") return "iPhone";
+    if (norm === "mac") return "Mac";
+    if (norm === "ipad") return "iPad";
+    if (norm === "watch") return "Watch";
+    if (norm === "airpods") return "AirPods";
+    if (norm === "accessories") return "Accessories";
+  }
+
+  const cat = (item.category || "").toLowerCase();
+  const brand = (item.brand || "").toLowerCase();
+  const name = (item.name || "").toLowerCase();
+  const sub = (item.subcategory || "").toLowerCase();
+
+  if (cat === "others") return "Others";
+  if (cat === "iphones" || cat === "phones" || cat === "mobile phones" || (brand === "apple" && name.includes("iphone"))) return "iPhone";
+  if (cat === "macbooks" || cat === "laptops" || (brand === "apple" && (name.includes("macbook") || name.includes("mac mini") || name.includes("mac studio") || name.includes("imac")))) return "Mac";
+  if (cat === "ipads" || cat === "tablets" || (brand === "apple" && name.includes("ipad"))) return "iPad";
+  if (cat === "apple watches" || cat === "watches" || (brand === "apple" && (name.includes("watch") || name.includes("apple watch")))) return "Watch";
+  if (cat === "airpods" || (cat === "audio" && (brand === "apple" || name.includes("airpod")))) return "AirPods";
+  if (cat === "accessories" || sub.includes("accessory")) return "Accessories";
+  return "Others";
+}
 
 export const rowToProduct = (row: ProductRow): Product => {
   const isAirpodsPro3 = row.slug === "airpods-pro-3" || row.id === "airpods-pro-3";
@@ -158,6 +194,7 @@ export const rowToProduct = (row: ProductRow): Product => {
       brand: row.brand,
       category: row.category,
       subcategory: row.subcategory ?? "",
+      mainWebsiteSection: (row.main_website_section as MainWebsiteSection) || getProductSectionFallback(row),
       model: row.model,
       generation: row.generation ?? "",
       description: row.description,
@@ -217,6 +254,7 @@ export const rowToProduct = (row: ProductRow): Product => {
       brand: normalized.brand,
       category: normalized.category,
       subcategory: normalized.subcategory || null,
+      main_website_section: normalized.mainWebsiteSection || getProductSectionFallback(normalized),
       model: normalized.model,
       generation: normalized.generation || null,
       description: normalized.description,

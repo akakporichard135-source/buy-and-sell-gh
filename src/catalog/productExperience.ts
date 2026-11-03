@@ -428,6 +428,9 @@ export function getProductStory(family: ProductFamilyKey, slug: string) {
 }
 
 export function familyMatchesProduct(product: Product, family: ProductFamilyKey) {
+  if (product.mainWebsiteSection === "Others" || product.category === "Others") {
+    return false;
+  }
   const cat = product.category;
   const brand = (product.brand || "").toLowerCase();
   const name = (product.name || "").toLowerCase();

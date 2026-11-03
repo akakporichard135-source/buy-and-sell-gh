@@ -6,7 +6,7 @@ import { business } from "../config/business";
 const footerColumns = [
   {
     title: "Shop and Learn",
-    links: [["Store", "/store"], ["iPhone", "/iphone"], ["Mac", "/mac"], ["iPad", "/ipad"], ["Watch", "/watch"], ["AirPods", "/airpods"], ["Accessories", "/accessories"]],
+    links: [["Store", "/store"], ["iPhone", "/iphone"], ["Mac", "/mac"], ["iPad", "/ipad"], ["Watch", "/watch"], ["AirPods", "/airpods"], ["Accessories", "/accessories"], ["Others", "/others"]],
   },
   {
     title: "Services",
@@ -18,7 +18,7 @@ const footerColumns = [
   },
   {
     title: "About",
-    links: [["About Buy & Sell GH", "/about"], ["Others", "/others"], ["Contact", "/contact"], ["FAQ", "/faq"]],
+    links: [["About Buy & Sell GH", "/about"], ["Contact", "/contact"], ["FAQ", "/faq"]],
   },
   {
     title: "Support",

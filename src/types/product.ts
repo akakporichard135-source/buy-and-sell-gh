@@ -14,8 +14,18 @@ export type ProductCategory =
   | "Game Consoles"
   | "Accessories"
   | "Electronics"
+  | "Others"
   | "UK Used Devices"
   | "Brand New Devices";
+
+export type MainWebsiteSection =
+  | "Mac"
+  | "iPad"
+  | "iPhone"
+  | "Watch"
+  | "AirPods"
+  | "Accessories"
+  | "Others";
 
 export type ProductBrand = string;
 
@@ -57,6 +67,7 @@ export interface Product {
   slug: string;
   category: ProductCategory;
   subcategory?: string;
+  mainWebsiteSection?: MainWebsiteSection;
   brand: ProductBrand;
   model: string;
   generation?: string;

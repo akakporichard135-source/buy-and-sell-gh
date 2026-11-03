@@ -75,6 +75,7 @@ export const categories: ProductCategory[] = [
   "Game Consoles",
   "Accessories",
   "Electronics",
+  "Others",
   "UK Used Devices",
   "Brand New Devices",
 ];

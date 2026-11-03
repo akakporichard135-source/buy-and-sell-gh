@@ -83,8 +83,8 @@ html {
   align-items: center;
   justify-content: space-between;
   flex: 1;
-  max-width: 720px;
-  margin: 0 clamp(16px, 3vw, 36px);
+  max-width: 780px;
+  margin: 0 clamp(10px, 2.2vw, 28px);
   padding: 0;
   list-style: none;
 }
@@ -98,7 +98,7 @@ html {
   color: rgba(0, 0, 0, 0.72) !important;
   text-decoration: none;
   white-space: nowrap;
-  padding: 8px 4px;
+  padding: 8px 3px;
   transition: color 0.18s ease, opacity 0.18s ease;
   font-weight: 400;
   box-shadow: none !important;

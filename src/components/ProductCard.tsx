@@ -2,6 +2,7 @@ import { Eye, MessageCircle, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { familyMatchesProduct, productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { isProductUnavailable, isProductImageEligible } from "../catalog/productCatalog";
+import { isOthersProduct } from "../catalog/catalogueDiscovery";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { getCardPriceDisplay } from "../utils/productPricing";
@@ -16,8 +17,10 @@ export function ProductCard({ product, variant = "default", imageVariant = "defa
   const priceDisplay = getCardPriceDisplay(product);
   const storage = product.storage[0];
   const color = product.colors[0];
+  const isOthers = isOthersProduct(product);
   const buyFamily = (["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[])
     .find((family) => familyMatchesProduct(product, family)) ?? "accessories";
+  const buyPath = isOthers ? `/product/${product.slug}` : productBuyPath(buyFamily, product.slug);
   const isSoldOut = isProductUnavailable(product);
   const isPriceOnRequest = priceDisplay.isEnquiry;
   const isCompact = variant === "compact";
@@ -67,8 +70,8 @@ export function ProductCard({ product, variant = "default", imageVariant = "defa
           <span className={productBadgeClass(displayStockLabel)}>{displayStockLabel}</span>
         </div>
         <div className="product-card-actions">
-          {isSoldOut ? <span className="btn-primary opacity-45"><Plus size={17} /> {stockLabel}</span> : <Link className="btn-primary" to={productBuyPath(buyFamily, product.slug)}>
-            <Plus size={17} /> {isPriceOnRequest ? "Enquiry only" : "Configure & Buy"}
+          {isSoldOut ? <span className="btn-primary opacity-45"><Plus size={17} /> {stockLabel}</span> : <Link className="btn-primary" to={buyPath}>
+            <Plus size={17} /> {isPriceOnRequest ? "Enquiry only" : isOthers ? "Buy" : "Configure & Buy"}
           </Link>}
           <div className="product-card-secondary-actions">
             <Link className="btn-secondary" to={`/product/${product.slug}`}>
