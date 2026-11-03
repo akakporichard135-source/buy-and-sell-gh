@@ -47,16 +47,16 @@ export function HomepagePromotionalCarousel() {
     return () => clearInterval(timer);
   }, [flyerCampaigns.length, isPaused]);
 
-  // Keep track scrolled smoothly to active slide
+  // Keep horizontal track scrolled smoothly to active slide without affecting window vertical scroll
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     const slide = track.children[currentIndex] as HTMLElement | undefined;
     if (slide) {
-      slide.scrollIntoView({
+      const targetLeft = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
+      track.scrollTo({
+        left: Math.max(0, targetLeft),
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        block: "nearest",
-        inline: "center",
       });
     }
   }, [currentIndex]);
