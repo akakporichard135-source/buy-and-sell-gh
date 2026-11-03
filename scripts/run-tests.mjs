@@ -15,6 +15,7 @@ import { testLivePublishingAndRealtimePromotions } from "./test-live-publishing-
 import { testPs5PromotionAndPdpPolish } from "./test-ps5-promotion-and-pdp-polish.mjs";
 import { testPromotionsEditorAndAdminText } from "./test-promotions-editor-and-admin-text.mjs";
 import { testCompletePromotionsAdminAndTiers } from "./test-complete-promotions-admin-and-tiers.mjs";
+import { testProductDraftAndPublishWorkflow } from "./test-product-draft-and-publish-workflow.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -723,6 +724,7 @@ try {
   await testPs5PromotionAndPdpPolish(projectRoot);
   await testPromotionsEditorAndAdminText(projectRoot, bundle, outdir);
   await testCompletePromotionsAdminAndTiers(projectRoot, bundle, outdir);
+  await testProductDraftAndPublishWorkflow();
 
   console.log("All tests passed");
 } finally {

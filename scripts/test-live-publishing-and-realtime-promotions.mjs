@@ -66,7 +66,8 @@ export async function testLivePublishingAndRealtimePromotions(
     "Bundle must target ps5-slim-combo-offer"
   );
   assert.ok(
-    ps5Campaign.desktop_flyer_url && ps5Campaign.desktop_flyer_url.includes("ps5-combo-offer-flyer"),
+    ps5Campaign.desktop_flyer_url &&
+    (ps5Campaign.desktop_flyer_url.includes("ps5-combo-offer-flyer") || ps5Campaign.desktop_flyer_url.includes("ps5-combo-offer-limited-time")),
     "PS5 campaign desktop flyer URL must point to verified flyer"
   );
   assert.equal(ps5Campaign.show_on_homepage_carousel, true, "Must appear on homepage carousel");

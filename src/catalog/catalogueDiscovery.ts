@@ -102,10 +102,14 @@ export function getElectronicsCategory(product: Pick<Product, "brand" | "categor
   const category = normalize(product.category);
   const subcategory = normalize(product.subcategory);
 
+  if (category === "game consoles" || category === "gaming consoles" || category === "video game consoles") {
+    return "video-game-consoles";
+  }
+
   if (category !== "electronics") return undefined;
   if (["laptops computers", "laptop computers", "desktop computers", "computers"].includes(subcategory)) return "laptops-computers";
   if (["tv video equipment", "televisions", "tv displays", "video equipment"].includes(subcategory)) return "tv-video-equipment";
-  if (["video game consoles", "video games consoles", "gaming consoles", "games consoles"].includes(subcategory)) return "video-game-consoles";
+  if (["video game consoles", "video games consoles", "gaming consoles", "games consoles", "playstation 5", "playstation", "xbox", "nintendo"].includes(subcategory)) return "video-game-consoles";
   if (["audio music equipment", "audio equipment", "speakers", "headphones"].includes(subcategory)) return "audio-music-equipment";
   return undefined;
 }

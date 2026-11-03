@@ -264,21 +264,33 @@ export function ProductCatalogProvider({ children }: { children: React.ReactNode
       saveProduct: async (product) => {
         const normalized = normalizeProduct({ ...product, updatedAt: new Date().toISOString() }, backendStatus !== "supabase");
         if (backendStatus === "supabase") {
-          if (isLocalAdminActive()) {
-            const currentOverlay = readAdminTestProducts();
-            const existsInOverlay = currentOverlay.some((item) => item.id === normalized.id || item.slug === normalized.slug);
-            const nextOverlay = existsInOverlay
-              ? currentOverlay.map((item) => (item.id === normalized.id || item.slug === normalized.slug ? normalized : item))
-              : [normalized, ...currentOverlay];
-            writeAdminTestProducts(nextOverlay);
+          try {
+            const saved = await upsertProduct(normalized);
+            if (isLocalAdminActive() || isPreviewMode()) {
+              const currentOverlay = readAdminTestProducts();
+              if (currentOverlay.length > 0) {
+                const nextOverlay = currentOverlay.map((item) => (item.id === saved.id || item.slug === saved.slug ? saved : item));
+                writeAdminTestProducts(nextOverlay);
+              }
+            }
             await loadProducts();
-            broadcastPublishedUpdate("product", normalized.id);
-            return normalized;
+            broadcastPublishedUpdate("product", saved.id);
+            return saved;
+          } catch (upsertErr) {
+            if (isLocalAdminActive() || isPreviewMode()) {
+              console.warn("Supabase upsert fallback in local/preview mode:", upsertErr);
+              const currentOverlay = readAdminTestProducts();
+              const existsInOverlay = currentOverlay.some((item) => item.id === normalized.id || item.slug === normalized.slug);
+              const nextOverlay = existsInOverlay
+                ? currentOverlay.map((item) => (item.id === normalized.id || item.slug === normalized.slug ? normalized : item))
+                : [normalized, ...currentOverlay];
+              writeAdminTestProducts(nextOverlay);
+              await loadProducts();
+              broadcastPublishedUpdate("product", normalized.id);
+              return normalized;
+            }
+            throw upsertErr;
           }
-          const saved = await upsertProduct(normalized);
-          await loadProducts();
-          broadcastPublishedUpdate("product", saved.id);
-          return saved;
         }
         if (import.meta.env.PROD) throw new Error("Supabase is required for production catalogue writes.");
         const exists = products.some((item) => item.id === normalized.id || item.slug === normalized.slug);
