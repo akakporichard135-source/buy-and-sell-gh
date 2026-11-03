@@ -925,7 +925,7 @@ export function AdminProductManager() {
                       <td>
                         <div className="flex flex-col gap-0.5 items-start">
                           <span className="admin-badge admin-badge-slate">{product.category}</span>
-                          <span className="text-[10px] font-semibold text-slate-500">
+                          <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
                             Section: {product.mainWebsiteSection ?? getProductSectionFallback(product)}
                           </span>
                         </div>
@@ -1140,7 +1140,7 @@ export function AdminProductManager() {
 
                 <div className="flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="admin-badge admin-badge-slate text-[0.68rem]">{product.category}</span>
-                  <span className="text-[10px] text-slate-500 font-medium">({product.mainWebsiteSection ?? getProductSectionFallback(product)})</span>
+                  <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">({product.mainWebsiteSection ?? getProductSectionFallback(product)})</span>
                   <span
                     className={`admin-badge text-[0.68rem] ${
                       product.condition.includes("Brand New")
@@ -1674,7 +1674,7 @@ function ProductForm({
 
   return (
     <form
-      className="space-y-6"
+      className="space-y-6 pb-20"
       onSubmit={(e) => {
         e.preventDefault();
         if (form.available) {
@@ -1816,13 +1816,15 @@ function ProductForm({
                 Determines where this product appears on the public storefront
               </span>
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 mt-1">
+            <div className="admin-section-selector" role="radiogroup" aria-label="Main Website Section">
               {(["iPhone", "Mac", "iPad", "Watch", "AirPods", "Accessories", "Others"] as MainWebsiteSection[]).map((sec) => {
                 const isSelected = form.mainWebsiteSection === sec;
                 return (
                   <button
                     key={sec}
                     type="button"
+                    role="radio"
+                    aria-checked={isSelected}
                     onClick={() => {
                       let nextCategory = form.category;
                       if (sec === "Others") {
@@ -1846,11 +1848,7 @@ function ProductForm({
                         category: nextCategory,
                       });
                     }}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-center ${
-                      isSelected
-                        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
-                        : "bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50"
-                    }`}
+                    className={`admin-section-btn ${isSelected ? "is-selected" : ""}`}
                   >
                     {sec}
                   </button>
@@ -2604,7 +2602,7 @@ function ProductForm({
       )}
 
       {/* 5. Sticky Action Bar */}
-      <div className="p-4 rounded-xl bg-white border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sticky bottom-0 shadow-lg z-20">
+      <div className="p-4 rounded-xl bg-white/95 backdrop-blur-md border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sticky bottom-0 shadow-lg z-20 mt-8">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${form.available ? "bg-emerald-500" : "bg-amber-500"}`} />

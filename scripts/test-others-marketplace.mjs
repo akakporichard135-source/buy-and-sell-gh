@@ -166,15 +166,24 @@ export async function testOthersMarketplace() {
   console.log("✓ Header CSS verified: accommodates all 9 items smoothly before tablet breakpoint");
 
   // -------------------------------------------------------------------------
-  // SCENARIO H: ADMIN PRODUCT MANAGER SECTION CONTROLS
+  // SCENARIO H: ADMIN PRODUCT MANAGER SECTION CONTROLS & RESPONSIVENESS
   // -------------------------------------------------------------------------
-  console.log("\n[SCENARIO H] Verifying Admin Product Manager section integration...");
+  console.log("\n[SCENARIO H] Verifying Admin Product Manager section integration & responsiveness...");
   const adminCode = fs.readFileSync(path.resolve("src/pages/admin/AdminProductManager.tsx"), "utf-8");
   assert(adminCode.includes("mainWebsiteSection: MainWebsiteSection;"), "ProductFormState includes mainWebsiteSection");
   assert(adminCode.includes("Main Website Section *"), "ProductForm renders Main Website Section label");
   assert(adminCode.includes('value="Others"'), "ProductForm and Section filter have Others option");
   assert(adminCode.includes('form.mainWebsiteSection === "Others"'), "ProductForm has dynamic Others helper/inputs");
-  console.log("✓ Admin Product Manager contains complete Main Website Section controls");
+  assert(adminCode.includes("admin-section-selector"), "ProductForm uses responsive admin-section-selector container");
+  assert(adminCode.includes("admin-section-btn"), "ProductForm uses dedicated admin-section-btn buttons");
+  assert(adminCode.includes("pb-20"), "ProductForm has bottom padding to prevent sticky footer overlap");
+
+  const adminCss = fs.readFileSync(path.resolve("src/styles/admin.css"), "utf-8");
+  assert(adminCss.includes(".admin-section-selector"), "admin.css contains .admin-section-selector rules");
+  assert(adminCss.includes(".admin-section-btn"), "admin.css contains .admin-section-btn rules");
+  assert(adminCss.includes("white-space: nowrap"), "admin-section-btn enforces white-space: nowrap against word splitting");
+  assert(adminCss.includes("min-width: 110px"), "admin-section-btn provides at least 110px min-width for Accessories and labels");
+  console.log("✓ Admin Product Manager section selector is fully responsive, never splits words, and does not overlap footer");
 
   // -------------------------------------------------------------------------
   // SCENARIO I: OTHERS PAGE MARKETPLACE IMPLEMENTATION
