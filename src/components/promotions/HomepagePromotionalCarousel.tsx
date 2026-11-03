@@ -100,6 +100,7 @@ export function HomepagePromotionalCarousel() {
   return (
     <section
       className="homepage-promo-carousel-section"
+      data-testid="promotional-carousel"
       aria-labelledby="promo-carousel-heading"
       style={{
         padding: "60px 20px 70px",

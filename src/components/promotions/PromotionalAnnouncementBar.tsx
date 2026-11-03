@@ -83,6 +83,7 @@ export function PromotionalAnnouncementBar() {
   return (
     <aside
       className="promo-announcement-bar"
+      data-testid="promotions-announcement-bar"
       aria-label="Promotional announcements"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
