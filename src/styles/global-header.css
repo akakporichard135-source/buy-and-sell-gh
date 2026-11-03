@@ -7,6 +7,10 @@
   --global-header-height: 44px;
 }
 
+html {
+  scroll-padding-top: calc(var(--global-header-height) + 24px) !important;
+}
+
 /* Slim sticky global navigation */
 .site-header.global-header {
   position: sticky;

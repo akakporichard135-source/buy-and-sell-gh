@@ -12,6 +12,7 @@ import { testWordBreaksAndResponsive } from "./test-word-breaks-and-responsive.m
 import { testPromotionsSystem } from "./test-promotions-system.mjs";
 import { testSimplifiedPromotionsAndBundles } from "./test-simplified-promotions-and-bundles.mjs";
 import { testLivePublishingAndRealtimePromotions } from "./test-live-publishing-and-realtime-promotions.mjs";
+import { testPs5PromotionAndPdpPolish } from "./test-ps5-promotion-and-pdp-polish.mjs";
 
 const outdir = path.join(tmpdir(), `buyandsell-tests-${Date.now()}`);
 const projectRoot = process.cwd();
@@ -717,6 +718,7 @@ try {
   await testPromotionsSystem(projectRoot, bundle, outdir);
   await testSimplifiedPromotionsAndBundles(projectRoot, bundle, outdir);
   await testLivePublishingAndRealtimePromotions(projectRoot, bundle, outdir);
+  await testPs5PromotionAndPdpPolish(projectRoot);
 
   console.log("All tests passed");
 } finally {

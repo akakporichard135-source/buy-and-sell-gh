@@ -101,11 +101,13 @@ export function HomepagePromotionalCarousel() {
     <section
       className="homepage-promo-carousel-section"
       data-testid="promotional-carousel"
+      id="promotions"
       aria-labelledby="promo-carousel-heading"
       style={{
         padding: "60px 20px 70px",
         background: "#ffffff",
         position: "relative",
+        scrollMarginTop: "calc(var(--global-header-height, 44px) + 24px)",
       }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}

@@ -224,6 +224,7 @@ export function OffersPage() {
                       display: "grid",
                       gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
                       transition: "all 0.3s ease",
+                      scrollMarginTop: "calc(var(--global-header-height, 44px) + 24px)",
                     }}
                   >
                     {/* Flyer Visual */}

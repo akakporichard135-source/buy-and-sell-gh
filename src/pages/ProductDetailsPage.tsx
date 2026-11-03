@@ -8,6 +8,7 @@ import { isProductImageEligible, isProductUnavailable } from "../catalog/product
 import { productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { business } from "../config/business";
 import { useBuyJourney } from "../context/BuyJourneyContext";
+import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { resolveConfiguredPrice } from "../utils/productPricing";
@@ -20,11 +21,30 @@ import { useBuyGallery } from "../cms/buyGalleryRepository";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
 
+function hasVerifiedDetail(value?: string | null): boolean {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.includes("contact the shop to confirm") ||
+    lower.includes("confirm on whatsapp") ||
+    lower.includes("not specified") ||
+    lower.includes("confirm before payment") ||
+    lower === "null" ||
+    lower === "undefined"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function ProductDetailsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { activeProducts: products, getProductBySlug, loading, error, refreshProducts } = useProductCatalog();
   const product = getProductBySlug(slug ?? "");
+  const { addItem } = useCart();
   const { setQuantity: setBuyQuantity } = useBuyJourney();
   const [storage, setStorage] = useState(product?.storage[0] ?? "");
   const [color, setColor] = useState(product?.colors[0] ?? "");
@@ -35,14 +55,46 @@ export function ProductDetailsPage() {
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const [variantError, setVariantError] = useState("");
 
-  const isSoldOut = product ? isProductUnavailable(product) : true;
-  const related = useMemo(() => products.filter((item) => item.id !== product?.id && item.category === product?.category).slice(0, 3), [product, products]);
+  const stockQuantity = Math.max(0, product?.stockQuantity ?? 0);
+  const hasConfirmedStock =
+    Boolean(product) &&
+    stockQuantity > 0 &&
+    (product?.stockStatus === "In Stock" || product?.stockStatus === "Low Stock") &&
+    product?.available !== false;
+  const isSoldOut = product ? (!hasConfirmedStock || isProductUnavailable(product)) : true;
+
+  const related = useMemo(
+    () =>
+      products
+        .filter(
+          (item) =>
+            item.id !== product?.id &&
+            item.slug !== product?.slug &&
+            item.category === product?.category
+        )
+        .slice(0, 3),
+    [product, products]
+  );
+  const fallbackRelated = useMemo(
+    () =>
+      products
+        .filter(
+          (item) =>
+            item.id !== product?.id &&
+            item.slug !== product?.slug &&
+            isProductImageEligible(item)
+        )
+        .slice(0, 3),
+    [product, products]
+  );
   const recentlyViewed = useMemo(() => {
     const viewedProducts = recentSlugs
       .map((item) => getProductBySlug(item))
       .filter((item): item is Product => Boolean(item && isProductImageEligible(item)));
-    return viewedProducts.filter((item) => item.id !== product?.id).slice(0, 3);
-  }, [getProductBySlug, product?.id, recentSlugs]);
+    return viewedProducts
+      .filter((item) => item.id !== product?.id && item.slug !== product?.slug)
+      .slice(0, 3);
+  }, [getProductBySlug, product?.id, product?.slug, recentSlugs]);
 
   useEffect(() => {
     if (product) {
@@ -78,6 +130,14 @@ export function ProductDetailsPage() {
         { src: matchedFinishImage, alt: `${product.name} in ${color}` },
         ...baseGallery.filter((img) => img.src !== matchedFinishImage),
       ];
+    }
+    // If baseGallery has genuine product photos alongside campaign flyers, prioritize genuine product photos
+    if (baseGallery.length > 1) {
+      const genuinePhotos = baseGallery.filter((img) => !img.src.includes("/campaigns-"));
+      const flyerPhotos = baseGallery.filter((img) => img.src.includes("/campaigns-"));
+      if (genuinePhotos.length > 0) {
+        return [...genuinePhotos, ...flyerPhotos];
+      }
     }
     return baseGallery;
   }, [isCustomPublished, publishedBuyGallery, matchedFinishImage, product?.name, color, baseGallery]);
@@ -117,7 +177,11 @@ export function ProductDetailsPage() {
   const isPriceOnRequest = configured.isEnquiry;
   const currentPriceLabel = configured.formattedPrice;
   const oldPriceLabel = configured.formattedPreviousPrice ?? (!isPriceOnRequest && product.oldPrice ? formatGhs(product.oldPrice) : undefined);
-  const displayStockLabel = isPriceOnRequest ? "Availability To Confirm" : stockLabel;
+  const displayStockLabel = isPriceOnRequest
+    ? "Availability To Confirm"
+    : hasConfirmedStock
+    ? (stockQuantity === 1 ? "In Stock (1 available)" : `In Stock (${stockQuantity} available)`)
+    : "Out of Stock";
   const primaryOptionLabel = product.category === "Apple Watches" || product.category === "Watches"
     ? "Connectivity"
     : product.category === "AirPods" || product.category === "Audio"
@@ -127,6 +191,11 @@ export function ProductDetailsPage() {
         : product.category === "Game Consoles"
           ? "Edition / Storage"
         : "Storage";
+
+  const hasMultipleStorage = Boolean(product.storage && product.storage.length > 1);
+  const hasMultipleColors = Boolean(product.colors && product.colors.length > 1);
+  const showOptionSelectors = hasMultipleStorage || hasMultipleColors;
+
   const isMacbook = product.category === "MacBooks" || product.category === "Laptops";
   const isAirpods = product.category === "AirPods";
   const isAccessory = product.category === "Accessories";
@@ -137,13 +206,13 @@ export function ProductDetailsPage() {
   const accessoryPower = accessorySpecifications.find((item) => item.startsWith("Wattage:"))?.replace("Wattage:", "").trim();
   const accessoryCompatibility = accessorySpecifications.find((item) => item.startsWith("Compatibility:"))?.replace("Compatibility:", "").trim();
 
-  const handleAddToCart = () => {
-    if (product.storage.length > 0 && !storage) {
-      setVariantError("Choose a storage option before adding this device.");
+  const handleBuyNow = () => {
+    if (hasMultipleStorage && !storage) {
+      setVariantError("Choose an option before continuing.");
       return;
     }
-    if (product.colors.length > 0 && !color) {
-      setVariantError("Choose a colour option before adding this device.");
+    if (hasMultipleColors && !color) {
+      setVariantError("Choose a colour option before continuing.");
       return;
     }
     if (quantity > product.stockQuantity) {
@@ -151,10 +220,14 @@ export function ProductDetailsPage() {
       return;
     }
     setBuyQuantity(quantity);
-    navigate(studioBuyPath ?? productBuyPath("accessories", product.slug), { state: { storage, color } });
+    const selectedStorage = storage || (product.storage?.[0] ?? "Standard");
+    const selectedColor = color || (product.colors?.[0] ?? "Standard");
+
+    addItem(product, selectedStorage, selectedColor, quantity, undefined, selectedColorImage);
+    navigate("/checkout");
   };
 
-  const handleBuyNow = handleAddToCart;
+  const handleAddToCart = handleBuyNow;
 
   const handleShare = async () => {
     try {
@@ -186,7 +259,13 @@ export function ProductDetailsPage() {
           } }),
         })}
       </script>
-      <section className="section product-detail-layout">
+      <section
+        className="section product-detail-layout"
+        style={{
+          paddingTop: "clamp(1.5rem, 3vw, 2.75rem)",
+          scrollMarginTop: "calc(var(--global-header-height, 44px) + 24px)",
+        }}
+      >
         <div className="product-gallery">
           <SwipeableProductGallery
             images={gallery}
@@ -247,34 +326,69 @@ export function ProductDetailsPage() {
             <span><CheckCircle2 size={17} /> Pickup: {business.location}</span>
           </div>
 
-          <div className="mt-7 grid gap-5 sm:grid-cols-2">
-            <label className="choice-label">{primaryOptionLabel}
-              <select value={storage} required onChange={(e) => setStorage(e.target.value)}>{product.storage.map((item) => <option key={item}>{item}</option>)}</select>
-            </label>
-            <label className="choice-label">Colour
-              <select
-                value={color}
-                required
-                onChange={(e) => {
-                  setColor(e.target.value);
-                  setActiveImage(0);
-                }}
-              >
-                {product.colors.map((item) => <option key={item}>{item}</option>)}
-              </select>
-            </label>
-          </div>
+          {showOptionSelectors && (
+            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+              {hasMultipleStorage && (
+                <label className="choice-label">{primaryOptionLabel}
+                  <select value={storage} required onChange={(e) => setStorage(e.target.value)}>
+                    {product.storage.map((item) => <option key={item}>{item}</option>)}
+                  </select>
+                </label>
+              )}
+              {hasMultipleColors && (
+                <label className="choice-label">Colour
+                  <select
+                    value={color}
+                    required
+                    onChange={(e) => {
+                      setColor(e.target.value);
+                      setActiveImage(0);
+                    }}
+                  >
+                    {product.colors.map((item) => <option key={item}>{item}</option>)}
+                  </select>
+                </label>
+              )}
+            </div>
+          )}
           {variantError && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{variantError}</p>}
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            <div className="quantity-stepper" aria-label="Quantity selector">
-              <button type="button" aria-label="Decrease quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.max(1, value - 1))}><Minus size={17} /></button>
-              <span>{quantity}</span>
-              <button type="button" aria-label="Increase quantity" disabled={isSoldOut} onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}><Plus size={17} /></button>
-            </div>
-            <button className="btn-primary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleAddToCart}><ShoppingBag size={18} /> {isPriceOnRequest ? "Configure unavailable" : "Configure & Buy"}</button>
-            <button className="btn-secondary disabled:cursor-not-allowed disabled:opacity-45" type="button" disabled={isSoldOut} onClick={handleBuyNow}>{isPriceOnRequest ? "Buy Now unavailable" : "Buy Now"}</button>
-            <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer"><Zap size={18} /> {isPriceOnRequest ? "Ask on WhatsApp" : "Confirm Availability"}</a>
+            {hasConfirmedStock && product.stockQuantity > 1 && (
+              <div className="quantity-stepper" aria-label="Quantity selector">
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  disabled={isSoldOut}
+                  onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+                >
+                  <Minus size={17} />
+                </button>
+                <span>{quantity}</span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  disabled={isSoldOut}
+                  onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}
+                >
+                  <Plus size={17} />
+                </button>
+              </div>
+            )}
+            <button
+              className="btn-primary disabled:cursor-not-allowed disabled:opacity-45"
+              type="button"
+              aria-label={isSoldOut ? "Sold Out" : isPriceOnRequest ? "Availability To Confirm" : "Buy Now"}
+              disabled={isSoldOut}
+              onClick={handleBuyNow}
+            >
+              <ShoppingBag size={18} /> {isSoldOut ? "Sold Out" : isPriceOnRequest ? "Availability To Confirm" : "Buy Now"}
+            </button>
+            {isPriceOnRequest && (
+              <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                <Zap size={18} /> Confirm Availability
+              </a>
+            )}
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <a className="btn-secondary" href={`tel:+${business.whatsapp.primary.replace(/^\+/, "")}`}><Phone size={18} /> Call Shop</a>
@@ -310,17 +424,27 @@ export function ProductDetailsPage() {
       </section>
 
       <section className="section grid gap-5 lg:grid-cols-3">
-        <InfoBlock title="Product description" items={[product.description]} />
-        <InfoBlock title="Key specifications" items={product.specifications ?? product.specs} />
-        <InfoBlock title={isAccessory ? "Condition and compatibility" : "Device condition report"} items={product.conditionReport ?? ["Condition details are confirmed before payment."]} />
-        <InfoBlock title="What is included" items={product.includedItems ?? product.box} />
-        <InfoBlock title="Warranty information" items={[product.warranty ?? product.warrantyInfo ?? "Contact the shop to confirm warranty for this device."]} />
-        <InfoBlock title="Delivery and pickup" items={[product.deliveryInfo ?? product.deliveryNote ?? `Pickup at ${business.location}. Delivery options are confirmed on WhatsApp.`]} />
+        {product.description && <InfoBlock title="Product description" items={[product.description]} />}
+        {(product.specifications ?? product.specs)?.length > 0 && (
+          <InfoBlock title="Key specifications" items={product.specifications ?? product.specs} />
+        )}
+        {(product.includedItems ?? product.box)?.length > 0 && (
+          <InfoBlock title="What is included" items={product.includedItems ?? product.box} />
+        )}
+        {product.conditionReport?.length ? (
+          <InfoBlock title={isAccessory ? "Condition and compatibility" : "Device condition report"} items={product.conditionReport} />
+        ) : null}
+        {hasVerifiedDetail(product.warranty || product.warrantyInfo) && (
+          <InfoBlock title="Warranty information" items={[product.warranty || product.warrantyInfo!]} />
+        )}
+        {hasVerifiedDetail(product.deliveryInfo || product.deliveryNote) && (
+          <InfoBlock title="Delivery and pickup" items={[product.deliveryInfo || product.deliveryNote!]} />
+        )}
       </section>
 
       <section className="section">
         <div className="section-heading"><p className="eyebrow-dark">Related products</p><h2>You may also like</h2></div>
-        <ProductGrid products={related.length ? related : products.slice(0, 3)} />
+        <ProductGrid products={related.length ? related : fallbackRelated} />
       </section>
       {recentlyViewed.length > 0 && (
         <section className="section">
@@ -339,10 +463,10 @@ export function ProductDetailsPage() {
             className="btn-primary !py-2.5 !px-3.5 text-sm flex items-center gap-1.5 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-45"
             type="button"
             disabled={isSoldOut}
-            onClick={handleAddToCart}
+            onClick={handleBuyNow}
           >
             <ShoppingBag size={15} />
-            <span>Configure & Buy</span>
+            <span>{isSoldOut ? "Sold Out" : "Buy Now"}</span>
           </button>
           <a
             className="btn-ghost !py-2.5 !px-3 text-sm flex items-center gap-1.5 whitespace-nowrap"
