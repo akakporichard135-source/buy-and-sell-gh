@@ -105,4 +105,7 @@ ON CONFLICT (id) DO UPDATE SET
   discount_tiers = EXCLUDED.discount_tiers,
   updated_at = now();
 
+-- Reload PostgREST schema cache immediately
+NOTIFY pgrst, 'reload schema';
+
 COMMIT;

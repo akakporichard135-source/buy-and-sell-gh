@@ -129,6 +129,7 @@ export function AdminPromotionsPage() {
 
   // Media Library Picker State
   const [mediaPickerTarget, setMediaPickerTarget] = useState<"desktop" | "mobile" | "gift" | "additional" | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const fileInputDesktopRef = useRef<HTMLInputElement>(null);
   const fileInputMobileRef = useRef<HTMLInputElement>(null);
   const fileInputAdditionalRef = useRef<HTMLInputElement>(null);
@@ -3147,43 +3148,155 @@ export function AdminPromotionsPage() {
                     </div>
                   </div>
 
-                  {/* Live Visual Card Preview */}
-                  <div className="space-y-3">
-                    <div className="text-xs font-bold text-slate-800">Storefront Carousel Flyer Preview</div>
+                  {/* Live Visual Card Preview (Separated Flyer & Details - No Overlap) */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-slate-800">Storefront Carousel &amp; Offers Preview</div>
+                      <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDevice("desktop")}
+                          className={`px-3 py-1 rounded-lg transition ${
+                            previewDevice === "desktop"
+                              ? "bg-white text-slate-900 shadow-2xs font-bold"
+                              : "text-slate-500 hover:text-slate-900"
+                          }`}
+                        >
+                          🖥 Desktop View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewDevice("mobile")}
+                          className={`px-3 py-1 rounded-lg transition ${
+                            previewDevice === "mobile"
+                              ? "bg-white text-slate-900 shadow-2xs font-bold"
+                              : "text-slate-500 hover:text-slate-900"
+                          }`}
+                        >
+                          📱 Mobile View
+                        </button>
+                      </div>
+                    </div>
 
-                    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md max-w-xl mx-auto">
-                      <div className="w-full aspect-[2/1] bg-gradient-to-br from-slate-900 via-slate-800 to-black relative">
-                        {editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl ? (
-                          <img
-                            src={editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl}
-                            alt={editingCampaign.title || "Offer preview"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center">
-                            <Sparkles size={28} className="text-amber-400 mb-2 opacity-80" />
-                            <span className="text-xs font-medium text-slate-300">Custom promotional flyer preview</span>
-                            <span className="text-[11px] text-slate-500 mt-0.5">Upload a desktop or mobile flyer in Step 5</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-5 text-white">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                            {editingCampaign.promotionType?.replace(/_/g, " ")}
+                    {/* Preview Card */}
+                    <div
+                      className={`bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 mx-auto ${
+                        previewDevice === "mobile" ? "max-w-sm" : "max-w-2xl"
+                      }`}
+                    >
+                      {/* Unimpeded Full Flyer Visual */}
+                      <div
+                        className={`w-full bg-slate-100 relative overflow-hidden flex items-center justify-center ${
+                          previewDevice === "mobile" ? "aspect-square" : "aspect-[16/9] md:aspect-[2.2/1]"
+                        }`}
+                      >
+                        {(() => {
+                          const flyerSrc =
+                            previewDevice === "mobile"
+                              ? (editingCampaign.mobileFlyerUrl || editingCampaign.desktopFlyerUrl)
+                              : (editingCampaign.desktopFlyerUrl || editingCampaign.mobileFlyerUrl);
+
+                          return flyerSrc ? (
+                            <img
+                              src={flyerSrc}
+                              alt={editingCampaign.flyerAltText || editingCampaign.title || "Offer flyer"}
+                              className={`w-full h-full object-cover object-${editingCampaign.imagePosition || "center"}`}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center bg-gradient-to-br from-slate-100 to-slate-200">
+                              <Sparkles size={28} className="text-amber-500 mb-2 opacity-80" />
+                              <span className="text-xs font-bold text-slate-700">No flyer graphic uploaded</span>
+                              <span className="text-[11px] text-slate-500 mt-0.5">Attach a flyer in Step 5 to preview artwork</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Content & Details Section BELOW the Flyer (No Overlap) */}
+                      <div className="p-5 space-y-3.5 bg-white border-t border-slate-100">
+                        {/* Badges Bar */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                            {editingCampaign.promotionType === "percentage_discount"
+                              ? editingCampaign.discountCalculationMode === "price_tiers"
+                                ? "Mega Discount · 10% to 15% Off"
+                                : `${editingCampaign.discountPercent || 0}% Off`
+                              : editingCampaign.promotionType === "fixed_discount"
+                              ? `Save ${formatGhs(editingCampaign.discountAmount || 0)}`
+                              : editingCampaign.promotionType === "bundle"
+                              ? (editingCampaign.promotionalPrice ? `Special Bundle · ${formatGhs(editingCampaign.promotionalPrice)}` : "Special Bundle")
+                              : editingCampaign.promotionType?.replace(/_/g, " ").toUpperCase()}
                           </span>
-                          <h3 className="text-lg font-bold mt-1 text-white">{editingCampaign.title || "Untitled Offer"}</h3>
-                          <p className="text-xs text-slate-200 line-clamp-1 mt-0.5">
+
+                          {editingCampaign.minQualifyingItemPrice && editingCampaign.minQualifyingItemPrice > 0 && (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                              Qualifying Items: &gt; {formatGhs(editingCampaign.minQualifyingItemPrice)}
+                            </span>
+                          )}
+
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            Live Destination: {editingCampaign.ctaDestination || "/store"}
+                          </span>
+                        </div>
+
+                        {/* Title & Short Description */}
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">
+                            {editingCampaign.title || "Mega Discount Sale — Up to 15% Off"}
+                          </h3>
+                          <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                             {editingCampaign.shortDescription || "Special offer headline"}
                           </p>
-                          <div className="mt-3 flex items-center justify-between">
-                            <span className="text-xs font-semibold px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-lg text-white">
-                              {editingCampaign.ctaText || "Shop Offer"}
+                        </div>
+
+                        {/* Detailed Rules & Placements Info */}
+                        <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-xs space-y-1.5">
+                          <div className="flex items-start gap-1.5 text-slate-700">
+                            <span className="font-bold text-slate-900 shrink-0">Discount Rules:</span>
+                            <span>
+                              {editingCampaign.discountCalculationMode === "price_tiers" && editingCampaign.discountTiers && editingCampaign.discountTiers.length > 0
+                                ? editingCampaign.discountTiers
+                                    .map(
+                                      (t) =>
+                                        t.label ||
+                                        `GH₵ ${t.minPrice.toLocaleString()}${t.maxPrice ? ` – GH₵ ${t.maxPrice.toLocaleString()}` : "+"} → ${t.percent}% Off`
+                                    )
+                                    .join(" · ")
+                                : editingCampaign.discountPercent
+                                ? `${editingCampaign.discountPercent}% flat discount applied at bag.`
+                                : "Standard promotional terms apply."}
                             </span>
-                            {editingCampaign.promotionalPrice && (
-                              <span className="text-sm font-bold text-amber-300">
-                                {formatGhs(editingCampaign.promotionalPrice)}
-                              </span>
-                            )}
                           </div>
+
+                          <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                            <span className="font-semibold text-slate-700">Placements:</span>
+                            <span>
+                              {[
+                                editingCampaign.showOnHomepageCarousel && "Homepage Carousel",
+                                editingCampaign.showOnOffersPage && "Offers Directory (/offers)",
+                                editingCampaign.showOnAnnouncementBar && "Header Ticker",
+                              ]
+                                .filter(Boolean)
+                                .join(", ") || "None"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* CTA Link Button Action */}
+                        <div className="pt-1 flex items-center justify-between gap-3">
+                          <a
+                            href={editingCampaign.ctaDestination || "/offers"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95"
+                          >
+                            <span>{editingCampaign.ctaText || "Explore Offers"}</span>
+                            <ExternalLink size={13} />
+                          </a>
+
+                          <span className="text-[11px] text-slate-400">
+                            Clicking opens <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">{editingCampaign.ctaDestination || "/offers"}</code>
+                          </span>
                         </div>
                       </div>
                     </div>
