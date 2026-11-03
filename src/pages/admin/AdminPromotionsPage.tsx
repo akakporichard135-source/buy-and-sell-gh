@@ -632,12 +632,12 @@ export function AdminPromotionsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <button
               type="button"
               onClick={() => void loadData()}
               disabled={loading}
-              className="p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition border border-slate-200"
+              className="shrink-0 p-3 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition border border-slate-200"
               title="Refresh Campaigns"
             >
               <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
@@ -646,7 +646,7 @@ export function AdminPromotionsPage() {
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="flex items-center gap-2 px-5 py-3 bg-[#1d1d1f] hover:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition active:scale-95"
+              className="shrink-0 whitespace-nowrap flex items-center gap-2 px-5 py-3 bg-[#1d1d1f] hover:bg-black text-white text-sm font-semibold rounded-xl shadow-sm transition active:scale-95"
             >
               <Plus size={18} />
               <span>Create Promotion</span>
@@ -791,7 +791,7 @@ export function AdminPromotionsPage() {
 
               return (
                 <div key={promo.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
                     {/* Thumbnail */}
                     <div className="w-20 h-20 sm:w-24 sm:h-20 bg-slate-100 border border-slate-200 rounded-xl overflow-hidden shrink-0 grid place-items-center relative">
                       {flyer ? (
@@ -805,10 +805,10 @@ export function AdminPromotionsPage() {
                     </div>
 
                     {/* Information */}
-                    <div className="space-y-1.5 min-w-0">
+                    <div className="space-y-1.5 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
-                          className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md ${
+                          className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md shrink-0 ${
                             promo.status === "active" && promo.isEnabled
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               : promo.status === "draft"
@@ -821,19 +821,19 @@ export function AdminPromotionsPage() {
                           {promo.status === "active" && !promo.isEnabled ? "Paused" : promo.status}
                         </span>
 
-                        <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
                           {isBundle ? <Package size={11} /> : isGift ? <Gift size={11} /> : <Tag size={11} />}
                           <span>{promo.promotionType.replace(/_/g, " ")}</span>
                         </span>
 
                         {promo.promotionalPrice && (
-                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 shrink-0">
                             {formatGhs(promo.promotionalPrice)}
                           </span>
                         )}
                       </div>
 
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-black transition">
+                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-black transition truncate">
                         {promo.title}
                       </h4>
 
@@ -842,12 +842,12 @@ export function AdminPromotionsPage() {
                       </p>
 
                       <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-0.5">
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 shrink-0">
                           <ShoppingBag size={12} />
                           <span>{promo.currentRedemptions || 0} claimed</span>
                         </span>
                         {promo.startDate && promo.endDate && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 shrink-0">
                             <Clock size={12} />
                             <span>{new Date(promo.startDate).toLocaleDateString()} – {new Date(promo.endDate).toLocaleDateString()}</span>
                           </span>
@@ -857,12 +857,12 @@ export function AdminPromotionsPage() {
                   </div>
 
                   {/* Right Actions */}
-                  <div className="flex items-center gap-2 self-end sm:self-center">
+                  <div className="shrink-0 flex items-center gap-2 self-end sm:self-center">
                     {/* Enable/Disable Toggle */}
                     <button
                       type="button"
                       onClick={() => void handleToggleEnabled(promo)}
-                      className={`p-2 rounded-xl border transition ${
+                      className={`shrink-0 p-2 rounded-xl border transition ${
                         promo.isEnabled
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                           : "bg-slate-100 text-slate-400 border-slate-200 hover:text-slate-700"
@@ -876,7 +876,7 @@ export function AdminPromotionsPage() {
                     <button
                       type="button"
                       onClick={() => handleOpenEdit(promo)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-1.5"
+                      className="shrink-0 whitespace-nowrap px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center gap-1.5"
                     >
                       <Edit3 size={14} />
                       <span>Edit</span>
@@ -886,7 +886,7 @@ export function AdminPromotionsPage() {
                     <button
                       type="button"
                       onClick={() => void handleDuplicate(promo)}
-                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
+                      className="shrink-0 p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
                       title="Duplicate Offer"
                     >
                       <Copy size={15} />
@@ -896,7 +896,7 @@ export function AdminPromotionsPage() {
                     <button
                       type="button"
                       onClick={() => void handleArchive(promo)}
-                      className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
+                      className="shrink-0 p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
                       title={promo.status === "archived" ? "Restore Campaign" : "Archive Campaign"}
                     >
                       <Archive size={15} />
@@ -909,7 +909,7 @@ export function AdminPromotionsPage() {
                         setDeleteCandidate(promo);
                         setDeleteInput("");
                       }}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200 transition"
+                      className="shrink-0 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-slate-200 transition"
                       title="Delete Permanently"
                     >
                       <Trash2 size={15} />
