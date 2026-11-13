@@ -359,6 +359,7 @@ export function AdminProductManager() {
     setEditorTab("details");
     const empty = createDraftProduct();
     const draft = productToForm({ ...empty, available: true });
+    draft.purchaseAction = "buy";
     setEditing(draft);
     setPendingEditorTarget(draft.id);
   };
@@ -468,11 +469,19 @@ export function AdminProductManager() {
 
     // Validate pricing & inventory
     if (editing.purchaseAction === "buy") {
-      if (!Number.isFinite(normalized.price) || normalized.price <= 0) {
+      const variants = normalized.variants ?? [];
+      const activeVariants = variants.filter((v) => v.available !== false);
+      const totalVarStock = activeVariants.reduce((s, v) => s + (v.stockQuantity ?? 0), 0);
+      const effectiveStock = normalized.stockQuantity > 0 ? normalized.stockQuantity : totalVarStock;
+      const activePriced = activeVariants.filter((v) => v.price > 0);
+      const minVarPrice = activePriced.length > 0 ? Math.min(...activePriced.map((v) => v.price)) : 0;
+      const effectivePrice = normalized.price > 0 ? normalized.price : minVarPrice;
+
+      if (!Number.isFinite(effectivePrice) || effectivePrice <= 0) {
         setActionError("Direct checkout (Buy action) requires a confirmed price greater than GH₵0. If pricing is unconfirmed, select 'Contact for Price' or 'WhatsApp Enquiry' or click 'Save Draft'.");
         return;
       }
-      if (normalized.stockQuantity <= 0) {
+      if (effectiveStock <= 0) {
         setActionError("Direct checkout (Buy action) requires available stock (quantity > 0). If out of stock, adjust inventory, change purchase action, or click 'Save Draft'.");
         return;
       }

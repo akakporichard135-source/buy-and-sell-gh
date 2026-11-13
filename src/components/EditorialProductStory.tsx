@@ -202,7 +202,7 @@ export function EditorialProductStory({ story, sections = [], education }: { sto
       {story.finalImage && (
         <section className="editorial-final-beauty" aria-label={`${story.name} final product view`}>
           <div className="editorial-final-beauty-art"><ProductImage image={story.finalImage} /></div>
-          <Link className="editorial-buy" to={story.buyPath}>View pricing</Link>
+          <Link className="editorial-buy" to={story.buyPath}>{story.buyLabel ?? "Buy"}</Link>
         </section>
       )}
       </>}

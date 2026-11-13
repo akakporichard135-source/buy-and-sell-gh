@@ -64,7 +64,9 @@ export const addCartItem = (
   const variantTitle = matchedVariant?.title;
   const configuredPrice = matchedVariant ? matchedVariant.price : product.price;
   const originalPrice = matchedVariant?.previousPrice ?? product.previousPrice ?? product.oldPrice ?? null;
-  const effectiveStock = Math.min(product.stockQuantity, matchedVariant?.stockQuantity ?? product.stockQuantity);
+  const effectiveStock = product.stockQuantity > 0 && (matchedVariant?.stockQuantity ?? 0) > 0
+    ? Math.min(product.stockQuantity, matchedVariant?.stockQuantity ?? product.stockQuantity)
+    : (matchedVariant?.stockQuantity ?? product.stockQuantity);
 
   const existing = items.find(
     (item) =>
@@ -162,7 +164,9 @@ export const updateCartQuantity = (
       (variantId === undefined || item.variantId === variantId);
 
     if (!matches) return item;
-    const maxStock = Math.min(item.product.stockQuantity, item.variantStockQuantity ?? item.product.stockQuantity);
+    const maxStock = item.product.stockQuantity > 0 && (item.variantStockQuantity ?? 0) > 0
+      ? Math.min(item.product.stockQuantity, item.variantStockQuantity ?? item.product.stockQuantity)
+      : (item.variantStockQuantity ?? item.product.stockQuantity);
     return { ...item, quantity: Math.min(maxStock, clampCartQuantity(quantity)) };
   });
 

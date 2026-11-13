@@ -235,7 +235,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Room to unfold",
     tagline: "A different way to see more.",
     buyPath: "/shop/buy-iphone/iphone-duo",
-    buyLabel: "View Pricing",
+    buyLabel: "Buy",
     hero: { src: `${campaign}/iphone-duo-open.webp`, alt: "iPhone Duo foldable phone opened wide" },
     heroTone: "light",
     highlights: [
@@ -688,7 +688,7 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Sound made personal",
     tagline: "Premium sound. A more immersive experience.",
     buyPath: "/shop/buy-airpods/airpods-pro-3",
-    buyLabel: "View pricing",
+    buyLabel: "Buy",
     hero: { src: airpodsPro3Apple, alt: "AirPods Pro 3 earbuds and open MagSafe Charging Case" },
     heroTone: "light",
     highlights: [

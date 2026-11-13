@@ -46,7 +46,7 @@ const heroes: Campaign[] = [
     alt: "Open iPhone Duo held in two hands",
     tone: "light",
     primary: { label: "Learn more", to: "/iphone/iphone-duo" },
-    secondary: { label: "View pricing", to: "/shop/buy-iphone/iphone-duo" },
+    secondary: { label: "Buy", to: "/shop/buy-iphone/iphone-duo" },
   },
   {
     id: "watch-series-12",
@@ -161,7 +161,7 @@ function withPublishedProductAction(campaign: Campaign, products: Product[]): Ca
   );
   if (!product) {
     return campaign.secondary.to.startsWith("/shop/buy-")
-      ? { ...campaign, secondary: { ...campaign.secondary, label: "View pricing" } }
+      ? { ...campaign, secondary: { ...campaign.secondary, label: "Buy" } }
       : campaign;
   }
   const action = getPublicPurchaseAction(product);

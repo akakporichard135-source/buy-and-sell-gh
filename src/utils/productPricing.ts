@@ -62,8 +62,16 @@ export function resolveConfiguredPrice(
   product?: Product,
   options: ConfiguredPriceOptions = {}
 ): ResolvedPriceResult {
-  if (!product || product.priceOnRequest || product.price <= 0) {
-    const isEnquiry = !product || Boolean(product.priceOnRequest) || product.price <= 0;
+  const variants = product?.variants ?? [];
+  const activeVariants = variants.filter((v) => v.available !== false && v.price > 0);
+  const minVariantPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map((v) => v.price)) : 0;
+  const effectivePrice = product && product.price > 0 ? product.price : minVariantPrice;
+
+  const hasBuyTag = product?.tags?.includes("purchase-action:buy");
+  const isPriceOnRequest = Boolean(product?.priceOnRequest && !hasBuyTag);
+
+  if (!product || isPriceOnRequest || effectivePrice <= 0) {
+    const isEnquiry = !product || isPriceOnRequest || effectivePrice <= 0;
     return {
       variant: undefined,
       price: product?.price ?? 0,
@@ -74,8 +82,6 @@ export function resolveConfiguredPrice(
       isEnquiry,
     };
   }
-
-  const variants = product.variants ?? [];
 
   if (variants.length > 0) {
     // 1. Try finding a scored best variant match

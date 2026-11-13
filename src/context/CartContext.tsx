@@ -177,7 +177,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const selection = resolveSelection(product, storage, variant);
     if (!selection) return false;
     const { product: currentProduct, variant: currentVariant } = selection;
-    const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
+    const effectiveStock = currentProduct.stockQuantity > 0 && (currentVariant?.stockQuantity ?? 0) > 0
+      ? Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity)
+      : (currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
     const existingQuantity = items
       .filter((item) => item.product.id === currentProduct.id && item.storage === storage && item.color === color &&
         (!currentVariant?.id || item.variantId === currentVariant.id))
@@ -186,7 +188,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .filter((item) => item.product.id === currentProduct.id)
       .reduce((sum, item) => sum + item.quantity, 0);
     if (currentVariant?.available === false || existingQuantity + quantity > effectiveStock ||
-      productQuantity + quantity > currentProduct.stockQuantity) {
+      (currentProduct.stockQuantity > 0 && productQuantity + quantity > currentProduct.stockQuantity)) {
       setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }

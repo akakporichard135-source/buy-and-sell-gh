@@ -65,7 +65,7 @@ export const defaultHomepageContent: HomepageContent = {
       alt: "Open iPhone Duo held in two hands",
       tone: "light",
       primary: { label: "Learn more", to: "/iphone/iphone-duo" },
-      secondary: { label: "View pricing", to: "/shop/buy-iphone/iphone-duo" },
+      secondary: { label: "Buy", to: "/shop/buy-iphone/iphone-duo" },
       enabled: true,
       order: 2,
     },
@@ -870,7 +870,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/mac/macbook-pro-14-m5",
       actionPath: "/shop/buy-mac/macbook-pro-14-m5",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "macbook-air-13-m5",
@@ -882,7 +882,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/mac/macbook-air-13-m5",
       actionPath: "/shop/buy-mac/macbook-air-13-m5",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "mac-mini",
@@ -918,7 +918,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/ipad/ipad-air-11-inch-m4",
       actionPath: "/shop/buy-ipad/ipad-air-11-inch-m4",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "ipad-a16",
@@ -930,7 +930,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/ipad/ipad-10th-generation",
       actionPath: "/shop/buy-ipad/ipad-10th-generation",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "ipad-mini-a17-pro",
@@ -942,7 +942,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/ipad/ipad-mini-a17-pro",
       actionPath: "/shop/buy-ipad/ipad-mini-a17-pro",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "apple-watch-se-3",
@@ -954,7 +954,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/watch/apple-watch-se-2",
       actionPath: "/shop/buy-watch/apple-watch-se-2",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
   ],
   categoryCards: [
@@ -1018,7 +1018,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "dark",
       learnMorePath: "/iphone/iphone-18-pro",
       actionPath: "/shop/buy-iphone/iphone-18-pro",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "iphone-duo",
@@ -1030,7 +1030,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/iphone/iphone-duo",
       actionPath: "/shop/buy-iphone/iphone-duo",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "airpods-5",
@@ -1042,7 +1042,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/airpods/airpods-5",
       actionPath: "/shop/buy-airpods/airpods-5",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "iphone-17",
@@ -1054,7 +1054,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/iphone/iphone-17",
       actionPath: "/shop/buy-iphone/iphone-17",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "airpods-max-2",
@@ -1066,7 +1066,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/airpods/airpods-max-usb-c",
       actionPath: "/shop/buy-airpods/airpods-max-usb-c",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "iphone-air",
@@ -1078,7 +1078,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/iphone/iphone-air",
       actionPath: "/shop/buy-iphone/iphone-air",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
     {
       id: "iphone-17-pro",
@@ -1090,7 +1090,7 @@ export const defaultMainStoreConfig: MainStoreConfig = {
       theme: "light",
       learnMorePath: "/iphone/iphone-17-pro",
       actionPath: "/shop/buy-iphone/iphone-17-pro",
-      actionLabel: "View Pricing",
+      actionLabel: "Buy",
     },
   ],
   accessories: [

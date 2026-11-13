@@ -66,7 +66,7 @@ export function StoreDiscovery({ products }: { products: Product[] }) {
                   <span>{story.tagline}</span>
                   <div className="experience-actions">
                     <Link className="experience-button experience-button-primary" to={`/${family}/${slug}`}>Learn more</Link>
-                    <Link className="experience-button experience-button-secondary" to={story.buyPath}>View pricing</Link>
+                    <Link className="experience-button experience-button-secondary" to={story.buyPath}>Buy</Link>
                   </div>
                 </div>
                 {campaignMedia.type === "image"

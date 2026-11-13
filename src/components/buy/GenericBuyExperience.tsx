@@ -146,10 +146,20 @@ export function GenericBuyExperience({
       return publishedGalleryImages;
     }
     if (hasOwnerImages) {
+      if (matchedFinishImage) {
+        const matchingIdx = rawGallery.findIndex((img) => img.src === matchedFinishImage);
+        if (matchingIdx > 0) {
+          const reordered = [...rawGallery];
+          const [matched] = reordered.splice(matchingIdx, 1);
+          return [matched, ...reordered];
+        } else if (matchingIdx === -1) {
+          return [{ src: matchedFinishImage, alt: `${name}${color ? ` in ${color}` : ""}` }, ...rawGallery];
+        }
+      }
       return rawGallery;
     }
     return resolveProductColorGallery(effectiveProduct, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
-  }, [isCustomPublished, publishedGalleryImages, effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name]);
+  }, [isCustomPublished, publishedGalleryImages, effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name, matchedFinishImage]);
 
   const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
 

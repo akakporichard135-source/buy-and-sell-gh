@@ -53,11 +53,17 @@ export const getPrimaryImage = (product: Product) => {
 export const normalizeProduct = (product: Product, useSeedPricing = true): Product => {
   const seedPricing = useSeedPricing ? (initialProductPricingSeed[product.id] ?? initialProductPricingSeed[product.slug]) : undefined;
   const variants = product.variants !== undefined ? product.variants : (seedPricing?.variants ?? []);
+  const activeVariants = variants.filter((v) => v.available !== false);
+  const totalVariantStock = activeVariants.reduce(
+    (sum, v) => sum + (typeof v.stockQuantity === "number" ? v.stockQuantity : 0),
+    0
+  );
+
   let price = product.price > 0 ? product.price : (seedPricing?.price ?? product.price);
-  if (useSeedPricing && variants.length > 0) {
-    const activeVars = variants.filter((v) => v.available !== false && v.price > 0);
-    const minVarPrice = activeVars.length > 0 ? Math.min(...activeVars.map((v) => v.price)) : 0;
-    if (minVarPrice > 0 && (price <= 0 || price > minVarPrice || (product.slug === "iphone-18-pro" && price === 30000))) {
+  if (variants.length > 0) {
+    const activePricedVars = activeVariants.filter((v) => v.price > 0);
+    const minVarPrice = activePricedVars.length > 0 ? Math.min(...activePricedVars.map((v) => v.price)) : 0;
+    if (minVarPrice > 0 && (price <= 0 || (useSeedPricing && (price > minVarPrice || (product.slug === "iphone-18-pro" && price === 30000))))) {
       price = minVarPrice;
     }
   }
@@ -65,8 +71,19 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
   const condition = (product.condition === "To Confirm" && seedPricing?.condition)
     ? normalizeCondition(seedPricing.condition as ProductCondition)
     : normalizeCondition(product.condition);
-  const stockQuantity = typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
-  const stockStatus = normalizeStockStatus({ ...product, stockQuantity });
+
+  // Compute effective stock quantity: if parent is 0 or unassigned, compute from active variants
+  const rawStock = typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
+  const stockQuantity = (rawStock > 0 || variants.length === 0) ? rawStock : totalVariantStock;
+
+  // Compute effective stock status: variants with inventory should not be marked Out of Stock
+  let effectiveStatus = product.stockStatus;
+  if (effectiveStatus !== "Sold" && (effectiveStatus as string) !== "Sold Out") {
+    if (totalVariantStock > 0 && (effectiveStatus === "Out of Stock" || rawStock < 1)) {
+      effectiveStatus = totalVariantStock <= 3 ? "Low Stock" : "In Stock";
+    }
+  }
+  const stockStatus = normalizeStockStatus({ stockQuantity, stockStatus: effectiveStatus });
 
   const now = new Date().toISOString();
   const specs = product.specifications ?? product.specs;
@@ -74,7 +91,11 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
   const warranty = product.warranty ?? product.warrantyInfo;
   const deliveryInfo = product.deliveryInfo ?? product.deliveryNote;
   const primaryImage = resolveProductImage(product);
-  const priceOnRequest = (product.price <= 0 && seedPricing && seedPricing.price > 0)
+
+  const hasBuyTag = product.tags?.includes("purchase-action:buy");
+  const priceOnRequest = hasBuyTag
+    ? false
+    : (product.price <= 0 && seedPricing && seedPricing.price > 0)
       ? false
       : (product.priceOnRequest !== undefined ? product.priceOnRequest : (price <= 0));
 
@@ -85,7 +106,9 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
     oldPrice: previousPrice,
     priceOnRequest,
     variants,
-    defaultColor: product.defaultColor ?? product.colors[0] ?? "",
+    storage: product.storage ?? [],
+    colors: product.colors ?? [],
+    defaultColor: product.defaultColor ?? product.colors?.[0] ?? "",
     condition,
     stockStatus,
     stockQuantity,
@@ -93,7 +116,7 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
     popular: product.popular ?? product.isPopular ?? false,
     newArrival: product.newArrival ?? product.isNewArrival ?? false,
     featured: product.featured ?? product.isFeatured ?? false,
-    available: product.available ?? (stockStatus !== "Sold" && stockStatus !== "Out of Stock"),
+    available: product.available ?? (stockStatus !== "Sold" && stockStatus !== "Out of Stock" && stockQuantity > 0),
     isPopular: product.popular ?? product.isPopular ?? false,
     isNewArrival: product.newArrival ?? product.isNewArrival ?? false,
     isFeatured: product.featured ?? product.isFeatured ?? false,

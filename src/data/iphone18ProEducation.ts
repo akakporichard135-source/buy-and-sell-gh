@@ -133,6 +133,6 @@ export const iphone18ProEducation: IphoneEducationContent = {
   before: {
     enabled: true, label: "BEFORE YOU BUY", title: "Choose the right one for you.",
     body: "The iPhone 18 Pro is the 6.3-inch model, not the larger Pro Max. Check the exact storage, finish, SIM configuration, condition, warranty, and included accessories on the listing before you order. The images on this page are illustrative; the selected product listing is the source for the item you will receive.",
-    buttonLabel: "View pricing", specsLabel: "Read Apple's full specifications", specsUrl: "https://www.apple.com/iphone-18-pro/specs/",
+    buttonLabel: "Buy", specsLabel: "Read Apple's full specifications", specsUrl: "https://www.apple.com/iphone-18-pro/specs/",
   },
 };
