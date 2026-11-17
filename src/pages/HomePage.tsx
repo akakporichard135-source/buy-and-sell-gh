@@ -1,14 +1,17 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
+import { defaultHomepageSections } from "../cms/defaultCmsData";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { getProductFamily, productBuyPath } from "../catalog/productExperience";
 import { SEO } from "../components/SEO";
+import { HomepageSectionRenderer } from "../components/homepage/HomepageSectionRenderer";
 import { PromotionalAnnouncementBar } from "../components/promotions/PromotionalAnnouncementBar";
 import { HomepagePromotionalCarousel } from "../components/promotions/HomepagePromotionalCarousel";
 import { whatsappUrl } from "../utils/whatsapp";
+import type { HomepageContent } from "../cms/types";
 import type { Product } from "../types/product";
 import "../styles/homepage-reference.css";
 
@@ -183,10 +186,18 @@ const serviceFlyers = [
 ];
 
 export function HomePage() {
-  const { homepage, loading, hasVerifiedHomepage } = useCms();
+  const { homepage, homepageDraft, loading, hasVerifiedHomepage } = useCms();
   const { products } = useProductCatalog();
+  const location = useLocation();
 
-  if (loading && !hasVerifiedHomepage) {
+  const searchParams = new URLSearchParams(location.search);
+  const isLocalHost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+  const isLocalPreviewModular =
+    (import.meta.env.DEV || isLocalHost) && searchParams.get("preview") === "modular";
+
+  if (loading && !hasVerifiedHomepage && !isLocalPreviewModular) {
     return (
       <main className="storefront-home home-reference">
         <SEO
@@ -206,6 +217,88 @@ export function HomePage() {
           </div>
         </div>
       </main>
+    );
+  }
+
+  if (isLocalPreviewModular || homepage?.layoutMode === "modular") {
+    const modularContent: HomepageContent = isLocalPreviewModular
+      ? homepageDraft || {
+          ...homepage,
+          layoutMode: "modular",
+          sections:
+            homepage?.sections && homepage.sections.length > 0
+              ? homepage.sections
+              : defaultHomepageSections,
+        }
+      : homepage;
+
+    return (
+      <>
+        <SEO
+          title="Premium Tech Store in Accra | Buy & Sell GH"
+          description="Shop original devices and get trusted trade-in, repair, installment and customer support from Buy & Sell GH in Accra."
+        />
+        <main className="storefront-home">
+          <HomepageSectionRenderer content={modularContent} />
+          {isLocalPreviewModular && (
+            <div
+              role="status"
+              style={{
+                position: "fixed",
+                right: 12,
+                bottom: 12,
+                zIndex: 90,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                borderRadius: 999,
+                background: "rgba(29, 29, 31, 0.92)",
+                color: "#f5f5f7",
+                fontSize: 11,
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                boxShadow: "0 10px 28px rgba(0, 0, 0, 0.28)",
+                border: "1px solid rgba(255, 255, 255, 0.16)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#30d158",
+                  display: "inline-block",
+                  flexShrink: 0,
+                }}
+              />
+              <span>{homepageDraft ? "Modular Draft" : "Modular Preview"}</span>
+              <Link
+                to="/admin/homepage"
+                style={{
+                  color: "#2997ff",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  marginLeft: 2,
+                }}
+              >
+                Admin
+              </Link>
+              <Link
+                to="/"
+                style={{
+                  color: "#a1a1a6",
+                  textDecoration: "none",
+                  marginLeft: 2,
+                }}
+              >
+                Exit
+              </Link>
+            </div>
+          )}
+        </main>
+      </>
     );
   }
 

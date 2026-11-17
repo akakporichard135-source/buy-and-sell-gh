@@ -20,23 +20,92 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
+import { defaultHomepageSections } from "../../cms/defaultCmsData";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import type { HeroCampaign, HomepageContent, MediaItem, PromoTile, ServiceFlyer, Tone } from "../../cms/types";
+import { HomepageSectionBuilder } from "../../components/admin/HomepageSectionBuilder";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
+/**
+ * Safety lock keeping the Phase 2 modular homepage strictly in local-only development
+ * until all content is filled, reviewed, tested, and explicitly approved for rollout.
+ */
+export const MODULAR_LIVE_PUBLISH_LOCKED = true;
+
+/**
+ * Pure publish guard that blocks invoking the live Supabase publishing function
+ * while local-only development mode is active, preserving the underlying
+ * AAL2-gated publish pipeline for an explicitly approved deployment stage.
+ */
+export async function executeGuardedModularPublish({
+  locked = MODULAR_LIVE_PUBLISH_LOCKED,
+  publishFn,
+}: {
+  locked?: boolean;
+  publishFn: () => Promise<void>;
+}): Promise<{ blocked: boolean; message?: string }> {
+  if (locked) {
+    return {
+      blocked: true,
+      message:
+        "Modular live publishing is disabled in the current local-only workflow. Save your local draft and preview via /?preview=modular.",
+    };
+  }
+  await publishFn();
+  return { blocked: false };
+}
+
 export function AdminHomepageManager() {
-  const { homepage, updateHomepage } = useCms();
+  const {
+    homepage,
+    homepageDraft,
+    media,
+    updateHomepage,
+    saveHomepageDraftConfig,
+    discardHomepageDraftConfig,
+  } = useCms();
+  const { products } = useProductCatalog();
   const [content, setContent] = useState<HomepageContent>(homepage);
+  const [draftContent, setDraftContent] = useState<HomepageContent>(() =>
+    homepageDraft || {
+      ...homepage,
+      layoutMode: "modular",
+      sections:
+        homepage.sections && homepage.sections.length > 0
+          ? homepage.sections
+          : defaultHomepageSections,
+    }
+  );
+  const [editorMode, setEditorMode] = useState<"modular" | "legacy">("modular");
   const [activeTab, setActiveTab] = useState<"heroes" | "tiles" | "flyers" | "announcement">("heroes");
   const [saving, setSaving] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [saveError, setSaveError] = useState("");
 
-  // Sync state when homepage updates from Supabase
+  // Sync legacy state when live homepage updates from Supabase
   useEffect(() => {
     if (homepage) {
       setContent(homepage);
+      if (!homepageDraft) {
+        setDraftContent({
+          ...homepage,
+          layoutMode: "modular",
+          sections:
+            homepage.sections && homepage.sections.length > 0
+              ? homepage.sections
+              : defaultHomepageSections,
+        });
+      }
     }
-  }, [homepage]);
+  }, [homepage, homepageDraft]);
+
+  useEffect(() => {
+    if (homepageDraft) {
+      setDraftContent(homepageDraft);
+    }
+  }, [homepageDraft]);
 
   // Media picker modal state
   const [mediaPickerTarget, setMediaPickerTarget] = useState<{
@@ -48,13 +117,91 @@ export function AdminHomepageManager() {
   // Live preview state
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Sync state if homepage updates externally
+  // Save modular draft locally only (never writes to Supabase)
+  const handleSaveModularDraft = async () => {
+    setSavingDraft(true);
+    setSaveError("");
+    setSaveSuccess(false);
+    try {
+      const saved = await saveHomepageDraftConfig({
+        ...draftContent,
+        layoutMode: "modular",
+      });
+      setDraftContent(saved);
+      setSuccessMessage("Local modular draft saved to browser storage (live website unchanged).");
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save local draft.");
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+  const handleDiscardModularDraft = async () => {
+    setSaveError("");
+    setSaveSuccess(false);
+    await discardHomepageDraftConfig();
+    setDraftContent({
+      ...homepage,
+      layoutMode: "modular",
+      sections:
+        homepage.sections && homepage.sections.length > 0
+          ? homepage.sections
+          : defaultHomepageSections,
+    });
+    setSuccessMessage("Local homepage draft discarded.");
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3500);
+  };
+
+  // Explicit Modular Publish (disabled in local-only workflow; guarded by AAL2 MFA when unlocked)
+  const handlePublishModular = async () => {
+    setSaveError("");
+    setSaveSuccess(false);
+    try {
+      const result = await executeGuardedModularPublish({
+        locked: MODULAR_LIVE_PUBLISH_LOCKED,
+        publishFn: async () => {
+          setSaving(true);
+          try {
+            await updateHomepage({
+              ...draftContent,
+              layoutMode: "modular",
+            });
+          } finally {
+            setSaving(false);
+          }
+        },
+      });
+
+      if (result.blocked) {
+        setSaveError(
+          result.message ||
+            "Modular live publishing is disabled in the current local-only workflow."
+        );
+        return;
+      }
+
+      setSuccessMessage("Modular homepage explicitly published to live website!");
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4500);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to publish modular homepage.");
+    }
+  };
+
+  // Explicit Legacy Publish (preserves legacy layoutMode)
   const handleSave = async () => {
     setSaving(true);
     setSaveError("");
     setSaveSuccess(false);
     try {
-      await updateHomepage(content);
+      await updateHomepage({
+        ...content,
+        layoutMode: content.layoutMode === "modular" ? "modular" : "legacy",
+      });
+      setSuccessMessage("Homepage content successfully published to live website!");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
@@ -95,16 +242,16 @@ export function AdminHomepageManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="homepage-cms-builder space-y-6">
       {/* 1. Header Card */}
       <div className="admin-header-card">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#92700c]">
               Storefront CMS
             </span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
-            <span className="text-xs font-semibold text-slate-500">Live Homepage Layout</span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+            <span className="text-xs font-semibold text-slate-500">Homepage Architecture</span>
           </div>
           <h2>Homepage Content &amp; Campaign Editor</h2>
           <p>
@@ -113,31 +260,38 @@ export function AdminHomepageManager() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setPreviewOpen(true)}
-            className="admin-btn admin-btn-secondary"
-          >
-            <Eye size={16} />
-            <span>Preview Layout</span>
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={handleSave}
-            className="admin-btn admin-btn-primary"
-          >
-            <Save size={16} />
-            <span>{saving ? "Saving Changes..." : "Publish to Homepage"}</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0 max-w-full">
+          <div className="inline-flex flex-wrap items-center p-1 rounded-xl bg-slate-100 border border-slate-200 max-w-full">
+            <button
+              type="button"
+              onClick={() => setEditorMode("modular")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                editorMode === "modular"
+                  ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Buy &amp; Sell GH Homepage Builder
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorMode("legacy")}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+                editorMode === "legacy"
+                  ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Legacy Layout Editor
+            </button>
+          </div>
         </div>
       </div>
 
       {saveSuccess && (
         <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
           <CheckCircle2 size={16} />
-          <span>Homepage content successfully published to live website!</span>
+          <span>{successMessage || "Homepage content successfully updated!"}</span>
         </div>
       )}
 
@@ -148,67 +302,127 @@ export function AdminHomepageManager() {
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="w-full overflow-x-auto scrollbar-none pb-1">
-        <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
-          <button
-            type="button"
-            onClick={() => setActiveTab("heroes")}
-            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "heroes"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Layout size={15} />
-            <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
-          </button>
+      {editorMode === "modular" ? (
+        <HomepageSectionBuilder
+          draft={draftContent}
+          liveLayoutMode={homepage.layoutMode === "modular" ? "modular" : "legacy"}
+          hasLocalDraft={Boolean(homepageDraft)}
+          products={products}
+          mediaLibrary={media}
+          onChangeDraft={setDraftContent}
+          onSaveDraft={handleSaveModularDraft}
+          onDiscardDraft={handleDiscardModularDraft}
+          onPublishModular={handlePublishModular}
+          modularPublishLocked={MODULAR_LIVE_PUBLISH_LOCKED}
+          savingDraft={savingDraft}
+          publishing={saving}
+        />
+      ) : (
+        <div className="space-y-6 min-w-0">
+          {/* Legacy Action Toolbar */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#0a0a0c] text-white border border-[#d4af37]/30 whitespace-nowrap">
+                  Legacy Layout Editor
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border whitespace-nowrap ${
+                    homepage.layoutMode === "modular"
+                      ? "bg-slate-100 text-slate-700 border-slate-200"
+                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  }`}
+                >
+                  Live Storefront: {homepage.layoutMode === "modular" ? "Modular Layout" : "Legacy Active"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Manage legacy hero slides, 2-column promotional tiles, service flyers, and the top announcement banner.
+              </p>
+            </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("tiles")}
-            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "tiles"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Grid size={15} />
-            <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
-          </button>
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 max-w-full">
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+                className="admin-btn admin-btn-secondary admin-btn-sm whitespace-nowrap"
+              >
+                <Eye size={15} className="shrink-0" />
+                <span>Preview Layout</span>
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSave}
+                className="admin-btn admin-btn-gold admin-btn-sm shadow-xs whitespace-nowrap"
+              >
+                <Save size={15} className="shrink-0" />
+                <span>{saving ? "Saving Changes..." : "Publish Legacy Homepage"}</span>
+              </button>
+            </div>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("flyers")}
-            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "flyers"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Layers size={15} />
-            <span>Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)</span>
-          </button>
+          {/* Navigation Tabs */}
+          <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-slate-100 homepage-cms-scroll">
+            <div className="inline-flex items-center gap-1 p-1 min-w-max">
+              <button
+                type="button"
+                onClick={() => setActiveTab("heroes")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "heroes"
+                    ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                }`}
+              >
+                <Layout size={14} className="shrink-0" />
+                <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("announcement")}
-            className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "announcement"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Volume2 size={15} />
-            <span>Announcement Bar</span>
-          </button>
-        </div>
-      </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab("tiles")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "tiles"
+                    ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                }`}
+              >
+                <Grid size={14} className="shrink-0" />
+                <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("flyers")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "flyers"
+                    ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                }`}
+              >
+                <Layers size={14} className="shrink-0" />
+                <span>Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("announcement")}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
+                  activeTab === "announcement"
+                    ? "bg-[#0f172a] text-[#f0cf78] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/70"
+                }`}
+              >
+                <Volume2 size={14} className="shrink-0" />
+                <span>Announcement Bar</span>
+              </button>
+            </div>
+          </div>
 
       {/* SECTION 1: HERO CAROUSEL */}
       {activeTab === "heroes" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-slate-900">Homepage Hero Slides</h3>
             <button
               type="button"
@@ -227,7 +441,7 @@ export function AdminHomepageManager() {
                 };
                 setContent({ ...content, heroes: [...content.heroes, newHero] });
               }}
-              className="admin-btn admin-btn-sm admin-btn-secondary"
+              className="admin-btn admin-btn-sm bg-[#0f172a] text-[#f0cf78] hover:bg-slate-800 border border-[#0f172a] whitespace-nowrap"
             >
               <Plus size={14} />
               <span>Add Hero Slide</span>
@@ -238,23 +452,23 @@ export function AdminHomepageManager() {
             {content.heroes.map((hero, index) => (
               <div
                 key={hero.id}
-                className={`admin-card p-5 space-y-4 border transition ${
-                  hero.enabled ? "border-slate-200" : "border-slate-200/50 bg-slate-50/50 opacity-60"
+                className={`rounded-2xl bg-white p-4 sm:p-5 space-y-4 border shadow-sm transition min-w-0 ${
+                  hero.enabled ? "border-slate-200" : "border-slate-200/60 bg-slate-50/70 opacity-65"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-[#d4af37]/15 text-[#d4af37] font-bold text-xs flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-[#0f172a] text-[#f0cf78] font-bold text-xs flex items-center justify-center shrink-0">
                       {index + 1}
                     </span>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">{hero.title || "Untitled Slide"}</h4>
-                      <p className="text-xs text-slate-500">{hero.subtitle}</p>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-slate-900 text-sm truncate">{hero.title || "Untitled Slide"}</h4>
+                      <p className="text-xs text-slate-500 truncate">{hero.subtitle}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer mr-2">
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer mr-1">
                       <input
                         type="checkbox"
                         checked={hero.enabled}
@@ -263,7 +477,7 @@ export function AdminHomepageManager() {
                           heroes[index] = { ...heroes[index], enabled: e.target.checked };
                           setContent({ ...content, heroes });
                         }}
-                        className="rounded border-slate-300 text-[#d4af37] focus:ring-[#d4af37]"
+                        className="rounded border-slate-300"
                       />
                       <span>Active on Storefront</span>
                     </label>
@@ -272,7 +486,7 @@ export function AdminHomepageManager() {
                       type="button"
                       disabled={index === 0}
                       onClick={() => setContent({ ...content, heroes: moveItem(content.heroes, index, -1) })}
-                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-[#d4af37]/60 text-slate-600 disabled:opacity-30 transition"
                       title="Move up"
                     >
                       <ArrowUp size={14} />
@@ -281,7 +495,7 @@ export function AdminHomepageManager() {
                       type="button"
                       disabled={index === content.heroes.length - 1}
                       onClick={() => setContent({ ...content, heroes: moveItem(content.heroes, index, 1) })}
-                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-[#d4af37]/60 text-slate-600 disabled:opacity-30 transition"
                       title="Move down"
                     >
                       <ArrowDown size={14} />
@@ -292,7 +506,7 @@ export function AdminHomepageManager() {
                         const heroes = content.heroes.filter((_, i) => i !== index);
                         setContent({ ...content, heroes });
                       }}
-                      className="p-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50"
+                      className="p-1.5 rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 transition"
                       title="Delete slide"
                     >
                       <Trash2 size={14} />
@@ -300,7 +514,7 @@ export function AdminHomepageManager() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 text-xs">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Headline Title *</label>
                     <input
@@ -331,7 +545,7 @@ export function AdminHomepageManager() {
                     />
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2 xl:col-span-1">
                     <label className="block font-bold text-slate-700 mb-1">Display Tone</label>
                     <select
                       value={hero.tone}
@@ -348,14 +562,15 @@ export function AdminHomepageManager() {
                     </select>
                   </div>
 
-                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="md:col-span-2 xl:col-span-3" style={{ containerType: "inline-size" }}>
+                    <div className="homepage-cms-media-grid p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                     {/* Desktop Hero Image */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2 min-w-0 flex flex-col">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <label className="block font-bold text-slate-800 text-xs">Desktop Hero Image *</label>
-                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 2880×1200 or 1440×600</span>
+                        <span className="text-[0.65rem] text-slate-500 font-semibold">Recommended: 2880×1200 or 1440×600</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <input
                           type="text"
                           value={hero.image}
@@ -364,30 +579,30 @@ export function AdminHomepageManager() {
                             heroes[index] = { ...heroes[index], image: e.target.value };
                             setContent({ ...content, heroes });
                           }}
-                          className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
+                          className="flex-1 min-w-[160px] p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
                           placeholder="/products/homepage/iphone-18-pro-hero-2x.webp"
                         />
                         <button
                           type="button"
                           onClick={() => setMediaPickerTarget({ section: "hero", index, field: "image" })}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-[#d4af37] text-white font-bold flex items-center gap-1.5 shrink-0 transition text-xs"
+                          className="px-3 py-2 rounded-lg bg-[#d4af37] hover:bg-[#b89726] text-[#0a0a0c] border border-[#b89726]/40 font-bold flex items-center gap-1.5 shrink-0 whitespace-nowrap transition text-xs"
                         >
-                          <ImageIcon size={13} />
+                          <ImageIcon size={13} className="shrink-0" />
                           <span>Change Image</span>
                         </button>
                       </div>
-                      <div className="h-24 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/80 p-1">
+                      <div className="homepage-cms-media-preview">
                         <img src={hero.image} alt={hero.alt} className="max-h-full max-w-full object-contain" />
                       </div>
                     </div>
 
                     {/* Mobile Hero Image */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2 min-w-0 flex flex-col">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
                         <label className="block font-bold text-slate-800 text-xs">Mobile Hero Image (Optional)</label>
-                        <span className="text-[0.65rem] text-slate-400 font-semibold">Recommended: 680×880 or vertical portrait</span>
+                        <span className="text-[0.65rem] text-slate-500 font-semibold">Recommended: 680×880 or vertical portrait</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <input
                           type="text"
                           value={hero.mobileImage || ""}
@@ -396,15 +611,15 @@ export function AdminHomepageManager() {
                             heroes[index] = { ...heroes[index], mobileImage: e.target.value || undefined };
                             setContent({ ...content, heroes });
                           }}
-                          className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
-                          placeholder="Select from Media Library or leave empty to use desktop image"
+                          className="flex-1 min-w-[160px] p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
+                          placeholder="Select from Media Library or leave empty"
                         />
                         <button
                           type="button"
                           onClick={() => setMediaPickerTarget({ section: "hero", index, field: "mobileImage" })}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-[#d4af37] text-white hover:text-slate-950 font-bold flex items-center gap-1.5 shrink-0 transition text-xs shadow-sm"
+                          className="px-3 py-2 rounded-lg bg-[#d4af37] hover:bg-[#b89726] text-[#0a0a0c] border border-[#b89726]/40 font-bold flex items-center gap-1.5 shrink-0 whitespace-nowrap transition text-xs"
                         >
-                          <ImageIcon size={13} />
+                          <ImageIcon size={13} className="shrink-0" />
                           <span>Pick Mobile</span>
                         </button>
                         {hero.mobileImage && (
@@ -415,14 +630,14 @@ export function AdminHomepageManager() {
                               heroes[index] = { ...heroes[index], mobileImage: undefined };
                               setContent({ ...content, heroes });
                             }}
-                            className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 text-xs font-bold transition whitespace-nowrap shrink-0"
+                            className="px-2.5 py-2 rounded-lg border border-rose-200 bg-rose-50/40 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition whitespace-nowrap shrink-0"
                             title="Clear mobile image"
                           >
                             Clear
                           </button>
                         )}
                       </div>
-                      <div className="h-24 bg-slate-900 rounded-lg overflow-hidden flex items-center justify-center border border-slate-300/80 p-1">
+                      <div className="homepage-cms-media-preview">
                         {hero.mobileImage ? (
                           <img
                             src={hero.mobileImage}
@@ -435,15 +650,16 @@ export function AdminHomepageManager() {
                             }}
                           />
                         ) : (
-                          <span className="text-[0.65rem] text-slate-400 font-medium">
+                          <span className="text-[0.68rem] text-slate-400 font-medium text-center px-2">
                             Inheriting Desktop Image on Mobile
                           </span>
                         )}
                       </div>
                     </div>
+                    </div>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2 xl:col-span-1">
                     <label className="block font-bold text-slate-700 mb-1">Accessibility Alt Text</label>
                     <input
                       type="text"
@@ -459,7 +675,7 @@ export function AdminHomepageManager() {
                   </div>
 
                   {/* Button 1 */}
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 min-w-0">
                     <span className="block font-bold text-slate-800">Primary Button</span>
                     <input
                       type="text"
@@ -470,7 +686,7 @@ export function AdminHomepageManager() {
                         setContent({ ...content, heroes });
                       }}
                       placeholder="Button label (e.g. Learn more)"
-                      className="w-full p-2 rounded border border-slate-200 bg-white"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white"
                     />
                     <input
                       type="text"
@@ -481,12 +697,12 @@ export function AdminHomepageManager() {
                         setContent({ ...content, heroes });
                       }}
                       placeholder="Destination URL (e.g. /iphone/iphone-18-pro)"
-                      className="w-full p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
                     />
                   </div>
 
                   {/* Button 2 */}
-                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 min-w-0">
                     <span className="block font-bold text-slate-800">Secondary Button (Optional)</span>
                     <input
                       type="text"
@@ -500,7 +716,7 @@ export function AdminHomepageManager() {
                         setContent({ ...content, heroes });
                       }}
                       placeholder="Button label (e.g. Buy)"
-                      className="w-full p-2 rounded border border-slate-200 bg-white"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white"
                     />
                     <input
                       type="text"
@@ -514,7 +730,7 @@ export function AdminHomepageManager() {
                         setContent({ ...content, heroes });
                       }}
                       placeholder="Destination URL (e.g. /shop/buy-iphone/...)"
-                      className="w-full p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
                     />
                   </div>
                 </div>
@@ -527,7 +743,7 @@ export function AdminHomepageManager() {
       {/* SECTION 2: PROMOTIONAL TILES */}
       {activeTab === "tiles" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-slate-900">Promotional Grid Tiles</h3>
             <button
               type="button"
@@ -546,7 +762,7 @@ export function AdminHomepageManager() {
                 };
                 setContent({ ...content, tiles: [...content.tiles, newTile] });
               }}
-              className="admin-btn admin-btn-sm admin-btn-secondary"
+              className="admin-btn admin-btn-sm bg-[#0f172a] text-[#f0cf78] hover:bg-slate-800 border border-[#0f172a] whitespace-nowrap"
             >
               <Plus size={14} />
               <span>Add Promotional Tile</span>
@@ -557,21 +773,21 @@ export function AdminHomepageManager() {
             {content.tiles.map((tile, index) => (
               <div
                 key={tile.id}
-                className={`admin-card p-4 space-y-3 border transition ${
-                  tile.enabled ? "border-slate-200" : "border-slate-200/50 bg-slate-50/50 opacity-60"
+                className={`rounded-2xl bg-white p-4 sm:p-5 space-y-3 border shadow-sm transition min-w-0 ${
+                  tile.enabled ? "border-slate-200" : "border-slate-200/60 bg-slate-50/70 opacity-65"
                 }`}
               >
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-slate-900 text-white font-bold text-[0.65rem] flex items-center justify-center">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="w-5 h-5 rounded-full bg-[#0f172a] text-[#f0cf78] font-bold text-[0.65rem] flex items-center justify-center shrink-0">
                       {index + 1}
                     </span>
-                    <h4 className="font-bold text-slate-900 text-xs truncate max-w-[150px]">
+                    <h4 className="font-bold text-slate-900 text-xs truncate">
                       {tile.title}
                     </h4>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <label className="flex items-center gap-1 text-[0.7rem] font-bold text-slate-700 cursor-pointer mr-1">
                       <input
                         type="checkbox"
@@ -581,7 +797,7 @@ export function AdminHomepageManager() {
                           tiles[index] = { ...tiles[index], enabled: e.target.checked };
                           setContent({ ...content, tiles });
                         }}
-                        className="rounded border-slate-300 text-[#d4af37]"
+                        className="rounded border-slate-300"
                       />
                       <span>Active</span>
                     </label>
@@ -590,7 +806,7 @@ export function AdminHomepageManager() {
                       type="button"
                       disabled={index === 0}
                       onClick={() => setContent({ ...content, tiles: moveItem(content.tiles, index, -1) })}
-                      className="p-1 rounded border border-slate-200 hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-[#d4af37]/60 text-slate-600 disabled:opacity-30 transition"
                     >
                       <ArrowUp size={12} />
                     </button>
@@ -598,7 +814,7 @@ export function AdminHomepageManager() {
                       type="button"
                       disabled={index === content.tiles.length - 1}
                       onClick={() => setContent({ ...content, tiles: moveItem(content.tiles, index, 1) })}
-                      className="p-1 rounded border border-slate-200 hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-[#d4af37]/60 text-slate-600 disabled:opacity-30 transition"
                     >
                       <ArrowDown size={12} />
                     </button>
@@ -608,16 +824,16 @@ export function AdminHomepageManager() {
                         const tiles = content.tiles.filter((_, i) => i !== index);
                         setContent({ ...content, tiles });
                       }}
-                      className="p-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50"
+                      className="p-1.5 rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 transition"
                     >
                       <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2.5 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Title</label>
+                    <label className="block font-bold text-slate-700 mb-1">Title</label>
                     <input
                       type="text"
                       value={tile.title}
@@ -631,7 +847,7 @@ export function AdminHomepageManager() {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Subtitle</label>
+                    <label className="block font-bold text-slate-700 mb-1">Subtitle</label>
                     <input
                       type="text"
                       value={tile.subtitle}
@@ -644,9 +860,9 @@ export function AdminHomepageManager() {
                     />
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <label className="block font-bold text-slate-700 text-xs">Tile Image Artwork *</label>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                       <input
                         type="text"
                         value={tile.image}
@@ -655,18 +871,18 @@ export function AdminHomepageManager() {
                           tiles[index] = { ...tiles[index], image: e.target.value };
                           setContent({ ...content, tiles });
                         }}
-                        className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.68rem]"
+                        className="flex-1 min-w-0 p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.68rem]"
                       />
                       <button
                         type="button"
                         onClick={() => setMediaPickerTarget({ section: "tile", index, field: "image" })}
-                        className="px-3 py-1.5 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white font-bold shrink-0 text-xs flex items-center gap-1 transition"
+                        className="px-3 py-2 rounded-lg bg-[#d4af37] hover:bg-[#b89726] text-[#0a0a0c] border border-[#b89726]/40 font-bold shrink-0 whitespace-nowrap text-xs flex items-center gap-1.5 transition"
                       >
-                        <ImageIcon size={13} />
+                        <ImageIcon size={13} className="shrink-0" />
                         <span>Change Image</span>
                       </button>
                     </div>
-                    <div className="aspect-[16/9] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 max-h-28 mt-2 p-1">
+                    <div className="homepage-cms-media-preview mt-1">
                       <img
                         src={tile.image}
                         alt={tile.alt || tile.title}
@@ -675,9 +891,9 @@ export function AdminHomepageManager() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">Tone</label>
+                      <label className="block font-bold text-slate-700 mb-1">Tone</label>
                       <select
                         value={tile.tone}
                         onChange={(e) => {
@@ -685,7 +901,7 @@ export function AdminHomepageManager() {
                           tiles[index] = { ...tiles[index], tone: e.target.value as Tone };
                           setContent({ ...content, tiles });
                         }}
-                        className="w-full p-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
+                        className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold"
                       >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
@@ -694,7 +910,7 @@ export function AdminHomepageManager() {
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">Placement</label>
+                      <label className="block font-bold text-slate-700 mb-1">Placement</label>
                       <select
                         value={tile.placement || "top"}
                         onChange={(e) => {
@@ -705,7 +921,7 @@ export function AdminHomepageManager() {
                           };
                           setContent({ ...content, tiles });
                         }}
-                        className="w-full p-1.5 rounded-lg border border-slate-200 bg-white text-xs"
+                        className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs"
                       >
                         <option value="top">Top Aligned Text</option>
                         <option value="bottom">Bottom Aligned Text</option>
@@ -713,9 +929,9 @@ export function AdminHomepageManager() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">Primary Link</label>
+                      <label className="block font-bold text-slate-700 mb-1">Primary Link</label>
                       <input
                         type="text"
                         value={tile.primary.to}
@@ -725,11 +941,11 @@ export function AdminHomepageManager() {
                           setContent({ ...content, tiles });
                         }}
                         placeholder="/store"
-                        className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
+                        className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.68rem]"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">Button Label</label>
+                      <label className="block font-bold text-slate-700 mb-1">Button Label</label>
                       <input
                         type="text"
                         value={tile.primary.label}
@@ -739,7 +955,7 @@ export function AdminHomepageManager() {
                           setContent({ ...content, tiles });
                         }}
                         placeholder="Learn more"
-                        className="w-full p-1.5 rounded border border-slate-200 bg-white text-xs"
+                        className="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs"
                       />
                     </div>
                   </div>
@@ -753,7 +969,7 @@ export function AdminHomepageManager() {
       {/* SECTION 3: SERVICE FLYERS */}
       {activeTab === "flyers" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-bold text-slate-900">Our Services Showcase Flyers</h3>
             <button
               type="button"
@@ -769,24 +985,24 @@ export function AdminHomepageManager() {
                 };
                 setContent({ ...content, serviceFlyers: [...content.serviceFlyers, newFlyer] });
               }}
-              className="admin-btn admin-btn-sm admin-btn-secondary"
+              className="admin-btn admin-btn-sm bg-[#0f172a] text-[#f0cf78] hover:bg-slate-800 border border-[#0f172a] whitespace-nowrap"
             >
               <Plus size={14} />
               <span>Add Flyer</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {content.serviceFlyers.map((flyer, index) => (
               <div
                 key={flyer.id}
-                className={`admin-card p-4 space-y-3 border transition ${
-                  flyer.enabled ? "border-slate-200" : "border-slate-200/50 bg-slate-50/50 opacity-60"
+                className={`rounded-2xl bg-white p-4 sm:p-5 space-y-3 border shadow-sm transition min-w-0 flex flex-col ${
+                  flyer.enabled ? "border-slate-200" : "border-slate-200/60 bg-slate-50/70 opacity-65"
                 }`}
               >
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <h4 className="font-bold text-slate-900 text-xs truncate">{flyer.title}</h4>
-                  <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                  <h4 className="font-bold text-slate-900 text-xs truncate min-w-0 flex-1">{flyer.title}</h4>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <label className="flex items-center gap-1 text-[0.7rem] font-bold text-slate-700 cursor-pointer">
                       <input
                         type="checkbox"
@@ -796,7 +1012,7 @@ export function AdminHomepageManager() {
                           flyers[index] = { ...flyers[index], enabled: e.target.checked };
                           setContent({ ...content, serviceFlyers: flyers });
                         }}
-                        className="rounded border-slate-300 text-[#d4af37]"
+                        className="rounded border-slate-300"
                       />
                       <span>Active</span>
                     </label>
@@ -806,20 +1022,20 @@ export function AdminHomepageManager() {
                         const flyers = content.serviceFlyers.filter((_, i) => i !== index);
                         setContent({ ...content, serviceFlyers: flyers });
                       }}
-                      className="p-1 rounded text-rose-500 hover:text-rose-700"
+                      className="p-1.5 rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 transition"
                     >
                       <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
 
-                <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 p-1">
+                <div className="aspect-[3/4] bg-[#0d0e11] rounded-xl overflow-hidden flex items-center justify-center border border-slate-300 p-2">
                   <img src={flyer.image} alt={flyer.alt} className="w-full h-full object-contain" />
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2.5 text-xs mt-auto">
                   <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Title</label>
+                    <label className="block font-bold text-slate-700 mb-1">Title</label>
                     <input
                       type="text"
                       value={flyer.title}
@@ -828,12 +1044,12 @@ export function AdminHomepageManager() {
                         flyers[index] = { ...flyers[index], title: e.target.value };
                         setContent({ ...content, serviceFlyers: flyers });
                       }}
-                      className="w-full p-2 rounded border border-slate-200 bg-white"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-700 mb-0.5">Destination Link</label>
+                    <label className="block font-bold text-slate-700 mb-1">Destination Link</label>
                     <input
                       type="text"
                       value={flyer.to}
@@ -842,16 +1058,16 @@ export function AdminHomepageManager() {
                         flyers[index] = { ...flyers[index], to: e.target.value };
                         setContent({ ...content, serviceFlyers: flyers });
                       }}
-                      className="w-full p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                      className="w-full p-2 rounded-lg border border-slate-200 bg-white font-mono text-[0.7rem]"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setMediaPickerTarget({ section: "flyer", index, field: "image" })}
-                    className="w-full py-2 rounded-lg bg-[#d4af37] hover:bg-slate-900 text-white font-bold flex items-center justify-center gap-1.5 transition text-xs shadow-sm"
+                    className="w-full py-2 px-3 rounded-lg bg-[#d4af37] hover:bg-[#b89726] text-[#0a0a0c] border border-[#b89726]/40 font-bold flex items-center justify-center gap-1.5 transition text-xs whitespace-nowrap"
                   >
-                    <ImageIcon size={13} />
+                    <ImageIcon size={13} className="shrink-0" />
                     <span>Change Flyer Artwork</span>
                   </button>
                 </div>
@@ -863,15 +1079,15 @@ export function AdminHomepageManager() {
 
       {/* SECTION 4: ANNOUNCEMENT BAR */}
       {activeTab === "announcement" && (
-        <div className="admin-card space-y-4 max-w-2xl">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-4 max-w-2xl">
+          <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+            <div className="min-w-0 flex-1">
               <h3 className="font-bold text-slate-900 text-sm">Top Homepage Announcement Bar</h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 mt-0.5">
                 A prominent banner at the very top of the homepage highlighting promotions or trade-in perks.
               </p>
             </div>
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer shrink-0">
               <input
                 type="checkbox"
                 checked={content.announcement.enabled}
@@ -881,7 +1097,7 @@ export function AdminHomepageManager() {
                     announcement: { ...content.announcement, enabled: e.target.checked },
                   })
                 }
-                className="rounded border-slate-300 text-[#d4af37]"
+                className="rounded border-slate-300"
               />
               <span>Banner Active</span>
             </label>
@@ -904,7 +1120,7 @@ export function AdminHomepageManager() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Link Label</label>
                 <input
@@ -941,7 +1157,7 @@ export function AdminHomepageManager() {
             {/* Live Preview Box */}
             <div className="pt-2">
               <span className="block font-bold text-slate-500 mb-1.5">Storefront Preview:</span>
-              <div className="p-3 bg-slate-900 text-white rounded-lg text-center text-xs font-medium">
+              <div className="p-3 bg-[#0a0a0c] text-white rounded-xl text-center text-xs font-medium border border-[#d4af37]/30">
                 {content.announcement.text}{" "}
                 <span className="text-[#d4af37] underline font-bold cursor-pointer">
                   {content.announcement.linkText} &rsaquo;
@@ -949,6 +1165,8 @@ export function AdminHomepageManager() {
               </div>
             </div>
           </div>
+        </div>
+      )}
         </div>
       )}
 

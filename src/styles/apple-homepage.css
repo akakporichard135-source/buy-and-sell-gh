@@ -1,0 +1,1530 @@
+/* ============================================================================
+   BUY & SELL GH — APPLE.COM MODULAR HOMEPAGE ARCHITECTURE
+   Reproduces Apple.com hero stack, 2-column 6-tile promo grid, visual story
+   carousel, product family strip, live catalog shelves, and media slots.
+   ============================================================================ */
+
+.apple-modular-homepage {
+  width: 100%;
+  max-width: 2560px;
+  margin-inline: auto;
+  background-color: #ffffff;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  overflow-x: clip;
+}
+
+/* ----------------------------------------------------------------------------
+   1. REUSABLE MEDIA SLOT (.apple-media-slot)
+   ---------------------------------------------------------------------------- */
+.apple-media-slot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.apple-media-slot__picture,
+.apple-media-slot__video-wrap {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.apple-media-slot__img,
+.apple-media-slot__video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-media-slot__video-toggle {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 6;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(29, 29, 31, 0.68);
+  backdrop-filter: blur(12px);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.apple-media-slot__video-toggle:hover {
+  background: rgba(29, 29, 31, 0.88);
+  transform: scale(1.05);
+}
+
+/* Intentional empty media slot — preserves exact architectural studio proportions */
+.apple-media-slot__exhibition-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.apple-media-slot--promo-panel .apple-media-slot__exhibition-frame {
+  min-height: 170px;
+}
+
+.apple-media-slot--story-card .apple-media-slot__exhibition-frame {
+  min-height: 310px;
+}
+
+.apple-media-slot--dark .apple-media-slot__exhibition-glow {
+  position: absolute;
+  width: min(560px, 84%);
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(41, 151, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 48%,
+    transparent 76%
+  );
+  filter: blur(22px);
+  pointer-events: none;
+}
+
+.apple-media-slot--light .apple-media-slot__exhibition-glow,
+.apple-media-slot--mist .apple-media-slot__exhibition-glow {
+  position: absolute;
+  width: min(520px, 82%);
+  height: 200px;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 113, 227, 0.07) 0%,
+    rgba(29, 29, 31, 0.035) 48%,
+    transparent 76%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.apple-media-slot__exhibition-stage {
+  position: relative;
+  width: min(460px, 78%);
+  height: min(190px, 70%);
+  min-height: 120px;
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.apple-media-slot--dark .apple-media-slot__exhibition-stage {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    rgba(255, 255, 255, 0.055) 0%,
+    rgba(255, 255, 255, 0.015) 60%,
+    transparent 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.apple-media-slot--light .apple-media-slot__exhibition-stage,
+.apple-media-slot--mist .apple-media-slot__exhibition-stage {
+  border: 1px solid rgba(29, 29, 31, 0.06);
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(245, 245, 247, 0.55) 70%,
+    rgba(245, 245, 247, 0.25) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.apple-media-slot__exhibition-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  opacity: 0.14;
+}
+
+.apple-media-slot__exhibition-line {
+  width: 34%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.14;
+}
+
+.apple-media-slot__admin-empty-cta {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 980px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px dashed rgba(184, 151, 38, 0.65);
+  background: rgba(212, 175, 55, 0.14);
+  color: #8f650e;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.apple-media-slot--dark .apple-media-slot__admin-empty-cta {
+  color: #f0cf78;
+  border-color: rgba(240, 207, 120, 0.55);
+  background: rgba(212, 175, 55, 0.16);
+}
+
+.apple-media-slot__admin-empty-cta:hover {
+  transform: translateY(-1px);
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #0a0a0c;
+}
+
+.apple-media-slot__admin-replace-pill {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 980px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(29, 29, 31, 0.78);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  opacity: 0.88;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.apple-media-slot__admin-replace-pill:hover {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+/* ----------------------------------------------------------------------------
+   2. FULL-WIDTH FLAGSHIP HERO & PROMOTIONAL CAMPAIGN (.apple-modular-hero)
+   Matches Apple.com .section-hero metrics
+   ---------------------------------------------------------------------------- */
+.apple-modular-hero {
+  position: relative;
+  width: 100%;
+  min-height: 640px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+@media (min-width: 1069px) and (min-height: 776px) {
+  .apple-modular-hero {
+    min-height: 692px;
+  }
+}
+
+.apple-modular-hero--dark {
+  background-color: #000000;
+  color: #f5f5f7;
+}
+
+.apple-modular-hero--light {
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.apple-modular-hero--mist {
+  background-color: #eef5f9;
+  color: #1d1d1f;
+}
+
+.apple-modular-hero--promo-banner {
+  min-height: 560px;
+}
+
+.apple-modular-hero--copy-bottom {
+  flex-direction: column-reverse;
+}
+
+.apple-modular-hero__stretch-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.apple-modular-hero__copy {
+  position: relative;
+  z-index: 3;
+  max-width: 980px;
+  width: 100%;
+  padding: 55px 24px 16px;
+  margin-inline: auto;
+  pointer-events: none;
+}
+
+.apple-modular-hero__copy--left {
+  text-align: left;
+}
+
+.apple-modular-hero__copy--right {
+  text-align: right;
+}
+
+.apple-modular-hero__eyebrow {
+  font-size: 12px;
+  line-height: 1.33337;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  color: #2997ff;
+}
+
+.apple-modular-hero--light .apple-modular-hero__eyebrow,
+.apple-modular-hero--mist .apple-modular-hero__eyebrow {
+  color: #0066cc;
+}
+
+.apple-modular-hero__headline {
+  font-size: 56px;
+  line-height: 1.07143;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.apple-modular-hero__subtitle {
+  font-size: 28px;
+  line-height: 1.14286;
+  font-weight: 400;
+  letter-spacing: 0.007em;
+  margin: 6px auto 0;
+  max-width: 720px;
+}
+
+.apple-modular-hero--dark .apple-modular-hero__subtitle {
+  color: #f5f5f7;
+}
+
+.apple-modular-hero--light .apple-modular-hero__subtitle,
+.apple-modular-hero--mist .apple-modular-hero__subtitle {
+  color: #1d1d1f;
+}
+
+.apple-modular-hero__description {
+  font-size: 17px;
+  line-height: 1.47059;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  margin: 8px auto 0;
+  max-width: 640px;
+  color: #86868b;
+}
+
+.apple-modular-hero--light .apple-modular-hero__description,
+.apple-modular-hero--mist .apple-modular-hero__description {
+  color: #6e6e73;
+}
+
+.apple-modular-hero__ctas {
+  position: relative;
+  z-index: 4;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 17px;
+  row-gap: 10px;
+  margin-top: 19px;
+  pointer-events: auto;
+}
+
+.apple-modular-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  line-height: 1.17648;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  min-width: 28px;
+  padding: 11px 21px;
+  border-radius: 980px;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease;
+  cursor: pointer;
+}
+
+.apple-modular-cta--primary {
+  background-color: #0071e3;
+  color: #ffffff;
+  border: 1px solid #0071e3;
+}
+
+.apple-modular-cta--primary:hover {
+  background-color: #0077ed;
+  border-color: #0077ed;
+}
+
+.apple-modular-cta--secondary-dark {
+  background-color: transparent;
+  color: #2997ff;
+  border: 1px solid #2997ff;
+}
+
+.apple-modular-cta--secondary-dark:hover {
+  background-color: #0071e3;
+  border-color: #0071e3;
+  color: #ffffff;
+}
+
+.apple-modular-cta--secondary-light {
+  background-color: transparent;
+  color: #0066cc;
+  border: 1px solid #0066cc;
+}
+
+.apple-modular-cta--secondary-light:hover {
+  background-color: #0071e3;
+  border-color: #0071e3;
+  color: #ffffff;
+}
+
+.apple-modular-hero__media {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1440px;
+  flex: 1 1 auto;
+  height: 390px;
+  min-height: 290px;
+  max-height: 450px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-inline: 20px;
+}
+
+.apple-modular-hero__media .apple-media-slot__img,
+.apple-modular-hero__media .apple-media-slot__video {
+  height: auto;
+  width: auto;
+  max-height: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* ----------------------------------------------------------------------------
+   2B. WIDE MULTI-IMAGE PROMOTIONAL CAMPAIGN STRIP (.apple-modular-multi-strip)
+   Matches Apple.com "Gifts they'll love" panoramic composition
+   ---------------------------------------------------------------------------- */
+.apple-modular-multi-strip {
+  position: relative;
+  width: 100%;
+  min-height: 600px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.apple-modular-multi-strip--light {
+  background: linear-gradient(180deg, #eef2f6 0%, #f5f5f7 56%, #ffffff 100%);
+  color: #1d1d1f;
+}
+
+.apple-modular-multi-strip--mist {
+  background: linear-gradient(180deg, #e7f0f7 0%, #eef5f9 60%, #ffffff 100%);
+  color: #1d1d1f;
+}
+
+.apple-modular-multi-strip--dark {
+  background: linear-gradient(180deg, #0b0c10 0%, #111116 100%);
+  color: #f5f5f7;
+}
+
+.apple-modular-multi-strip__copy {
+  position: relative;
+  z-index: 3;
+  max-width: 820px;
+  width: 100%;
+  padding: 54px 24px 18px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.apple-modular-multi-strip--light .apple-modular-hero__eyebrow,
+.apple-modular-multi-strip--mist .apple-modular-hero__eyebrow {
+  color: #0066cc;
+}
+
+.apple-modular-multi-strip__headline {
+  font-size: 52px;
+  line-height: 1.07692;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin: 0;
+}
+
+.apple-modular-multi-strip__subtitle {
+  font-size: 24px;
+  line-height: 1.20833;
+  font-weight: 400;
+  letter-spacing: 0.004em;
+  margin: 10px auto 0;
+  max-width: 680px;
+}
+
+.apple-modular-multi-strip__panels {
+  width: 100%;
+  max-width: 1520px;
+  margin-inline: auto;
+  padding: 20px 24px 36px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.apple-modular-multi-strip__panel {
+  min-width: 0;
+  height: 270px;
+}
+
+.apple-modular-multi-strip__panel-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.apple-modular-multi-strip__panel-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  padding: 18px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.035);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.apple-modular-multi-strip--dark .apple-modular-multi-strip__panel-inner {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.apple-modular-multi-strip__panel-link:hover .apple-modular-multi-strip__panel-inner {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.07);
+}
+
+.apple-modular-multi-strip--dark .apple-modular-multi-strip__panel-link:hover .apple-modular-multi-strip__panel-inner {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.apple-modular-multi-strip__panel-inner .apple-media-slot__picture {
+  align-items: center;
+}
+
+.apple-modular-multi-strip__panel-inner .apple-media-slot__img {
+  max-height: 220px;
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* ----------------------------------------------------------------------------
+   APPLE-STYLE LEGAL FOOTNOTES BAND (.apple-modular-footnotes)
+   ---------------------------------------------------------------------------- */
+.apple-modular-footnotes {
+  width: 100%;
+  background-color: #f5f5f7;
+  color: #6e6e73;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid #d2d2d7;
+}
+
+.apple-modular-footnotes__inner {
+  max-width: 980px;
+  margin-inline: auto;
+  padding: 22px 22px 24px;
+}
+
+.apple-modular-footnotes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.apple-modular-footnotes__item {
+  font-size: 12px;
+  line-height: 1.46667;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: #6e6e73;
+}
+
+/* ----------------------------------------------------------------------------
+   3. TWO-COLUMN PROMOTIONAL CAMPAIGN GRID (.apple-modular-promo-grid)
+   Matches Apple.com .section-promo 6-tile grid
+   ---------------------------------------------------------------------------- */
+.apple-modular-promo-section {
+  width: 100%;
+  margin-bottom: 12px;
+  background-color: #ffffff;
+}
+
+.apple-modular-promo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-inline: 12px;
+  width: 100%;
+}
+
+.apple-modular-promo-tile {
+  position: relative;
+  min-height: 580px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.apple-modular-promo-tile--bottom {
+  flex-direction: column-reverse;
+}
+
+.apple-modular-promo-tile--dark {
+  background-color: #000000;
+  color: #f5f5f7;
+}
+
+.apple-modular-promo-tile--light {
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.apple-modular-promo-tile--mist {
+  background-color: #eef5f9;
+  color: #1d1d1f;
+}
+
+.apple-modular-promo-tile__stretch-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.apple-modular-promo-tile__copy {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 560px;
+  padding: 50px 24px 14px;
+  margin-inline: auto;
+  pointer-events: none;
+}
+
+.apple-modular-promo-tile--bottom .apple-modular-promo-tile__copy {
+  padding: 16px 24px 44px;
+}
+
+.apple-modular-promo-tile__eyebrow {
+  font-size: 11px;
+  line-height: 1.27273;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+  color: #2997ff;
+}
+
+.apple-modular-promo-tile--light .apple-modular-promo-tile__eyebrow,
+.apple-modular-promo-tile--mist .apple-modular-promo-tile__eyebrow {
+  color: #0066cc;
+}
+
+.apple-modular-promo-tile__headline {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0em;
+  margin: 0;
+}
+
+.apple-modular-promo-tile__subtitle {
+  font-size: 21px;
+  line-height: 1.2381;
+  font-weight: 400;
+  letter-spacing: 0.016em;
+  margin: 4px auto 0;
+  max-width: 390px;
+}
+
+.apple-modular-promo-tile__description {
+  font-size: 14px;
+  line-height: 1.42859;
+  margin: 6px auto 0;
+  max-width: 370px;
+  color: #86868b;
+}
+
+.apple-modular-promo-tile--light .apple-modular-promo-tile__description,
+.apple-modular-promo-tile--mist .apple-modular-promo-tile__description {
+  color: #6e6e73;
+}
+
+.apple-modular-promo-tile__ctas {
+  position: relative;
+  z-index: 4;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 14px;
+  row-gap: 8px;
+  margin-top: 13px;
+  pointer-events: auto;
+}
+
+.apple-modular-promo-tile__ctas .apple-modular-cta {
+  font-size: 14px;
+  line-height: 1.42859;
+  letter-spacing: -0.016em;
+  padding: 7px 15px;
+}
+
+.apple-modular-promo-tile__media {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex: 1 1 auto;
+  height: 330px;
+  min-height: 260px;
+  max-height: 360px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 20px 18px;
+}
+
+.apple-modular-promo-tile--bottom .apple-modular-promo-tile__media {
+  align-items: center;
+  padding: 28px 20px 8px;
+}
+
+.apple-modular-promo-tile__media .apple-media-slot__img,
+.apple-modular-promo-tile__media .apple-media-slot__video {
+  height: auto;
+  width: auto;
+  max-height: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  border-radius: 12px;
+}
+
+/* ----------------------------------------------------------------------------
+   4. FEATURED VISUAL-CONTENT STORYTELLING CAROUSEL (.apple-modular-story-carousel)
+   Matches Apple.com section-endless-entertainment-gallery
+   ---------------------------------------------------------------------------- */
+.apple-modular-story-section {
+  width: 100%;
+  padding: 12px 0 26px;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.apple-modular-story-header {
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  padding: 20px 24px 0;
+  text-align: center;
+}
+
+.apple-modular-story-header__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  margin: 0 0 4px;
+}
+
+.apple-modular-story-header__title {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.003em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-modular-story-header__subtitle {
+  font-size: 19px;
+  line-height: 1.3;
+  color: #6e6e73;
+  margin: 6px auto 0;
+  max-width: 660px;
+}
+
+.apple-modular-story-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  padding: 4px max(24px, calc((100vw - 1080px) / 2)) 16px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.apple-modular-story-track::-webkit-scrollbar {
+  display: none;
+}
+
+.apple-modular-story-card {
+  position: relative;
+  flex: 0 0 min(82vw, 1080px);
+  aspect-ratio: 16 / 9;
+  min-height: 360px;
+  max-height: 610px;
+  scroll-snap-align: center;
+  overflow: hidden;
+  background-color: #111113;
+  color: #ffffff;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.apple-modular-story-card--inactive {
+  opacity: 0.55;
+}
+
+.apple-modular-story-card--active {
+  opacity: 1;
+}
+
+.apple-modular-story-card__media {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.apple-modular-story-card__media .apple-media-slot__img,
+.apple-modular-story-card__media .apple-media-slot__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.apple-modular-story-card__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.18) 55%,
+    rgba(0, 0, 0, 0.78) 100%
+  );
+  pointer-events: none;
+}
+
+.apple-modular-story-card__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 28px 36px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.apple-modular-story-card__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 22px;
+  border-radius: 980px;
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.apple-modular-story-card__cta:hover {
+  background-color: #ffffff;
+  transform: scale(1.02);
+}
+
+.apple-modular-story-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 17px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.apple-modular-story-card__category {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.apple-modular-story-card__dot {
+  opacity: 0.65;
+}
+
+.apple-modular-story-card__caption {
+  font-weight: 400;
+  color: rgba(245, 245, 247, 0.88);
+}
+
+.apple-modular-story-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 8px 24px 0;
+}
+
+.apple-modular-story-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.apple-modular-story-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background-color: rgba(29, 29, 31, 0.24);
+  cursor: pointer;
+  transition: background-color 0.2s ease, width 0.25s ease;
+}
+
+.apple-modular-story-dot--active {
+  background-color: #1d1d1f;
+  width: 22px;
+}
+
+.apple-modular-story-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(29, 29, 31, 0.16);
+  background: #f5f5f7;
+  color: #1d1d1f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.apple-modular-story-nav-btn:hover {
+  background: #e8e8ed;
+}
+
+/* ----------------------------------------------------------------------------
+   5. PRODUCT-FAMILY DISCOVERY STRIP & SHELVES
+   ---------------------------------------------------------------------------- */
+.apple-modular-band {
+  width: 100%;
+  padding: 64px 24px;
+}
+
+.apple-modular-band__inner {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+.apple-modular-band__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.apple-modular-band__header--center {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.apple-modular-band__eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6e6e73;
+  margin: 0 0 6px;
+}
+
+.apple-modular-band__title {
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.003em;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.apple-modular-band__subtitle {
+  font-size: 19px;
+  line-height: 1.35;
+  color: #6e6e73;
+  margin: 6px 0 0;
+  max-width: 680px;
+}
+
+.apple-modular-family-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.apple-modular-services-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.apple-modular-service-card {
+  display: block;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-modular-service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+.apple-modular-service-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.apple-modular-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.apple-modular-trust-card {
+  padding: 28px 24px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f5f5f7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.apple-modular-trust-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(41, 151, 255, 0.14);
+  color: #2997ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.apple-modular-trust-card__title {
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 0;
+  color: #ffffff;
+}
+
+.apple-modular-trust-card__copy {
+  font-size: 14px;
+  line-height: 1.48;
+  color: #a1a1a6;
+  margin: 0;
+}
+
+.apple-modular-family-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 12px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(29, 29, 31, 0.06);
+  text-decoration: none;
+  color: #1d1d1f;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.apple-modular-family-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+}
+
+.apple-modular-family-item__thumb {
+  width: 76px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.apple-modular-family-item__thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.apple-modular-family-item__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-modular-family-item__caption {
+  font-size: 11px;
+  color: #6e6e73;
+  margin-top: 2px;
+}
+
+/* Product Shelf Cards — Apple-style horizontal swipeable shelf */
+.apple-modular-shelf-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 54px) / 4);
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 14px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(29, 29, 31, 0.18) transparent;
+}
+
+.apple-modular-product-card {
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 26px 22px 22px;
+  border: 1px solid rgba(29, 29, 31, 0.06);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-modular-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.07);
+}
+
+.apple-modular-product-card__badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #bf4800;
+  margin-bottom: 4px;
+}
+
+.apple-modular-product-card__title {
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+  text-decoration: none;
+}
+
+.apple-modular-product-card__tagline {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6e6e73;
+  margin: 6px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 36px;
+}
+
+.apple-modular-product-card__media {
+  height: 200px;
+  margin: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-modular-product-card__media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.35s ease;
+}
+
+.apple-modular-product-card:hover .apple-modular-product-card__media img {
+  transform: scale(1.04);
+}
+
+.apple-modular-product-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(29, 29, 31, 0.06);
+}
+
+.apple-modular-product-card__price {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.apple-modular-product-card__buy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 15px;
+  border-radius: 980px;
+  background: #0071e3;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.apple-modular-product-card__buy:hover {
+  background: #0077ed;
+}
+
+/* ----------------------------------------------------------------------------
+   6. TABLET & MOBILE RESPONSIVE BREAKPOINTS
+   Matches Apple.com 1068px and 734px breakpoints
+   ---------------------------------------------------------------------------- */
+@media (max-width: 1068px) {
+  .apple-modular-hero {
+    min-height: 570px;
+  }
+
+  .apple-modular-hero__copy {
+    padding: 50px 20px 14px;
+  }
+
+  .apple-modular-hero__headline {
+    font-size: 48px;
+    line-height: 1.08349;
+  }
+
+  .apple-modular-hero__subtitle {
+    font-size: 24px;
+    line-height: 1.16667;
+  }
+
+  .apple-modular-multi-strip {
+    min-height: 540px;
+  }
+
+  .apple-modular-multi-strip__headline {
+    font-size: 42px;
+    line-height: 1.09;
+  }
+
+  .apple-modular-multi-strip__subtitle {
+    font-size: 20px;
+  }
+
+  .apple-modular-multi-strip__panels {
+    padding: 16px 16px 0;
+    gap: 10px;
+  }
+
+  .apple-modular-multi-strip__panel {
+    height: 230px;
+  }
+
+  .apple-modular-multi-strip__panel-inner .apple-media-slot__img {
+    max-height: 205px;
+  }
+
+  .apple-modular-promo-tile {
+    min-height: 490px;
+  }
+
+  .apple-modular-promo-tile__copy {
+    padding: 42px 20px 12px;
+  }
+
+  .apple-modular-promo-tile__headline {
+    font-size: 32px;
+    line-height: 1.125;
+  }
+
+  .apple-modular-promo-tile__subtitle {
+    font-size: 19px;
+    line-height: 1.21053;
+  }
+
+  .apple-modular-family-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .apple-modular-services-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .apple-modular-trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .apple-modular-shelf-grid {
+    grid-auto-columns: calc((100% - 18px) / 2.2);
+  }
+
+  .apple-modular-story-header__title,
+  .apple-modular-band__title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 734px) {
+  .apple-modular-hero {
+    min-height: 500px;
+  }
+
+  .apple-modular-hero__copy {
+    padding: 38px 16px 12px;
+  }
+
+  .apple-modular-hero__headline {
+    font-size: 32px;
+    line-height: 1.125;
+    letter-spacing: 0.004em;
+  }
+
+  .apple-modular-hero__subtitle {
+    font-size: 19px;
+    line-height: 1.21053;
+    margin-top: 5px;
+  }
+
+  .apple-modular-hero__description {
+    font-size: 14px;
+    line-height: 1.42859;
+  }
+
+  .apple-modular-hero__ctas {
+    column-gap: 12px;
+    margin-top: 14px;
+  }
+
+  .apple-modular-cta {
+    font-size: 14px;
+    line-height: 1.42859;
+    padding: 8px 16px;
+  }
+
+  .apple-modular-hero__media {
+    height: 280px;
+    min-height: 230px;
+    max-height: 300px;
+    padding-inline: 12px;
+  }
+
+  .apple-modular-hero__media .apple-media-slot__img,
+  .apple-modular-hero__media .apple-media-slot__video {
+    max-height: 100%;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .apple-modular-promo-grid {
+    grid-template-columns: 1fr;
+    padding-inline: 0;
+    gap: 12px;
+  }
+
+  .apple-modular-promo-tile {
+    min-height: 500px;
+  }
+
+  .apple-modular-promo-tile__copy {
+    padding: 38px 16px 12px;
+  }
+
+  .apple-modular-story-card {
+    flex: 0 0 88vw;
+    aspect-ratio: 4 / 3;
+    min-height: 310px;
+  }
+
+  .apple-modular-story-card__footer {
+    padding: 18px 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .apple-modular-story-card__meta {
+    font-size: 14px;
+  }
+
+  .apple-modular-band {
+    padding: 44px 16px;
+  }
+
+  .apple-modular-family-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .apple-modular-services-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding-bottom: 8px;
+  }
+
+  .apple-modular-service-card {
+    flex: 0 0 68vw;
+    scroll-snap-align: start;
+  }
+
+  .apple-modular-trust-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .apple-modular-shelf-grid {
+    grid-auto-columns: 78vw;
+  }
+
+  .apple-modular-multi-strip {
+    min-height: 560px;
+  }
+
+  .apple-modular-multi-strip__copy {
+    padding: 40px 16px 14px;
+  }
+
+  .apple-modular-multi-strip__headline {
+    font-size: 32px;
+    line-height: 1.125;
+  }
+
+  .apple-modular-multi-strip__subtitle {
+    font-size: 18px;
+    line-height: 1.25;
+  }
+
+  .apple-modular-multi-strip__panels {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px 12px 24px;
+    gap: 10px;
+  }
+
+  .apple-modular-multi-strip__panel {
+    height: 178px;
+  }
+
+  .apple-modular-multi-strip__panel-inner {
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .apple-modular-multi-strip__panel-inner .apple-media-slot__img {
+    max-height: 146px;
+  }
+
+  .apple-modular-footnotes__inner {
+    padding: 18px 16px 20px;
+  }
+}

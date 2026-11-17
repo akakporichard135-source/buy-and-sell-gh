@@ -45,7 +45,158 @@ export interface ServiceFlyer {
   order: number;
 }
 
+export type HomepageLayoutMode = "legacy" | "modular";
+
+export type HomepageSectionType =
+  | "apple-hero"              // Full-bleed cinematic flagship hero (iPhone 18 Pro, iPhone Duo)
+  | "multi-promo-strip"       // Wide multi-image promotional campaign strip with central copy & CTA
+  | "promo-banner"            // Legacy single-image promotional campaign banner
+  | "apple-bento-grid"        // 2-column promotional campaign grid (6 independent tiles)
+  | "story-carousel"          // Apple.com-style featured visual-content storytelling carousel
+  | "footnotes"               // Apple-style legal footnotes and disclosures band above footer
+  | "product-family-strip"    // Storefront product-family icon navigation (preserved for Store/Category phases)
+  | "product-carousel"        // Live swipeable catalog product row (preserved for Store phases)
+  | "accessories-collection"  // Curated original Apple accessories (preserved for Accessories/Store phases)
+  | "promotional-carousel"    // Live Supabase marketing campaign flyers (preserved for Offers/Store phases)
+  | "services-showcase"       // Ghana local services (preserved for Support/Store phases)
+  | "trust-values";           // Inspection warranty, verified battery health (preserved for Support/Store phases)
+
+export type HomepageSectionLayoutStyle =
+  | "full-bleed"
+  | "split"
+  | "grid-2"
+  | "grid-3"
+  | "carousel"
+  | "standard";
+
+export type HomepageMediaFocalPoint = "center" | "top" | "bottom" | "left" | "right";
+
+export type HomepageMediaFit = "cover" | "contain";
+
+export type HomepageMediaMode = "image" | "video";
+
+export interface HomepageBentoTile {
+  id: string;
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  description?: string;
+  tone: Tone;
+  backgroundColor?: string;
+  mediaMode?: HomepageMediaMode;
+  desktopImage?: string;
+  mobileImage?: string;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  imageAlt: string;
+  focalPoint?: HomepageMediaFocalPoint;
+  objectFit?: HomepageMediaFit;
+  caption?: string;
+  copyPlacement?: "top" | "bottom";
+  primaryLabel: string;
+  primaryDestination: string;
+  secondaryLabel?: string;
+  secondaryDestination?: string;
+  productIds?: string[];
+  visible: boolean;
+  order: number;
+}
+
+export interface HomepageCarouselCard {
+  id: string;
+  categoryLabel: string;
+  title: string;
+  caption: string;
+  mediaMode?: HomepageMediaMode;
+  desktopImage?: string;
+  mobileImage?: string;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  imageAlt: string;
+  focalPoint?: HomepageMediaFocalPoint;
+  objectFit?: HomepageMediaFit;
+  tone?: Tone;
+  backgroundColor?: string;
+  ctaLabel: string;
+  ctaDestination: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface HomepagePromoPanel {
+  id: string;
+  label: string;
+  mediaMode?: HomepageMediaMode;
+  desktopImage?: string;
+  mobileImage?: string;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  imageAlt: string;
+  focalPoint?: HomepageMediaFocalPoint;
+  objectFit?: HomepageMediaFit;
+  backgroundColor?: string;
+  destination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface HomepageSection {
+  id: string;
+  type: HomepageSectionType;
+  builtInKey?: string;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  tone?: Tone;
+  mediaMode?: HomepageMediaMode;
+  desktopImage?: string;
+  mobileImage?: string;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  imageAlt?: string;
+  focalPoint?: HomepageMediaFocalPoint;
+  objectFit?: HomepageMediaFit;
+  caption?: string;
+  copyPlacement?: "top" | "bottom";
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right";
+  productIds?: string[];
+  tiles?: HomepageBentoTile[];
+  carouselCards?: HomepageCarouselCard[];
+  promoPanels?: HomepagePromoPanel[];
+  footnoteItems?: string[];
+  buttonLabel?: string;
+  buttonDestination?: string;
+  secondaryButtonLabel?: string;
+  secondaryButtonDestination?: string;
+  layoutStyle?: HomepageSectionLayoutStyle;
+  visible: boolean;
+  order: number;
+}
+
 export interface HomepageContent {
+  layoutMode?: HomepageLayoutMode;
   announcement: {
     enabled: boolean;
     text: string;
@@ -55,6 +206,9 @@ export interface HomepageContent {
   heroes: HeroCampaign[];
   tiles: PromoTile[];
   serviceFlyers: ServiceFlyer[];
+  sections?: HomepageSection[];
+  hasDraft?: boolean;
+  updatedAt?: string;
 }
 
 export interface SiteSettings {

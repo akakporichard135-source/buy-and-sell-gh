@@ -10,9 +10,11 @@ import {
 import {
   deleteMediaItemById,
   deleteMediaItemPermanently,
+  discardHomepageDraft,
   discardMainStoreDraft,
   fetchFaqs,
   fetchHomepageContent,
+  fetchHomepageDraft,
   fetchMainStoreContent,
   fetchMainStoreDraft,
   fetchMediaLibrary,
@@ -21,6 +23,7 @@ import {
   fetchStorefrontContent,
   getInitialFaqs,
   getInitialHomepageContent,
+  getInitialHomepageDraft,
   getInitialMainStoreContent,
   getInitialMainStoreDraft,
   getInitialMediaLibrary,
@@ -31,6 +34,7 @@ import {
   removeMediaItemFromLibrary,
   saveFaqs,
   saveHomepageContent,
+  saveHomepageDraft,
   saveMainStoreContent,
   saveMainStoreDraft,
   savePageContent,
@@ -54,6 +58,7 @@ import type {
 interface CmsContextValue {
   settings: SiteSettings;
   homepage: HomepageContent;
+  homepageDraft: HomepageContent | null;
   mainStore: MainStoreConfig;
   mainStoreDraft: MainStoreConfig | null;
   media: MediaItem[];
@@ -65,6 +70,8 @@ interface CmsContextValue {
   refreshCms: () => Promise<void>;
   updateSettings: (partial: Partial<SiteSettings>) => Promise<SiteSettings>;
   updateHomepage: (content: HomepageContent) => Promise<HomepageContent>;
+  saveHomepageDraftConfig: (content: HomepageContent) => Promise<HomepageContent>;
+  discardHomepageDraftConfig: () => Promise<void>;
   updateMainStore: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   saveMainStoreDraftConfig: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   discardMainStoreDraftConfig: () => Promise<void>;
@@ -102,6 +109,7 @@ const CmsContext = createContext<CmsContextValue | null>(null);
 export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(() => getInitialSiteSettings());
   const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
+  const [homepageDraft, setHomepageDraft] = useState<HomepageContent | null>(() => getInitialHomepageDraft());
   const [mainStore, setMainStore] = useState<MainStoreConfig>(() => getInitialMainStoreContent());
   const [mainStoreDraft, setMainStoreDraft] = useState<MainStoreConfig | null>(() => getInitialMainStoreDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
@@ -113,9 +121,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
   const loadAll = async () => {
     try {
-      const [s, h, m, f, p, d, ms, msDraft] = await Promise.all([
+      const [s, h, hDraft, m, f, p, d, ms, msDraft] = await Promise.all([
         fetchSiteSettings(),
         fetchHomepageContent(),
+        fetchHomepageDraft(),
         fetchMediaLibrary(),
         fetchFaqs(),
         fetchPageContent(),
@@ -127,6 +136,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       startTransition(() => {
         setSettings(s);
         setHomepage(h);
+        setHomepageDraft(hDraft);
         setMedia(m);
         setFaqs(f);
         setPages(p);
@@ -164,7 +174,19 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const handleUpdateHomepage = async (content: HomepageContent) => {
     const updated = await saveHomepageContent(content);
     setHomepage(updated);
+    setHomepageDraft(null);
     return updated;
+  };
+
+  const handleSaveHomepageDraft = async (content: HomepageContent) => {
+    const draft = await saveHomepageDraft(content);
+    setHomepageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardHomepageDraft = async () => {
+    await discardHomepageDraft();
+    setHomepageDraft(null);
   };
 
   const handleUploadMedia = async (
@@ -258,6 +280,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       value={{
         settings,
         homepage,
+        homepageDraft,
         mainStore,
         mainStoreDraft,
         media,
@@ -269,6 +292,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         refreshCms: loadAll,
         updateSettings: handleUpdateSettings,
         updateHomepage: handleUpdateHomepage,
+        saveHomepageDraftConfig: handleSaveHomepageDraft,
+        discardHomepageDraftConfig: handleDiscardHomepageDraft,
         updateMainStore: handleUpdateMainStore,
         saveMainStoreDraftConfig: handleSaveMainStoreDraft,
         discardMainStoreDraftConfig: handleDiscardMainStoreDraft,

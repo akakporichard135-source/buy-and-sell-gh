@@ -3,8 +3,20 @@ import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import { broadcastPublishedUpdate } from "../utils/imageVersioning";
 import {
+  getLocalStagedMediaRecord,
+  isLocalMediaUri,
+  validateLocalMediaFile,
+  type LocalMediaKind,
+  type LocalStagedMediaRecord,
+} from "./localMediaStore";
+import {
   defaultFaqs,
+  defaultHomepageBentoTiles,
+  defaultHomepageCarouselCards,
   defaultHomepageContent,
+  defaultHomepageFootnotes,
+  defaultHomepagePromoPanels,
+  defaultHomepageSections,
   defaultMainStoreConfig,
   defaultMediaItems,
   defaultPageContent,
@@ -14,7 +26,12 @@ import {
 import type {
   CategoryDepartmentConfig,
   FaqItem,
+  HomepageBentoTile,
+  HomepageCarouselCard,
   HomepageContent,
+  HomepageLayoutMode,
+  HomepagePromoPanel,
+  HomepageSection,
   MainStoreConfig,
   MediaItem,
   PageContentRegistry,
@@ -24,6 +41,7 @@ import type {
 
 const CMS_STORAGE_KEY_SETTINGS = "buyandsell_cms_settings_v1";
 const CMS_STORAGE_KEY_HOMEPAGE = "buyandsell_cms_homepage_v1";
+export const CMS_STORAGE_KEY_HOMEPAGE_DRAFT = "buyandsell_cms_homepage_draft_v1";
 const CMS_STORAGE_KEY_HOMEPAGE_VERIFIED = "buyandsell_cms_homepage_verified_v1";
 const CMS_STORAGE_KEY_MEDIA = "buyandsell_cms_media_v1";
 const CMS_STORAGE_KEY_FAQS = "buyandsell_cms_faqs_v1";
@@ -163,8 +181,186 @@ export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise
 const APPROVED_IPHONE_18_PRO_DESKTOP_HERO = "/products/homepage/iphone-18-pro-hero-2x.webp";
 const APPROVED_IPHONE_18_PRO_MOBILE_HERO = "/products/homepage/iphone-18-pro-hero-mobile.jpg";
 
+const normalizeHomepageBentoTile = (
+  tile: Partial<HomepageBentoTile>,
+  idx: number
+): HomepageBentoTile => {
+  const def = defaultHomepageBentoTiles.find((d) => d.id === tile.id) || defaultHomepageBentoTiles[idx];
+  return {
+    id: tile.id || def?.id || `promo-tile-${idx + 1}`,
+    eyebrow: tile.eyebrow !== undefined ? tile.eyebrow : (def?.eyebrow || ""),
+    title: tile.title !== undefined ? tile.title : (def?.title || `Campaign Tile ${idx + 1}`),
+    subtitle: tile.subtitle !== undefined ? tile.subtitle : (def?.subtitle || ""),
+    description: tile.description !== undefined ? tile.description : (def?.description || ""),
+    tone: tile.tone || def?.tone || "light",
+    backgroundColor: tile.backgroundColor || def?.backgroundColor || (tile.tone === "dark" ? "#000000" : "#f5f5f7"),
+    mediaMode: tile.mediaMode || def?.mediaMode,
+    desktopImage: tile.desktopImage !== undefined ? tile.desktopImage : (def?.desktopImage ?? ""),
+    mobileImage: tile.mobileImage !== undefined ? tile.mobileImage : (def?.mobileImage ?? ""),
+    videoUrl: tile.videoUrl !== undefined ? tile.videoUrl : (def?.videoUrl ?? ""),
+    mobileVideoUrl: tile.mobileVideoUrl !== undefined ? tile.mobileVideoUrl : (def?.mobileVideoUrl ?? ""),
+    posterUrl: tile.posterUrl !== undefined ? tile.posterUrl : (def?.posterUrl ?? ""),
+    mobilePosterUrl: tile.mobilePosterUrl !== undefined ? tile.mobilePosterUrl : (def?.mobilePosterUrl ?? ""),
+    videoAutoplay: tile.videoAutoplay !== undefined ? tile.videoAutoplay : def?.videoAutoplay,
+    videoMuted: tile.videoMuted !== undefined ? tile.videoMuted : def?.videoMuted,
+    videoLoop: tile.videoLoop !== undefined ? tile.videoLoop : def?.videoLoop,
+    imageAlt: tile.imageAlt !== undefined ? tile.imageAlt : (def?.imageAlt || tile.title || "Campaign tile image"),
+    focalPoint: tile.focalPoint || def?.focalPoint || "bottom",
+    objectFit: tile.objectFit || def?.objectFit || "contain",
+    caption: tile.caption !== undefined ? tile.caption : (def?.caption || ""),
+    copyPlacement: tile.copyPlacement || def?.copyPlacement || "top",
+    primaryLabel: tile.primaryLabel !== undefined ? tile.primaryLabel : (def?.primaryLabel || "Learn more"),
+    primaryDestination: tile.primaryDestination !== undefined ? tile.primaryDestination : (def?.primaryDestination || "/store"),
+    secondaryLabel: tile.secondaryLabel !== undefined ? tile.secondaryLabel : (def?.secondaryLabel || ""),
+    secondaryDestination: tile.secondaryDestination !== undefined ? tile.secondaryDestination : (def?.secondaryDestination || ""),
+    productIds: Array.isArray(tile.productIds) ? tile.productIds : (def?.productIds || []),
+    visible: tile.visible !== false,
+    order: typeof tile.order === "number" ? tile.order : idx + 1,
+  };
+};
+
+const normalizeHomepageCarouselCard = (
+  card: Partial<HomepageCarouselCard>,
+  idx: number
+): HomepageCarouselCard => {
+  const def = defaultHomepageCarouselCards.find((d) => d.id === card.id) || defaultHomepageCarouselCards[idx];
+  return {
+    id: card.id || def?.id || `story-card-${idx + 1}`,
+    categoryLabel: card.categoryLabel !== undefined ? card.categoryLabel : (def?.categoryLabel || "Spotlight"),
+    title: card.title !== undefined ? card.title : (def?.title || `Story Card ${idx + 1}`),
+    caption: card.caption !== undefined ? card.caption : (def?.caption || ""),
+    mediaMode: card.mediaMode || def?.mediaMode,
+    desktopImage: card.desktopImage !== undefined ? card.desktopImage : (def?.desktopImage ?? ""),
+    mobileImage: card.mobileImage !== undefined ? card.mobileImage : (def?.mobileImage ?? ""),
+    videoUrl: card.videoUrl !== undefined ? card.videoUrl : (def?.videoUrl ?? ""),
+    mobileVideoUrl: card.mobileVideoUrl !== undefined ? card.mobileVideoUrl : (def?.mobileVideoUrl ?? ""),
+    posterUrl: card.posterUrl !== undefined ? card.posterUrl : (def?.posterUrl ?? ""),
+    mobilePosterUrl: card.mobilePosterUrl !== undefined ? card.mobilePosterUrl : (def?.mobilePosterUrl ?? ""),
+    videoAutoplay: card.videoAutoplay !== undefined ? card.videoAutoplay : def?.videoAutoplay,
+    videoMuted: card.videoMuted !== undefined ? card.videoMuted : def?.videoMuted,
+    videoLoop: card.videoLoop !== undefined ? card.videoLoop : def?.videoLoop,
+    imageAlt: card.imageAlt !== undefined ? card.imageAlt : (def?.imageAlt || card.title || "Storytelling card image"),
+    focalPoint: card.focalPoint || def?.focalPoint || "center",
+    objectFit: card.objectFit || def?.objectFit || "cover",
+    tone: card.tone || def?.tone || "dark",
+    backgroundColor: card.backgroundColor || def?.backgroundColor || "#000000",
+    ctaLabel: card.ctaLabel !== undefined ? card.ctaLabel : (def?.ctaLabel || "Explore"),
+    ctaDestination: card.ctaDestination !== undefined ? card.ctaDestination : (def?.ctaDestination || "/store"),
+    visible: card.visible !== false,
+    order: typeof card.order === "number" ? card.order : idx + 1,
+  };
+};
+
+const normalizeHomepagePromoPanel = (
+  panel: Partial<HomepagePromoPanel>,
+  idx: number
+): HomepagePromoPanel => {
+  const def = defaultHomepagePromoPanels.find((d) => d.id === panel.id) || defaultHomepagePromoPanels[idx];
+  return {
+    id: panel.id || def?.id || `promo-panel-${idx + 1}`,
+    label: panel.label !== undefined ? panel.label : (def?.label || `Campaign Panel ${idx + 1}`),
+    mediaMode: panel.mediaMode || def?.mediaMode,
+    desktopImage: panel.desktopImage !== undefined ? panel.desktopImage : (def?.desktopImage ?? ""),
+    mobileImage: panel.mobileImage !== undefined ? panel.mobileImage : (def?.mobileImage ?? ""),
+    videoUrl: panel.videoUrl !== undefined ? panel.videoUrl : (def?.videoUrl ?? ""),
+    mobileVideoUrl: panel.mobileVideoUrl !== undefined ? panel.mobileVideoUrl : (def?.mobileVideoUrl ?? ""),
+    posterUrl: panel.posterUrl !== undefined ? panel.posterUrl : (def?.posterUrl ?? ""),
+    mobilePosterUrl: panel.mobilePosterUrl !== undefined ? panel.mobilePosterUrl : (def?.mobilePosterUrl ?? ""),
+    videoAutoplay: panel.videoAutoplay !== undefined ? panel.videoAutoplay : def?.videoAutoplay,
+    videoMuted: panel.videoMuted !== undefined ? panel.videoMuted : def?.videoMuted,
+    videoLoop: panel.videoLoop !== undefined ? panel.videoLoop : def?.videoLoop,
+    imageAlt: panel.imageAlt !== undefined ? panel.imageAlt : (def?.imageAlt || panel.label || "Campaign panel visual"),
+    focalPoint: panel.focalPoint || def?.focalPoint || "bottom",
+    objectFit: panel.objectFit || def?.objectFit || "contain",
+    backgroundColor: panel.backgroundColor || def?.backgroundColor,
+    destination: panel.destination !== undefined ? panel.destination : (def?.destination || "/store"),
+    visible: panel.visible !== false,
+    order: typeof panel.order === "number" ? panel.order : idx + 1,
+  };
+};
+
+const normalizeHomepageSection = (
+  section: Partial<HomepageSection>,
+  idx: number
+): HomepageSection => {
+  const def = section.builtInKey
+    ? defaultHomepageSections.find((d) => d.builtInKey === section.builtInKey)
+    : defaultHomepageSections.find((d) => d.id === section.id);
+
+  const resolvedType = section.type || def?.type || "apple-hero";
+
+  const resolvedTiles =
+    Array.isArray(section.tiles) && section.tiles.length > 0
+      ? section.tiles.map((t, i) => normalizeHomepageBentoTile(t, i))
+      : resolvedType === "apple-bento-grid"
+      ? (def?.tiles || defaultHomepageBentoTiles).map((t, i) => normalizeHomepageBentoTile(t, i))
+      : undefined;
+
+  const resolvedCarouselCards =
+    Array.isArray(section.carouselCards) && section.carouselCards.length > 0
+      ? section.carouselCards.map((c, i) => normalizeHomepageCarouselCard(c, i))
+      : resolvedType === "story-carousel"
+      ? (def?.carouselCards || defaultHomepageCarouselCards).map((c, i) => normalizeHomepageCarouselCard(c, i))
+      : undefined;
+
+  const resolvedPromoPanels =
+    Array.isArray(section.promoPanels) && section.promoPanels.length > 0
+      ? section.promoPanels.map((p, i) => normalizeHomepagePromoPanel(p, i))
+      : resolvedType === "multi-promo-strip"
+      ? (def?.promoPanels || defaultHomepagePromoPanels).map((p, i) => normalizeHomepagePromoPanel(p, i))
+      : undefined;
+
+  const resolvedFootnotes =
+    Array.isArray(section.footnoteItems) && section.footnoteItems.length > 0
+      ? section.footnoteItems.map((item) => String(item))
+      : resolvedType === "footnotes"
+      ? [...(def?.footnoteItems || defaultHomepageFootnotes)]
+      : undefined;
+
+  return {
+    id: section.id || def?.id || `homepage-section-${idx + 1}`,
+    type: resolvedType,
+    builtInKey: section.builtInKey ?? def?.builtInKey,
+    eyebrow: section.eyebrow !== undefined ? section.eyebrow : (def?.eyebrow || ""),
+    heading: section.heading !== undefined ? section.heading : (def?.heading || "Section Heading"),
+    subtitle: section.subtitle !== undefined ? section.subtitle : (def?.subtitle || ""),
+    description: section.description !== undefined ? section.description : (def?.description || ""),
+    tone: section.tone || def?.tone || "dark",
+    mediaMode: section.mediaMode || def?.mediaMode,
+    desktopImage: section.desktopImage !== undefined ? section.desktopImage : (def?.desktopImage ?? ""),
+    mobileImage: section.mobileImage !== undefined ? section.mobileImage : (def?.mobileImage ?? ""),
+    videoUrl: section.videoUrl !== undefined ? section.videoUrl : (def?.videoUrl ?? ""),
+    mobileVideoUrl: section.mobileVideoUrl !== undefined ? section.mobileVideoUrl : (def?.mobileVideoUrl ?? ""),
+    posterUrl: section.posterUrl !== undefined ? section.posterUrl : (def?.posterUrl ?? ""),
+    mobilePosterUrl: section.mobilePosterUrl !== undefined ? section.mobilePosterUrl : (def?.mobilePosterUrl ?? ""),
+    videoAutoplay: section.videoAutoplay !== undefined ? section.videoAutoplay : def?.videoAutoplay,
+    videoMuted: section.videoMuted !== undefined ? section.videoMuted : def?.videoMuted,
+    videoLoop: section.videoLoop !== undefined ? section.videoLoop : def?.videoLoop,
+    imageAlt: section.imageAlt !== undefined ? section.imageAlt : (def?.imageAlt || section.heading || "Homepage section image"),
+    focalPoint: section.focalPoint || def?.focalPoint || "bottom",
+    objectFit: section.objectFit || def?.objectFit || "contain",
+    caption: section.caption !== undefined ? section.caption : (def?.caption || ""),
+    copyPlacement: section.copyPlacement || def?.copyPlacement || "top",
+    backgroundColor: section.backgroundColor || def?.backgroundColor || "#000000",
+    textAlignment: section.textAlignment || def?.textAlignment || "center",
+    productIds: Array.isArray(section.productIds) ? section.productIds : (def?.productIds || []),
+    tiles: resolvedTiles,
+    carouselCards: resolvedCarouselCards,
+    promoPanels: resolvedPromoPanels,
+    footnoteItems: resolvedFootnotes,
+    buttonLabel: section.buttonLabel !== undefined ? section.buttonLabel : (def?.buttonLabel || ""),
+    buttonDestination: section.buttonDestination !== undefined ? section.buttonDestination : (def?.buttonDestination || ""),
+    secondaryButtonLabel: section.secondaryButtonLabel !== undefined ? section.secondaryButtonLabel : (def?.secondaryButtonLabel || ""),
+    secondaryButtonDestination: section.secondaryButtonDestination !== undefined ? section.secondaryButtonDestination : (def?.secondaryButtonDestination || ""),
+    layoutStyle: section.layoutStyle || def?.layoutStyle || "full-bleed",
+    visible: section.visible !== false,
+    order: typeof section.order === "number" ? section.order : idx,
+  };
+};
+
 export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent> | null): HomepageContent => {
   const source = savedContent || defaultHomepageContent;
+  const layoutMode: HomepageLayoutMode = source.layoutMode === "modular" ? "modular" : "legacy";
   const normalizeSecondary = <T extends { id: string; secondary?: { label: string; to: string } }>(item: T): T => {
     if (item.id === "iphone-duo") return item;
     if (item.secondary && item.secondary.label === "View pricing") {
@@ -211,11 +407,20 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     return normalizeSecondary(combined);
   });
 
+  const sections =
+    Array.isArray(source.sections) && source.sections.length > 0
+      ? source.sections.map((sec, idx) => normalizeHomepageSection(sec, idx))
+      : defaultHomepageSections.map((sec, idx) => normalizeHomepageSection(sec, idx));
+
   return {
     ...defaultHomepageContent,
     ...source,
+    layoutMode,
     heroes: mergedHeroes,
     tiles: mergedTiles,
+    sections,
+    hasDraft: Boolean(source.hasDraft),
+    updatedAt: source.updatedAt,
   };
 };
 
@@ -230,6 +435,21 @@ export const hasVerifiedLocalHomepageContent = (): boolean => {
 
 export const getInitialHomepageContent = (): HomepageContent =>
   normalizeHomepageContent(readLocal<HomepageContent>(CMS_STORAGE_KEY_HOMEPAGE, defaultHomepageContent));
+
+export const getInitialHomepageDraft = (): HomepageContent | null => {
+  try {
+    const raw = localStorage.getItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<HomepageContent>;
+    return normalizeHomepageContent({
+      ...parsed,
+      layoutMode: parsed.layoutMode || "modular",
+      hasDraft: true,
+    });
+  } catch {
+    return null;
+  }
+};
 
 export const fetchHomepageContent = async (): Promise<HomepageContent> => {
   const local = getInitialHomepageContent();
@@ -259,16 +479,401 @@ export const fetchHomepageContent = async (): Promise<HomepageContent> => {
   return local;
 };
 
+export const fetchHomepageDraft = async (): Promise<HomepageContent | null> => {
+  return getInitialHomepageDraft();
+};
+
+export const saveHomepageDraft = async (
+  content: HomepageContent
+): Promise<HomepageContent> => {
+  const normalized = normalizeHomepageContent({
+    ...content,
+    layoutMode: content.layoutMode || "modular",
+    hasDraft: true,
+    updatedAt: new Date().toISOString(),
+  });
+
+  writeLocal(CMS_STORAGE_KEY_HOMEPAGE_DRAFT, normalized);
+  notifyListeners();
+  return normalized;
+};
+
+export const discardHomepageDraft = async (): Promise<void> => {
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+  } catch {
+    // ignore
+  }
+  notifyListeners();
+};
+
+export const HOMEPAGE_VIDEO_BUCKET = "learn-more-media";
+
+type StagedSlotRef = {
+  uri: string;
+  expectedKind: LocalMediaKind;
+};
+
+const MEDIA_IMAGE_FIELDS = ["desktopImage", "mobileImage", "posterUrl", "mobilePosterUrl"] as const;
+const MEDIA_VIDEO_FIELDS = ["videoUrl", "mobileVideoUrl"] as const;
+
+function collectFromMediaFields(
+  entity: Record<string, unknown> | undefined | null,
+  localRefs: Map<string, StagedSlotRef>,
+  transientBlobs: Set<string>
+) {
+  if (!entity) return;
+  const inspect = (raw: unknown, expectedKind: LocalMediaKind) => {
+    if (typeof raw !== "string") return;
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    if (isLocalMediaUri(trimmed)) {
+      if (!localRefs.has(trimmed)) {
+        localRefs.set(trimmed, { uri: trimmed, expectedKind });
+      }
+    } else if (trimmed.startsWith("blob:")) {
+      transientBlobs.add(trimmed);
+    }
+  };
+
+  for (const field of MEDIA_IMAGE_FIELDS) {
+    inspect(entity[field], "image");
+  }
+  for (const field of MEDIA_VIDEO_FIELDS) {
+    inspect(entity[field], "video");
+  }
+}
+
+export function collectHomepageMediaReferences(content: HomepageContent): {
+  localRefs: StagedSlotRef[];
+  transientBlobUris: string[];
+} {
+  const localRefs = new Map<string, StagedSlotRef>();
+  const transientBlobs = new Set<string>();
+
+  const inspectScalarImage = (raw?: string) => {
+    if (!raw) return;
+    const trimmed = raw.trim();
+    if (isLocalMediaUri(trimmed) && !localRefs.has(trimmed)) {
+      localRefs.set(trimmed, { uri: trimmed, expectedKind: "image" });
+    } else if (trimmed.startsWith("blob:")) {
+      transientBlobs.add(trimmed);
+    }
+  };
+
+  for (const hero of content.heroes || []) {
+    inspectScalarImage(hero.image);
+    inspectScalarImage(hero.mobileImage);
+  }
+  for (const tile of content.tiles || []) {
+    inspectScalarImage(tile.image);
+  }
+  for (const flyer of content.serviceFlyers || []) {
+    inspectScalarImage(flyer.image);
+  }
+  for (const section of content.sections || []) {
+    collectFromMediaFields(section as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    for (const panel of section.promoPanels || []) {
+      collectFromMediaFields(panel as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    }
+    for (const tile of section.tiles || []) {
+      collectFromMediaFields(tile as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    }
+    for (const card of section.carouselCards || []) {
+      collectFromMediaFields(card as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    }
+  }
+
+  return {
+    localRefs: Array.from(localRefs.values()),
+    transientBlobUris: Array.from(transientBlobs),
+  };
+}
+
+function replaceFieldsInObject<T extends object>(obj: T, urlMap: Map<string, string>): T {
+  const clone = { ...obj } as Record<string, unknown>;
+  for (const field of [...MEDIA_IMAGE_FIELDS, ...MEDIA_VIDEO_FIELDS]) {
+    const val = clone[field];
+    if (typeof val === "string") {
+      const mapped = urlMap.get(val.trim());
+      if (mapped) clone[field] = mapped;
+    }
+  }
+  return clone as T;
+}
+
+export function replaceHomepageMediaReferences(
+  content: HomepageContent,
+  urlMap: Map<string, string>
+): HomepageContent {
+  const mapScalar = (val?: string) => (val && urlMap.get(val.trim())) || val;
+
+  return {
+    ...content,
+    heroes: (content.heroes || []).map((hero) => ({
+      ...hero,
+      image: mapScalar(hero.image) || hero.image,
+      mobileImage: mapScalar(hero.mobileImage),
+    })),
+    tiles: (content.tiles || []).map((tile) => ({
+      ...tile,
+      image: mapScalar(tile.image) || tile.image,
+    })),
+    serviceFlyers: (content.serviceFlyers || []).map((flyer) => ({
+      ...flyer,
+      image: mapScalar(flyer.image) || flyer.image,
+    })),
+    sections: content.sections
+      ? content.sections.map((section) => {
+          const nextSection = replaceFieldsInObject(section, urlMap);
+          if (section.promoPanels) {
+            nextSection.promoPanels = section.promoPanels.map((p) =>
+              replaceFieldsInObject(p, urlMap)
+            );
+          }
+          if (section.tiles) {
+            nextSection.tiles = section.tiles.map((t) => replaceFieldsInObject(t, urlMap));
+          }
+          if (section.carouselCards) {
+            nextSection.carouselCards = section.carouselCards.map((c) =>
+              replaceFieldsInObject(c, urlMap)
+            );
+          }
+          return nextSection;
+        })
+      : undefined,
+  };
+}
+
+const toBase64Utf8 = (input: string): string => {
+  const bytes = new TextEncoder().encode(input);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
+
+async function uploadResumableTusWithFetch({
+  projectId,
+  token,
+  bucket,
+  storagePath,
+  contentType,
+  blob,
+}: {
+  projectId: string;
+  token: string;
+  bucket: string;
+  storagePath: string;
+  contentType: string;
+  blob: Blob;
+}): Promise<void> {
+  const endpoint = `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`;
+  const metadata = [
+    `bucketName ${toBase64Utf8(bucket)}`,
+    `objectName ${toBase64Utf8(storagePath)}`,
+    `contentType ${toBase64Utf8(contentType)}`,
+    `cacheControl ${toBase64Utf8("31536000")}`,
+  ].join(",");
+
+  const createRes = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "x-upsert": "false",
+      "Tus-Resumable": "1.0.0",
+      "Upload-Length": String(blob.size),
+      "Upload-Metadata": metadata,
+    },
+  });
+
+  if (!createRes.ok) {
+    const errText = await createRes.text().catch(() => createRes.statusText);
+    throw new Error(`Resumable video upload initialization failed (${createRes.status}): ${errText}`);
+  }
+
+  const locationHeader = createRes.headers.get("Location");
+  if (!locationHeader) {
+    throw new Error("Resumable video upload did not return an upload Location URL.");
+  }
+  const uploadUrl = locationHeader.startsWith("http")
+    ? locationHeader
+    : `https://${projectId}.storage.supabase.co${locationHeader}`;
+
+  const chunkSize = 6 * 1024 * 1024;
+  let offset = 0;
+  while (offset < blob.size) {
+    const nextEnd = Math.min(offset + chunkSize, blob.size);
+    const chunk = blob.slice(offset, nextEnd);
+    const patchRes = await fetch(uploadUrl, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Tus-Resumable": "1.0.0",
+        "Upload-Offset": String(offset),
+        "Content-Type": "application/offset+octet-stream",
+      },
+      body: chunk,
+    });
+    if (!patchRes.ok) {
+      const errText = await patchRes.text().catch(() => patchRes.statusText);
+      throw new Error(`Video chunk upload failed at offset ${offset} (${patchRes.status}): ${errText}`);
+    }
+    const serverOffset = Number(patchRes.headers.get("Upload-Offset"));
+    offset = Number.isFinite(serverOffset) && serverOffset > offset ? serverOffset : nextEnd;
+  }
+}
+
+async function uploadHomepageStagedRecordToSupabase(
+  record: LocalStagedMediaRecord,
+  expectedKind: LocalMediaKind
+): Promise<string> {
+  const client = getSupabaseOrThrow();
+  const fileLike = {
+    name: record.filename,
+    type: record.mimeType,
+    size: record.blob?.size ?? record.size,
+    slice: (start?: number, end?: number) => record.blob.slice(start, end),
+  };
+
+  const validated = await validateLocalMediaFile(fileLike, expectedKind);
+
+  const uniqueToken =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const cleanBase =
+    (record.filename || "media")
+      .toLowerCase()
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 50) || "homepage-media";
+
+  const isVideo = validated.kind === "video";
+  const bucket = isVideo ? HOMEPAGE_VIDEO_BUCKET : productImagesBucket;
+  const folder = isVideo ? "homepage/videos" : "media/homepage/images";
+  const storagePath = `${folder}/${uniqueToken}-${cleanBase}.${validated.extension}`;
+
+  const uploadBlob =
+    record.blob instanceof Blob
+      ? new File([record.blob], `${cleanBase}.${validated.extension}`, {
+          type: validated.normalizedMimeType,
+        })
+      : record.blob;
+
+  if (isVideo && record.blob.size > 6 * 1024 * 1024) {
+    const { data: sessionData } = await client.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (!token) {
+      throw new Error("Admin session expired before uploading video. Sign in with AAL2 MFA again.");
+    }
+    const projectUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const projectId = new URL(projectUrl).hostname.split(".")[0];
+    await uploadResumableTusWithFetch({
+      projectId,
+      token,
+      bucket,
+      storagePath,
+      contentType: validated.normalizedMimeType,
+      blob: uploadBlob,
+    });
+  } else {
+    const { error: uploadErr } = await client.storage.from(bucket).upload(storagePath, uploadBlob, {
+      cacheControl: "31536000",
+      upsert: false,
+      contentType: validated.normalizedMimeType,
+    });
+    if (uploadErr) {
+      throw new Error(
+        `Failed to upload "${record.filename}" to Supabase Storage (${uploadErr.message}). Your local draft was preserved.`
+      );
+    }
+  }
+
+  const { data: urlData } = client.storage.from(bucket).getPublicUrl(storagePath);
+  const publicUrl = (urlData?.publicUrl || "").trim();
+  if (!publicUrl || (!publicUrl.startsWith("https://") && !publicUrl.startsWith("http://"))) {
+    throw new Error(`Could not obtain a public URL for "${record.filename}". Publish cancelled.`);
+  }
+  return publicUrl;
+}
+
+export async function promoteHomepageLocalMediaForPublish(
+  content: HomepageContent,
+  deps?: {
+    assertAuth?: () => Promise<unknown>;
+    getStagedRecord?: (uri: string) => Promise<LocalStagedMediaRecord | null>;
+    uploadStagedRecord?: (
+      record: LocalStagedMediaRecord,
+      expectedKind: LocalMediaKind
+    ) => Promise<string>;
+  }
+): Promise<HomepageContent> {
+  await (deps?.assertAuth ? deps.assertAuth() : assertAdminAal2());
+
+  const { localRefs, transientBlobUris } = collectHomepageMediaReferences(content);
+  if (transientBlobUris.length > 0) {
+    throw new Error(
+      "Cannot publish temporary browser blob URLs. Re-upload the affected image or video before publishing."
+    );
+  }
+
+  if (localRefs.length === 0) {
+    return content;
+  }
+
+  const resolveRecord = deps?.getStagedRecord ?? getLocalStagedMediaRecord;
+  const uploadRecord = deps?.uploadStagedRecord ?? uploadHomepageStagedRecordToSupabase;
+  const uploadedUrlMap = new Map<string, string>();
+
+  for (const ref of localRefs) {
+    const stagedRecord = await resolveRecord(ref.uri);
+    if (!stagedRecord || !stagedRecord.blob || stagedRecord.blob.size <= 0) {
+      throw new Error(
+        `Staged local media "${ref.uri}" could not be read from browser storage. Re-upload it before publishing; your draft remains saved.`
+      );
+    }
+    const permanentUrl = await uploadRecord(stagedRecord, ref.expectedKind);
+    if (!permanentUrl || isLocalMediaUri(permanentUrl) || permanentUrl.startsWith("blob:")) {
+      throw new Error(
+        `Media upload for "${stagedRecord.filename}" did not return a permanent public URL.`
+      );
+    }
+    uploadedUrlMap.set(ref.uri, permanentUrl);
+  }
+
+  const resolvedContent = replaceHomepageMediaReferences(content, uploadedUrlMap);
+  const remaining = collectHomepageMediaReferences(resolvedContent);
+  if (remaining.localRefs.length > 0 || remaining.transientBlobUris.length > 0) {
+    throw new Error(
+      "Publish blocked: unresolved local-media references remained after upload. Your local draft has not been altered."
+    );
+  }
+
+  return resolvedContent;
+}
+
 export const saveHomepageContent = async (
   content: HomepageContent
 ): Promise<HomepageContent> => {
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
 
+  const resolvedContent = await promoteHomepageLocalMediaForPublish(content);
+
+  const cleanContent: HomepageContent = {
+    ...resolvedContent,
+    layoutMode: resolvedContent.layoutMode === "modular" ? "modular" : "legacy",
+    hasDraft: false,
+    updatedAt: new Date().toISOString(),
+  };
+
   const { error } = await client.from("homepage_content").upsert({
     id: "main",
-    content,
-    updated_at: new Date().toISOString(),
+    content: cleanContent,
+    updated_at: cleanContent.updatedAt,
   });
 
   if (error) {
@@ -277,8 +882,15 @@ export const saveHomepageContent = async (
     );
   }
 
+  // Clear unpublished local draft only AFTER authoritative Supabase write succeeds
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+  } catch {
+    // ignore
+  }
+
   // Only update client cache after authoritative Supabase write succeeds
-  writeLocal(CMS_STORAGE_KEY_HOMEPAGE, content);
+  writeLocal(CMS_STORAGE_KEY_HOMEPAGE, cleanContent);
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(CMS_STORAGE_KEY_HOMEPAGE_VERIFIED, "true");
@@ -286,7 +898,7 @@ export const saveHomepageContent = async (
   }
   broadcastPublishedUpdate("homepage");
   notifyListeners();
-  return content;
+  return cleanContent;
 };
 
 // 3. MEDIA LIBRARY
