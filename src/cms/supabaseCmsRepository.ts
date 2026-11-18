@@ -694,6 +694,7 @@ type StagedSlotRef = {
 };
 
 const MEDIA_IMAGE_FIELDS = [
+  "src",
   "image",
   "desktopImage",
   "mobileImage",
@@ -745,6 +746,9 @@ export function collectHomepageMediaReferences(content: HomepageContent): {
   }
   for (const customSec of content.customSections || []) {
     collectFromMediaFields(customSec as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    for (const galItem of customSec.galleryImages || []) {
+      collectFromMediaFields(galItem as unknown as Record<string, unknown>, localRefs, transientBlobs);
+    }
   }
   for (const flyer of content.serviceFlyers || []) {
     collectFromMediaFields(flyer as unknown as Record<string, unknown>, localRefs, transientBlobs);
@@ -789,7 +793,15 @@ export function replaceHomepageMediaReferences(
     heroes: (content.heroes || []).map((hero) => replaceFieldsInObject(hero, urlMap)),
     tiles: (content.tiles || []).map((tile) => replaceFieldsInObject(tile, urlMap)),
     customSections: content.customSections
-      ? content.customSections.map((cs) => replaceFieldsInObject(cs, urlMap))
+      ? content.customSections.map((cs) => {
+          const nextCs = replaceFieldsInObject(cs, urlMap);
+          if (cs.galleryImages) {
+            nextCs.galleryImages = cs.galleryImages.map((galItem) =>
+              replaceFieldsInObject(galItem, urlMap)
+            );
+          }
+          return nextCs;
+        })
       : undefined,
     serviceFlyers: (content.serviceFlyers || []).map((flyer) =>
       replaceFieldsInObject(flyer, urlMap)

@@ -265,6 +265,8 @@
 .admin-topbar h1 {
   font-size: 1.15rem !important;
   font-weight: 700 !important;
+  line-height: 1.35 !important;
+  padding-bottom: 1px;
   color: var(--admin-text-main) !important;
   margin: 0 !important;
   letter-spacing: -0.01em !important;
@@ -314,7 +316,23 @@
 }
 
 /* 5. Core Cards & Panels */
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell p,
+.admin-shell label {
+  writing-mode: horizontal-tb !important;
+  word-break: normal !important;
+  overflow-wrap: break-word;
+}
+
 .admin-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background-color: var(--admin-surface);
   border: 1px solid var(--admin-border);
   border-radius: 0.875rem;
@@ -322,38 +340,102 @@
   padding: 1.25rem 1.5rem;
 }
 
+@media (max-width: 639px) {
+  .admin-card {
+    padding: 1rem;
+  }
+}
+
 .admin-header-card {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.125rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background-color: var(--admin-surface);
   border: 1px solid var(--admin-border);
   border-radius: 0.875rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-  padding: 1.5rem;
+  padding: 1.35rem 1.5rem;
 }
 
-@media (min-width: 640px) {
-  .admin-header-card {
+.admin-header-card > div:first-child {
+  width: 100%;
+  min-width: min(320px, 100%);
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+
+.admin-header-card > div:last-child:not(:first-child) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+@media (min-width: 1280px) {
+  .admin-header-card:not(.is-stacked) {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 1.25rem 1.75rem;
+  }
+
+  .admin-header-card:not(.is-stacked) > div:first-child {
+    flex: 1 1 360px;
   }
 }
 
+.admin-header-card.is-stacked .admin-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid var(--admin-border-subtle);
+  width: 100%;
+}
+
 .admin-header-card h2 {
-  font-size: 1.45rem;
+  font-size: 1.4rem;
+  line-height: 1.25;
   font-weight: 700;
   color: var(--admin-text-main);
   letter-spacing: -0.02em;
-  margin: 0.2rem 0 0;
+  margin: 0.25rem 0 0;
 }
 
 .admin-header-card p {
   color: var(--admin-text-muted);
   font-size: 0.875rem;
-  margin: 0.25rem 0 0;
-  max-width: 600px;
+  line-height: 1.5;
+  margin: 0.35rem 0 0;
+  max-width: 72ch;
+}
+
+.admin-subpanel {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 1rem 1.125rem;
+  border-radius: 0.75rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-subpanel-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
 }
 
 /* 6. Live Metrics & KPI Grid */

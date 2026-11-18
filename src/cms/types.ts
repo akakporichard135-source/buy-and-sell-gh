@@ -9,16 +9,29 @@ import type { ProductFamilyKey } from "../catalog/productExperience";
 
 export type CustomSectionLayoutVariant =
   | "full-hero"
+  | "product-showcase"
   | "split-left"
   | "split-right"
+  | "gift-showcase"
+  | "promo-banner"
   | "compact-banner"
-  | "gift-showcase";
+  | "gallery"
+  | "video-showcase"
+  | "editorial";
 
 export type CustomSectionPlacement =
+  | "before-heroes"
+  | "after-hero-1"
   | "after-heroes"
   | "after-tiles"
   | "before-services"
   | "after-services";
+
+export interface CustomSectionGalleryImage {
+  src: string;
+  alt?: string;
+  caption?: string;
+}
 
 export interface HeroCampaign {
   id: string;
@@ -122,11 +135,15 @@ export interface CustomHomepageSection {
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
   layoutVariant?: CustomSectionLayoutVariant;
+  mobileLayout?: "stack" | "media-first" | "compact";
+  containerWidth?: "full" | "wide" | "contained";
   sectionPlacement?: CustomSectionPlacement;
   minHeightDesktop?: number;
   minHeightMobile?: number;
+  galleryImages?: CustomSectionGalleryImage[];
   primary: ActionLink;
   secondary?: ActionLink;
+  extraActions?: ActionLink[];
   placement?: "top" | "bottom";
   enabled: boolean;
   order: number;

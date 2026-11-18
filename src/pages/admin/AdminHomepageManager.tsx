@@ -7,7 +7,6 @@ import {
   ExternalLink,
   Eye,
   Film,
-  Gift,
   Grid,
   GripVertical,
   Image as ImageIcon,
@@ -33,10 +32,10 @@ import { defaultHomepageSections } from "../../cms/defaultCmsData";
 import {
   applyProductToCampaign,
   createDefaultCustomHomepageSection,
-  createGiftCampaignHomepageSection,
   deriveCampaignLearnMorePath,
   deriveCampaignLearnMoreSlug,
   extractLegacyMediaUnit,
+  HOMEPAGE_SECTION_LAYOUT_PRESETS,
   inferLegacyMediaAttributesForUrl,
   reorderListById,
   reorderListByIndex,
@@ -181,6 +180,7 @@ export function AdminHomepageManager() {
   const [successMessage, setSuccessMessage] = useState("");
   const [saveError, setSaveError] = useState("");
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const [addSectionModalOpen, setAddSectionModalOpen] = useState(false);
 
   // Drag-and-drop state for campaign reordering and complete campaign swaps
   const [dragHeroId, setDragHeroId] = useState<string | null>(null);
@@ -540,24 +540,39 @@ export function AdminHomepageManager() {
     setMediaPickerTarget(null);
   };
 
-  const handleAddNewCustomSection = () => {
+  const handleCreateCustomSection = (layoutVariant: CustomSectionLayoutVariant = "full-hero") => {
     const existing = content.customSections || [];
-    const nextSection = createDefaultCustomHomepageSection(existing.length + 1);
+    const nextSection = createDefaultCustomHomepageSection(existing.length + 1, {
+      layoutVariant,
+    });
     setContent({
       ...content,
       customSections: [...existing, nextSection],
     });
     setActiveTab("customSections");
+    setAddSectionModalOpen(false);
   };
 
-  const handleAddGiftCampaignSection = () => {
-    const existing = content.customSections || [];
-    const nextSection = createGiftCampaignHomepageSection(existing.length + 1);
-    setContent({
-      ...content,
-      customSections: [...existing, nextSection],
-    });
-    setActiveTab("customSections");
+  const handleUploadSectionGalleryImage = async (sectionIndex: number, file: File) => {
+    try {
+      await validateLocalMediaFile(file, "image");
+      const staged = await saveLocalStagedMedia(file);
+      const customSections = [...(content.customSections || [])];
+      const current = customSections[sectionIndex];
+      if (!current) return;
+      customSections[sectionIndex] = {
+        ...current,
+        galleryImages: [
+          ...(current.galleryImages || []),
+          { src: staged.uri, alt: current.title || "", caption: "" },
+        ],
+      };
+      setContent({ ...content, customSections });
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to stage local gallery image."
+      );
+    }
   };
 
   const handleOpenCampaignLearnMoreEditor = async (
@@ -629,11 +644,11 @@ export function AdminHomepageManager() {
   const customSectionsList = content.customSections || [];
 
   return (
-    <div className="space-y-6">
-      {/* 1. Clean Standard Admin Header Card */}
-      <div className="admin-header-card">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
+    <div className="space-y-6 min-w-0 w-full">
+      {/* 1. Clean Two-Band Admin Header Card (Never squeezes title or description) */}
+      <div className="admin-header-card is-stacked">
+        <div className="w-full min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <span className="text-xs font-bold uppercase tracking-wider text-[#d4af37]">
               Storefront CMS
             </span>
@@ -658,30 +673,20 @@ export function AdminHomepageManager() {
           </div>
           <h2>Homepage Content &amp; Campaign Editor</h2>
           <p>
-            Manage hero campaigns, promotional tiles, custom homepage sections, device assignments,
-            images, videos, and announcement banners for buyandsellgh.com.
+            Manage hero campaigns, promotional tiles, reusable homepage sections, device
+            assignments, images, videos, and announcement banners for buyandsellgh.com.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
+        <div className="admin-header-actions">
           <button
             type="button"
             data-testid="add-new-homepage-section-btn"
-            onClick={handleAddNewCustomSection}
-            className="admin-btn admin-btn-secondary"
+            onClick={() => setAddSectionModalOpen(true)}
+            className="admin-btn admin-btn-gold"
           >
             <Plus size={15} />
-            <span>Add New Section</span>
-          </button>
-
-          <button
-            type="button"
-            data-testid="add-gift-campaign-btn"
-            onClick={handleAddGiftCampaignSection}
-            className="admin-btn admin-btn-secondary"
-          >
-            <Gift size={15} />
-            <span>+ Add Gift Campaign</span>
+            <span>Add Section</span>
           </button>
 
           <button
@@ -781,83 +786,81 @@ export function AdminHomepageManager() {
         />
       ) : (
         <div className="space-y-6 min-w-0">
-          {/* Standard Navigation Tabs */}
-          <div className="w-full overflow-x-auto scrollbar-none pb-1">
-            <div className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100/80 border border-slate-200 min-w-max">
-              <button
-                type="button"
-                data-testid="tab-heroes"
-                onClick={() => setActiveTab("heroes")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === "heroes"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Layout size={15} />
-                <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
-              </button>
+          {/* Responsive Wrapping Navigation Tabs (Zero Horizontal Clipping) */}
+          <div className="homepage-cms-tabs" role="tablist" aria-label="Homepage Editor Sections">
+            <button
+              type="button"
+              data-testid="tab-heroes"
+              onClick={() => setActiveTab("heroes")}
+              className={`homepage-cms-tab-btn ${
+                activeTab === "heroes"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Layout size={15} />
+              <span>Hero Carousel ({content.heroes.filter((h) => h.enabled).length} Active)</span>
+            </button>
 
-              <button
-                type="button"
-                data-testid="tab-tiles"
-                onClick={() => setActiveTab("tiles")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === "tiles"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Grid size={15} />
-                <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
-              </button>
+            <button
+              type="button"
+              data-testid="tab-tiles"
+              onClick={() => setActiveTab("tiles")}
+              className={`homepage-cms-tab-btn ${
+                activeTab === "tiles"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Grid size={15} />
+              <span>Promotional Tiles ({content.tiles.filter((t) => t.enabled).length} Active)</span>
+            </button>
 
-              <button
-                type="button"
-                data-testid="tab-custom-sections"
-                onClick={() => setActiveTab("customSections")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === "customSections"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Sparkles size={15} />
-                <span>
-                  Custom Sections ({customSectionsList.filter((s) => s.enabled).length} Active)
-                </span>
-              </button>
+            <button
+              type="button"
+              data-testid="tab-custom-sections"
+              onClick={() => setActiveTab("customSections")}
+              className={`homepage-cms-tab-btn ${
+                activeTab === "customSections"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Sparkles size={15} />
+              <span>
+                Homepage Sections ({customSectionsList.filter((s) => s.enabled).length} Active)
+              </span>
+            </button>
 
-              <button
-                type="button"
-                data-testid="tab-flyers"
-                onClick={() => setActiveTab("flyers")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === "flyers"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Layers size={15} />
-                <span>
-                  Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)
-                </span>
-              </button>
+            <button
+              type="button"
+              data-testid="tab-flyers"
+              onClick={() => setActiveTab("flyers")}
+              className={`homepage-cms-tab-btn ${
+                activeTab === "flyers"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Layers size={15} />
+              <span>
+                Service Flyers ({content.serviceFlyers.filter((f) => f.enabled).length} Active)
+              </span>
+            </button>
 
-              <button
-                type="button"
-                data-testid="tab-announcement"
-                onClick={() => setActiveTab("announcement")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === "announcement"
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Volume2 size={15} />
-                <span>Announcement Bar</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              data-testid="tab-announcement"
+              onClick={() => setActiveTab("announcement")}
+              className={`homepage-cms-tab-btn ${
+                activeTab === "announcement"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Volume2 size={15} />
+              <span>Announcement Bar</span>
+            </button>
           </div>
 
           {/* SECTION 1: HERO CAROUSEL */}
@@ -1341,7 +1344,7 @@ export function AdminHomepageManager() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 2xl:grid-cols-2 gap-5">
                 {content.tiles.map((tile, index) => (
                   <div
                     key={`${tile.id}-${index}`}
@@ -1732,69 +1735,51 @@ export function AdminHomepageManager() {
             </div>
           )}
 
-          {/* SECTION 3: CUSTOM HOMEPAGE SECTIONS */}
+          {/* SECTION 3: UNIFIED REUSABLE HOMEPAGE SECTION BUILDER */}
           {activeTab === "customSections" && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
                   <h3 className="text-sm font-bold text-slate-900">
-                    Custom Homepage Sections
+                    Homepage Sections Builder
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Create unlimited homepage sections (including Gifts Campaigns, product launches, split showcases, or banners) with dedicated Learn More pages.
+                    Create, configure, reorder, preview, and publish reusable homepage sections (heroes, product showcases, split rows, gift campaigns, galleries, video showcases, or editorial blocks).
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    data-testid="tab-add-gift-campaign-btn"
-                    onClick={handleAddGiftCampaignSection}
-                    className="admin-btn admin-btn-sm admin-btn-secondary"
-                  >
-                    <Gift size={14} />
-                    <span>+ Add Gift Campaign</span>
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="tab-add-custom-section-btn"
-                    onClick={handleAddNewCustomSection}
-                    className="admin-btn admin-btn-sm admin-btn-primary"
-                  >
-                    <Plus size={14} />
-                    <span>Add New Section</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  data-testid="tab-add-custom-section-btn"
+                  onClick={() => setAddSectionModalOpen(true)}
+                  className="admin-btn admin-btn-gold admin-btn-sm shrink-0"
+                >
+                  <Plus size={14} />
+                  <span>Add Section</span>
+                </button>
               </div>
 
               {customSectionsList.length === 0 ? (
-                <div className="admin-card text-center py-10 space-y-3">
+                <div className="admin-card text-center py-12 space-y-4">
                   <p className="text-sm font-bold text-slate-800">
-                    No custom homepage sections added yet.
+                    No additional homepage sections created yet.
                   </p>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Click <strong>Add Gift Campaign</strong> or <strong>Add New Section</strong> to create a custom hero, split showcase, or holiday gift section on the homepage.
+                  <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                    Use the general <strong>+ Add Section</strong> builder to choose a layout template (Campaign Hero, Product Showcase, Split Image/Text, Gift-Shopping Showcase, Promotional Banner, Image Gallery, Video Showcase, or Custom Editorial) and configure everything in one unified workflow.
                   </p>
-                  <div className="flex flex-wrap justify-center gap-2">
+                  <div className="flex justify-center">
                     <button
                       type="button"
-                      onClick={handleAddGiftCampaignSection}
-                      className="admin-btn admin-btn-secondary admin-btn-sm"
-                    >
-                      <Gift size={14} />
-                      <span>+ Add Gift Campaign</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAddNewCustomSection}
-                      className="admin-btn admin-btn-primary admin-btn-sm"
+                      data-testid="empty-add-section-btn"
+                      onClick={() => setAddSectionModalOpen(true)}
+                      className="admin-btn admin-btn-gold admin-btn-sm"
                     >
                       <Plus size={14} />
-                      <span>Add New Section</span>
+                      <span>Add Section</span>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {customSectionsList.map((section, index) => (
                     <div
                       key={`${section.id}-${index}`}
@@ -1919,449 +1904,686 @@ export function AdminHomepageManager() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-xs">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Internal Section Name
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`custom-section-internal-name-${index}`}
-                            value={section.internalName}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], internalName: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Holiday Gift Campaign"
-                          />
-                        </div>
+                      {/* 1. Behaviour, Layout & Responsive Structure */}
+                      <section className="admin-subpanel">
+                        <h5 className="admin-subpanel-title">1. Layout, Behaviour &amp; Dimensions</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 text-xs">
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Internal Section Name
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`custom-section-internal-name-${index}`}
+                              value={section.internalName}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], internalName: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. Seasonal Campaign"
+                            />
+                          </div>
 
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Catalogue Product Assignment
-                          </label>
-                          <select
-                            data-testid={`campaign-product-select-customSection-${index}`}
-                            value={section.productId || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const next = [...customSectionsList];
-                              if (!val) {
-                                next[index] = { ...next[index], productId: undefined };
-                              } else {
-                                const found = activeCatalogProducts.find(
-                                  (p) => p.id === val || p.slug === val
-                                );
-                                if (found) {
-                                  const resolvedImg = resolveAdminProductImage(found)?.src;
-                                  next[index] = applyProductToCampaign(
-                                    next[index],
-                                    found,
-                                    resolvedImg
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Catalogue Product Association
+                            </label>
+                            <select
+                              data-testid={`campaign-product-select-customSection-${index}`}
+                              value={section.productId || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const next = [...customSectionsList];
+                                if (!val) {
+                                  next[index] = { ...next[index], productId: undefined };
+                                } else {
+                                  const found = activeCatalogProducts.find(
+                                    (p) => p.id === val || p.slug === val
                                   );
+                                  if (found) {
+                                    const resolvedImg = resolveAdminProductImage(found)?.src;
+                                    next[index] = applyProductToCampaign(
+                                      next[index],
+                                      found,
+                                      resolvedImg
+                                    );
+                                  }
                                 }
-                              }
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-800"
-                          >
-                            <option value="">Custom / Manual Section</option>
-                            {activeCatalogProducts.map((p) => (
-                              <option key={p.id} value={p.slug}>
-                                {p.name} ({p.category})
-                              </option>
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold text-slate-800"
+                            >
+                              <option value="">Custom / Manual Section</option>
+                              {activeCatalogProducts.map((p) => (
+                                <option key={p.id} value={p.slug}>
+                                  {p.name} ({p.category})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Section Layout
+                            </label>
+                            <select
+                              data-testid={`custom-section-layout-${index}`}
+                              value={section.layoutVariant || "full-hero"}
+                              onChange={(e) => {
+                                const nextLayout = e.target.value as CustomSectionLayoutVariant;
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  layoutVariant: nextLayout,
+                                  ...(nextLayout === "video-showcase"
+                                    ? { mediaMode: "video" as const }
+                                    : {}),
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                            >
+                              {HOMEPAGE_SECTION_LAYOUT_PRESETS.map((preset) => (
+                                <option key={preset.variant} value={preset.variant}>
+                                  {preset.label}
+                                </option>
+                              ))}
+                              {section.layoutVariant === "compact-banner" && (
+                                <option value="compact-banner">Compact Promotional Banner</option>
+                              )}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Placement on Homepage
+                            </label>
+                            <select
+                              data-testid={`custom-section-placement-${index}`}
+                              value={section.sectionPlacement || "after-heroes"}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  sectionPlacement: e.target.value as CustomSectionPlacement,
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                            >
+                              <option value="before-heroes">Top Banner (Before Heroes)</option>
+                              <option value="after-hero-1">After First Hero Slide</option>
+                              <option value="after-heroes">After Hero Slides</option>
+                              <option value="after-tiles">After Promotional Tiles</option>
+                              <option value="before-services">Before Services Showcase</option>
+                              <option value="after-services">After Services Showcase</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Container Width
+                            </label>
+                            <select
+                              value={section.containerWidth || "full"}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  containerWidth: e.target.value as "full" | "wide" | "contained",
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                            >
+                              <option value="full">Full-Width Edge to Edge</option>
+                              <option value="wide">Wide Framed (1340px)</option>
+                              <option value="contained">Contained Editorial (1140px)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Mobile Layout
+                            </label>
+                            <select
+                              value={section.mobileLayout || "stack"}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  mobileLayout: e.target.value as
+                                    | "stack"
+                                    | "media-first"
+                                    | "compact",
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                            >
+                              <option value="stack">Standard (Copy Above Media)</option>
+                              <option value="media-first">Visual First on Mobile</option>
+                              <option value="compact">Compact Mobile Height</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Desktop Min Height (px)
+                            </label>
+                            <input
+                              type="number"
+                              min={320}
+                              max={1200}
+                              value={section.minHeightDesktop || ""}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  minHeightDesktop:
+                                    Number.isFinite(val) && val > 0 ? val : undefined,
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="Auto"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Mobile Min Height (px)
+                            </label>
+                            <input
+                              type="number"
+                              min={280}
+                              max={900}
+                              value={section.minHeightMobile || ""}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                const next = [...customSectionsList];
+                                next[index] = {
+                                  ...next[index],
+                                  minHeightMobile:
+                                    Number.isFinite(val) && val > 0 ? val : undefined,
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="Auto"
+                            />
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* 2. Section Content */}
+                      <section className="admin-subpanel">
+                        <h5 className="admin-subpanel-title">2. Section Content</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5 text-xs">
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Public Product / Campaign Name
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`campaign-device-name-customSection-${index}`}
+                              value={section.deviceName ?? section.title}
+                              onChange={(e) => {
+                                const nextDeviceName = e.target.value;
+                                const next = [...customSectionsList];
+                                const prevDeviceName =
+                                  next[index].deviceName ?? next[index].title;
+                                const shouldSyncTitle =
+                                  !next[index].title || next[index].title === prevDeviceName;
+                                next[index] = {
+                                  ...next[index],
+                                  deviceName: nextDeviceName,
+                                  ...(shouldSyncTitle ? { title: nextDeviceName } : {}),
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. Gifts They'll Love"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Headline *
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`campaign-title-customSection-${index}`}
+                              value={section.title}
+                              onChange={(e) => {
+                                const nextTitle = e.target.value;
+                                const next = [...customSectionsList];
+                                const prevTitle = next[index].title;
+                                const shouldSyncDevice =
+                                  !next[index].deviceName ||
+                                  next[index].deviceName === prevTitle;
+                                next[index] = {
+                                  ...next[index],
+                                  title: nextTitle,
+                                  ...(shouldSyncDevice ? { deviceName: nextTitle } : {}),
+                                };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. Gifts They'll Love"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Eyebrow / Promotional Badge
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`campaign-eyebrow-customSection-${index}`}
+                              value={section.eyebrow || ""}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], eyebrow: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. HOLIDAY GIFT GUIDE"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Subtitle
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`campaign-subtitle-customSection-${index}`}
+                              value={section.subtitle}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], subtitle: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. Find their perfect match this holiday."
+                            />
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Description
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`campaign-description-customSection-${index}`}
+                              value={section.description || ""}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], description: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="Detailed campaign description"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Additional Promotional Text
+                            </label>
+                            <input
+                              type="text"
+                              data-testid={`custom-section-promo-text-${index}`}
+                              value={section.promoText || ""}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], promoText: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="e.g. Same-day Accra delivery available"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">
+                              Accessibility Alt Text
+                            </label>
+                            <input
+                              type="text"
+                              value={section.alt}
+                              onChange={(e) => {
+                                const next = [...customSectionsList];
+                                next[index] = { ...next[index], alt: e.target.value };
+                                setContent({ ...content, customSections: next });
+                              }}
+                              className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                              placeholder="Descriptive media alt text"
+                            />
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* 3. Full-Width Media & Appearance */}
+                      <LegacyMediaBackgroundEditor
+                        slotRef={{ kind: "customSection", index }}
+                        unit={extractLegacyMediaUnit(section)}
+                        supportsMobileImage
+                        swapTargets={swapTargets}
+                        dragMediaSlot={dragMediaSlot}
+                        onDragMediaStart={setDragMediaSlot}
+                        onDropMediaSwap={(fromRef, toRef) => {
+                          setContent(swapLegacyMediaUnits(content, fromRef, toRef));
+                          setDragMediaSlot(null);
+                        }}
+                        onSwapWith={(targetRef) =>
+                          setContent(
+                            swapLegacyMediaUnits(
+                              content,
+                              { kind: "customSection", index },
+                              targetRef
+                            )
+                          )
+                        }
+                        onPatch={(patch) => {
+                          const next = [...customSectionsList];
+                          next[index] = { ...next[index], ...patch };
+                          setContent({ ...content, customSections: next });
+                        }}
+                        onUploadLocal={(field, file) =>
+                          handleLegacyLocalUpload(
+                            { kind: "customSection", index, field },
+                            file
+                          )
+                        }
+                        onOpenLibrary={(field) =>
+                          setMediaPickerTarget({
+                            section: "customSection",
+                            index,
+                            field,
+                          })
+                        }
+                      />
+
+                      {section.layoutVariant === "gallery" && (
+                        <section className="admin-subpanel space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <h5 className="admin-subpanel-title" style={{ marginBottom: 2 }}>
+                                3B. Image Gallery Collection ({section.galleryImages?.length || 0})
+                              </h5>
+                              <p className="text-[11px] text-slate-500">
+                                Upload multiple product or lifestyle images with optional captions for the Image Gallery layout.
+                              </p>
+                            </div>
+                            <label className="admin-btn admin-btn-gold admin-btn-sm cursor-pointer">
+                              <ImagePlus size={14} />
+                              <span>Upload Gallery Image</span>
+                              <input
+                                type="file"
+                                accept={SUPPORTED_IMAGE_ACCEPT}
+                                data-testid={`custom-section-gallery-upload-${index}`}
+                                className="hidden"
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  if (f) void handleUploadSectionGalleryImage(index, f);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {(section.galleryImages || []).map((gItem, gIdx) => (
+                              <div
+                                key={`${gItem.src}-${gIdx}`}
+                                className="p-2.5 rounded-lg bg-white border border-slate-200 space-y-2 text-xs"
+                              >
+                                <StagedImageThumb src={gItem.src} alt={gItem.alt || ""} />
+                                <input
+                                  type="text"
+                                  value={gItem.caption || ""}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    const list = [...(next[index].galleryImages || [])];
+                                    list[gIdx] = { ...list[gIdx], caption: e.target.value };
+                                    next[index] = { ...next[index], galleryImages: list };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Optional caption"
+                                  className="w-full p-1.5 rounded border border-slate-200"
+                                />
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[11px] font-bold text-slate-400">
+                                    Image #{gIdx + 1}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const next = [...customSectionsList];
+                                      const list = [...(next[index].galleryImages || [])];
+                                      list.splice(gIdx, 1);
+                                      next[index] = { ...next[index], galleryImages: list };
+                                      setContent({ ...content, customSections: next });
+                                    }}
+                                    className="text-[11px] font-semibold text-rose-600 hover:underline"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
                             ))}
-                          </select>
-                        </div>
+                          </div>
+                        </section>
+                      )}
 
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Layout Style
-                          </label>
-                          <select
-                            data-testid={`custom-section-layout-${index}`}
-                            value={section.layoutVariant || "full-hero"}
-                            onChange={(e) => {
+                      {/* 4. Actions, CTAs & Learn More Integration */}
+                      <section className="admin-subpanel space-y-3 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <h5 className="admin-subpanel-title" style={{ marginBottom: 0 }}>
+                            4. Actions, Buttons &amp; Destinations
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => {
                               const next = [...customSectionsList];
                               next[index] = {
                                 ...next[index],
-                                layoutVariant: e.target.value as CustomSectionLayoutVariant,
+                                extraActions: [
+                                  ...(next[index].extraActions || []),
+                                  { label: "Buy", to: "/store" },
+                                ],
                               };
                               setContent({ ...content, customSections: next });
                             }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
+                            className="admin-btn admin-btn-secondary admin-btn-sm"
                           >
-                            <option value="full-hero">Full-Width Hero Section</option>
-                            <option value="gift-showcase">Gift Campaign Showcase</option>
-                            <option value="split-left">Split Left (Media Left, Copy Right)</option>
-                            <option value="split-right">Split Right (Copy Left, Media Right)</option>
-                            <option value="compact-banner">Compact Promotional Banner</option>
-                          </select>
+                            <Plus size={12} />
+                            <span>Add Extra Button</span>
+                          </button>
                         </div>
 
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Section Placement on Homepage
-                          </label>
-                          <select
-                            data-testid={`custom-section-placement-${index}`}
-                            value={section.sectionPlacement || "after-heroes"}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = {
-                                ...next[index],
-                                sectionPlacement: e.target.value as CustomSectionPlacement,
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
-                          >
-                            <option value="after-heroes">After Hero Slides</option>
-                            <option value="after-tiles">After Promotional Tiles</option>
-                            <option value="before-services">Before Services Showcase</option>
-                            <option value="after-services">After Services Showcase</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Device / Campaign Name
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`campaign-device-name-customSection-${index}`}
-                            value={section.deviceName ?? section.title}
-                            onChange={(e) => {
-                              const nextDeviceName = e.target.value;
-                              const next = [...customSectionsList];
-                              const prevDeviceName =
-                                next[index].deviceName ?? next[index].title;
-                              const shouldSyncTitle =
-                                !next[index].title || next[index].title === prevDeviceName;
-                              next[index] = {
-                                ...next[index],
-                                deviceName: nextDeviceName,
-                                ...(shouldSyncTitle ? { title: nextDeviceName } : {}),
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Gifts They'll Love"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Public Section Heading *
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`campaign-title-customSection-${index}`}
-                            value={section.title}
-                            onChange={(e) => {
-                              const nextTitle = e.target.value;
-                              const next = [...customSectionsList];
-                              const prevTitle = next[index].title;
-                              const shouldSyncDevice =
-                                !next[index].deviceName ||
-                                next[index].deviceName === prevTitle;
-                              next[index] = {
-                                ...next[index],
-                                title: nextTitle,
-                                ...(shouldSyncDevice ? { deviceName: nextTitle } : {}),
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Gifts They'll Love"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Eyebrow / Tag
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`campaign-eyebrow-customSection-${index}`}
-                            value={section.eyebrow || ""}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], eyebrow: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. BUY & SELL GH GIFT GUIDE"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Subtitle
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`campaign-subtitle-customSection-${index}`}
-                            value={section.subtitle}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], subtitle: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Find their perfect match this holiday."
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Description
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`campaign-description-customSection-${index}`}
-                            value={section.description || ""}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], description: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="Detailed section description"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Additional Promotional Copy
-                          </label>
-                          <input
-                            type="text"
-                            data-testid={`custom-section-promo-text-${index}`}
-                            value={section.promoText || ""}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], promoText: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Same-day Accra delivery available"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Accessibility Alt Text
-                          </label>
-                          <input
-                            type="text"
-                            value={section.alt}
-                            onChange={(e) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], alt: e.target.value };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="Descriptive image summary"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Desktop Min Height (px, optional)
-                          </label>
-                          <input
-                            type="number"
-                            min={320}
-                            max={1200}
-                            value={section.minHeightDesktop || ""}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              const next = [...customSectionsList];
-                              next[index] = {
-                                ...next[index],
-                                minHeightDesktop: Number.isFinite(val) && val > 0 ? val : undefined,
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="Auto (620)"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">
-                            Mobile Min Height (px, optional)
-                          </label>
-                          <input
-                            type="number"
-                            min={280}
-                            max={900}
-                            value={section.minHeightMobile || ""}
-                            onChange={(e) => {
-                              const val = Number(e.target.value);
-                              const next = [...customSectionsList];
-                              next[index] = {
-                                ...next[index],
-                                minHeightMobile: Number.isFinite(val) && val > 0 ? val : undefined,
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="Auto (520)"
-                          />
-                        </div>
-
-                        <div className="md:col-span-2 xl:col-span-4">
-                          <LegacyMediaBackgroundEditor
-                            slotRef={{ kind: "customSection", index }}
-                            unit={extractLegacyMediaUnit(section)}
-                            supportsMobileImage
-                            swapTargets={swapTargets}
-                            dragMediaSlot={dragMediaSlot}
-                            onDragMediaStart={setDragMediaSlot}
-                            onDropMediaSwap={(fromRef, toRef) => {
-                              setContent(swapLegacyMediaUnits(content, fromRef, toRef));
-                              setDragMediaSlot(null);
-                            }}
-                            onSwapWith={(targetRef) =>
-                              setContent(
-                                swapLegacyMediaUnits(
-                                  content,
-                                  { kind: "customSection", index },
-                                  targetRef
-                                )
-                              )
-                            }
-                            onPatch={(patch) => {
-                              const next = [...customSectionsList];
-                              next[index] = { ...next[index], ...patch };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            onUploadLocal={(field, file) =>
-                              handleLegacyLocalUpload(
-                                { kind: "customSection", index, field },
-                                file
-                              )
-                            }
-                            onOpenLibrary={(field) =>
-                              setMediaPickerTarget({
-                                section: "customSection",
-                                index,
-                                field,
-                              })
-                            }
-                          />
-                        </div>
-
-                        <div className="md:col-span-2 xl:col-span-4 space-y-3 pt-2 border-t border-slate-100">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
-                              <span className="font-bold text-slate-800 block">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2 p-3 rounded-lg bg-white border border-slate-200">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-bold text-slate-800">
                                 Primary Action Button
                               </span>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  data-testid={`custom-section-primary-label-${index}`}
-                                  value={section.primary.label}
-                                  onChange={(e) => {
-                                    const next = [...customSectionsList];
-                                    next[index] = {
-                                      ...next[index],
-                                      primary: { ...section.primary, label: e.target.value },
-                                    };
-                                    setContent({ ...content, customSections: next });
-                                  }}
-                                  placeholder="Button Label (e.g. Shop Gifts)"
-                                  className="p-2 rounded border border-slate-200 bg-white"
-                                />
-                                <input
-                                  type="text"
-                                  data-testid={`custom-section-primary-to-${index}`}
-                                  value={section.primary.to}
-                                  onChange={(e) => {
-                                    const next = [...customSectionsList];
-                                    next[index] = {
-                                      ...next[index],
-                                      primary: { ...section.primary, to: e.target.value },
-                                    };
-                                    setContent({ ...content, customSections: next });
-                                  }}
-                                  placeholder="Destination URL (e.g. /store)"
-                                  className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                                />
+                              <div className="flex flex-wrap gap-1">
+                                {["Shop Now", "Shop Gifts", "Buy", "Learn more"].map((lbl) => (
+                                  <button
+                                    key={lbl}
+                                    type="button"
+                                    onClick={() => {
+                                      const next = [...customSectionsList];
+                                      next[index] = {
+                                        ...next[index],
+                                        primary: { ...section.primary, label: lbl },
+                                      };
+                                      setContent({ ...content, customSections: next });
+                                    }}
+                                    className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-[10px] font-semibold text-slate-700"
+                                  >
+                                    {lbl}
+                                  </button>
+                                ))}
                               </div>
                             </div>
-
-                            <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
-                              <span className="font-bold text-slate-800 block">
-                                Secondary Action Button (Optional)
-                              </span>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <input
-                                  type="text"
-                                  data-testid={`custom-section-secondary-label-${index}`}
-                                  value={section.secondary?.label || ""}
-                                  onChange={(e) => {
-                                    const next = [...customSectionsList];
-                                    const label = e.target.value;
-                                    next[index] = {
-                                      ...next[index],
-                                      secondary: label
-                                        ? { label, to: section.secondary?.to || "/store" }
-                                        : undefined,
-                                    };
-                                    setContent({ ...content, customSections: next });
-                                  }}
-                                  placeholder="Button Label (e.g. Learn more)"
-                                  className="p-2 rounded border border-slate-200 bg-white"
-                                />
-                                <input
-                                  type="text"
-                                  data-testid={`custom-section-secondary-to-${index}`}
-                                  value={section.secondary?.to || ""}
-                                  onChange={(e) => {
-                                    const next = [...customSectionsList];
-                                    const to = e.target.value;
-                                    next[index] = {
-                                      ...next[index],
-                                      secondary: {
-                                        label: section.secondary?.label || "Learn more",
-                                        to,
-                                      },
-                                    };
-                                    setContent({ ...content, customSections: next });
-                                  }}
-                                  placeholder="Destination URL"
-                                  className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                                />
-                              </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                data-testid={`custom-section-primary-label-${index}`}
+                                value={section.primary.label}
+                                onChange={(e) => {
+                                  const next = [...customSectionsList];
+                                  next[index] = {
+                                    ...next[index],
+                                    primary: { ...section.primary, label: e.target.value },
+                                  };
+                                  setContent({ ...content, customSections: next });
+                                }}
+                                placeholder="Label (e.g. Shop Gifts)"
+                                className="p-2 rounded border border-slate-200 bg-white"
+                              />
+                              <input
+                                type="text"
+                                data-testid={`custom-section-primary-to-${index}`}
+                                value={section.primary.to}
+                                onChange={(e) => {
+                                  const next = [...customSectionsList];
+                                  next[index] = {
+                                    ...next[index],
+                                    primary: { ...section.primary, to: e.target.value },
+                                  };
+                                  setContent({ ...content, customSections: next });
+                                }}
+                                placeholder="Destination URL (e.g. /store)"
+                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                              />
                             </div>
                           </div>
 
-                          <CampaignLearnMoreBar
-                            testId={`open-learn-more-customSection-${index}`}
-                            campaign={section}
-                            onChangeSlug={(nextSlug, nextRoute) => {
-                              const next = [...customSectionsList];
-                              next[index] = {
-                                ...next[index],
-                                learnMoreSlug: nextSlug || undefined,
-                                secondary:
-                                  !next[index].secondary ||
-                                  next[index].secondary?.label.toLowerCase() === "learn more"
-                                    ? { label: "Learn more", to: nextRoute }
-                                    : next[index].secondary,
-                              };
-                              setContent({ ...content, customSections: next });
-                            }}
-                            onOpenEditor={() => void handleOpenCampaignLearnMoreEditor(section)}
-                          />
+                          <div className="space-y-2 p-3 rounded-lg bg-white border border-slate-200">
+                            <span className="font-bold text-slate-800 block">
+                              Secondary Action Button (Optional)
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                data-testid={`custom-section-secondary-label-${index}`}
+                                value={section.secondary?.label || ""}
+                                onChange={(e) => {
+                                  const next = [...customSectionsList];
+                                  const label = e.target.value;
+                                  next[index] = {
+                                    ...next[index],
+                                    secondary: label
+                                      ? { label, to: section.secondary?.to || "/store" }
+                                      : undefined,
+                                  };
+                                  setContent({ ...content, customSections: next });
+                                }}
+                                placeholder="Label (e.g. Learn more)"
+                                className="p-2 rounded border border-slate-200 bg-white"
+                              />
+                              <input
+                                type="text"
+                                data-testid={`custom-section-secondary-to-${index}`}
+                                value={section.secondary?.to || ""}
+                                onChange={(e) => {
+                                  const next = [...customSectionsList];
+                                  const to = e.target.value;
+                                  next[index] = {
+                                    ...next[index],
+                                    secondary: {
+                                      label: section.secondary?.label || "Learn more",
+                                      to,
+                                    },
+                                  };
+                                  setContent({ ...content, customSections: next });
+                                }}
+                                placeholder="Destination URL"
+                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
+
+                        {(section.extraActions || []).length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                            {(section.extraActions || []).map((act, aIdx) => (
+                              <div
+                                key={aIdx}
+                                className="flex items-center gap-2 p-2 rounded-lg bg-white border border-slate-200"
+                              >
+                                <input
+                                  type="text"
+                                  value={act.label}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    const extras = [...(next[index].extraActions || [])];
+                                    extras[aIdx] = { ...extras[aIdx], label: e.target.value };
+                                    next[index] = { ...next[index], extraActions: extras };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Label"
+                                  className="w-28 p-1.5 rounded border border-slate-200"
+                                />
+                                <input
+                                  type="text"
+                                  value={act.to}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    const extras = [...(next[index].extraActions || [])];
+                                    extras[aIdx] = { ...extras[aIdx], to: e.target.value };
+                                    next[index] = { ...next[index], extraActions: extras };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="/store"
+                                  className="flex-1 min-w-0 p-1.5 rounded border border-slate-200 font-mono text-[11px]"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = [...customSectionsList];
+                                    const extras = [...(next[index].extraActions || [])];
+                                    extras.splice(aIdx, 1);
+                                    next[index] = { ...next[index], extraActions: extras };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  className="p-1 text-rose-600 hover:bg-rose-50 rounded"
+                                  title="Remove button"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <CampaignLearnMoreBar
+                          testId={`open-learn-more-customSection-${index}`}
+                          campaign={section}
+                          onChangeSlug={(nextSlug, nextRoute) => {
+                            const next = [...customSectionsList];
+                            next[index] = {
+                              ...next[index],
+                              learnMoreSlug: nextSlug || undefined,
+                              secondary:
+                                !next[index].secondary ||
+                                next[index].secondary?.label.toLowerCase() === "learn more"
+                                  ? { label: "Learn more", to: nextRoute }
+                                  : next[index].secondary,
+                            };
+                            setContent({ ...content, customSections: next });
+                          }}
+                          onOpenEditor={() => void handleOpenCampaignLearnMoreEditor(section)}
+                        />
+                      </section>
                     </div>
                   ))}
                 </div>
@@ -2745,6 +2967,85 @@ export function AdminHomepageManager() {
           </div>
         </div>
       )}
+
+      {/* UNIFIED ADD SECTION — CHOOSE REUSABLE LAYOUT MODAL */}
+      {addSectionModalOpen && (
+        <div
+          className="admin-modal-overlay"
+          data-testid="add-section-layout-modal"
+          onClick={() => setAddSectionModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-4xl max-h-[88vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#b17d12] block">
+                  Unified Section Builder
+                </span>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Add Section — Choose a Reusable Layout
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  All homepage sections—including Gift Showcases, Split Rows, Video Films, Galleries, and Editorial Blocks—are edited and published through one unified system.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddSectionModalOpen(false)}
+                className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 shrink-0"
+                aria-label="Close layout picker"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto bg-slate-50/70">
+              <div className="homepage-section-picker-grid">
+                {HOMEPAGE_SECTION_LAYOUT_PRESETS.map((preset) => (
+                  <button
+                    key={preset.variant}
+                    type="button"
+                    data-testid={`add-section-preset-${preset.variant}`}
+                    onClick={() => handleCreateCustomSection(preset.variant)}
+                    className="homepage-section-picker-card"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="admin-badge admin-badge-gold">{preset.shortTag}</span>
+                        <span className="text-[10px] font-bold uppercase text-slate-400">
+                          {preset.defaultMediaMode}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900">{preset.label}</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        {preset.description}
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8c6411] pt-2 border-t border-slate-100">
+                      <Plus size={14} /> Use This Layout
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StagedImageThumb({ src, alt }: { src: string; alt: string }) {
+  const { resolvedUrl } = useResolvedMediaUrl(src);
+  return (
+    <div className="h-24 rounded bg-slate-100 flex items-center justify-center overflow-hidden">
+      {resolvedUrl ? (
+        <img src={resolvedUrl} alt={alt} className="w-full h-full object-contain" />
+      ) : (
+        <span className="text-[10px] text-slate-400">Preview pending</span>
+      )}
     </div>
   );
 }
@@ -3103,8 +3404,8 @@ function LegacyMediaBackgroundEditor({
           </div>
 
           {/* Mobile Video + Playback Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               <input
                 ref={mobileVideoInputRef}
                 type="file"
@@ -3119,7 +3420,7 @@ function LegacyMediaBackgroundEditor({
               <button
                 type="button"
                 onClick={() => mobileVideoInputRef.current?.click()}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs whitespace-nowrap"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs whitespace-nowrap shrink-0"
               >
                 Upload Mobile Video (Optional)
               </button>
@@ -3127,7 +3428,7 @@ function LegacyMediaBackgroundEditor({
                 type="text"
                 value={unit.mobileVideoUrl || ""}
                 onChange={(e) => onPatch({ mobileVideoUrl: e.target.value || undefined })}
-                className="flex-1 p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-[0.68rem]"
+                className="flex-1 min-w-[160px] p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-[0.68rem]"
                 placeholder="Optional mobile video URL"
               />
             </div>
@@ -3315,7 +3616,7 @@ function LegacyMediaBackgroundEditor({
       )}
 
       {/* Paired Background & Media Presentation Controls */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2 border-t border-slate-200/80 text-[11px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-3 border-t border-slate-200/80 text-xs">
         <div>
           <label className="block font-bold text-slate-600 mb-1">Theme &amp; Contrast</label>
           <select

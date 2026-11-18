@@ -1,10 +1,37 @@
-/* Minimal scoped layout helpers for Homepage media previews */
+/* Scoped layout helpers for Unified Homepage Editor & Add Section Builder */
+
+.homepage-cms-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border-radius: 0.875rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.homepage-cms-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.625rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
 
 .homepage-cms-media-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.75rem;
+  gap: 0.875rem;
   align-items: stretch;
+  width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -15,13 +42,51 @@
 
 .homepage-cms-media-preview {
   position: relative;
-  height: 7.5rem;
+  height: 8.5rem;
   border-radius: 0.625rem;
   border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0.35rem;
+  padding: 0.4rem;
   flex-shrink: 0;
+}
+
+.homepage-section-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .homepage-section-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .homepage-section-picker-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.homepage-section-picker-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.homepage-section-picker-card:hover {
+  border-color: #d4af37;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
 }

@@ -209,6 +209,63 @@
   margin: clamp(18px, 2.5vw, 32px) auto 12px;
 }
 
+/* Cinematic Hero Video Stage (Apple-caliber presence for contain & studio reveals like iPhone Duo) */
+.home-ref-hero[data-media-mode="video"].home-ref-media-contain {
+  height: auto;
+  min-height: clamp(670px, 86vh, 840px);
+  padding-bottom: clamp(10px, 2vh, 22px);
+}
+
+.home-ref-hero[data-media-mode="video"].home-ref-media-contain .home-ref-copy {
+  padding: clamp(28px, 3.6vh, 44px) 20px 4px;
+}
+
+.home-ref-video-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: min(1280px, 96vw);
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(480px, 68vh, 720px);
+  margin: 2px auto 0;
+  overflow: hidden;
+}
+
+.home-ref-video-stage .home-ref-hero-image,
+.home-ref-video-stage .home-ref-video-media {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  display: block;
+}
+
+/* Blend off-white studio video backdrops (#fcfcfc) seamlessly into pure white canvases with no box seam */
+.home-ref-hero[data-tone="light"] .home-ref-video-stage .home-ref-video-media {
+  filter: brightness(1.022) contrast(1.025) saturate(1.03);
+}
+
+.home-ref-hero[data-tone="light"] .home-ref-video-stage,
+.home-ref-hero[data-tone="mist"] .home-ref-video-stage {
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 4%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 4%, #000 100%);
+  mask-composite: intersect;
+}
+
+.home-ref-hero[data-tone="light"] .home-ref-video-media {
+  filter: contrast(1.03) saturate(1.05);
+}
+
 /* Full-bleed cover mode (adapts smoothly to hero or tile dimensions with contrast scrim matching tone) */
 .home-ref-media-cover .home-ref-hero-image,
 .home-ref-media-cover .home-ref-tile-image {
@@ -313,15 +370,81 @@
   margin: clamp(20px, 2.8vw, 34px) auto 14px;
 }
 
-.home-ref-variant-compact-banner {
+.home-ref-variant-compact-banner,
+.home-ref-variant-promo-banner {
   height: auto;
-  min-height: 420px;
+  min-height: 400px;
+  padding-bottom: 24px;
+}
+
+.home-ref-variant-product-showcase {
+  height: auto;
+  min-height: clamp(580px, 74vh, 740px);
+  padding-bottom: 18px;
+}
+
+.home-ref-variant-editorial {
+  height: auto;
+  min-height: 540px;
+  padding-bottom: 28px;
+}
+
+.home-ref-variant-video-showcase {
+  height: auto;
+  min-height: clamp(640px, 82vh, 800px);
   padding-bottom: 20px;
 }
 
+.home-ref-variant-gallery {
+  height: auto;
+  min-height: 500px;
+  padding-bottom: 44px;
+}
+
+.home-ref-custom-section[data-container-width="wide"] {
+  margin-inline: max(12px, calc((100vw - 1340px) / 2));
+  border-radius: 24px;
+}
+
+.home-ref-custom-section[data-container-width="contained"] {
+  margin-inline: max(16px, calc((100vw - 1140px) / 2));
+  border-radius: 24px;
+}
+
+.home-ref-custom-gallery-grid {
+  width: min(1240px, calc(100% - 32px));
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.home-ref-custom-gallery-item {
+  margin: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(128, 128, 134, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.home-ref-custom-gallery-item img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: block;
+}
+
+.home-ref-custom-gallery-item figcaption {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.88;
+}
+
 @media (min-width: 900px) {
-  .home-ref-variant-split-left,
-  .home-ref-variant-split-right {
+  .home-ref-hero.home-ref-variant-split-left,
+  .home-ref-hero.home-ref-variant-split-right {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -332,13 +455,14 @@
     min-height: 520px;
   }
 
-  .home-ref-variant-split-left {
+  .home-ref-hero.home-ref-variant-split-left {
     flex-direction: row-reverse;
   }
 
-  .home-ref-variant-split-left .home-ref-copy,
-  .home-ref-variant-split-right .home-ref-copy {
+  .home-ref-hero.home-ref-variant-split-left .home-ref-copy,
+  .home-ref-hero.home-ref-variant-split-right .home-ref-copy {
     flex: 1 1 46%;
+    min-width: 0;
     max-width: 540px;
     justify-items: start;
     text-align: left;
@@ -351,8 +475,11 @@
   }
 
   .home-ref-variant-split-left .home-ref-hero-image,
-  .home-ref-variant-split-right .home-ref-hero-image {
+  .home-ref-variant-split-right .home-ref-hero-image,
+  .home-ref-variant-split-left .home-ref-video-stage,
+  .home-ref-variant-split-right .home-ref-video-stage {
     flex: 1 1 50%;
+    min-width: 0;
     max-width: 580px;
     max-height: 440px;
     margin: 0;
@@ -494,6 +621,54 @@ body:has(.home-reference) .store-footer {
 
   .home-ref-hero {
     height: clamp(500px, 75svh, 560px);
+  }
+
+  .home-ref-hero[data-media-mode="video"].home-ref-media-contain {
+    height: auto;
+    min-height: 430px;
+    padding-bottom: 18px;
+  }
+
+  .home-ref-hero[data-media-mode="video"].home-ref-media-contain .home-ref-copy {
+    padding: 24px 16px 2px;
+  }
+
+  .home-ref-video-stage {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 240px;
+    margin: 22px auto 0;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  }
+
+  .home-ref-hero[data-media-mode="video"].home-ref-media-contain .home-ref-video-media {
+    transform: scale(1.18);
+    transform-origin: center 15%;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+
+  .home-ref-custom-section[data-container-width="wide"],
+  .home-ref-custom-section[data-container-width="contained"] {
+    margin-inline: 10px;
+    border-radius: 18px;
+  }
+
+  .home-ref-custom-section[data-mobile-layout="media-first"] {
+    flex-direction: column-reverse;
+    padding-top: 24px;
+    padding-bottom: 28px;
+    height: auto;
+  }
+
+  .home-ref-custom-section[data-mobile-layout="compact"] {
+    min-height: 360px !important;
+    height: auto;
+    padding-bottom: 18px;
   }
 
   .home-ref-tile {

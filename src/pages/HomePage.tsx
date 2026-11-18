@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
 import { defaultHomepageContent, defaultHomepageSections } from "../cms/defaultCmsData";
@@ -302,6 +302,12 @@ export function HomePage({ overrideContent, isAdminDraftPreview = false }: HomeP
     .slice()
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
+  const customBeforeHeroes = activeCustomSections.filter(
+    (cs) => cs.sectionPlacement === "before-heroes"
+  );
+  const customAfterHero1 = activeCustomSections.filter(
+    (cs) => cs.sectionPlacement === "after-hero-1"
+  );
   const customAfterHeroes = activeCustomSections.filter(
     (cs) => !cs.sectionPlacement || cs.sectionPlacement === "after-heroes"
   );
@@ -340,8 +346,17 @@ export function HomePage({ overrideContent, isAdminDraftPreview = false }: HomeP
         ) : (
           <PromotionalAnnouncementBar />
         )}
+        {customBeforeHeroes.map((section, idx) => (
+          <CustomHomepageSectionView section={section} key={`${section.id}-bh-${idx}`} />
+        ))}
         {activeHeroes.map((campaign, index) => (
-          <ProductHero campaign={campaign} key={`${campaign.id}-${index}`} priority={index < 2} />
+          <Fragment key={`${campaign.id}-${index}`}>
+            <ProductHero campaign={campaign} priority={index < 2} />
+            {index === 0 &&
+              customAfterHero1.map((section, cIdx) => (
+                <CustomHomepageSectionView section={section} key={`${section.id}-ah1-${cIdx}`} />
+              ))}
+          </Fragment>
         ))}
         {customAfterHeroes.map((section, idx) => (
           <CustomHomepageSectionView section={section} key={`${section.id}-ah-${idx}`} />
@@ -371,32 +386,48 @@ export function HomePage({ overrideContent, isAdminDraftPreview = false }: HomeP
   );
 }
 
-function CampaignActions({ primary, secondary }: { primary: Action; secondary?: Action }) {
+function renderActionButton(action: Action, styleClass: string, key?: string) {
+  if (!action?.label) return null;
+  if (action.to.startsWith("https://wa.me/") || action.to.startsWith("http")) {
+    return (
+      <a
+        key={key}
+        className={`home-ref-button ${styleClass}`}
+        href={action.to}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {action.label}
+      </a>
+    );
+  }
+  return (
+    <Link key={key} className={`home-ref-button ${styleClass}`} to={action.to || "/store"}>
+      {action.label}
+    </Link>
+  );
+}
+
+function CampaignActions({
+  primary,
+  secondary,
+  extraActions,
+}: {
+  primary: Action;
+  secondary?: Action;
+  extraActions?: Action[];
+}) {
   return (
     <div className="home-ref-actions">
-      {primary?.label ? (
-        <Link className="home-ref-button home-ref-button-primary" to={primary.to || "/store"}>
-          {primary.label}
-        </Link>
-      ) : null}
-      {secondary && secondary.label
-        ? secondary.to.startsWith("https://wa.me/")
-          ? (
-            <a
-              className="home-ref-button home-ref-button-secondary"
-              href={secondary.to}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {secondary.label}
-            </a>
-          )
-          : (
-            <Link className="home-ref-button home-ref-button-secondary" to={secondary.to || "/store"}>
-              {secondary.label}
-            </Link>
-          )
+      {renderActionButton(primary, "home-ref-button-primary", "primary")}
+      {secondary?.label
+        ? renderActionButton(secondary, "home-ref-button-secondary", "secondary")
         : null}
+      {(extraActions || []).map((act, idx) =>
+        act.label
+          ? renderActionButton(act, "home-ref-button-secondary", `extra-${idx}`)
+          : null
+      )}
     </div>
   );
 }
@@ -424,6 +455,147 @@ function buildSectionBackgroundImage(
   return parts.length > 0 ? parts.join(", ") : undefined;
 }
 
+/**
+ * Resilient campaign video player that handles format decode failures (including
+ * audio-only/unplayable mobile crops returning videoWidth === 0) by cleanly
+ * advancing through fallback streams before falling back to the poster image.
+ */
+function CampaignVideo({
+  id,
+  sources,
+  poster,
+  autoplay,
+  muted,
+  loop,
+  priority,
+  mediaFit,
+  objectPosition,
+  mixBlendMode,
+  className,
+  wrapStage = true,
+  fallbackNode,
+}: {
+  id: string;
+  sources: Array<string | undefined>;
+  poster?: string;
+  autoplay: boolean;
+  muted: boolean;
+  loop: boolean;
+  priority?: boolean;
+  mediaFit: HomepageMediaFit;
+  objectPosition: string;
+  mixBlendMode: "normal" | "multiply";
+  className: string;
+  wrapStage?: boolean;
+  fallbackNode: React.ReactNode;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
+  const orderedSources = sources
+    .map((s) => s?.trim())
+    .filter((s, i, arr): s is string => Boolean(s) && arr.indexOf(s) === i);
+
+  const activeSrc = orderedSources.find((src) => !failedUrls[src]);
+
+  const markFailed = (src: string) => {
+    setFailedUrls((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
+  };
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !activeSrc) return;
+
+    const validateTrackHealth = () => {
+      if (el.error || (el.readyState >= 1 && (el.videoWidth === 0 || el.videoHeight === 0))) {
+        markFailed(activeSrc);
+        return false;
+      }
+      return true;
+    };
+
+    const tryPlay = () => {
+      if (!autoplay || !validateTrackHealth()) return;
+      if (el.paused) {
+        void el.play().catch(() => {});
+      }
+    };
+
+    tryPlay();
+    const t1 = window.setTimeout(tryPlay, 300);
+    const t2 = window.setTimeout(validateTrackHealth, 1200);
+
+    let observer: IntersectionObserver | undefined;
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) tryPlay();
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(el);
+    }
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      observer?.disconnect();
+    };
+  }, [activeSrc, autoplay]);
+
+  if (!activeSrc) {
+    return <>{fallbackNode}</>;
+  }
+
+  const videoEl = (
+    <video
+      ref={videoRef}
+      key={`${id}-vid-${activeSrc}`}
+      data-testid="homepage-campaign-video"
+      className={className}
+      src={activeSrc}
+      poster={poster}
+      autoPlay={autoplay}
+      muted={muted}
+      loop={loop}
+      playsInline
+      preload={priority ? "auto" : "metadata"}
+      onCanPlay={(e) => {
+        const v = e.currentTarget;
+        if (v.videoWidth === 0 || v.videoHeight === 0) {
+          markFailed(activeSrc);
+          return;
+        }
+        if (autoplay && v.paused) {
+          void v.play().catch(() => {});
+        }
+      }}
+      onLoadedData={(e) => {
+        const v = e.currentTarget;
+        if (v.videoWidth === 0 || v.videoHeight === 0) {
+          markFailed(activeSrc);
+        }
+      }}
+      onLoadedMetadata={(e) => {
+        const v = e.currentTarget;
+        if (v.videoWidth === 0 || v.videoHeight === 0) {
+          markFailed(activeSrc);
+        }
+      }}
+      onError={() => markFailed(activeSrc)}
+      style={{
+        objectFit: mediaFit,
+        objectPosition,
+        mixBlendMode,
+      }}
+    />
+  );
+
+  if (wrapStage) {
+    return <div className="home-ref-video-stage">{videoEl}</div>;
+  }
+  return videoEl;
+}
+
 function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boolean }) {
   const { resolvedUrl: resolvedDesktop } = useResolvedMediaUrl(campaign.image);
   const { resolvedUrl: resolvedMobile } = useResolvedMediaUrl(campaign.mobileImage);
@@ -433,7 +605,6 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
   const { resolvedUrl: resolvedMobilePoster } = useResolvedMediaUrl(campaign.mobilePosterUrl);
   const { resolvedUrl: resolvedBgImage } = useResolvedMediaUrl(campaign.backgroundImage);
   const isMobile = useResponsiveMobileFlag(768);
-  const [videoFailed, setVideoFailed] = useState(false);
 
   const mobileImg = resolvedMobile || undefined;
   const hasMobileArt = Boolean(mobileImg && mobileImg !== resolvedDesktop);
@@ -447,14 +618,14 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
   );
   const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
 
-  const activeVideoSrc =
-    isMobile && resolvedMobileVideo ? resolvedMobileVideo : resolvedVideo || resolvedMobileVideo;
+  const videoSources = isMobile
+    ? [resolvedMobileVideo, resolvedVideo]
+    : [resolvedVideo, resolvedMobileVideo];
+  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.some(Boolean);
   const activePosterSrc =
     (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
     (isMobile && mobileImg ? mobileImg : resolvedDesktop) ||
     undefined;
-  const shouldRenderVideo =
-    campaign.mediaMode === "video" && Boolean(activeVideoSrc) && !videoFailed;
 
   const headingText = campaign.title || campaign.deviceName || "Featured Campaign";
   const distinctEyebrow =
@@ -464,6 +635,40 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
       ? campaign.deviceName.trim()
       : "");
 
+  const imageFallback = mobileImg ? (
+    <picture key={`${campaign.id}-${resolvedDesktop}-${mobileImg}`} className="home-ref-hero-picture">
+      <source media="(max-width: 768px)" srcSet={mobileImg} />
+      <img
+        className="home-ref-hero-image"
+        src={resolvedDesktop || activePosterSrc}
+        alt={campaign.alt || headingText}
+        style={{
+          objectFit: mediaFit,
+          objectPosition,
+          mixBlendMode,
+        }}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
+        decoding={priority ? "sync" : "async"}
+      />
+    </picture>
+  ) : (
+    <img
+      key={`${campaign.id}-${resolvedDesktop}`}
+      className="home-ref-hero-image"
+      src={resolvedDesktop || activePosterSrc}
+      alt={campaign.alt || headingText}
+      style={{
+        objectFit: mediaFit,
+        objectPosition,
+        mixBlendMode,
+      }}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : undefined}
+      decoding={priority ? "sync" : "async"}
+    />
+  );
+
   return (
     <section
       className={`home-ref-hero home-ref-${tone} ${
@@ -472,7 +677,7 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
       data-campaign-id={campaign.id}
       data-tone={tone}
       data-bg={backgroundColor}
-      data-media-mode={shouldRenderVideo ? "video" : "image"}
+      data-media-mode={hasAnyVideo ? "video" : "image"}
       style={{
         backgroundColor,
         backgroundImage,
@@ -499,57 +704,24 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         ) : null}
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      {shouldRenderVideo ? (
-        <video
-          key={`${campaign.id}-vid-${activeVideoSrc}`}
-          data-testid="homepage-campaign-video"
-          className="home-ref-hero-image home-ref-video-media"
-          src={activeVideoSrc}
+      {hasAnyVideo ? (
+        <CampaignVideo
+          id={campaign.id}
+          sources={videoSources}
           poster={activePosterSrc}
-          autoPlay={campaign.videoAutoplay !== false}
+          autoplay={campaign.videoAutoplay !== false}
           muted={campaign.videoMuted !== false}
           loop={campaign.videoLoop !== false}
-          playsInline
-          preload="metadata"
-          onError={() => setVideoFailed(true)}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
+          priority={priority}
+          mediaFit={mediaFit}
+          objectPosition={objectPosition}
+          mixBlendMode={mixBlendMode}
+          className="home-ref-hero-image home-ref-video-media"
+          wrapStage={mediaFit !== "cover"}
+          fallbackNode={imageFallback}
         />
-      ) : mobileImg ? (
-        <picture key={`${campaign.id}-${resolvedDesktop}-${mobileImg}`} className="home-ref-hero-picture">
-          <source media="(max-width: 768px)" srcSet={mobileImg} />
-          <img
-            className="home-ref-hero-image"
-            src={resolvedDesktop || activePosterSrc}
-            alt={campaign.alt || headingText}
-            style={{
-              objectFit: mediaFit,
-              objectPosition,
-              mixBlendMode,
-            }}
-            loading={priority ? "eager" : "lazy"}
-            fetchPriority={priority ? "high" : undefined}
-            decoding={priority ? "sync" : "async"}
-          />
-        </picture>
       ) : (
-        <img
-          key={`${campaign.id}-${resolvedDesktop}`}
-          className="home-ref-hero-image"
-          src={resolvedDesktop || activePosterSrc}
-          alt={campaign.alt || headingText}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : undefined}
-          decoding={priority ? "sync" : "async"}
-        />
+        imageFallback
       )}
     </section>
   );
@@ -564,7 +736,6 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
   const { resolvedUrl: resolvedMobilePoster } = useResolvedMediaUrl(campaign.mobilePosterUrl);
   const { resolvedUrl: resolvedBgImage } = useResolvedMediaUrl(campaign.backgroundImage);
   const isMobile = useResponsiveMobileFlag(768);
-  const [videoFailed, setVideoFailed] = useState(false);
 
   const tone = campaign.tone || "light";
   const backgroundColor = resolveLegacyBackgroundColor(tone, campaign.backgroundColor);
@@ -575,14 +746,14 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
   );
   const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
 
-  const activeVideoSrc =
-    isMobile && resolvedMobileVideo ? resolvedMobileVideo : resolvedVideo || resolvedMobileVideo;
+  const videoSources = isMobile
+    ? [resolvedMobileVideo, resolvedVideo]
+    : [resolvedVideo, resolvedMobileVideo];
+  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.some(Boolean);
   const activePosterSrc =
     (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
     (isMobile && resolvedMobile ? resolvedMobile : resolvedDesktop) ||
     undefined;
-  const shouldRenderVideo =
-    campaign.mediaMode === "video" && Boolean(activeVideoSrc) && !videoFailed;
 
   const headingText = campaign.title || campaign.deviceName || "Featured Tile";
   const distinctEyebrow =
@@ -592,6 +763,38 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
       ? campaign.deviceName.trim()
       : "");
 
+  const imageFallback = resolvedMobile ? (
+    <picture key={`${campaign.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
+      <source media="(max-width: 768px)" srcSet={resolvedMobile} />
+      <img
+        className="home-ref-tile-image"
+        src={resolvedDesktop || activePosterSrc}
+        alt={campaign.alt || headingText}
+        style={{
+          objectFit: mediaFit,
+          objectPosition,
+          mixBlendMode,
+        }}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  ) : (
+    <img
+      key={`${campaign.id}-${resolvedDesktop}`}
+      className="home-ref-tile-image"
+      src={resolvedDesktop || activePosterSrc}
+      alt={campaign.alt || headingText}
+      style={{
+        objectFit: mediaFit,
+        objectPosition,
+        mixBlendMode,
+      }}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+
   return (
     <section
       className={`home-ref-tile home-ref-${tone} ${
@@ -600,7 +803,7 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
       data-campaign-id={campaign.id}
       data-tone={tone}
       data-bg={backgroundColor}
-      data-media-mode={shouldRenderVideo ? "video" : "image"}
+      data-media-mode={hasAnyVideo ? "video" : "image"}
       style={{
         backgroundColor,
         backgroundImage,
@@ -627,57 +830,67 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
         ) : null}
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      {shouldRenderVideo ? (
-        <video
-          key={`${campaign.id}-vid-${activeVideoSrc}`}
-          data-testid="homepage-campaign-video"
-          className="home-ref-tile-image home-ref-video-media"
-          src={activeVideoSrc}
+      {hasAnyVideo ? (
+        <CampaignVideo
+          id={campaign.id}
+          sources={videoSources}
           poster={activePosterSrc}
-          autoPlay={campaign.videoAutoplay !== false}
+          autoplay={campaign.videoAutoplay !== false}
           muted={campaign.videoMuted !== false}
           loop={campaign.videoLoop !== false}
-          playsInline
-          preload="metadata"
-          onError={() => setVideoFailed(true)}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
+          mediaFit={mediaFit}
+          objectPosition={objectPosition}
+          mixBlendMode={mixBlendMode}
+          className="home-ref-tile-image home-ref-video-media"
+          wrapStage={false}
+          fallbackNode={imageFallback}
         />
-      ) : resolvedMobile ? (
-        <picture key={`${campaign.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
-          <source media="(max-width: 768px)" srcSet={resolvedMobile} />
-          <img
-            className="home-ref-tile-image"
-            src={resolvedDesktop || activePosterSrc}
-            alt={campaign.alt || headingText}
-            style={{
-              objectFit: mediaFit,
-              objectPosition,
-              mixBlendMode,
-            }}
-            loading="lazy"
-            decoding="async"
-          />
-        </picture>
       ) : (
-        <img
-          key={`${campaign.id}-${resolvedDesktop}`}
-          className="home-ref-tile-image"
-          src={resolvedDesktop || activePosterSrc}
-          alt={campaign.alt || headingText}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
-          loading="lazy"
-          decoding="async"
-        />
+        imageFallback
       )}
     </section>
+  );
+}
+
+function CustomGalleryGrid({
+  items,
+  fit,
+  blendMode,
+}: {
+  items: NonNullable<CustomHomepageSection["galleryImages"]>;
+  fit: HomepageMediaFit;
+  blendMode: "normal" | "multiply";
+}) {
+  return (
+    <div className="home-ref-custom-gallery-grid" data-testid="homepage-custom-gallery">
+      {items.map((item, idx) => (
+        <CustomGalleryCard key={`${item.src}-${idx}`} item={item} fit={fit} blendMode={blendMode} />
+      ))}
+    </div>
+  );
+}
+
+function CustomGalleryCard({
+  item,
+  fit,
+  blendMode,
+}: {
+  item: NonNullable<CustomHomepageSection["galleryImages"]>[number];
+  fit: HomepageMediaFit;
+  blendMode: "normal" | "multiply";
+}) {
+  const { resolvedUrl } = useResolvedMediaUrl(item.src);
+  if (!resolvedUrl) return null;
+  return (
+    <figure className="home-ref-custom-gallery-item">
+      <img
+        src={resolvedUrl}
+        alt={item.alt || item.caption || ""}
+        style={{ objectFit: fit, mixBlendMode: blendMode }}
+        loading="lazy"
+      />
+      {item.caption ? <figcaption>{item.caption}</figcaption> : null}
+    </figure>
   );
 }
 
@@ -690,7 +903,6 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
   const { resolvedUrl: resolvedMobilePoster } = useResolvedMediaUrl(section.mobilePosterUrl);
   const { resolvedUrl: resolvedBgImage } = useResolvedMediaUrl(section.backgroundImage);
   const isMobile = useResponsiveMobileFlag(768);
-  const [videoFailed, setVideoFailed] = useState(false);
 
   const tone = section.tone || "light";
   const backgroundColor = resolveLegacyBackgroundColor(tone, section.backgroundColor);
@@ -702,14 +914,16 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
   const mixBlendMode = tone === "dark" ? "normal" : section.mediaBlendMode || "normal";
   const variant = section.layoutVariant || "full-hero";
 
-  const activeVideoSrc =
-    isMobile && resolvedMobileVideo ? resolvedMobileVideo : resolvedVideo || resolvedMobileVideo;
+  const videoSources = isMobile
+    ? [resolvedMobileVideo, resolvedVideo]
+    : [resolvedVideo, resolvedMobileVideo];
+  const hasAnyVideo =
+    (section.mediaMode === "video" || variant === "video-showcase") &&
+    videoSources.some(Boolean);
   const activePosterSrc =
     (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
     (isMobile && resolvedMobile ? resolvedMobile : resolvedDesktop) ||
     undefined;
-  const shouldRenderVideo =
-    section.mediaMode === "video" && Boolean(activeVideoSrc) && !videoFailed;
 
   const headingText = section.title || section.deviceName || section.internalName || "Featured Section";
   const distinctEyebrow =
@@ -720,6 +934,8 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
       : "");
 
   const isSplit = variant === "split-left" || variant === "split-right";
+  const isGalleryLayout =
+    variant === "gallery" && Array.isArray(section.galleryImages) && section.galleryImages.length > 0;
 
   const customMinHeight = isMobile
     ? section.minHeightMobile
@@ -729,17 +945,53 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
     ? `${section.minHeightDesktop}px`
     : undefined;
 
+  const imageFallback = resolvedMobile ? (
+    <picture key={`${section.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
+      <source media="(max-width: 768px)" srcSet={resolvedMobile} />
+      <img
+        className="home-ref-hero-image"
+        src={resolvedDesktop || activePosterSrc}
+        alt={section.alt || headingText}
+        style={{
+          objectFit: mediaFit,
+          objectPosition,
+          mixBlendMode,
+        }}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  ) : (
+    <img
+      key={`${section.id}-${resolvedDesktop}`}
+      className="home-ref-hero-image"
+      src={resolvedDesktop || activePosterSrc}
+      alt={section.alt || headingText}
+      style={{
+        objectFit: mediaFit,
+        objectPosition,
+        mixBlendMode,
+      }}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+
   return (
     <section
       className={`home-ref-hero home-ref-custom-section home-ref-variant-${variant} home-ref-${tone} ${
-        mediaFit === "cover" && !isSplit ? "home-ref-media-cover" : "home-ref-media-contain"
+        mediaFit === "cover" && !isSplit && !isGalleryLayout
+          ? "home-ref-media-cover"
+          : "home-ref-media-contain"
       }`}
       data-custom-section-id={section.id}
       data-campaign-id={section.id}
       data-tone={tone}
       data-bg={backgroundColor}
       data-layout-variant={variant}
-      data-media-mode={shouldRenderVideo ? "video" : "image"}
+      data-mobile-layout={section.mobileLayout || "stack"}
+      data-container-width={section.containerWidth || "full"}
+      data-media-mode={hasAnyVideo ? "video" : "image"}
       style={{
         backgroundColor,
         backgroundImage,
@@ -767,57 +1019,35 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
         {section.promoText ? (
           <p className="home-ref-promo-text">{section.promoText}</p>
         ) : null}
-        <CampaignActions primary={section.primary} secondary={section.secondary} />
+        <CampaignActions
+          primary={section.primary}
+          secondary={section.secondary}
+          extraActions={section.extraActions}
+        />
       </div>
-      {shouldRenderVideo ? (
-        <video
-          key={`${section.id}-vid-${activeVideoSrc}`}
-          data-testid="homepage-campaign-video"
-          className="home-ref-hero-image home-ref-video-media"
-          src={activeVideoSrc}
+      {isGalleryLayout ? (
+        <CustomGalleryGrid
+          items={section.galleryImages!}
+          fit={mediaFit}
+          blendMode={mixBlendMode}
+        />
+      ) : hasAnyVideo ? (
+        <CampaignVideo
+          id={section.id}
+          sources={videoSources}
           poster={activePosterSrc}
-          autoPlay={section.videoAutoplay !== false}
+          autoplay={section.videoAutoplay !== false}
           muted={section.videoMuted !== false}
           loop={section.videoLoop !== false}
-          playsInline
-          preload="metadata"
-          onError={() => setVideoFailed(true)}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
+          mediaFit={mediaFit}
+          objectPosition={objectPosition}
+          mixBlendMode={mixBlendMode}
+          className="home-ref-hero-image home-ref-video-media"
+          wrapStage={mediaFit !== "cover"}
+          fallbackNode={imageFallback}
         />
-      ) : resolvedMobile ? (
-        <picture key={`${section.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
-          <source media="(max-width: 768px)" srcSet={resolvedMobile} />
-          <img
-            className="home-ref-hero-image"
-            src={resolvedDesktop || activePosterSrc}
-            alt={section.alt || headingText}
-            style={{
-              objectFit: mediaFit,
-              objectPosition,
-              mixBlendMode,
-            }}
-            loading="lazy"
-            decoding="async"
-          />
-        </picture>
       ) : (
-        <img
-          key={`${section.id}-${resolvedDesktop}`}
-          className="home-ref-hero-image"
-          src={resolvedDesktop || activePosterSrc}
-          alt={section.alt || headingText}
-          style={{
-            objectFit: mediaFit,
-            objectPosition,
-            mixBlendMode,
-          }}
-          loading="lazy"
-          decoding="async"
-        />
+        imageFallback
       )}
     </section>
   );

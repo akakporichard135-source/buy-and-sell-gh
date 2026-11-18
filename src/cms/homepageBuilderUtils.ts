@@ -849,85 +849,269 @@ export function applyProductToCampaign<
   };
 }
 
-export function createGiftCampaignHomepageSection(
-  order: number,
-  overrides?: Partial<CustomHomepageSection>
-): CustomHomepageSection {
-  return createDefaultCustomHomepageSection(order, {
-    internalName: "Holiday Gift Campaign",
-    deviceName: "Gifts They'll Love",
-    learnMoreSlug: "gifts-theyll-love",
-    eyebrow: "BUY & SELL GH GIFT GUIDE",
-    title: "Gifts They'll Love",
-    subtitle: "Find their perfect match this holiday.",
-    description:
-      "Original iPhones, Apple Watch, iPad, Mac, and AirPods — wrapped with official Buy & Sell GH warranty.",
-    image: "/products/homepage/iphone-duo.webp",
-    alt: "Gifts They'll Love — Buy & Sell GH holiday gift campaign",
-    tone: "light",
-    backgroundColor: "#ffffff",
-    layoutVariant: "gift-showcase",
-    sectionPlacement: "after-heroes",
-    primary: { label: "Shop Gifts", to: "/store" },
-    secondary: { label: "Learn more", to: "/learn-more/gifts-theyll-love" },
-    ...overrides,
-  });
+export interface HomepageSectionLayoutPreset {
+  variant: CustomHomepageSection["layoutVariant"];
+  label: string;
+  shortTag: string;
+  description: string;
+  defaultMediaMode: "image" | "video";
+  defaultTone: Tone;
+  defaults: Partial<CustomHomepageSection>;
 }
+
+export const HOMEPAGE_SECTION_LAYOUT_PRESETS: HomepageSectionLayoutPreset[] = [
+  {
+    variant: "full-hero",
+    label: "Full-width Campaign Hero",
+    shortTag: "Full Hero",
+    description: "Commanding edge-to-edge headline, subtitle, CTA buttons, and centerpiece media.",
+    defaultMediaMode: "image",
+    defaultTone: "dark",
+    defaults: {
+      internalName: "Full-Width Campaign Hero",
+      eyebrow: "FEATURED LAUNCH",
+      title: "New Campaign Hero",
+      subtitle: "Built to stand out on the storefront.",
+      tone: "dark",
+      backgroundColor: "#000000",
+      mediaFit: "contain",
+      mediaPosition: "bottom",
+      primary: { label: "Learn more", to: "/store" },
+      secondary: { label: "Buy", to: "/store" },
+    },
+  },
+  {
+    variant: "product-showcase",
+    label: "Product Showcase",
+    shortTag: "Product Stage",
+    description: "Clean product-first framing with eyebrow badge, specs note, and Shop / Learn More CTAs.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Product Showcase",
+      eyebrow: "FEATURED HARDWARE",
+      title: "Featured Apple Device",
+      subtitle: "Original hardware backed by official Buy & Sell GH warranty.",
+      tone: "light",
+      backgroundColor: "#f5f5f7",
+      mediaFit: "contain",
+      mediaPosition: "bottom",
+      primary: { label: "Shop Now", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/featured-apple-device" },
+    },
+  },
+  {
+    variant: "split-left",
+    label: "Image Left, Text Right",
+    shortTag: "Split Left",
+    description: "Asymmetric two-column showcase placing product visual on the left and copy on the right.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Split Left Showcase",
+      eyebrow: "SPOTLIGHT",
+      title: "Designed Around You",
+      subtitle: "Crafted for power, portability, and everyday reliability.",
+      tone: "light",
+      backgroundColor: "#ffffff",
+      mediaFit: "contain",
+      mediaPosition: "center",
+      primary: { label: "Shop Now", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/designed-around-you" },
+    },
+  },
+  {
+    variant: "split-right",
+    label: "Text Left, Image Right",
+    shortTag: "Split Right",
+    description: "Editorial story copy on the left balanced with large product photography on the right.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Split Right Showcase",
+      eyebrow: "EDITORIAL FEATURE",
+      title: "Engineered in Every Detail",
+      subtitle: "Compare models and find your ideal configuration.",
+      tone: "light",
+      backgroundColor: "#f5f5f7",
+      mediaFit: "contain",
+      mediaPosition: "center",
+      primary: { label: "Buy", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/engineered-detail" },
+    },
+  },
+  {
+    variant: "gift-showcase",
+    label: "Gift-shopping Showcase",
+    shortTag: "Gift Showcase",
+    description: "Celebratory gift campaign canvas with headline, tagline, curated artwork/video, and Shop Gifts CTA.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Holiday Gift Campaign",
+      deviceName: "Gifts They'll Love",
+      learnMoreSlug: "gifts-theyll-love",
+      eyebrow: "BUY & SELL GH GIFT GUIDE",
+      title: "Gifts They'll Love",
+      subtitle: "Find their perfect match this holiday.",
+      description:
+        "Original iPhones, Apple Watch, iPad, Mac, and AirPods — wrapped with official Buy & Sell GH warranty.",
+      tone: "light",
+      backgroundColor: "#ffffff",
+      mediaFit: "contain",
+      mediaPosition: "bottom",
+      primary: { label: "Shop Gifts", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/gifts-theyll-love" },
+    },
+  },
+  {
+    variant: "promo-banner",
+    label: "Promotional Banner",
+    shortTag: "Promo Banner",
+    description: "Compact promotional ribbon for seasonal offers, trade-in deals, or installment announcements.",
+    defaultMediaMode: "image",
+    defaultTone: "mist",
+    defaults: {
+      internalName: "Promotional Banner",
+      eyebrow: "SPECIAL OFFER",
+      title: "Flexible Upgrades in Accra",
+      subtitle: "Trade in your current device or split payments seamlessly.",
+      tone: "mist",
+      backgroundColor: "#e9f5fa",
+      mediaFit: "contain",
+      mediaPosition: "center",
+      primary: { label: "Shop Now", to: "/store" },
+      secondary: { label: "Learn more", to: "/trade-in" },
+    },
+  },
+  {
+    variant: "gallery",
+    label: "Image Gallery",
+    shortTag: "Gallery",
+    description: "Multi-image storefront showcase displaying up to multiple product angles or lifestyle stills side by side.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Visual Gallery Section",
+      eyebrow: "GALLERY",
+      title: "Closer Look",
+      subtitle: "Explore finishes, accessories, and curated bundles.",
+      tone: "light",
+      backgroundColor: "#ffffff",
+      mediaFit: "cover",
+      mediaPosition: "center",
+      galleryImages: [],
+      primary: { label: "Shop Collection", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/closer-look" },
+    },
+  },
+  {
+    variant: "video-showcase",
+    label: "Video Showcase",
+    shortTag: "Video Film",
+    description: "Theatrical autoplaying MP4/WebM product film canvas with poster fallback and overlay controls.",
+    defaultMediaMode: "video",
+    defaultTone: "dark",
+    defaults: {
+      internalName: "Video Showcase",
+      eyebrow: "PRODUCT FILM",
+      title: "See It in Motion",
+      subtitle: "Cinema-grade campaign presentation on desktop and mobile.",
+      tone: "dark",
+      backgroundColor: "#000000",
+      mediaMode: "video",
+      mediaFit: "contain",
+      mediaPosition: "bottom",
+      primary: { label: "Shop Now", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/product-film" },
+    },
+  },
+  {
+    variant: "editorial",
+    label: "Custom Editorial Section",
+    shortTag: "Editorial",
+    description: "Generous story-driven section combining extended editorial narrative, imagery, and multiple CTAs.",
+    defaultMediaMode: "image",
+    defaultTone: "light",
+    defaults: {
+      internalName: "Custom Editorial Section",
+      eyebrow: "EDITORIAL",
+      title: "Curated by Buy & Sell GH",
+      subtitle: "Verified hardware, transparent advice, and dedicated support.",
+      description:
+        "Every device passes our multi-point inspection with official coverage across Accra.",
+      tone: "light",
+      backgroundColor: "#f5f5f7",
+      containerWidth: "contained",
+      mediaFit: "contain",
+      mediaPosition: "center",
+      primary: { label: "Shop Now", to: "/store" },
+      secondary: { label: "Learn more", to: "/learn-more/curated-story" },
+    },
+  },
+];
 
 export function createDefaultCustomHomepageSection(
   order: number,
   overrides?: Partial<CustomHomepageSection>
 ): CustomHomepageSection {
-  const id = overrides?.id || `custom-section-${Date.now()}-${order}`;
-  const tone: Tone = overrides?.tone || "light";
-  const backgroundColor = resolveLegacyBackgroundColor(tone, overrides?.backgroundColor);
-  const title = overrides?.title || "Gifts They'll Love";
-  const deviceName = overrides?.deviceName || title;
+  const variant = overrides?.layoutVariant || "full-hero";
+  const preset =
+    HOMEPAGE_SECTION_LAYOUT_PRESETS.find((p) => p.variant === variant) ||
+    HOMEPAGE_SECTION_LAYOUT_PRESETS[0];
+  const merged = { ...preset.defaults, ...overrides };
+  const id = merged.id || `custom-section-${Date.now()}-${order}`;
+  const tone: Tone = merged.tone || preset.defaultTone || "light";
+  const backgroundColor = resolveLegacyBackgroundColor(tone, merged.backgroundColor);
+  const title = merged.title || "Featured Campaign";
+  const deviceName = merged.deviceName || title;
   const learnMoreSlug =
-    overrides?.learnMoreSlug || slugifyCampaignIdentifier(deviceName || title) || `campaign-${order}`;
+    merged.learnMoreSlug || slugifyCampaignIdentifier(deviceName || title) || `campaign-${order}`;
   return {
     id,
-    internalName: overrides?.internalName || `Custom Section ${order} — ${title}`,
+    internalName: merged.internalName || `Section ${order} — ${title}`,
     deviceName,
-    productId: overrides?.productId,
+    productId: merged.productId,
     learnMoreSlug,
-    eyebrow: overrides?.eyebrow || "BUY & SELL GH FEATURED CAMPAIGN",
+    eyebrow: merged.eyebrow || "BUY & SELL GH FEATURED",
     title,
-    subtitle: overrides?.subtitle || "Find their perfect match this holiday.",
-    description:
-      overrides?.description ||
-      "Available with official Buy & Sell GH inspection warranty and flexible payment options in Accra.",
-    promoText: overrides?.promoText || "",
-    image: overrides?.image || "/products/homepage/iphone-duo.webp",
-    mobileImage: overrides?.mobileImage,
-    mediaMode: overrides?.mediaMode || "image",
-    videoUrl: overrides?.videoUrl,
-    mobileVideoUrl: overrides?.mobileVideoUrl,
-    posterUrl: overrides?.posterUrl,
-    mobilePosterUrl: overrides?.mobilePosterUrl,
-    videoAutoplay: overrides?.videoAutoplay ?? true,
-    videoMuted: overrides?.videoMuted ?? true,
-    videoLoop: overrides?.videoLoop ?? true,
-    backgroundImage: overrides?.backgroundImage,
-    alt: overrides?.alt || title || "Featured homepage section",
+    subtitle: merged.subtitle || "",
+    description: merged.description || "",
+    promoText: merged.promoText || "",
+    image: merged.image || "/products/homepage/iphone-duo.webp",
+    mobileImage: merged.mobileImage,
+    mediaMode: merged.mediaMode || preset.defaultMediaMode || "image",
+    videoUrl: merged.videoUrl,
+    mobileVideoUrl: merged.mobileVideoUrl,
+    posterUrl: merged.posterUrl,
+    mobilePosterUrl: merged.mobilePosterUrl,
+    videoAutoplay: merged.videoAutoplay ?? true,
+    videoMuted: merged.videoMuted ?? true,
+    videoLoop: merged.videoLoop ?? true,
+    backgroundImage: merged.backgroundImage,
+    alt: merged.alt || title || "Featured homepage section",
     tone,
     backgroundColor,
-    backgroundGradient: overrides?.backgroundGradient,
-    mediaFit: overrides?.mediaFit || "contain",
-    mediaPosition: overrides?.mediaPosition || "bottom",
+    backgroundGradient: merged.backgroundGradient,
+    mediaFit: merged.mediaFit || "contain",
+    mediaPosition: merged.mediaPosition || "bottom",
     mediaBlendMode:
-      tone === "dark" ? "normal" : overrides?.mediaBlendMode || "normal",
-    layoutVariant: overrides?.layoutVariant || "full-hero",
-    sectionPlacement: overrides?.sectionPlacement || "after-heroes",
-    minHeightDesktop: overrides?.minHeightDesktop,
-    minHeightMobile: overrides?.minHeightMobile,
-    primary: overrides?.primary || { label: "Shop Gifts", to: "/store" },
-    secondary: overrides?.secondary || {
+      tone === "dark" ? "normal" : merged.mediaBlendMode || "normal",
+    layoutVariant: variant,
+    mobileLayout: merged.mobileLayout || "stack",
+    containerWidth: merged.containerWidth || "full",
+    sectionPlacement: merged.sectionPlacement || "after-heroes",
+    minHeightDesktop: merged.minHeightDesktop,
+    minHeightMobile: merged.minHeightMobile,
+    galleryImages: merged.galleryImages ? [...merged.galleryImages] : [],
+    primary: merged.primary || { label: "Shop Now", to: "/store" },
+    secondary: merged.secondary || {
       label: "Learn more",
       to: `/learn-more/${learnMoreSlug}`,
     },
+    extraActions: merged.extraActions ? [...merged.extraActions] : [],
     placement: "top",
-    enabled: overrides?.enabled ?? true,
+    enabled: merged.enabled ?? true,
     order,
   };
 }
