@@ -11,8 +11,10 @@ import { Header } from "../../components/Header";
 import { BuyJourneyProvider } from "../../context/BuyJourneyContext";
 import { HomePage } from "../HomePage";
 
-export const HOMEPAGE_PREVIEW_SESSION_KEY_LEGACY = "buyandsell_admin_preview_legacy_v1";
-export const HOMEPAGE_PREVIEW_SESSION_KEY_MODULAR = "buyandsell_admin_preview_modular_v1";
+export const HOMEPAGE_PREVIEW_SESSION_KEY_LEGACY =
+  "buyandsell_cms_homepage_preview_session_legacy_v1";
+export const HOMEPAGE_PREVIEW_SESSION_KEY_MODULAR =
+  "buyandsell_cms_homepage_preview_session_modular_v1";
 
 function readSessionPreview(key: string, layoutMode: "legacy" | "modular"): HomepageContent | null {
   if (typeof window === "undefined") return null;
@@ -62,8 +64,8 @@ export function AdminHomepagePreviewPage() {
 
   const savedDraft = requestedMode === "modular" ? homepageDraft : homepageLegacyDraft;
   const previewContent: HomepageContent =
-    savedDraft ||
     sessionSnapshot ||
+    savedDraft ||
     (requestedMode === "modular"
       ? {
           ...homepage,

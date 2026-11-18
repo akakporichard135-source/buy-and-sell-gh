@@ -431,6 +431,7 @@ export interface LegacyMediaUnit {
   internalName?: string;
   deviceName?: string;
   productId?: string;
+  learnMoreSlug?: string;
   eyebrow?: string;
   title?: string;
   subtitle?: string;
@@ -557,6 +558,7 @@ export function extractLegacyMediaUnit(
     internalName: slot.internalName,
     deviceName: slot.deviceName ?? slot.title,
     productId: slot.productId,
+    learnMoreSlug: slot.learnMoreSlug,
     eyebrow: slot.eyebrow,
     title: slot.title,
     subtitle: slot.subtitle,
@@ -583,7 +585,7 @@ export function extractLegacyMediaUnit(
       tone === "dark" ? "normal" : slot.mediaBlendMode || "normal",
     primary: slot.primary ? { ...slot.primary } : undefined,
     secondary: slot.secondary ? { ...slot.secondary } : undefined,
-    placement: slot.placement,
+    placement: "top",
     enabled: slot.enabled,
   };
 }
@@ -602,6 +604,7 @@ export function applyLegacyMediaUnit<
       unit.internalName !== undefined ? unit.internalName : slot.internalName,
     deviceName: nextDeviceName,
     productId: unit.productId,
+    learnMoreSlug: unit.learnMoreSlug,
     eyebrow: unit.eyebrow,
     title: nextTitle,
     subtitle: unit.subtitle !== undefined ? unit.subtitle : slot.subtitle,
@@ -628,7 +631,7 @@ export function applyLegacyMediaUnit<
       tone === "dark" ? "normal" : unit.mediaBlendMode || "normal",
     primary: unit.primary ? { ...unit.primary } : slot.primary,
     secondary: unit.secondary ? { ...unit.secondary } : undefined,
-    placement: unit.placement,
+    placement: "top",
     enabled: unit.enabled !== undefined ? unit.enabled : slot.enabled,
     order: slot.order,
   };
@@ -731,6 +734,61 @@ function resolveProductFamilyKey(product: CatalogProductLike): string {
   return "accessories";
 }
 
+export function slugifyCampaignIdentifier(text: string): string {
+  return (text || "")
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function deriveCampaignLearnMoreSlug(
+  slot: Partial<HeroCampaign | PromoTile | CustomHomepageSection>
+): string {
+  if (slot.learnMoreSlug?.trim()) {
+    return slugifyCampaignIdentifier(slot.learnMoreSlug.trim());
+  }
+  const checkRoute = (to?: string): string | null => {
+    const clean = (to || "").trim().split("?")[0];
+    if (!clean) return null;
+    if (clean === "/mac-mini") return "mac-mini";
+    if (clean === "/mac-studio") return "mac-studio";
+    const match = clean.match(
+      /^\/(?:iphone|mac|ipad|watch|airpods|accessories|learn-more|campaigns)\/([a-z0-9-]+)$/i
+    );
+    return match ? match[1].toLowerCase() : null;
+  };
+  const fromPrimary = checkRoute(slot.primary?.to);
+  if (fromPrimary) return fromPrimary;
+  const fromSecondary = checkRoute(slot.secondary?.to);
+  if (fromSecondary) return fromSecondary;
+  if (slot.productId?.trim()) {
+    return slugifyCampaignIdentifier(slot.productId.trim());
+  }
+  const candidate =
+    slot.deviceName?.trim() ||
+    slot.title?.trim() ||
+    slot.internalName?.trim() ||
+    slot.id?.trim() ||
+    "campaign";
+  return slugifyCampaignIdentifier(candidate) || "campaign";
+}
+
+export function deriveCampaignLearnMorePath(
+  slot: Partial<HeroCampaign | PromoTile | CustomHomepageSection>
+): string {
+  const slug = deriveCampaignLearnMoreSlug(slot);
+  if (slug === "mac-mini") return "/mac-mini";
+  if (slug === "mac-studio") return "/mac-studio";
+  const text = `${slug} ${slot.deviceName || ""} ${slot.title || ""}`.toLowerCase();
+  if (text.includes("iphone")) return `/iphone/${slug}`;
+  if (text.includes("macbook") || text.includes("imac") || text.includes("mac-")) return `/mac/${slug}`;
+  if (text.includes("ipad")) return `/ipad/${slug}`;
+  if (text.includes("watch")) return `/watch/${slug}`;
+  if (text.includes("airpod")) return `/airpods/${slug}`;
+  return `/learn-more/${slug}`;
+}
+
 /**
  * Updates a homepage campaign or custom section to display a selected catalogue product
  * without mutating, overwriting, or deleting the underlying product in the catalogue.
@@ -756,12 +814,23 @@ export function applyProductToCampaign<
   return {
     ...slot,
     productId: product.id || product.slug,
+    learnMoreSlug: product.slug,
+    internalName: product.name,
     deviceName: product.name,
     title: product.name,
-    eyebrow: product.generation || product.subcategory || slot.eyebrow,
-    subtitle: product.shortDescription || slot.subtitle || "Available at Buy & Sell GH.",
+    eyebrow: product.generation || product.subcategory || "",
+    subtitle: product.shortDescription || "Available at Buy & Sell GH.",
+    description: "",
+    promoText: "",
     image: chosenImage,
+    mobileImage: undefined,
+    mediaMode: "image",
+    videoUrl: undefined,
+    mobileVideoUrl: undefined,
+    posterUrl: undefined,
+    mobilePosterUrl: undefined,
     alt: product.name,
+    placement: "top",
     ...(inferredBg
       ? {
           tone: inferredBg.tone || slot.tone,
@@ -770,14 +839,39 @@ export function applyProductToCampaign<
         }
       : {}),
     primary: {
-      label: slot.primary?.label || "Learn more",
+      label: "Learn more",
       to: learnMorePath,
     },
     secondary: {
-      label: slot.secondary?.label || "Buy",
+      label: "Buy",
       to: buyPath,
     },
   };
+}
+
+export function createGiftCampaignHomepageSection(
+  order: number,
+  overrides?: Partial<CustomHomepageSection>
+): CustomHomepageSection {
+  return createDefaultCustomHomepageSection(order, {
+    internalName: "Holiday Gift Campaign",
+    deviceName: "Gifts They'll Love",
+    learnMoreSlug: "gifts-theyll-love",
+    eyebrow: "BUY & SELL GH GIFT GUIDE",
+    title: "Gifts They'll Love",
+    subtitle: "Find their perfect match this holiday.",
+    description:
+      "Original iPhones, Apple Watch, iPad, Mac, and AirPods — wrapped with official Buy & Sell GH warranty.",
+    image: "/products/homepage/iphone-duo.webp",
+    alt: "Gifts They'll Love — Buy & Sell GH holiday gift campaign",
+    tone: "light",
+    backgroundColor: "#ffffff",
+    layoutVariant: "gift-showcase",
+    sectionPlacement: "after-heroes",
+    primary: { label: "Shop Gifts", to: "/store" },
+    secondary: { label: "Learn more", to: "/learn-more/gifts-theyll-love" },
+    ...overrides,
+  });
 }
 
 export function createDefaultCustomHomepageSection(
@@ -787,14 +881,19 @@ export function createDefaultCustomHomepageSection(
   const id = overrides?.id || `custom-section-${Date.now()}-${order}`;
   const tone: Tone = overrides?.tone || "light";
   const backgroundColor = resolveLegacyBackgroundColor(tone, overrides?.backgroundColor);
+  const title = overrides?.title || "Gifts They'll Love";
+  const deviceName = overrides?.deviceName || title;
+  const learnMoreSlug =
+    overrides?.learnMoreSlug || slugifyCampaignIdentifier(deviceName || title) || `campaign-${order}`;
   return {
     id,
-    internalName: overrides?.internalName || `Custom Section ${order}`,
-    deviceName: overrides?.deviceName || "Featured Device",
+    internalName: overrides?.internalName || `Custom Section ${order} — ${title}`,
+    deviceName,
     productId: overrides?.productId,
-    eyebrow: overrides?.eyebrow || "FEATURED CAMPAIGN",
-    title: overrides?.title || "Featured Device",
-    subtitle: overrides?.subtitle || "Engineered for extraordinary performance.",
+    learnMoreSlug,
+    eyebrow: overrides?.eyebrow || "BUY & SELL GH FEATURED CAMPAIGN",
+    title,
+    subtitle: overrides?.subtitle || "Find their perfect match this holiday.",
     description:
       overrides?.description ||
       "Available with official Buy & Sell GH inspection warranty and flexible payment options in Accra.",
@@ -810,7 +909,7 @@ export function createDefaultCustomHomepageSection(
     videoMuted: overrides?.videoMuted ?? true,
     videoLoop: overrides?.videoLoop ?? true,
     backgroundImage: overrides?.backgroundImage,
-    alt: overrides?.alt || overrides?.title || "Featured homepage section",
+    alt: overrides?.alt || title || "Featured homepage section",
     tone,
     backgroundColor,
     backgroundGradient: overrides?.backgroundGradient,
@@ -820,9 +919,14 @@ export function createDefaultCustomHomepageSection(
       tone === "dark" ? "normal" : overrides?.mediaBlendMode || "normal",
     layoutVariant: overrides?.layoutVariant || "full-hero",
     sectionPlacement: overrides?.sectionPlacement || "after-heroes",
-    primary: overrides?.primary || { label: "Learn more", to: "/store" },
-    secondary: overrides?.secondary || { label: "Buy", to: "/store" },
-    placement: overrides?.placement || "top",
+    minHeightDesktop: overrides?.minHeightDesktop,
+    minHeightMobile: overrides?.minHeightMobile,
+    primary: overrides?.primary || { label: "Shop Gifts", to: "/store" },
+    secondary: overrides?.secondary || {
+      label: "Learn more",
+      to: `/learn-more/${learnMoreSlug}`,
+    },
+    placement: "top",
     enabled: overrides?.enabled ?? true,
     order,
   };

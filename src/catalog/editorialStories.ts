@@ -8,6 +8,16 @@ export type EditorialTone = "light" | "ink" | "blue" | "plum" | "sage";
 
 export type EditorialImage = {
   src: string;
+  mobileSrc?: string;
+  videoSrc?: string;
+  mobileVideoSrc?: string;
+  posterSrc?: string;
+  mediaMode?: "image" | "video";
+  autoplay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  controls?: boolean;
+  layout?: "contained" | "full-width";
   alt: string;
   fit?: "contain" | "cover";
   position?: string;
@@ -51,8 +61,14 @@ export type EditorialStory = {
   name: string;
   eyebrow: string;
   tagline: string;
+  introText?: string;
   buyPath: string;
   buyLabel?: string;
+  secondaryLabel?: string;
+  secondaryPath?: string;
+  customRoute?: string;
+  backgroundColor?: string;
+  backgroundGradient?: string;
   hero: EditorialImage;
   heroTone: EditorialTone;
   highlights: Array<{ label: string; title: string; image: EditorialImage; tone: EditorialTone }>;

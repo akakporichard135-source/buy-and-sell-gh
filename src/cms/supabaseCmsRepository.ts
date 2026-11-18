@@ -436,12 +436,22 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       mobileImage: isDeprecatedIphone18Mobile
         ? APPROVED_IPHONE_18_PRO_MOBILE_HERO
         : rawMobileImage || undefined,
+      placement: "top" as const,
       order: typeof h.order === "number" ? h.order : idx + 1,
     };
   });
 
   const mergedTiles = (source.tiles || defaultHomepageContent.tiles).map((t, idx) => {
-    const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
+    const rawDef = defaultHomepageContent.tiles.find((d) => d.id === t.id);
+    const isReplacedProduct = Boolean(
+      (t.productId && rawDef?.productId && t.productId !== rawDef.productId) ||
+        (t.title &&
+          rawDef?.title &&
+          t.title.trim().toLowerCase() !== rawDef.title.trim().toLowerCase() &&
+          t.image &&
+          t.image !== rawDef.image)
+    );
+    const def = isReplacedProduct ? undefined : rawDef;
     const hasExplicitBackground = t.backgroundColor !== undefined;
     const rawTileImage = t.image !== undefined ? t.image : (def?.image || "");
     const inferredFromImage = !hasExplicitBackground
@@ -465,6 +475,18 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     const finalDeviceName =
       t.deviceName !== undefined ? t.deviceName : finalTitle;
 
+    const isAirpodsCampaign =
+      t.id === "airpods-pro-3" ||
+      t.productId === "airpods-pro-3" ||
+      rawTileImage.includes("airpods-pro-3") ||
+      finalTitle.toLowerCase().includes("airpods") ||
+      finalDeviceName.toLowerCase().includes("airpods");
+
+    const normalizedMediaPosition =
+      isAirpodsCampaign && (t.mediaPosition === "top" || !t.mediaPosition)
+        ? "bottom"
+        : t.mediaPosition || def?.mediaPosition || "bottom";
+
     return {
       ...def,
       ...t,
@@ -477,10 +499,11 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       backgroundGradient:
         "backgroundGradient" in t ? t.backgroundGradient : def?.backgroundGradient,
       mediaFit: t.mediaFit || def?.mediaFit || "contain",
-      mediaPosition: t.mediaPosition || def?.mediaPosition || "bottom",
+      mediaPosition: normalizedMediaPosition,
       mediaBlendMode: finalBlend,
       mediaMode: t.mediaMode || (t.videoUrl ? "video" : "image"),
       mobileImage: "mobileImage" in t ? t.mobileImage || undefined : def?.mobileImage,
+      placement: "top" as const,
       order: typeof t.order === "number" ? t.order : idx + 1,
     };
   });
@@ -512,6 +535,7 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
           layoutVariant: cs.layoutVariant || "full-hero",
           sectionPlacement: cs.sectionPlacement || "after-heroes",
           primary: cs.primary || { label: "Learn more", to: "/store" },
+          placement: "top" as const,
           enabled: cs.enabled ?? true,
           order: typeof cs.order === "number" ? cs.order : idx + 1,
         };

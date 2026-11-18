@@ -287,36 +287,30 @@
   margin: 14px auto 8px;
 }
 
-/* Bottom copy alignment on contained heroes/tiles stacks copy cleanly below image without overlap */
+/* Copy is always positioned above the product image/video for consistent hierarchy */
 .home-ref-hero.home-ref-copy-bottom.home-ref-media-contain,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-contain {
-  flex-direction: column-reverse;
-  justify-content: space-between;
-}
-
-.home-ref-hero.home-ref-copy-bottom.home-ref-media-contain .home-ref-copy,
-.home-ref-tile.home-ref-copy-bottom.home-ref-media-contain .home-ref-copy {
-  padding: 8px 18px 26px;
-}
-
-.home-ref-hero.home-ref-copy-bottom.home-ref-media-contain .home-ref-hero-image,
-.home-ref-tile.home-ref-copy-bottom.home-ref-media-contain .home-ref-tile-image {
-  margin: 18px auto 4px;
-}
-
-.home-ref-hero.home-ref-copy-bottom.home-ref-media-cover,
-.home-ref-tile.home-ref-copy-bottom.home-ref-media-cover {
-  justify-content: flex-end;
-}
-
-.home-ref-hero.home-ref-copy-bottom.home-ref-media-cover .home-ref-copy,
-.home-ref-tile.home-ref-copy-bottom.home-ref-media-cover .home-ref-copy {
-  padding: 20px 18px 28px;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 /* Custom Homepage Section layout variants */
 .home-ref-custom-section {
   margin-top: 12px;
+}
+
+.home-ref-variant-gift-showcase {
+  height: clamp(600px, 76vh, 740px);
+  min-height: 520px;
+}
+
+.home-ref-variant-gift-showcase .home-ref-copy {
+  padding-top: clamp(42px, 5vh, 58px);
+}
+
+.home-ref-variant-gift-showcase .home-ref-hero-image {
+  max-width: min(980px, 90%);
+  margin: clamp(20px, 2.8vw, 34px) auto 14px;
 }
 
 .home-ref-variant-compact-banner {

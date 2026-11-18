@@ -1,10 +1,19 @@
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { isPreviewMode } from "../admin/adminAuthorization";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { editorialStories } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
-import { fetchPublishedLearnMore, getPublishedLearnMoreSync, refreshBundledStoryAssets, sectionsAt, type LearnMoreContent } from "../cms/learnMoreRepository";
+import {
+  fetchDraftLearnMore,
+  fetchPublishedLearnMore,
+  getCustomLearnMoreRegistryEntries,
+  getPublishedLearnMoreSync,
+  refreshBundledStoryAssets,
+  sectionsAt,
+  type LearnMoreContent,
+} from "../cms/learnMoreRepository";
 import {
   familyMatchesProduct,
   getProductStory,
@@ -53,25 +62,47 @@ export function resolveStorySlug(slug: string): string {
   return slug;
 }
 
-export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
+export function ProductStoryPage({ family }: { family: ProductFamilyKey | "custom" }) {
   const { slug = "" } = useParams();
   const resolvedSlug = resolveStorySlug(slug);
-  const [published, setPublished] = useState<LearnMoreContent | null>(() =>
-    getPublishedLearnMoreSync(slug) || (slug !== resolvedSlug ? getPublishedLearnMoreSync(resolvedSlug) : null)
-  );
+  const previewActive = isPreviewMode();
+  const [published, setPublished] = useState<LearnMoreContent | null>(() => {
+    const direct =
+      getPublishedLearnMoreSync(slug) ||
+      (slug !== resolvedSlug ? getPublishedLearnMoreSync(resolvedSlug) : null);
+    if (direct) return direct;
+    if (previewActive) {
+      return (
+        getCustomLearnMoreRegistryEntries().find(
+          (c) => c.story.slug === slug || c.story.slug === resolvedSlug
+        ) || null
+      );
+    }
+    return null;
+  });
   const [isResolving, setIsResolving] = useState<boolean>(() => !published);
 
   useEffect(() => {
     let active = true;
     const fetchLatest = (force = false) => {
-      void fetchPublishedLearnMore(slug, force)
-        .then((direct) => direct ?? (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug, force) : null))
+      const loader = previewActive
+        ? fetchDraftLearnMore(slug)
+            .catch(() => null)
+            .then((draft) => draft ?? fetchPublishedLearnMore(slug, force))
+        : fetchPublishedLearnMore(slug, force);
+
+      void loader
+        .then((direct) =>
+          direct ??
+          (slug !== resolvedSlug ? fetchPublishedLearnMore(resolvedSlug, force) : null)
+        )
         .catch(() => null)
         .then((content) => {
-          if (active && content) {
+          if (!active) return;
+          if (content) {
             setPublished(content);
-            setIsResolving(false);
           }
+          setIsResolving(false);
         });
     };
     fetchLatest(false);
@@ -86,7 +117,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
       active = false;
       unsubscribe();
     };
-  }, [slug, resolvedSlug]);
+  }, [slug, resolvedSlug, previewActive]);
 
   if (isResolving && !published) {
     return (
@@ -100,13 +131,63 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey }) {
   }
 
   const editorialStory = editorialStories[resolvedSlug] || editorialStories[slug];
-  if (editorialStory) return <MinimalEditorialProductStory
-    story={published?.kind === "editorial" && (published.story.slug === slug || published.story.slug === resolvedSlug)
-      ? refreshBundledStoryAssets(published.story, editorialStory) : editorialStory}
-    sections={(published?.story.slug === slug || published?.story.slug === resolvedSlug)
-      ? published.sections : defaultEditorialShowcases(editorialStory)} />;
-  return <CatalogProductStory family={family} slug={resolvedSlug || slug}
-    published={(published?.story.slug === slug || published?.story.slug === resolvedSlug) ? published : null} />;
+  const matchesPublished =
+    published &&
+    (published.story.slug === slug || published.story.slug === resolvedSlug);
+
+  if (matchesPublished && published.kind === "editorial") {
+    return (
+      <MinimalEditorialProductStory
+        story={
+          editorialStory
+            ? refreshBundledStoryAssets(published.story, editorialStory)
+            : published.story
+        }
+        sections={published.sections}
+      />
+    );
+  }
+
+  if (editorialStory) {
+    return (
+      <MinimalEditorialProductStory
+        story={editorialStory}
+        sections={defaultEditorialShowcases(editorialStory)}
+      />
+    );
+  }
+
+  if (family === "custom") {
+    if (matchesPublished && published.kind === "catalog") {
+      return (
+        <CatalogProductStory
+          family={published.story.family}
+          slug={published.story.slug}
+          published={published}
+        />
+      );
+    }
+    return (
+      <section className="experience-not-found">
+        <p>Buy &amp; Sell GH Campaign</p>
+        <h1>Campaign story not found.</h1>
+        <span>
+          This Learn More campaign page is being prepared. Explore our current catalog and offers in the Store.
+        </span>
+        <Link className="experience-button experience-button-primary" to="/store">
+          Browse Store
+        </Link>
+      </section>
+    );
+  }
+
+  return (
+    <CatalogProductStory
+      family={family}
+      slug={resolvedSlug || slug}
+      published={matchesPublished ? published : null}
+    />
+  );
 }
 
 export function CatalogProductStory({ family, slug, published }: { family: ProductFamilyKey; slug: string; published: LearnMoreContent | null }) {

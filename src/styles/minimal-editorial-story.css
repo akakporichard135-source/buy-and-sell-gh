@@ -55,6 +55,26 @@
   line-height: 1.35;
 }
 
+.minimal-editorial-intro {
+  margin: 0;
+  max-width: 640px;
+  font-size: clamp(14px, 1.3vw, 16px);
+  line-height: 1.55;
+  color: #6e6e73;
+}
+
+.minimal-editorial-hero.is-dark .minimal-editorial-intro {
+  color: #c7c7cc;
+}
+
+.minimal-editorial-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
 .minimal-editorial-buy {
   display: inline-flex;
   justify-content: center;
@@ -67,11 +87,42 @@
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .minimal-editorial-buy:hover,
 .minimal-editorial-buy:focus-visible {
   background: #ffdc50;
+  transform: translateY(-1px);
+}
+
+.minimal-editorial-secondary-cta {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 22px;
+  border-radius: 22px;
+  border: 1px solid #d4af37;
+  color: #9b7700;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.minimal-editorial-hero.is-dark .minimal-editorial-secondary-cta {
+  color: #f4cf42;
+}
+
+.minimal-editorial-secondary-cta:hover,
+.minimal-editorial-secondary-cta:focus-visible {
+  background: #d4af37;
+  color: #101010;
+}
+
+.minimal-editorial-hero-picture {
+  display: contents;
 }
 
 .minimal-editorial-hero-image {
@@ -79,6 +130,65 @@
   width: min(100%, 1000px);
   height: clamp(265px, 47vh, 530px);
   object-fit: contain;
+}
+
+.minimal-editorial-hero-image.is-full-bleed {
+  width: 100%;
+  max-width: 1440px;
+  height: clamp(320px, 58vh, 640px);
+  border-radius: 24px;
+}
+
+.minimal-editorial-hero.is-full-width {
+  padding-inline: clamp(12px, 2vw, 24px);
+}
+
+.minimal-editorial-hero-video-wrap {
+  position: relative;
+  width: min(100%, 1180px);
+  border-radius: 24px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 16 / 9;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+}
+
+.minimal-editorial-hero-video-wrap.is-full-bleed {
+  width: 100%;
+  max-width: 1440px;
+  border-radius: 20px;
+}
+
+.minimal-editorial-hero-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.minimal-editorial-video-toggle {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(10, 10, 12, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.minimal-editorial-video-toggle:hover {
+  background: rgba(212, 175, 55, 0.9);
+  color: #101010;
+  border-color: #d4af37;
 }
 
 .minimal-editorial-story-apple-watch-ultra-4 .minimal-editorial-hero-image {
@@ -150,11 +260,15 @@
 @media (max-width: 700px) {
   .minimal-editorial-hero {
     gap: 18px;
-    padding-top: 34px;
+    padding: 34px 16px 24px;
   }
 
   .minimal-editorial-hero-image {
     height: clamp(245px, 42vh, 370px);
+  }
+
+  .minimal-editorial-hero-video-wrap {
+    border-radius: 16px;
   }
 
   .minimal-editorial-story-apple-watch-ultra-4 .minimal-editorial-hero-image {

@@ -11,7 +11,8 @@ export type CustomSectionLayoutVariant =
   | "full-hero"
   | "split-left"
   | "split-right"
-  | "compact-banner";
+  | "compact-banner"
+  | "gift-showcase";
 
 export type CustomSectionPlacement =
   | "after-heroes"
@@ -24,6 +25,7 @@ export interface HeroCampaign {
   internalName?: string;
   deviceName?: string;
   productId?: string;
+  learnMoreSlug?: string;
   eyebrow?: string;
   title: string;
   subtitle: string;
@@ -59,6 +61,7 @@ export interface PromoTile {
   internalName?: string;
   deviceName?: string;
   productId?: string;
+  learnMoreSlug?: string;
   eyebrow?: string;
   title: string;
   subtitle: string;
@@ -94,6 +97,7 @@ export interface CustomHomepageSection {
   internalName: string;
   deviceName?: string;
   productId?: string;
+  learnMoreSlug?: string;
   eyebrow?: string;
   title: string;
   subtitle: string;
@@ -119,6 +123,8 @@ export interface CustomHomepageSection {
   mediaBlendMode?: "normal" | "multiply";
   layoutVariant?: CustomSectionLayoutVariant;
   sectionPlacement?: CustomSectionPlacement;
+  minHeightDesktop?: number;
+  minHeightMobile?: number;
   primary: ActionLink;
   secondary?: ActionLink;
   placement?: "top" | "bottom";

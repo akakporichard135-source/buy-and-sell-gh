@@ -157,6 +157,8 @@ function PublicShell() {
           <Route path="/watch/:slug" element={<ProductStoryPage family="watch" />} />
           <Route path="/airpods/:slug" element={<ProductStoryPage family="airpods" />} />
           <Route path="/accessories/:slug" element={<ProductStoryPage family="accessories" />} />
+          <Route path="/learn-more/:slug" element={<ProductStoryPage family="custom" />} />
+          <Route path="/campaigns/:slug" element={<ProductStoryPage family="custom" />} />
           <Route path="/shop/buy-iphone/:slug" element={<ProductBuyPage family="iphone" />} />
           <Route path="/shop/buy-mac/:slug" element={<ProductBuyPage family="mac" />} />
           <Route path="/shop/buy-ipad/:slug" element={<ProductBuyPage family="ipad" />} />

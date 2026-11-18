@@ -35,16 +35,31 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
-import type { ProductFamilyKey } from "../../catalog/productExperience";
+import { useCms } from "../../cms/CmsContext";
+import {
+  deriveCampaignLearnMorePath,
+  deriveCampaignLearnMoreSlug,
+  SUPPORTED_IMAGE_ACCEPT,
+  SUPPORTED_VIDEO_ACCEPT,
+} from "../../cms/homepageBuilderUtils";
+import {
+  saveLocalStagedMedia,
+  useResolvedMediaUrl,
+  validateLocalMediaFile,
+} from "../../cms/localMediaStore";
 import { getLearnMoreMediaSource, replaceLearnMoreMedia, type LearnMoreMediaTarget } from "../../cms/learnMoreMedia";
 import {
+  collectLearnMoreMediaReferences,
+  createCustomEditorialLearnMorePage,
   fetchDraftLearnMore,
   fetchLearnMoreRevisions,
   fetchLearnMoreStatusMap,
   fetchPublishedLearnMore,
   getPublishedLearnMoreSync,
   getBuiltInLearnMoreMedia,
+  getCustomLearnMoreRegistryEntries,
   getEligibleLearnMoreProducts,
   getLearnMoreFamily,
   getLearnMoreHeroThumbnail,
@@ -55,9 +70,9 @@ import {
   publishLearnMore,
   resolveApprovedProductThumbnail,
   rollbackLearnMoreRevision,
+  saveCustomLearnMoreRegistryEntry,
   saveDraftLearnMore,
   unpublishLearnMore,
-  uploadLearnMoreMedia,
   type LearnMoreContent,
   type LearnMorePageStatus,
   type LearnMoreRevision,
@@ -75,79 +90,167 @@ const createSectionId = (): string =>
     ? crypto.randomUUID()
     : `sec-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
+function ResolvedImg({
+  src,
+  alt = "",
+  className,
+  style,
+}: {
+  src?: string | null;
+  alt?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { resolvedUrl } = useResolvedMediaUrl(src);
+  if (!resolvedUrl) return null;
+  return <img src={resolvedUrl} alt={alt} className={className} style={style} loading="lazy" />;
+}
+
+function ResolvedVideo({
+  src,
+  poster,
+  className,
+  style,
+  controls = true,
+  muted = true,
+}: {
+  src?: string | null;
+  poster?: string | null;
+  className?: string;
+  style?: React.CSSProperties;
+  controls?: boolean;
+  muted?: boolean;
+}) {
+  const { resolvedUrl } = useResolvedMediaUrl(src);
+  const { resolvedUrl: resolvedPoster } = useResolvedMediaUrl(poster);
+  if (!resolvedUrl) return null;
+  return (
+    <video
+      src={resolvedUrl}
+      poster={resolvedPoster || undefined}
+      className={className}
+      style={style}
+      controls={controls}
+      muted={muted}
+      playsInline
+    />
+  );
+}
+
 export interface SectionPresetMeta {
+  presetKey?: string;
   type: LearnMoreSectionType;
   shortName: string;
   label: string;
   category: "core" | "media" | "specs";
   featured: boolean;
   desc: string;
+  defaultLayout?: LearnMoreSection["layout"];
+  defaultContainer?: "contained" | "full-width";
+  defaultBg?: "white" | "soft-gray" | "dark";
 }
 
 export const SECTION_TYPE_PRESETS: SectionPresetMeta[] = [
   {
-    type: "large-image",
-    shortName: "Hero",
-    label: "Hero / Showcase Stage",
+    presetKey: "layout-a-split-left",
+    type: "text-image",
+    shortName: "Image Left / Text Right",
+    label: "Layout A — Image Left, Text Right",
     category: "core",
     featured: true,
-    desc: "Bold centered headline, eyebrow, and hero product visual on a pure white, soft gray, or dark stage.",
+    defaultLayout: "split-left",
+    defaultBg: "white",
+    desc: "Visual product photo or video on the left paired with headline, description, and CTA on the right.",
   },
   {
+    presetKey: "layout-b-split-right",
+    type: "text-image",
+    shortName: "Text Left / Image Right",
+    label: "Layout B — Text Left, Image Right",
+    category: "core",
+    featured: true,
+    defaultLayout: "split-right",
+    defaultBg: "soft-gray",
+    desc: "Editorial headline, story copy, and CTA on the left paired with high-resolution media on the right.",
+  },
+  {
+    presetKey: "layout-c-full-image",
     type: "full-bleed",
-    shortName: "Large Image",
-    label: "Large Full-Width Image",
+    shortName: "Full-Width Image",
+    label: "Layout C — Full-Width Cinematic Image",
     category: "media",
     featured: true,
+    defaultLayout: "full-width",
+    defaultContainer: "full-width",
+    defaultBg: "dark",
     desc: "Expansive edge-to-edge product presentation canvas for dramatic hardware photography.",
   },
   {
-    type: "text-image",
-    shortName: "Split Image/Text",
-    label: "Split Image & Text",
-    category: "core",
-    featured: true,
-    desc: "Balanced editorial story copy paired side-by-side with a high-resolution product image.",
-  },
-  {
-    type: "gallery",
-    shortName: "Gallery",
-    label: "Multi-Angle Image Gallery",
-    category: "media",
-    featured: true,
-    desc: "Visual grid of multiple product angles and finish perspectives.",
-  },
-  {
+    presetKey: "layout-d-full-video",
     type: "video",
     shortName: "Cinematic Video",
-    label: "Cinematic Video",
+    label: "Layout D — Full-Width Cinematic Video",
     category: "media",
     featured: true,
-    desc: "Autoplaying or controlled 4K product film with poster fallback and optional mobile video.",
+    defaultLayout: "full-width",
+    defaultContainer: "full-width",
+    defaultBg: "dark",
+    desc: "Autoplaying or controlled 4K product video with headline, supporting copy, poster fallback, and mobile video.",
   },
   {
+    presetKey: "layout-e-gallery",
+    type: "gallery",
+    shortName: "Side-by-Side Gallery",
+    label: "Layout E — Side-by-Side Image Gallery",
+    category: "media",
+    featured: true,
+    defaultLayout: "carousel",
+    defaultBg: "white",
+    desc: "Clean balanced horizontal gallery displaying multiple product angles and finish perspectives.",
+  },
+  {
+    presetKey: "layout-f-feature-media",
     type: "feature-cards",
-    shortName: "Features",
-    label: "Feature Cards Grid",
+    shortName: "Text & Media Feature",
+    label: "Layout F — Text & Media Feature",
     category: "core",
     featured: true,
-    desc: "Grid of rounded feature highlight cards with optional card imagery, titles, and descriptions.",
+    defaultLayout: "grid-3",
+    defaultBg: "soft-gray",
+    desc: "Premium editorial combination of highlight cards, imagery, titles, descriptions, and CTAs.",
   },
   {
+    presetKey: "hero-stage",
+    type: "large-image",
+    shortName: "Showcase Stage",
+    label: "Centered Visual Showcase Stage",
+    category: "core",
+    featured: false,
+    defaultLayout: "stacked",
+    defaultBg: "white",
+    desc: "Bold centered headline, eyebrow, and hero visual on pure white, soft gray, or dark stage.",
+  },
+  {
+    presetKey: "specifications",
     type: "specifications",
     shortName: "Specifications",
     label: "Technical Specifications",
     category: "specs",
     featured: true,
+    defaultLayout: "stacked",
+    defaultBg: "white",
     desc: "Clean structured hardware specification rows for processor, display, camera, and battery details.",
   },
   {
+    presetKey: "cta-banner",
     type: "cta",
     shortName: "Buy CTA",
     label: "Buy Call-to-Action",
     category: "specs",
     featured: true,
-    desc: "Direct purchase conversion banner linking customers straight to the product Buy Page.",
+    defaultLayout: "stacked",
+    defaultBg: "soft-gray",
+    desc: "Direct purchase conversion banner linking customers straight to the product or shop destination.",
   },
   {
     type: "hardware-close-up",
@@ -219,6 +322,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   watch: "Watch",
   airpods: "AirPods",
   accessories: "Accessories",
+  custom: "Campaigns & Custom",
 };
 
 function getStoryTagline(content: LearnMoreContent | null): string {
@@ -524,18 +628,91 @@ export function getCinematicVideoThumbnail(content: LearnMoreContent | null): st
 }
 
 export function AdminLearnMorePages() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { products: catalogProducts, getProductBySlug } = useProductCatalog();
-  // Eligible Learn More products: all catalog products (seed & Supabase) with clean empty pages for unconfigured products
-  const allChoices: LearnMoreContent[] = useMemo(
-    () => getEligibleLearnMoreProducts(catalogProducts),
-    [catalogProducts]
-  );
+  const { homepage, homepageLegacyDraft } = useCms();
+
+  const [customRegistryVersion, setCustomRegistryVersion] = useState(0);
+  const querySlug = searchParams.get("slug")?.trim() || "";
+  const queryName = searchParams.get("name")?.trim() || "";
+  const querySubtitle = searchParams.get("subtitle")?.trim() || "";
+  const queryBuyTo = searchParams.get("buyTo")?.trim() || "";
+  const queryRoute = searchParams.get("route")?.trim() || "";
+
+  // Discover Learn More pages for: all catalog products + active/draft homepage campaigns + custom Learn More registry + URL query slug
+  const allChoices: LearnMoreContent[] = useMemo(() => {
+    const campaignExtras: LearnMoreContent[] = [...getCustomLearnMoreRegistryEntries()];
+    const activeHomepage = homepageLegacyDraft || homepage;
+    const campaignPools = [
+      ...(activeHomepage?.heroes || []),
+      ...(activeHomepage?.tiles || []),
+      ...(activeHomepage?.customSections || []),
+    ];
+    for (const camp of campaignPools) {
+      const slug = deriveCampaignLearnMoreSlug(camp);
+      if (!slug || campaignExtras.some((e) => e.story.slug === slug)) continue;
+      const buyTo = camp.secondary?.to || (camp.primary?.to?.startsWith("/shop/") ? camp.primary.to : "/store");
+      campaignExtras.push(
+        createCustomEditorialLearnMorePage({
+          slug,
+          name: camp.deviceName || camp.title || slug,
+          eyebrow: camp.eyebrow || "BUY & SELL GH CAMPAIGN",
+          tagline: camp.subtitle || "",
+          introText: camp.description || "",
+          buyPath: buyTo,
+          buyLabel: camp.secondary?.label || "Shop now",
+          customRoute: deriveCampaignLearnMorePath(camp),
+          heroTone: camp.tone === "dark" ? "ink" : "light",
+          heroImage: camp.image,
+          heroVideo: camp.mediaMode === "video" ? camp.videoUrl : undefined,
+          posterImage: camp.posterUrl || camp.image,
+        })
+      );
+    }
+    if (querySlug && !campaignExtras.some((e) => e.story.slug === querySlug)) {
+      campaignExtras.push(
+        createCustomEditorialLearnMorePage({
+          slug: querySlug,
+          name: queryName || querySlug,
+          tagline: querySubtitle || "Explore specifications, media, and offers.",
+          buyPath: queryBuyTo || "/store",
+          customRoute: queryRoute || `/learn-more/${querySlug}`,
+          heroTone: "ink",
+        })
+      );
+    }
+    return getEligibleLearnMoreProducts(catalogProducts, campaignExtras);
+  }, [
+    catalogProducts,
+    homepage,
+    homepageLegacyDraft,
+    customRegistryVersion,
+    querySlug,
+    queryName,
+    querySubtitle,
+    queryBuyTo,
+    queryRoute,
+  ]);
   const builtInMedia = useMemo(() => getBuiltInLearnMoreMedia(), []);
 
-  const [selectedSlug, setSelectedSlug] = useState<string>("iphone-18-pro");
+  const [selectedSlug, setSelectedSlug] = useState<string>(() => querySlug || "iphone-18-pro");
+  useEffect(() => {
+    if (querySlug && querySlug !== selectedSlug) {
+      setSelectedSlug(querySlug);
+    }
+  }, [querySlug]);
+
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [productSidebarOpen, setProductSidebarOpen] = useState<boolean>(true);
+
+  // Create Custom Learn More Page modal state
+  const [showCreatePageModal, setShowCreatePageModal] = useState(false);
+  const [newPageName, setNewPageName] = useState("");
+  const [newPageSlug, setNewPageSlug] = useState("");
+  const [newPageTagline, setNewPageTagline] = useState("");
+  const [newPageBuyPath, setNewPageBuyPath] = useState("/store");
+  const [newPageTone, setNewPageTone] = useState<"ink" | "light">("ink");
 
   // Mobile/Tablet responsive panel step ("products" | "outline" | "editor" | "preview")
   const [mobileStep, setMobileStep] = useState<"products" | "outline" | "editor" | "preview">("editor");
@@ -550,7 +727,7 @@ export function AdminLearnMorePages() {
   const [statusMap, setStatusMap] = useState<Record<string, LearnMorePageStatus>>({});
 
   const [activeItemKey, setActiveItemKey] = useState<string>("hero"); // "hero", "video", or section ID
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [previewDevice, setPreviewDevice] = useState<"1440" | "1024" | "834" | "390" | "375">("1440");
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // Drag-and-drop state for section outline
@@ -590,7 +767,12 @@ export function AdminLearnMorePages() {
     return JSON.stringify(workingContent) !== baselineJson;
   }, [workingContent, baselineJson]);
 
-  // Refresh status map across all 13 Learn More pages
+  const pendingLocalMediaCount = useMemo(
+    () => (workingContent ? collectLearnMoreMediaReferences(workingContent).localRefs.length : 0),
+    [workingContent]
+  );
+
+  // Refresh status map across all Learn More pages
   const refreshStatusMap = async () => {
     const map = await fetchLearnMoreStatusMap();
     setStatusMap(map);
@@ -611,7 +793,7 @@ export function AdminLearnMorePages() {
     const initialClone = normalizeLearnMoreContent(clone(cachedPub || baseChoice));
     setWorkingContent(initialClone);
     setBaselineJson(JSON.stringify(initialClone));
-    setActiveItemKey(initialClone.isEmptyPage ? (initialClone.sections[0]?.id || "") : "hero");
+    setActiveItemKey(initialClone.isEmptyPage ? (initialClone.sections[0]?.id || "hero") : "hero");
 
     async function loadData() {
       try {
@@ -626,19 +808,19 @@ export function AdminLearnMorePages() {
           const draftClone = clone(draft);
           setWorkingContent(draftClone);
           setBaselineJson(JSON.stringify(draftClone));
-          setActiveItemKey(draftClone.isEmptyPage ? (draftClone.sections[0]?.id || "") : "hero");
+          setActiveItemKey(draftClone.isEmptyPage ? (draftClone.sections[0]?.id || "hero") : "hero");
         } else if (published) {
           setHasDraft(false);
           const pubClone = clone(published);
           setWorkingContent(pubClone);
           setBaselineJson(JSON.stringify(pubClone));
-          setActiveItemKey(pubClone.isEmptyPage ? (pubClone.sections[0]?.id || "") : "hero");
+          setActiveItemKey(pubClone.isEmptyPage ? (pubClone.sections[0]?.id || "hero") : "hero");
         } else {
           setHasDraft(false);
           const defClone = clone(baseChoice);
           setWorkingContent(defClone);
           setBaselineJson(JSON.stringify(defClone));
-          setActiveItemKey(defClone.isEmptyPage ? (defClone.sections[0]?.id || "") : "hero");
+          setActiveItemKey(defClone.isEmptyPage ? (defClone.sections[0]?.id || "hero") : "hero");
         }
       } catch (err) {
         console.warn("Could not load published/draft data:", err);
@@ -661,6 +843,7 @@ export function AdminLearnMorePages() {
       watch: 0,
       airpods: 0,
       accessories: 0,
+      custom: 0,
     };
     for (const c of allChoices) {
       const fam = getLearnMoreFamily(c);
@@ -694,12 +877,51 @@ export function AdminLearnMorePages() {
     }
     if (hasUnsavedChanges) {
       const proceed = window.confirm(
-        "You have unsaved edits on this Learn More page. Switch product without saving draft?"
+        "You have unsaved edits on this Learn More page. Switch page without saving draft?"
       );
       if (!proceed) return;
     }
     setSelectedSlug(slug);
+    if (searchParams.get("slug")) {
+      setSearchParams({ slug });
+    }
     if (mobileStep === "products") setMobileStep("outline");
+  };
+
+  const handleCreateCustomPage = async () => {
+    const cleanName = newPageName.trim() || "New Campaign Story";
+    const cleanSlug =
+      (newPageSlug || cleanName)
+        .toLowerCase()
+        .replace(/['’]/g, "")
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || `campaign-${Date.now()}`;
+
+    const entry = createCustomEditorialLearnMorePage({
+      slug: cleanSlug,
+      name: cleanName,
+      tagline: newPageTagline.trim() || "Explore specifications, imagery, and exclusive Buy & Sell GH offers.",
+      buyPath: newPageBuyPath.trim() || "/store",
+      customRoute: `/learn-more/${cleanSlug}`,
+      heroTone: newPageTone,
+    });
+    saveCustomLearnMoreRegistryEntry(entry);
+    try {
+      await saveDraftLearnMore(entry);
+    } catch {
+      // keep local entry cleanly
+    }
+    setCustomRegistryVersion((v) => v + 1);
+    setSelectedSlug(cleanSlug);
+    setSearchParams({ slug: cleanSlug });
+    setShowCreatePageModal(false);
+    setNewPageName("");
+    setNewPageSlug("");
+    setNewPageTagline("");
+    setStatusMsg({
+      text: `Created Learn More page "${cleanName}" at /learn-more/${cleanSlug}. Upload your top cinematic hero video and add story rows below.`,
+      type: "success",
+    });
   };
 
   // Load Revisions
@@ -778,8 +1000,11 @@ export function AdminLearnMorePages() {
     const pageId = workingContent.story.slug;
     const source = getLearnMoreMediaSource(workingContent, target);
     const ratio = target.field === "image" && source ? await imageAspectRatio(source) : undefined;
-    setWorkingContent((previous) => previous?.story.slug === pageId
-      ? replaceLearnMoreMedia(previous, target, url, ratio) : previous);
+    setWorkingContent((previous) =>
+      previous?.story.slug === pageId
+        ? replaceLearnMoreMedia(previous, target, url, ratio)
+        : previous
+    );
   };
 
   const handleSelectMedia = (url: string) => {
@@ -789,7 +1014,7 @@ export function AdminLearnMorePages() {
     setMediaTarget(null);
   };
 
-  // Upload file directly
+  // Validate and stage local file into persistent IndexedDB (`local-media://...`) so drafts never alter live media until Publish Live
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     target: {
@@ -804,18 +1029,29 @@ export function AdminLearnMorePages() {
     if (!file) return false;
     e.target.value = "";
 
-    try {
-      setUploadProgress(0);
-      const url = await uploadLearnMoreMedia(file, (pct) => setUploadProgress(pct));
-      setUploadProgress(null);
+    const isVideoTarget =
+      target.field === "video" ||
+      target.field === "mobileVideo" ||
+      target.field === "videoSrc" ||
+      target.field === "mobileVideoSrc" ||
+      target.field === "heroVideo" ||
+      target.field === "heroMobileVideo";
 
-      await applyMedia(url, target);
-      setMediaLibrary((prev) => (prev.includes(url) ? prev : [url, ...prev]));
-      setStatusMsg({ text: "Media uploaded to Supabase and applied to section.", type: "success" });
+    try {
+      setUploadProgress(20);
+      await validateLocalMediaFile(file, isVideoTarget ? "video" : "image");
+      setUploadProgress(70);
+      const staged = await saveLocalStagedMedia(file);
+      await applyMedia(staged.uri, target);
+      setUploadProgress(null);
+      setStatusMsg({
+        text: `Staged "${file.name}" locally (${isVideoTarget ? "video" : "image"}). Click "Save Draft" to preserve across refreshes or "Publish Live" to upload permanently to Supabase Storage.`,
+        type: "success",
+      });
       return true;
     } catch (err: any) {
       setUploadProgress(null);
-      setStatusMsg({ text: `Upload failed: ${err.message}`, type: "error" });
+      setStatusMsg({ text: `Media selection failed: ${err.message}`, type: "error" });
       return false;
     }
   };
@@ -825,12 +1061,15 @@ export function AdminLearnMorePages() {
     if (!workingContent) return;
     try {
       setIsSaving(true);
+      if (workingContent.kind === "editorial") {
+        saveCustomLearnMoreRegistryEntry(workingContent);
+      }
       await saveDraftLearnMore(workingContent);
       setHasDraft(true);
       setBaselineJson(JSON.stringify(workingContent));
       await refreshStatusMap();
       setStatusMsg({
-        text: `Draft saved and verified in Supabase for "${workingContent.story.name}".`,
+        text: `Draft saved persistently for "${workingContent.story.name}". Live page was not altered.`,
         type: "success",
       });
     } catch (err: any) {
@@ -853,12 +1092,17 @@ export function AdminLearnMorePages() {
     }
     try {
       setIsPublishing(true);
-      setStatusMsg({ text: `Publishing and verifying "${workingContent.story.name}" in Supabase...`, type: "info" });
+      setStatusMsg({
+        text: `Uploading staged media permanently and publishing "${workingContent.story.name}"...`,
+        type: "info",
+      });
       const { revisionNumber, verifiedContent, persistedSectionIds } = await publishLearnMore(
         workingContent,
         `Published "${workingContent.story.name}" from Visual Learn More Editor on ${new Date().toLocaleString()}`
       );
-      // Strictly update publishedContent from the verified read-back content from Supabase
+      if (verifiedContent.kind === "editorial") {
+        saveCustomLearnMoreRegistryEntry(verifiedContent);
+      }
       const pubClone = clone(verifiedContent);
       setPublishedContent(pubClone);
       setWorkingContent(pubClone);
@@ -871,7 +1115,13 @@ export function AdminLearnMorePages() {
       });
     } catch (err: any) {
       console.error("Publishing error:", err);
-      setStatusMsg({ text: `Publish failed: ${err.message}`, type: "error" });
+      try {
+        await saveDraftLearnMore(workingContent);
+      } catch {}
+      setStatusMsg({
+        text: `Publish failed (${err.message}). Your draft was preserved and the live page was left untouched.`,
+        type: "error",
+      });
     } finally {
       setIsPublishing(false);
     }
@@ -936,6 +1186,7 @@ export function AdminLearnMorePages() {
     const target = clone(next.sections[index]);
     target.id = createSectionId();
     target.title = `${target.title} (Copy)`;
+    if (target.internalName) target.internalName = `${target.internalName} (Copy)`;
     target.enabled = true;
     next.sections.splice(index + 1, 0, target);
     setWorkingContent(next);
@@ -946,15 +1197,15 @@ export function AdminLearnMorePages() {
 
   const handleDeleteSection = (sectionId: string) => {
     if (!workingContent) return;
+    const target = workingContent.sections.find((s) => s.id === sectionId);
+    const label = target?.internalName || target?.title || "this section";
+    if (!window.confirm(`Delete section "${label}" from this Learn More page?`)) return;
+
     const next = clone(workingContent);
     next.sections = next.sections.filter((s) => s.id !== sectionId);
     setWorkingContent(next);
     if (activeItemKey === sectionId) {
-      if (next.isEmptyPage) {
-        setActiveItemKey(next.sections[0]?.id || "");
-      } else {
-        setActiveItemKey("hero");
-      }
+      setActiveItemKey(next.isEmptyPage ? (next.sections[0]?.id || "hero") : "hero");
     }
   };
 
@@ -970,7 +1221,7 @@ export function AdminLearnMorePages() {
         delete next.story.cinematicVideo;
       }
       setWorkingContent(next);
-      setActiveItemKey(next.isEmptyPage ? (next.sections[0]?.id || "") : "hero");
+      setActiveItemKey("hero");
       setStatusMsg({
         text: "Cinematic video removed from this page. Save Draft or Publish Live to persist.",
         type: "info",
@@ -978,63 +1229,66 @@ export function AdminLearnMorePages() {
     }
   };
 
-  const handleAddSection = (type: LearnMoreSectionType) => {
+  const handleAddSection = (presetOrType: SectionPresetMeta | LearnMoreSectionType) => {
     if (!workingContent) return;
 
-    if (type === "video" && workingContent.kind === "editorial" && !workingContent.story.cinematicVideo) {
-      const next = clone(workingContent);
-      next.story.cinematicVideo = {
-        headline: "Precision in continuous motion.",
-        subheadline: "Autoplaying hardware film",
-        src: "",
-        poster: "",
-        alt: `${workingContent.story.name} cinematic film`,
-        eyebrow: "Cinematic Hardware",
-        aspectRatio: "16/9",
-      };
-      setWorkingContent(next);
-      setActiveItemKey("video");
-      setWorkspaceMode("inspector");
-      setMobileStep("editor");
-      setStatusMsg({ text: "Cinematic video showcase added to story.", type: "success" });
-      return;
-    }
+    const preset =
+      typeof presetOrType === "string"
+        ? SECTION_TYPE_PRESETS.find((p) => p.type === presetOrType)
+        : presetOrType;
+    const type = typeof presetOrType === "string" ? presetOrType : presetOrType.type;
+    const defaultBuyPath = getStoryBuyPath(workingContent) || "/store";
 
-    const preset = SECTION_TYPE_PRESETS.find((p) => p.type === type);
-    const defaultBuyPath = getStoryBuyPath(workingContent);
+    const chosenLayout =
+      preset?.defaultLayout ||
+      (type === "text-image"
+        ? "split-right"
+        : type === "feature-cards"
+        ? "grid-3"
+        : type === "gallery"
+        ? "carousel"
+        : "stacked");
+
+    const chosenBg =
+      preset?.defaultBg ||
+      (type === "video" || type === "full-bleed"
+        ? "dark"
+        : type === "feature-cards" || type === "cta"
+        ? "soft-gray"
+        : "white");
 
     const newSection: LearnMoreSection = {
       id: createSectionId(),
+      internalName: preset?.label || `Section ${(workingContent.sections?.length || 0) + 1}`,
       type,
       enabled: true,
-      eyebrow: "",
-      title: `Untitled ${preset?.shortName || "Section"}`,
+      eyebrow: workingContent.story.eyebrow || "BUY & SELL GH",
+      title: preset?.shortName || "New Section Headline",
+      subtitle: "",
       body: "",
-      backgroundColor:
-        type === "video" || type === "full-bleed"
-          ? "dark"
-          : type === "feature-cards" || type === "cta"
-          ? "soft-gray"
-          : "white",
-      textAlignment: type === "text-image" ? "left" : "center",
-      layout:
-        type === "text-image"
-          ? "split-right"
-          : type === "feature-cards"
-          ? "grid-3"
-          : "stacked",
+      supportingText: "",
+      backgroundColor: chosenBg,
+      tone: chosenBg === "dark" ? "dark" : "light",
+      spacing: "normal",
+      containerMode: preset?.defaultContainer || (type === "full-bleed" ? "full-width" : "contained"),
+      textAlignment: chosenLayout === "split-left" || chosenLayout === "split-right" ? "left" : "center",
+      layout: chosenLayout,
       animationPreset: "none",
       placement: "end",
-      fit: type === "full-bleed" ? "cover" : "contain",
+      fit: type === "full-bleed" || type === "video" ? "cover" : "contain",
       position: "center",
-      alt: "",
+      alt: `${workingContent.story.name} ${preset?.shortName || "visual"}`,
       buttonLabel: type === "cta" ? `Buy ${workingContent.story.name}` : undefined,
       buttonTo: type === "cta" ? defaultBuyPath : undefined,
       autoplay: type === "video" ? true : undefined,
       muted: type === "video" ? true : undefined,
       loop: type === "video" ? true : undefined,
       controls: type === "video" ? true : undefined,
-      items: ["feature-cards", "specifications", "comparison", "finishes"].includes(type) ? [] : undefined,
+      images: type === "gallery" ? [] : undefined,
+      galleryCaptions: type === "gallery" ? [] : undefined,
+      items: ["feature-cards", "specifications", "comparison", "finishes", "highlights"].includes(type)
+        ? []
+        : undefined,
     };
 
     const next = clone(workingContent);
@@ -1052,9 +1306,6 @@ export function AdminLearnMorePages() {
   // Ordered keys for Prev/Next section navigation
   const outlineKeys = useMemo(() => {
     if (!workingContent) return [];
-    if (workingContent.isEmptyPage) {
-      return workingContent.sections.map((s) => s.id);
-    }
     const keys = ["hero"];
     if (workingContent.kind === "editorial" && workingContent.story.cinematicVideo) {
       keys.push("video");
@@ -1103,14 +1354,14 @@ export function AdminLearnMorePages() {
         <div className={`vlearn-device-bezel is-${previewDevice}`}>
           <div className="vlearn-empty-preview-state" style={{ padding: "80px 24px", textAlign: "center", color: "#86868b" }}>
             <Layers size={36} strokeWidth={1.5} style={{ opacity: 0.5, marginBottom: 12 }} />
-            <h3 style={{ color: "#f5f5f7", margin: "0 0 8px" }}>{workingContent.story.name}</h3>
+            <h3 style={{ color: "#1d1d1f", margin: "0 0 8px" }}>{workingContent.story.name}</h3>
             <p style={{ margin: 0 }}>This Learn More page is currently empty. Add sections in the editor to see your live preview here.</p>
           </div>
         </div>
       );
     }
     return (
-      <div className={`vlearn-device-bezel is-${previewDevice}`}>
+      <div className={`vlearn-device-bezel is-${previewDevice}`} data-testid="learn-more-preview-frame">
         {workingContent.kind === "editorial" ? (
           <MinimalEditorialProductStory
             story={workingContent.story}
@@ -1141,12 +1392,12 @@ export function AdminLearnMorePages() {
             title={productSidebarOpen ? "Collapse product list for wider workspace" : "Show product list"}
           >
             {productSidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-            <span>Products ({allChoices.length})</span>
+            <span>Pages ({allChoices.length})</span>
           </button>
 
           <div className="vlearn-active-product-meta">
             {workingContent && (
-              <img
+              <ResolvedImg
                 src={
                   resolveApprovedProductThumbnail(
                     workingContent.story.slug,
@@ -1181,6 +1432,11 @@ export function AdminLearnMorePages() {
                 )}
                 {hasDraft && !hasUnsavedChanges && (
                   <span className="vlearn-badge vlearn-badge-draft">Draft Saved</span>
+                )}
+                {pendingLocalMediaCount > 0 && (
+                  <span className="vlearn-badge vlearn-badge-unsaved">
+                    {pendingLocalMediaCount} Staged Local Media
+                  </span>
                 )}
                 {hasUnsavedChanges ? (
                   <span className="vlearn-badge vlearn-badge-unsaved" data-testid="unsaved-changes-badge">
@@ -1234,30 +1490,29 @@ export function AdminLearnMorePages() {
           </div>
 
           <div className="vlearn-device-group" role="group" aria-label="Preview Device Viewport">
-            <button
-              type="button"
-              className={`vlearn-device-btn ${previewDevice === "desktop" ? "is-active" : ""}`}
-              onClick={() => setPreviewDevice("desktop")}
-              title="Desktop Viewport (1280px)"
-            >
-              <Monitor size={14} /> Desktop
-            </button>
-            <button
-              type="button"
-              className={`vlearn-device-btn ${previewDevice === "tablet" ? "is-active" : ""}`}
-              onClick={() => setPreviewDevice("tablet")}
-              title="Tablet Viewport (768px)"
-            >
-              <Tablet size={14} /> Tablet
-            </button>
-            <button
-              type="button"
-              className={`vlearn-device-btn ${previewDevice === "mobile" ? "is-active" : ""}`}
-              onClick={() => setPreviewDevice("mobile")}
-              title="Mobile Viewport (375px)"
-            >
-              <Smartphone size={14} /> Mobile
-            </button>
+            {(
+              [
+                { id: "1440", label: "1440px", icon: Monitor },
+                { id: "1024", label: "1024px", icon: Laptop },
+                { id: "834", label: "834px", icon: Tablet },
+                { id: "390", label: "390px", icon: Smartphone },
+                { id: "375", label: "375px", icon: Smartphone },
+              ] as const
+            ).map((vp) => {
+              const Icon = vp.icon;
+              return (
+                <button
+                  key={vp.id}
+                  type="button"
+                  data-testid={`learn-more-vp-${vp.id}`}
+                  className={`vlearn-device-btn ${previewDevice === vp.id ? "is-active" : ""}`}
+                  onClick={() => setPreviewDevice(vp.id)}
+                  title={`${vp.label} Viewport`}
+                >
+                  <Icon size={13} /> {vp.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1273,15 +1528,17 @@ export function AdminLearnMorePages() {
 
           <button
             type="button"
+            data-testid="learn-more-preview-btn"
             className="vlearn-btn"
             onClick={() => setShowPreviewModal(true)}
             title="Open full-screen device preview"
           >
-            <Eye size={15} /> Preview
+            <Eye size={15} /> Preview Page
           </button>
 
           <button
             type="button"
+            data-testid="learn-more-save-draft-btn"
             className="vlearn-btn"
             onClick={handleSaveDraft}
             disabled={isSaving}
@@ -1291,6 +1548,7 @@ export function AdminLearnMorePages() {
 
           <button
             type="button"
+            data-testid="learn-more-publish-live-btn"
             className="vlearn-btn vlearn-btn-primary"
             onClick={handlePublish}
             disabled={isPublishing}
@@ -1318,7 +1576,7 @@ export function AdminLearnMorePages() {
           className={`vlearn-mobile-tab ${mobileStep === "products" ? "is-active" : ""}`}
           onClick={() => setMobileStep("products")}
         >
-          1. Products ({allChoices.length})
+          1. Pages ({allChoices.length})
         </button>
         <button
           type="button"
@@ -1352,11 +1610,15 @@ export function AdminLearnMorePages() {
       {/* Status Notice & Upload Progress */}
       {uploadProgress !== null && (
         <div className="vlearn-banner vlearn-banner-info">
-          <span>Uploading media to Supabase Storage... {uploadProgress}%</span>
+          <span>Validating &amp; staging media locally... {uploadProgress}%</span>
         </div>
       )}
       {statusMsg && (
-        <div className={`vlearn-banner vlearn-banner-${statusMsg.type}`} role="status">
+        <div
+          className={`vlearn-banner vlearn-banner-${statusMsg.type}`}
+          role="status"
+          data-testid="learn-more-status-banner"
+        >
           <span>{statusMsg.text}</span>
           <button type="button" onClick={() => setStatusMsg(null)} className="vlearn-icon-btn" aria-label="Dismiss notice">
             <X size={14} />
@@ -1368,12 +1630,19 @@ export function AdminLearnMorePages() {
       <div
         className={`vlearn-workspace ${!productSidebarOpen ? "is-sidebar-collapsed" : ""} is-mode-${workspaceMode} is-mobile-step-${mobileStep}`}
       >
-        {/* PANEL 1: Eligible Learn More Products Selector (Left) */}
-        <aside className="vlearn-left-panel" aria-label="Learn More Products">
+        {/* PANEL 1: Eligible Learn More Products & Campaigns Selector (Left) */}
+        <aside className="vlearn-left-panel" aria-label="Learn More Pages">
           <div className="vlearn-panel-header">
             <div className="vlearn-panel-title-row">
               <h3>Learn More Pages ({filteredChoices.length})</h3>
-              <span className="vlearn-panel-subtitle">Public website routes only</span>
+              <button
+                type="button"
+                data-testid="new-learn-more-page-btn"
+                className="vlearn-btn vlearn-btn-sm vlearn-btn-primary"
+                onClick={() => setShowCreatePageModal(true)}
+              >
+                <Plus size={12} /> New Page
+              </button>
             </div>
             <div className="vlearn-search-box">
               <Search size={14} className="vlearn-search-icon" />
@@ -1389,7 +1658,7 @@ export function AdminLearnMorePages() {
           </div>
 
           <div className="vlearn-category-chips" role="tablist" aria-label="Filter Learn More pages by category">
-            {(["all", "iphone", "mac", "ipad", "watch", "airpods", "accessories"] as const).map((cat) => (
+            {(["all", "iphone", "mac", "ipad", "watch", "airpods", "accessories", "custom"] as const).map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -1445,7 +1714,7 @@ export function AdminLearnMorePages() {
                   >
                     <div className="vlearn-prod-thumb">
                       {thumb ? (
-                        <img src={thumb} alt={choice.story.name} loading="lazy" />
+                        <ResolvedImg src={thumb} alt={choice.story.name} />
                       ) : (
                         <Laptop size={18} />
                       )}
@@ -1479,9 +1748,7 @@ export function AdminLearnMorePages() {
             <div>
               <h3>Story Outline</h3>
               <span className="vlearn-panel-subtitle">
-                {workingContent?.isEmptyPage
-                  ? `${workingContent.sections.length} visual blocks`
-                  : `${(workingContent?.sections.length || 0) + 1} visual blocks`} · Click to edit
+                {(workingContent?.sections.length || 0) + 1} visual blocks · Drag or use arrows to reorder
               </span>
             </div>
             <button
@@ -1490,7 +1757,7 @@ export function AdminLearnMorePages() {
               className="vlearn-btn vlearn-btn-primary vlearn-add-top-btn"
               onClick={() => setShowAddSectionModal(true)}
             >
-              <Plus size={14} /> + Add Section
+              <Plus size={14} /> Add Section
             </button>
           </div>
 
@@ -1513,8 +1780,8 @@ export function AdminLearnMorePages() {
               </div>
             ) : (
               <>
-                {/* Core Hero Section Card (only for editorial/configured stories or if not isEmptyPage) */}
-                {!workingContent?.isEmptyPage && (
+                {/* Core Hero Section Card (always available at top of page) */}
+                {workingContent && (
                   <div
                     data-testid="outline-card-hero"
                     className={`vlearn-section-card ${activeItemKey === "hero" ? "is-selected" : ""}`}
@@ -1536,7 +1803,7 @@ export function AdminLearnMorePages() {
                             getProductBySlug(workingContent?.story.slug || selectedSlug)
                           );
                         return heroThumb ? (
-                          <img src={heroThumb} alt={workingContent?.story.name || "Hero"} />
+                          <ResolvedImg src={heroThumb} alt={workingContent?.story.name || "Hero"} />
                         ) : (
                           <Laptop size={18} />
                         );
@@ -1544,7 +1811,12 @@ export function AdminLearnMorePages() {
                     </div>
                     <div className="vlearn-card-body">
                       <div className="vlearn-card-header">
-                        <span className="vlearn-card-type is-core">HERO STAGE</span>
+                        <span className="vlearn-card-type is-core">
+                          {workingContent.kind === "editorial" &&
+                          workingContent.story.hero?.mediaMode === "video"
+                            ? "TOP HERO VIDEO"
+                            : "HERO STAGE"}
+                        </span>
                         <span className="vlearn-card-meta-pill">Pinned Top</span>
                       </div>
                       <h4 className="vlearn-card-title">{workingContent?.story.name}</h4>
@@ -1566,7 +1838,7 @@ export function AdminLearnMorePages() {
                   >
                     <div className="vlearn-card-thumb is-video-thumb">
                       {getCinematicVideoThumbnail(workingContent) ? (
-                        <img src={getCinematicVideoThumbnail(workingContent)} alt="Video poster" />
+                        <ResolvedImg src={getCinematicVideoThumbnail(workingContent)} alt="Video poster" />
                       ) : (
                         <Video size={18} />
                       )}
@@ -1593,30 +1865,6 @@ export function AdminLearnMorePages() {
                       <p className="vlearn-card-desc">
                         {workingContent.story.cinematicVideo.subheadline || "Autoplaying hardware film"}
                       </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* If editorial story does not have cinematic video, provide an add card */}
-                {workingContent?.kind === "editorial" && !workingContent.story.cinematicVideo && (
-                  <div
-                    data-testid="outline-add-video-card"
-                    className="vlearn-section-card vlearn-section-card-empty-prompt"
-                    style={{ borderStyle: "dashed", opacity: 0.85, cursor: "pointer" }}
-                    onClick={() => handleAddSection("video")}
-                  >
-                    <div className="vlearn-card-thumb is-video-thumb" style={{ background: "rgba(255,255,255,0.04)" }}>
-                      <Video size={18} />
-                    </div>
-                    <div className="vlearn-card-body">
-                      <div className="vlearn-card-header">
-                        <span className="vlearn-card-type is-video">CINEMATIC VIDEO</span>
-                        <span className="vlearn-card-meta-pill" style={{ color: "#38bdf8" }}>+ Add</span>
-                      </div>
-                      <h4 className="vlearn-card-title" style={{ fontSize: "0.85rem", color: "var(--color-primary-accent, #38bdf8)" }}>
-                        + Add Cinematic Video Showcase
-                      </h4>
-                      <p className="vlearn-card-desc">Showcase product hardware in 4K continuous motion</p>
                     </div>
                   </div>
                 )}
@@ -1658,7 +1906,7 @@ export function AdminLearnMorePages() {
 
                   <div className="vlearn-card-thumb">
                     {thumb ? (
-                      <img src={thumb} alt={section.alt || section.title || ""} loading="lazy" />
+                      <ResolvedImg src={thumb} alt={section.alt || section.title || ""} />
                     ) : section.type === "video" ? (
                       <Video size={18} />
                     ) : section.type === "specifications" ? (
@@ -1682,6 +1930,7 @@ export function AdminLearnMorePages() {
                         <button
                           type="button"
                           className="vlearn-icon-btn"
+                          data-testid={`outline-move-up-${idx}`}
                           disabled={idx === 0}
                           onClick={() => handleMoveSection(idx, "up")}
                           title="Move section up"
@@ -1692,6 +1941,7 @@ export function AdminLearnMorePages() {
                         <button
                           type="button"
                           className="vlearn-icon-btn"
+                          data-testid={`outline-move-down-${idx}`}
                           disabled={idx === (workingContent?.sections.length || 0) - 1}
                           onClick={() => handleMoveSection(idx, "down")}
                           title="Move section down"
@@ -1720,6 +1970,7 @@ export function AdminLearnMorePages() {
                         <button
                           type="button"
                           className="vlearn-icon-btn vlearn-icon-btn-danger"
+                          data-testid={`outline-delete-${idx}`}
                           onClick={() => handleDeleteSection(section.id)}
                           title="Remove section"
                           aria-label="Remove section"
@@ -1729,10 +1980,10 @@ export function AdminLearnMorePages() {
                       </div>
                     </div>
 
-                    <h4 className="vlearn-card-title">{section.title || "Untitled Section"}</h4>
+                    <h4 className="vlearn-card-title">{section.title || section.internalName || "Untitled Section"}</h4>
                     <p className="vlearn-card-desc">
                       {section.eyebrow ? `${section.eyebrow} — ` : ""}
-                      {section.body || "Visual showcase section"}
+                      {section.body || section.subtitle || "Visual showcase section"}
                     </p>
                   </div>
                 </div>
@@ -1753,10 +2004,11 @@ export function AdminLearnMorePages() {
             <div className="vlearn-quick-presets-grid">
               {SECTION_TYPE_PRESETS.filter((p) => p.featured).slice(0, 6).map((preset) => (
                 <button
-                  key={preset.type}
+                  key={preset.presetKey || preset.type}
                   type="button"
+                  data-testid={`quick-insert-${preset.presetKey || preset.type}`}
                   className="vlearn-quick-chip"
-                  onClick={() => handleAddSection(preset.type)}
+                  onClick={() => handleAddSection(preset)}
                 >
                   <Plus size={11} /> {preset.shortName}
                 </button>
@@ -1771,7 +2023,7 @@ export function AdminLearnMorePages() {
             <div className="vlearn-inline-canvas-container">
               <div className="vlearn-inline-canvas-toolbar">
                 <span>
-                  Interactive Live Preview — <strong>{workingContent?.story.name}</strong> ({previewDevice.toUpperCase()})
+                  Interactive Live Preview — <strong>{workingContent?.story.name}</strong> ({previewDevice}px)
                 </span>
                 <button
                   type="button"
@@ -1833,17 +2085,21 @@ export function AdminLearnMorePages() {
                   </div>
                 </div>
 
-                {activeItemKey === "hero" && workingContent && !workingContent.isEmptyPage ? (
+                {activeItemKey === "hero" && workingContent ? (
                   <div className="vlearn-inspector-cards">
                     {/* Live Visual Hero Stage Preview Card */}
                     <div
                       className={`vlearn-live-stage-card ${
-                        workingContent.kind === "editorial" && workingContent.story.heroTone === "ink"
+                        workingContent.kind === "editorial" &&
+                        (workingContent.story.heroTone === "ink" ||
+                          workingContent.story.heroTone === "plum")
                           ? "is-dark"
                           : "is-light"
                       }`}
                     >
-                      <div className="vlearn-stage-badge">LIVE HERO PREVIEW</div>
+                      <div className="vlearn-stage-badge">
+                        LIVE TOP HERO PREVIEW ({workingContent.kind === "editorial" && workingContent.story.hero?.mediaMode === "video" ? "CINEMATIC VIDEO" : "IMAGE STAGE"})
+                      </div>
                       <div className="vlearn-stage-copy">
                         <span className="vlearn-stage-eyebrow">{workingContent.story.eyebrow}</span>
                         <h3 className="vlearn-stage-headline">{workingContent.story.name}</h3>
@@ -1851,6 +2107,22 @@ export function AdminLearnMorePages() {
                         <span className="vlearn-stage-cta">{getStoryBuyLabel(workingContent)}</span>
                       </div>
                       {(() => {
+                        const isHeroVideo =
+                          workingContent.kind === "editorial" &&
+                          workingContent.story.hero?.mediaMode === "video" &&
+                          Boolean(workingContent.story.hero?.videoSrc);
+                        if (isHeroVideo && workingContent.kind === "editorial") {
+                          return (
+                            <div className="vlearn-stage-art">
+                              <ResolvedVideo
+                                src={workingContent.story.hero.videoSrc}
+                                poster={workingContent.story.hero.posterSrc || workingContent.story.hero.src}
+                                controls
+                                muted
+                              />
+                            </div>
+                          );
+                        }
                         const rawHero = getHeroImageSrc(workingContent);
                         const cleanHero = rawHero && !isUnwantedAiAsset(rawHero) ? rawHero : "";
                         const heroSrc = cleanHero || resolveApprovedProductThumbnail(
@@ -1860,7 +2132,7 @@ export function AdminLearnMorePages() {
                         );
                         return heroSrc ? (
                           <div className="vlearn-stage-art">
-                            <img
+                            <ResolvedImg
                               src={heroSrc}
                               alt={getHeroImageAlt(workingContent)}
                               style={{
@@ -1875,17 +2147,19 @@ export function AdminLearnMorePages() {
 
                     {/* Hero Copy Settings Card */}
                     <div className="vlearn-editor-card">
-                      <h3 className="vlearn-card-section-heading">Hero Story &amp; Call-to-Action</h3>
+                      <h3 className="vlearn-card-section-heading">Hero Story, Introduction &amp; CTAs</h3>
                       <div className="vlearn-grid-2">
                         <div className="vlearn-form-group">
-                          <label className="vlearn-form-label">Product Name / Headline</label>
+                          <label className="vlearn-form-label">Product / Campaign Name *</label>
                           <input
                             type="text"
+                            data-testid="hero-story-name-input"
                             className="vlearn-input"
                             value={workingContent.story.name || ""}
                             onChange={(e) => {
                               const next = clone(workingContent);
                               next.story.name = e.target.value;
+                              if (next.isEmptyPage) delete next.isEmptyPage;
                               setWorkingContent(next);
                             }}
                           />
@@ -1895,11 +2169,13 @@ export function AdminLearnMorePages() {
                           <label className="vlearn-form-label">Hero Eyebrow</label>
                           <input
                             type="text"
+                            data-testid="hero-story-eyebrow-input"
                             className="vlearn-input"
                             value={workingContent.story.eyebrow || ""}
                             onChange={(e) => {
                               const next = clone(workingContent);
                               next.story.eyebrow = e.target.value;
+                              if (next.isEmptyPage) delete next.isEmptyPage;
                               setWorkingContent(next);
                             }}
                           />
@@ -1907,37 +2183,46 @@ export function AdminLearnMorePages() {
                       </div>
 
                       <div className="vlearn-form-group">
-                        <label className="vlearn-form-label">Tagline Statement</label>
+                        <label className="vlearn-form-label">Main Headline Tagline</label>
                         <textarea
+                          data-testid="hero-story-tagline-input"
                           className="vlearn-textarea"
                           value={getStoryTagline(workingContent)}
                           onChange={(e) => {
                             const next = clone(workingContent);
                             setStoryTagline(next, e.target.value);
+                            if (next.isEmptyPage) delete next.isEmptyPage;
                             setWorkingContent(next);
                           }}
                         />
                       </div>
 
-                      <div className="vlearn-grid-2">
+                      {workingContent.kind === "editorial" && (
                         <div className="vlearn-form-group">
-                          <label className="vlearn-form-label">Buy Button Destination</label>
-                          <input
-                            type="text"
-                            className="vlearn-input"
-                            value={getStoryBuyPath(workingContent)}
+                          <label className="vlearn-form-label">Introductory Story Copy (Optional)</label>
+                          <textarea
+                            data-testid="hero-story-intro-input"
+                            className="vlearn-textarea"
+                            placeholder="Brief introductory paragraph displayed cleanly beneath the headline above the video/image"
+                            value={workingContent.story.introText || ""}
                             onChange={(e) => {
                               const next = clone(workingContent);
-                              setStoryBuyPath(next, e.target.value);
+                              if (next.kind === "editorial") {
+                                next.story.introText = e.target.value || undefined;
+                              }
+                              if (next.isEmptyPage) delete next.isEmptyPage;
                               setWorkingContent(next);
                             }}
                           />
                         </div>
+                      )}
 
+                      <div className="vlearn-grid-2">
                         <div className="vlearn-form-group">
-                          <label className="vlearn-form-label">Buy Button Label</label>
+                          <label className="vlearn-form-label">Buy / Primary CTA Label</label>
                           <input
                             type="text"
+                            data-testid="hero-buy-label-input"
                             className="vlearn-input"
                             value={getStoryBuyLabel(workingContent)}
                             onChange={(e) => {
@@ -1947,12 +2232,269 @@ export function AdminLearnMorePages() {
                             }}
                           />
                         </div>
+
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Buy / Primary CTA Destination</label>
+                          <input
+                            type="text"
+                            data-testid="hero-buy-path-input"
+                            className="vlearn-input"
+                            value={getStoryBuyPath(workingContent)}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              setStoryBuyPath(next, e.target.value);
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
                       </div>
+
+                      {workingContent.kind === "editorial" && (
+                        <div className="vlearn-grid-2">
+                          <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                            <label className="vlearn-form-label">Secondary CTA Label (Optional)</label>
+                            <input
+                              type="text"
+                              className="vlearn-input"
+                              placeholder="e.g. Compare Models, Watch Demo"
+                              value={workingContent.story.secondaryLabel || ""}
+                              onChange={(e) => {
+                                const next = clone(workingContent);
+                                if (next.kind === "editorial") {
+                                  next.story.secondaryLabel = e.target.value || undefined;
+                                }
+                                setWorkingContent(next);
+                              }}
+                            />
+                          </div>
+                          <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                            <label className="vlearn-form-label">Secondary CTA Destination</label>
+                            <input
+                              type="text"
+                              className="vlearn-input"
+                              placeholder="/store"
+                              value={workingContent.story.secondaryPath || ""}
+                              onChange={(e) => {
+                                const next = clone(workingContent);
+                                if (next.kind === "editorial") {
+                                  next.story.secondaryPath = e.target.value || undefined;
+                                }
+                                setWorkingContent(next);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Hero Image & Positioning Card (supported across all Learn More types) */}
+                    {/* Top Cinematic Hero Video / Image & Presentation Card */}
                     <div className="vlearn-editor-card">
-                      <h3 className="vlearn-card-section-heading">Hero Image, Alt Text &amp; Positioning</h3>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+                        <h3 className="vlearn-card-section-heading" style={{ margin: 0 }}>
+                          Top Hero Cinematic Video / Image &amp; Theme
+                        </h3>
+                        {workingContent.kind === "editorial" && (
+                          <div className="vlearn-mode-group" role="group" aria-label="Hero Media Mode">
+                            <button
+                              type="button"
+                              data-testid="hero-media-mode-image"
+                              className={`vlearn-device-btn ${workingContent.story.hero?.mediaMode !== "video" ? "is-active" : ""}`}
+                              onClick={() => {
+                                const next = clone(workingContent);
+                                if (next.kind === "editorial") {
+                                  next.story.hero.mediaMode = "image";
+                                }
+                                setWorkingContent(next);
+                              }}
+                            >
+                              <ImageIcon size={13} /> Image Hero
+                            </button>
+                            <button
+                              type="button"
+                              data-testid="hero-media-mode-video"
+                              className={`vlearn-device-btn ${workingContent.story.hero?.mediaMode === "video" ? "is-active" : ""}`}
+                              onClick={() => {
+                                const next = clone(workingContent);
+                                if (next.kind === "editorial") {
+                                  next.story.hero.mediaMode = "video";
+                                }
+                                setWorkingContent(next);
+                              }}
+                            >
+                              <Film size={13} /> Cinematic Video Hero
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {workingContent.kind === "editorial" &&
+                        workingContent.story.hero?.mediaMode === "video" && (
+                          <div className="vlearn-media-picker-card" style={{ marginBottom: 14 }}>
+                            <label className="vlearn-form-label">
+                              Main Cinematic Hero Video (MP4 / WebM, max 200 MB)
+                            </label>
+                            <div className="vlearn-media-preview-box">
+                              {workingContent.story.hero.videoSrc ? (
+                                <ResolvedVideo
+                                  src={workingContent.story.hero.videoSrc}
+                                  poster={workingContent.story.hero.posterSrc || workingContent.story.hero.src}
+                                  controls
+                                  muted
+                                />
+                              ) : (
+                                <span style={{ color: "#86868b" }}>
+                                  No top hero video uploaded yet
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="vlearn-media-actions">
+                              <label className="vlearn-btn vlearn-btn-primary">
+                                <Upload size={14} /> Upload Hero Video
+                                <input
+                                  type="file"
+                                  data-testid="hero-video-upload-input"
+                                  accept={SUPPORTED_VIDEO_ACCEPT}
+                                  style={{ display: "none" }}
+                                  onChange={(e) => handleFileUpload(e, { field: "heroVideo" })}
+                                />
+                              </label>
+                              <label className="vlearn-btn">
+                                <Upload size={14} /> Upload Mobile Video
+                                <input
+                                  type="file"
+                                  accept={SUPPORTED_VIDEO_ACCEPT}
+                                  style={{ display: "none" }}
+                                  onChange={(e) => handleFileUpload(e, { field: "heroMobileVideo" })}
+                                />
+                              </label>
+                              <label className="vlearn-btn">
+                                <ImageIcon size={14} /> Upload Poster Image
+                                <input
+                                  type="file"
+                                  accept={SUPPORTED_IMAGE_ACCEPT}
+                                  style={{ display: "none" }}
+                                  onChange={(e) => handleFileUpload(e, { field: "heroPoster" })}
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                className="vlearn-btn"
+                                onClick={() => handleOpenMediaLibrary({ field: "heroVideo" })}
+                              >
+                                <Video size={14} /> Choose Video from Library
+                              </button>
+                            </div>
+
+                            <div className="vlearn-grid-3" style={{ marginTop: 10 }}>
+                              <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                                <label className="vlearn-form-label">Desktop Video URL</label>
+                                <input
+                                  type="text"
+                                  className="vlearn-input"
+                                  value={workingContent.story.hero.videoSrc || ""}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.videoSrc = e.target.value || undefined;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                              </div>
+                              <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                                <label className="vlearn-form-label">Mobile Video URL (Optional)</label>
+                                <input
+                                  type="text"
+                                  className="vlearn-input"
+                                  value={workingContent.story.hero.mobileVideoSrc || ""}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.mobileVideoSrc = e.target.value || undefined;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                              </div>
+                              <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                                <label className="vlearn-form-label">Poster / Fallback Image URL</label>
+                                <input
+                                  type="text"
+                                  className="vlearn-input"
+                                  value={workingContent.story.hero.posterSrc || ""}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.posterSrc = e.target.value || undefined;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 10 }}>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={workingContent.story.hero.autoplay !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.autoplay = e.target.checked;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Autoplay
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={workingContent.story.hero.muted !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.muted = e.target.checked;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Muted
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={workingContent.story.hero.loop !== false}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.loop = e.target.checked;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Loop Playback
+                              </label>
+                              <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(workingContent.story.hero.controls)}
+                                  onChange={(e) => {
+                                    const next = clone(workingContent);
+                                    if (next.kind === "editorial") {
+                                      next.story.hero.controls = e.target.checked;
+                                    }
+                                    setWorkingContent(next);
+                                  }}
+                                />
+                                Show Native Controls
+                              </label>
+                            </div>
+                          </div>
+                        )}
+
                       <div className="vlearn-media-picker-card">
                         <div className="vlearn-media-preview-box">
                           {(() => {
@@ -1964,7 +2506,7 @@ export function AdminLearnMorePages() {
                               getProductBySlug(workingContent?.story.slug || selectedSlug)
                             );
                             return heroSrc ? (
-                              <img
+                              <ResolvedImg
                                 src={heroSrc}
                                 alt={getHeroImageAlt(workingContent)}
                                 style={{
@@ -1980,14 +2522,25 @@ export function AdminLearnMorePages() {
 
                         <div className="vlearn-media-actions">
                           <label className="vlearn-btn vlearn-btn-primary">
-                            <Upload size={14} /> Upload Image
+                            <Upload size={14} /> Upload Desktop Image
                             <input
                               type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
+                              accept={SUPPORTED_IMAGE_ACCEPT}
                               style={{ display: "none" }}
                               onChange={(e) => handleFileUpload(e, { field: "heroImage" })}
                             />
                           </label>
+                          {workingContent.kind === "editorial" && (
+                            <label className="vlearn-btn">
+                              <Upload size={14} /> Upload Mobile Image
+                              <input
+                                type="file"
+                                accept={SUPPORTED_IMAGE_ACCEPT}
+                                style={{ display: "none" }}
+                                onChange={(e) => handleFileUpload(e, { field: "heroMobileImage" })}
+                              />
+                            </label>
+                          )}
                           <button
                             type="button"
                             className="vlearn-btn"
@@ -2027,10 +2580,78 @@ export function AdminLearnMorePages() {
                           </div>
                         </div>
 
+                        {workingContent.kind === "editorial" && (
+                          <div className="vlearn-grid-3" style={{ marginTop: 12 }}>
+                            <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                              <label className="vlearn-form-label">Hero Width Layout</label>
+                              <select
+                                className="vlearn-select"
+                                value={workingContent.story.hero.layout || "contained"}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  if (next.kind === "editorial") {
+                                    next.story.hero.layout = e.target.value as "contained" | "full-width";
+                                  }
+                                  setWorkingContent(next);
+                                }}
+                              >
+                                <option value="contained">Contained Cinema Frame</option>
+                                <option value="full-width">Full-Width Edge Stage</option>
+                              </select>
+                            </div>
+                            <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                              <label className="vlearn-form-label">Hero Theme / Text Tone</label>
+                              <select
+                                className="vlearn-select"
+                                value={workingContent.story.heroTone || "ink"}
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  if (next.kind === "editorial") {
+                                    next.story.heroTone = e.target.value as any;
+                                  }
+                                  setWorkingContent(next);
+                                }}
+                              >
+                                <option value="ink">Dark (#050505 · Light Text)</option>
+                                <option value="light">Light (#f5f5f7 · Dark Text)</option>
+                                <option value="blue">Cool Accent (Light)</option>
+                                <option value="plum">Plum Accent (Dark)</option>
+                                <option value="sage">Sage Accent (Light)</option>
+                              </select>
+                            </div>
+                            <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
+                              <label className="vlearn-form-label">Custom BG Color / Gradient</label>
+                              <input
+                                type="text"
+                                className="vlearn-input"
+                                placeholder="#000000 or linear-gradient(...)"
+                                value={
+                                  workingContent.story.backgroundGradient ||
+                                  workingContent.story.backgroundColor ||
+                                  ""
+                                }
+                                onChange={(e) => {
+                                  const next = clone(workingContent);
+                                  if (next.kind === "editorial") {
+                                    const val = e.target.value;
+                                    if (val.includes("gradient")) {
+                                      next.story.backgroundGradient = val;
+                                    } else {
+                                      next.story.backgroundGradient = undefined;
+                                      next.story.backgroundColor = val || undefined;
+                                    }
+                                  }
+                                  setWorkingContent(next);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         {(workingContent.kind !== "catalog" || workingContent.story.media.type === "image") && (
                           <div className="vlearn-grid-2" style={{ marginTop: 12 }}>
                             <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
-                              <label className="vlearn-form-label">Image Fit</label>
+                              <label className="vlearn-form-label">Media Fit</label>
                               <select
                                 className="vlearn-select"
                                 value={getHeroFit(workingContent)}
@@ -2046,7 +2667,7 @@ export function AdminLearnMorePages() {
                             </div>
 
                             <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
-                              <label className="vlearn-form-label">Image Focal Positioning</label>
+                              <label className="vlearn-form-label">Media Focal Positioning</label>
                               <select
                                 className="vlearn-select"
                                 value={getHeroPosition(workingContent)}
@@ -2109,7 +2730,7 @@ export function AdminLearnMorePages() {
                       <div className="vlearn-media-picker-card">
                         <label className="vlearn-form-label">4K Cinematic Video Stream</label>
                         <div className="vlearn-media-preview-box">
-                          <video
+                          <ResolvedVideo
                             src={workingContent.story.cinematicVideo.src}
                             poster={getCinematicVideoThumbnail(workingContent)}
                             controls
@@ -2121,9 +2742,18 @@ export function AdminLearnMorePages() {
                             <Upload size={14} /> Upload Video (MP4/WebM)
                             <input
                               type="file"
-                              accept="video/mp4,video/webm"
+                              accept={SUPPORTED_VIDEO_ACCEPT}
                               style={{ display: "none" }}
                               onChange={(e) => handleFileUpload(e, { field: "videoSrc" })}
+                            />
+                          </label>
+                          <label className="vlearn-btn">
+                            <Upload size={14} /> Upload Mobile Video
+                            <input
+                              type="file"
+                              accept={SUPPORTED_VIDEO_ACCEPT}
+                              style={{ display: "none" }}
+                              onChange={(e) => handleFileUpload(e, { field: "mobileVideoSrc" })}
                             />
                           </label>
                           <button
@@ -2192,12 +2822,20 @@ export function AdminLearnMorePages() {
                     {/* Live Visual Section Preview Stage */}
                     <div
                       className={`vlearn-live-stage-card ${
-                        activeSection.backgroundColor === "dark"
+                        activeSection.tone === "light" || activeSection.backgroundColor === "dark"
                           ? "is-dark"
                           : activeSection.backgroundColor === "soft-gray"
                           ? "is-soft-gray"
                           : "is-light"
                       } ${!activeSection.enabled ? "is-hidden-section" : ""}`}
+                      style={
+                        activeSection.backgroundGradient
+                          ? { background: activeSection.backgroundGradient }
+                          : activeSection.backgroundColor &&
+                              !["white", "soft-gray", "dark"].includes(activeSection.backgroundColor)
+                            ? { background: activeSection.backgroundColor }
+                            : undefined
+                      }
                     >
                       <div className="vlearn-stage-top-bar">
                         <span className="vlearn-stage-badge">
@@ -2241,8 +2879,13 @@ export function AdminLearnMorePages() {
                             <span className="vlearn-stage-eyebrow">{activeSection.eyebrow}</span>
                           )}
                           <h3 className="vlearn-stage-headline">
-                            {activeSection.title || "Untitled Section"}
+                            {activeSection.title || activeSection.internalName || "Untitled Section"}
                           </h3>
+                          {activeSection.subtitle && (
+                            <p className="vlearn-stage-tagline" style={{ fontWeight: 500 }}>
+                              {activeSection.subtitle}
+                            </p>
+                          )}
                           {activeSection.body && (
                             <p className="vlearn-stage-tagline">{activeSection.body}</p>
                           )}
@@ -2250,16 +2893,32 @@ export function AdminLearnMorePages() {
                             <span className="vlearn-stage-cta">{activeSection.buttonLabel}</span>
                           )}
                         </div>
-                        {getSectionThumbnail(activeSection) && (
+                        {(activeSection.video || getSectionThumbnail(activeSection)) && (
                           <div className="vlearn-stage-art">
-                            <img
-                              src={getSectionThumbnail(activeSection)}
-                              alt={activeSection.alt || activeSection.title}
-                              style={{
-                                objectFit: activeSection.fit || "contain",
-                                objectPosition: activeSection.position || "center",
-                              }}
-                            />
+                            {activeSection.video ? (
+                              <ResolvedVideo
+                                src={activeSection.video}
+                                poster={activeSection.poster || getSectionThumbnail(activeSection)}
+                                controls={false}
+                                muted
+                                style={{
+                                  objectFit: activeSection.fit || "cover",
+                                  objectPosition: activeSection.position || "center",
+                                  maxWidth: "100%",
+                                  maxHeight: "220px",
+                                  borderRadius: "10px",
+                                }}
+                              />
+                            ) : (
+                              <ResolvedImg
+                                src={getSectionThumbnail(activeSection)}
+                                alt={activeSection.alt || activeSection.title}
+                                style={{
+                                  objectFit: activeSection.fit || "contain",
+                                  objectPosition: activeSection.position || "center",
+                                }}
+                              />
+                            )}
                           </div>
                         )}
                       </div>
@@ -2269,6 +2928,23 @@ export function AdminLearnMorePages() {
                     <div className="vlearn-editor-card">
                       <h3 className="vlearn-card-section-heading">1. Story Copy &amp; Headline</h3>
                       <div className="vlearn-grid-2">
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Internal Section Name (Admin)</label>
+                          <input
+                            type="text"
+                            data-testid="section-internal-name-input"
+                            className="vlearn-input"
+                            placeholder="e.g. Titanium Architecture Split"
+                            value={activeSection.internalName || ""}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.internalName = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
+
                         <div className="vlearn-form-group">
                           <label className="vlearn-form-label">Section Eyebrow</label>
                           <input
@@ -2298,7 +2974,7 @@ export function AdminLearnMorePages() {
                             }}
                           >
                             {SECTION_TYPE_PRESETS.map((p) => (
-                              <option key={p.type} value={p.type}>
+                              <option key={p.presetKey || p.type} value={p.type}>
                                 {p.shortName} — {p.label}
                               </option>
                             ))}
@@ -2328,20 +3004,39 @@ export function AdminLearnMorePages() {
                         </div>
                       </div>
 
-                      <div className="vlearn-form-group">
-                        <label className="vlearn-form-label">Section Headline</label>
-                        <input
-                          type="text"
-                          data-testid="section-title-input"
-                          className="vlearn-input"
-                          value={activeSection.title}
-                          onChange={(e) => {
-                            const next = clone(workingContent);
-                            const s = next.sections.find((sec) => sec.id === activeSection.id);
-                            if (s) s.title = e.target.value;
-                            setWorkingContent(next);
-                          }}
-                        />
+                      <div className="vlearn-grid-2">
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Section Headline</label>
+                          <input
+                            type="text"
+                            data-testid="section-title-input"
+                            className="vlearn-input"
+                            value={activeSection.title}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.title = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
+
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Section Subtitle (Optional)</label>
+                          <input
+                            type="text"
+                            data-testid="section-subtitle-input"
+                            className="vlearn-input"
+                            placeholder="Short deck under the headline"
+                            value={activeSection.subtitle || ""}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.subtitle = e.target.value;
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
                       </div>
 
                       <div className="vlearn-form-group">
@@ -2360,7 +3055,7 @@ export function AdminLearnMorePages() {
                       </div>
 
                       <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
-                        <label className="vlearn-form-label">Supporting / Subtitle Text (Optional)</label>
+                        <label className="vlearn-form-label">Supporting Footer Note (Optional)</label>
                         <input
                           type="text"
                           className="vlearn-input"
@@ -2393,7 +3088,8 @@ export function AdminLearnMorePages() {
                                 <Upload size={14} /> Upload Gallery Image
                                 <input
                                   type="file"
-                                  accept="image/jpeg,image/png,image/webp,image/avif"
+                                  data-testid="section-gallery-upload-input"
+                                  accept={SUPPORTED_IMAGE_ACCEPT}
                                   style={{ display: "none" }}
                                   onChange={(e) =>
                                     handleFileUpload(e, {
@@ -2423,14 +3119,51 @@ export function AdminLearnMorePages() {
                           <div className="vlearn-gallery-editor-grid">
                             {(activeSection.images || []).map((imgUrl, gIdx) => (
                               <div key={`${imgUrl}-${gIdx}`} className="vlearn-gallery-editor-item">
-                                <img src={imgUrl} alt="" />
+                                <ResolvedImg src={imgUrl} alt="" />
+                                <div style={{ padding: "6px 8px 0" }}>
+                                  <input
+                                    type="text"
+                                    className="vlearn-input"
+                                    style={{ fontSize: 11, padding: "4px 6px" }}
+                                    placeholder={`Caption #${gIdx + 1} (optional)`}
+                                    value={activeSection.galleryCaptions?.[gIdx] || ""}
+                                    onChange={(e) => {
+                                      const next = clone(workingContent);
+                                      const s = next.sections.find((sec) => sec.id === activeSection.id);
+                                      if (s) {
+                                        s.galleryCaptions = [...(s.galleryCaptions || [])];
+                                        s.galleryCaptions[gIdx] = e.target.value;
+                                        setWorkingContent(next);
+                                      }
+                                    }}
+                                  />
+                                </div>
                                 <div className="vlearn-gallery-item-bar">
                                   <span>#{gIdx + 1}</span>
-                                  <div>
+                                  <div style={{ display: "flex", gap: 4 }}>
+                                    <label
+                                      className="vlearn-icon-btn"
+                                      title="Upload replacement image"
+                                      style={{ cursor: "pointer", display: "inline-flex", alignItems: "center" }}
+                                    >
+                                      <Upload size={12} />
+                                      <input
+                                        type="file"
+                                        accept={SUPPORTED_IMAGE_ACCEPT}
+                                        style={{ display: "none" }}
+                                        onChange={(e) =>
+                                          handleFileUpload(e, {
+                                            sectionId: activeSection.id,
+                                            field: "images",
+                                            galleryIndex: gIdx,
+                                          })
+                                        }
+                                      />
+                                    </label>
                                     <button
                                       type="button"
                                       className="vlearn-icon-btn"
-                                      title="Replace image"
+                                      title="Replace from library"
                                       onClick={() =>
                                         handleOpenMediaLibrary({
                                           sectionId: activeSection.id,
@@ -2450,6 +3183,7 @@ export function AdminLearnMorePages() {
                                         const s = next.sections.find((sec) => sec.id === activeSection.id);
                                         if (s?.images) {
                                           s.images.splice(gIdx, 1);
+                                          if (s.galleryCaptions) s.galleryCaptions.splice(gIdx, 1);
                                           setWorkingContent(next);
                                         }
                                       }}
@@ -2467,12 +3201,11 @@ export function AdminLearnMorePages() {
                           <label className="vlearn-form-label">Cinematic Video &amp; Poster Preview</label>
                           <div className="vlearn-media-preview-box">
                             {activeSection.video ? (
-                              <video
+                              <ResolvedVideo
                                 src={activeSection.video}
                                 poster={activeSection.poster}
                                 controls
                                 muted
-                                playsInline
                               />
                             ) : (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, color: "#86868b", padding: "30px 0" }}>
@@ -2487,9 +3220,19 @@ export function AdminLearnMorePages() {
                               <Upload size={14} /> Upload Video (MP4/WebM)
                               <input
                                 type="file"
-                                accept="video/mp4,video/webm"
+                                data-testid="section-video-upload-input"
+                                accept={SUPPORTED_VIDEO_ACCEPT}
                                 style={{ display: "none" }}
                                 onChange={(e) => void handleFileUpload(e, { sectionId: activeSection.id, field: "video" })}
+                              />
+                            </label>
+                            <label className="vlearn-btn">
+                              <Upload size={14} /> Upload Mobile Video
+                              <input
+                                type="file"
+                                accept={SUPPORTED_VIDEO_ACCEPT}
+                                style={{ display: "none" }}
+                                onChange={(e) => void handleFileUpload(e, { sectionId: activeSection.id, field: "mobileVideo" })}
                               />
                             </label>
                             <button
@@ -2503,7 +3246,7 @@ export function AdminLearnMorePages() {
                               <Upload size={14} /> Upload Poster
                               <input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp,image/avif"
+                                accept={SUPPORTED_IMAGE_ACCEPT}
                                 style={{ display: "none" }}
                                 onChange={(e) => void handleFileUpload(e, { sectionId: activeSection.id, field: "poster" })}
                               />
@@ -2663,9 +3406,9 @@ export function AdminLearnMorePages() {
                         <div className="vlearn-media-picker-card">
                           <div className="vlearn-media-preview-box">
                             {activeSection.video ? (
-                              <video src={activeSection.video} poster={activeSection.poster} controls />
+                              <ResolvedVideo src={activeSection.video} poster={activeSection.poster} controls muted />
                             ) : activeSection.image ? (
-                              <img
+                              <ResolvedImg
                                 src={activeSection.image}
                                 alt={activeSection.alt || ""}
                                 style={{
@@ -2683,7 +3426,7 @@ export function AdminLearnMorePages() {
                               <Upload size={14} /> Upload Image / Video
                               <input
                                 type="file"
-                                accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm"
+                                accept={`${SUPPORTED_IMAGE_ACCEPT},${SUPPORTED_VIDEO_ACCEPT}`}
                                 data-testid="section-media-upload-input"
                                 style={{ display: "none" }}
                                 onChange={(e) => {
@@ -2696,6 +3439,17 @@ export function AdminLearnMorePages() {
                                 }}
                               />
                             </label>
+                            <label className="vlearn-btn">
+                              <Upload size={14} /> Upload Mobile Image
+                              <input
+                                type="file"
+                                accept={SUPPORTED_IMAGE_ACCEPT}
+                                style={{ display: "none" }}
+                                onChange={(e) =>
+                                  void handleFileUpload(e, { sectionId: activeSection.id, field: "mobileImage" })
+                                }
+                              />
+                            </label>
                             <button
                               type="button"
                               data-testid="open-media-library-btn"
@@ -2704,7 +3458,7 @@ export function AdminLearnMorePages() {
                                 handleOpenMediaLibrary({ sectionId: activeSection.id, field: "image" })
                               }
                             >
-                              <ImageIcon size={14} /> Choose Image from Library
+                              <ImageIcon size={14} /> Choose Image
                             </button>
                             <button
                               type="button"
@@ -2715,7 +3469,7 @@ export function AdminLearnMorePages() {
                             >
                               <Video size={14} /> Choose Video
                             </button>
-                            {(activeSection.image || activeSection.video) && (
+                            {(activeSection.image || activeSection.video || activeSection.mobileImage) && (
                               <button
                                 type="button"
                                 className="vlearn-btn vlearn-btn-danger-outline"
@@ -2724,7 +3478,10 @@ export function AdminLearnMorePages() {
                                   const s = next.sections.find((sec) => sec.id === activeSection.id);
                                   if (s) {
                                     s.image = undefined;
+                                    s.mobileImage = undefined;
                                     s.video = undefined;
+                                    s.mobileVideo = undefined;
+                                    s.poster = undefined;
                                   }
                                   setWorkingContent(next);
                                 }}
@@ -2787,6 +3544,39 @@ export function AdminLearnMorePages() {
                         </div>
                       </div>
 
+                      <div className="vlearn-grid-2">
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Desktop Video URL (Optional)</label>
+                          <input
+                            type="text"
+                            className="vlearn-input"
+                            placeholder="Optional section MP4 / WebM URL"
+                            value={activeSection.video || ""}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.video = e.target.value || undefined;
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Mobile Image Override (Optional)</label>
+                          <input
+                            type="text"
+                            className="vlearn-input"
+                            placeholder="Optional mobile crop URL"
+                            value={activeSection.mobileImage || ""}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.mobileImage = e.target.value || undefined;
+                              setWorkingContent(next);
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       <div className="vlearn-grid-3">
                         <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
                           <label className="vlearn-form-label">Image Fit</label>
@@ -2806,7 +3596,7 @@ export function AdminLearnMorePages() {
                         </div>
 
                         <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
-                          <label className="vlearn-form-label">Image Positioning / Focal Point</label>
+                          <label className="vlearn-form-label">Desktop Focal Point</label>
                           <select
                             data-testid="section-position-select"
                             className="vlearn-select"
@@ -2827,19 +3617,23 @@ export function AdminLearnMorePages() {
                         </div>
 
                         <div className="vlearn-form-group" style={{ marginBottom: 0 }}>
-                          <label className="vlearn-form-label">Mobile Image Override (Optional)</label>
-                          <input
-                            type="text"
-                            className="vlearn-input"
-                            placeholder="Optional mobile crop URL"
-                            value={activeSection.mobileImage || ""}
+                          <label className="vlearn-form-label">Mobile Focal Point</label>
+                          <select
+                            className="vlearn-select"
+                            value={activeSection.mobilePosition || activeSection.position || "center"}
                             onChange={(e) => {
                               const next = clone(workingContent);
                               const s = next.sections.find((sec) => sec.id === activeSection.id);
-                              if (s) s.mobileImage = e.target.value;
+                              if (s) s.mobilePosition = e.target.value;
                               setWorkingContent(next);
                             }}
-                          />
+                          >
+                            {FOCAL_POSITIONS.map((fp) => (
+                              <option key={fp.value} value={fp.value}>
+                                {fp.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -2849,14 +3643,22 @@ export function AdminLearnMorePages() {
                       <h3 className="vlearn-card-section-heading">3. Layout, Theme &amp; Buy Link</h3>
                       <div className="vlearn-grid-2">
                         <div className="vlearn-form-group">
-                          <label className="vlearn-form-label">Background Theme</label>
+                          <label className="vlearn-form-label">Background Theme / Hex Color</label>
                           <select
                             className="vlearn-select"
-                            value={activeSection.backgroundColor || "white"}
+                            value={
+                              ["white", "soft-gray", "dark"].includes(activeSection.backgroundColor || "white")
+                                ? activeSection.backgroundColor || "white"
+                                : "white"
+                            }
                             onChange={(e) => {
                               const next = clone(workingContent);
                               const s = next.sections.find((sec) => sec.id === activeSection.id);
-                              if (s) s.backgroundColor = e.target.value;
+                              if (s) {
+                                s.backgroundColor = e.target.value;
+                                if (e.target.value === "dark") s.tone = "light";
+                                else if (!s.tone) s.tone = "dark";
+                              }
                               setWorkingContent(next);
                             }}
                           >
@@ -2864,6 +3666,62 @@ export function AdminLearnMorePages() {
                             <option value="soft-gray">Soft Gray (#f5f5f7)</option>
                             <option value="dark">Cinematic Dark (#000000)</option>
                           </select>
+                        </div>
+
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Text Tone</label>
+                          <select
+                            className="vlearn-select"
+                            value={
+                              activeSection.tone ||
+                              (activeSection.backgroundColor === "dark" ? "light" : "dark")
+                            }
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.tone = e.target.value as "light" | "dark";
+                              setWorkingContent(next);
+                            }}
+                          >
+                            <option value="dark">Dark Ink (for light backgrounds)</option>
+                            <option value="light">Light Ink (for dark backgrounds)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="vlearn-grid-2">
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Custom Background Color or CSS Gradient</label>
+                          <input
+                            type="text"
+                            className="vlearn-input"
+                            placeholder="e.g. #0b132b or linear-gradient(135deg, #090d16, #1b2845)"
+                            value={
+                              activeSection.backgroundGradient ||
+                              (!["white", "soft-gray", "dark"].includes(activeSection.backgroundColor || "")
+                                ? activeSection.backgroundColor || ""
+                                : "")
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) {
+                                if (val.includes("gradient(")) {
+                                  s.backgroundGradient = val;
+                                } else {
+                                  s.backgroundGradient = undefined;
+                                  if (val.trim()) s.backgroundColor = val.trim();
+                                  else if (
+                                    !["white", "soft-gray", "dark"].includes(s.backgroundColor || "")
+                                  ) {
+                                    s.backgroundColor = "white";
+                                  }
+                                }
+                              }
+                              setWorkingContent(next);
+                            }}
+                          />
                         </div>
 
                         <div className="vlearn-form-group">
@@ -2889,6 +3747,7 @@ export function AdminLearnMorePages() {
                         <div className="vlearn-form-group">
                           <label className="vlearn-form-label">Layout Arrangement</label>
                           <select
+                            data-testid="section-layout-select"
                             className="vlearn-select"
                             value={activeSection.layout || "stacked"}
                             onChange={(e) => {
@@ -2898,12 +3757,50 @@ export function AdminLearnMorePages() {
                               setWorkingContent(next);
                             }}
                           >
-                            <option value="stacked">Stacked (Copy over visual)</option>
-                            <option value="split-left">Split Left (Visual Left, Copy Right)</option>
-                            <option value="split-right">Split Right (Copy Left, Visual Right)</option>
-                            <option value="grid-2">2-Column Feature Grid</option>
+                            <option value="split-left">Layout A: Image / Media Left, Text Right</option>
+                            <option value="split-right">Layout B: Text Left, Image / Media Right</option>
+                            <option value="stacked">Layout F: Text Above Media (Stacked)</option>
+                            <option value="full-width">Layout C/D: Full-Width Showcase</option>
+                            <option value="grid-2">Layout E: Side-by-Side 2-Column Grid</option>
                             <option value="grid-3">3-Column Feature Grid</option>
-                            <option value="carousel">Horizontal Carousel Rail</option>
+                            <option value="carousel">Horizontal Gallery / Carousel Rail</option>
+                          </select>
+                        </div>
+
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Container Width</label>
+                          <select
+                            className="vlearn-select"
+                            value={activeSection.containerMode || "contained"}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.containerMode = e.target.value as "contained" | "full-width";
+                              setWorkingContent(next);
+                            }}
+                          >
+                            <option value="contained">Contained Editorial Frame</option>
+                            <option value="full-width">Full-Bleed Edge to Edge</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="vlearn-grid-2">
+                        <div className="vlearn-form-group">
+                          <label className="vlearn-form-label">Vertical Spacing</label>
+                          <select
+                            className="vlearn-select"
+                            value={activeSection.spacing || "normal"}
+                            onChange={(e) => {
+                              const next = clone(workingContent);
+                              const s = next.sections.find((sec) => sec.id === activeSection.id);
+                              if (s) s.spacing = e.target.value as "compact" | "normal" | "spacious";
+                              setWorkingContent(next);
+                            }}
+                          >
+                            <option value="normal">Standard Breathing Room</option>
+                            <option value="compact">Compact Editorial Rhythm</option>
+                            <option value="spacious">Spacious Keynote Pacing</option>
                           </select>
                         </div>
 
@@ -3044,10 +3941,29 @@ export function AdminLearnMorePages() {
                                     setWorkingContent(next);
                                   }}
                                 />
+                                <label
+                                  className="vlearn-btn vlearn-btn-sm"
+                                  title="Upload card image"
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <Upload size={13} />
+                                  <input
+                                    type="file"
+                                    accept={SUPPORTED_IMAGE_ACCEPT}
+                                    style={{ display: "none" }}
+                                    onChange={(e) =>
+                                      void handleFileUpload(e, {
+                                        sectionId: activeSection.id,
+                                        field: "image",
+                                        itemIndex: itemIdx,
+                                      })
+                                    }
+                                  />
+                                </label>
                                 <button
                                   type="button"
                                   className="vlearn-btn vlearn-btn-sm"
-                                  title="Select card image"
+                                  title="Select card image from library"
                                   onClick={() =>
                                     handleOpenMediaLibrary({
                                       sectionId: activeSection.id,
@@ -3123,10 +4039,10 @@ export function AdminLearnMorePages() {
                       <div className="vlearn-quick-presets-grid" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {SECTION_TYPE_PRESETS.filter((p) => p.featured).map((preset) => (
                           <button
-                            key={preset.type}
+                            key={preset.presetKey || preset.type}
                             type="button"
                             className="vlearn-quick-chip"
-                            onClick={() => handleAddSection(preset.type)}
+                            onClick={() => handleAddSection(preset)}
                           >
                             <Plus size={11} /> {preset.label}
                           </button>
@@ -3407,11 +4323,11 @@ export function AdminLearnMorePages() {
                 {filteredPresets.map((preset) => (
                   <button
                     type="button"
-                    key={preset.type}
-                    data-testid={`library-preset-${preset.type}`}
+                    key={preset.presetKey || preset.type}
+                    data-testid={`library-preset-${preset.presetKey || preset.type}`}
                     className={`vlearn-template-card ${preset.featured ? "is-featured" : ""}`}
                     onClick={() => {
-                      handleAddSection(preset.type);
+                      handleAddSection(preset);
                       setShowAddSectionModal(false);
                     }}
                   >
@@ -3440,37 +4356,32 @@ export function AdminLearnMorePages() {
         <div className="vlearn-modal-backdrop vlearn-modal-overlay" onClick={() => setShowPreviewModal(false)}>
           <div
             className="vlearn-modal-dialog"
-            style={{ width: "96vw", maxWidth: "1400px", height: "92vh", maxHeight: "92vh" }}
+            style={{ width: "96vw", maxWidth: "1480px", height: "92vh", maxHeight: "92vh" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="vlearn-modal-header">
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <h3 style={{ margin: 0 }}>Live Preview — {workingContent.story.name}</h3>
                 <div className="vlearn-device-group">
-                  <button
-                    type="button"
-                    data-testid="preview-device-desktop"
-                    className={`vlearn-device-btn ${previewDevice === "desktop" ? "is-active" : ""}`}
-                    onClick={() => setPreviewDevice("desktop")}
-                  >
-                    <Monitor size={14} /> Desktop (1280px)
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="preview-device-tablet"
-                    className={`vlearn-device-btn ${previewDevice === "tablet" ? "is-active" : ""}`}
-                    onClick={() => setPreviewDevice("tablet")}
-                  >
-                    <Tablet size={14} /> Tablet (768px)
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="preview-device-mobile"
-                    className={`vlearn-device-btn ${previewDevice === "mobile" ? "is-active" : ""}`}
-                    onClick={() => setPreviewDevice("mobile")}
-                  >
-                    <Smartphone size={14} /> Mobile (390px)
-                  </button>
+                  {(
+                    [
+                      { key: "1440", label: "Desktop 1440px", icon: <Monitor size={14} />, testId: "preview-device-1440" },
+                      { key: "1024", label: "Laptop 1024px", icon: <Monitor size={14} />, testId: "preview-device-1024" },
+                      { key: "834", label: "Tablet 834px", icon: <Tablet size={14} />, testId: "preview-device-834" },
+                      { key: "390", label: "Mobile 390px", icon: <Smartphone size={14} />, testId: "preview-device-390" },
+                      { key: "375", label: "Compact 375px", icon: <Smartphone size={14} />, testId: "preview-device-375" },
+                    ] as const
+                  ).map((vp) => (
+                    <button
+                      key={vp.key}
+                      type="button"
+                      data-testid={vp.testId}
+                      className={`vlearn-device-btn ${previewDevice === vp.key ? "is-active" : ""}`}
+                      onClick={() => setPreviewDevice(vp.key)}
+                    >
+                      {vp.icon} {vp.label}
+                    </button>
+                  ))}
                 </div>
               </div>
               <button
@@ -3484,6 +4395,112 @@ export function AdminLearnMorePages() {
             </div>
 
             <div className="vlearn-preview-viewport">{renderLivePagePreview()}</div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Create Custom Learn More Page Modal */}
+      {showCreatePageModal && (
+        <div className="vlearn-modal-backdrop" onClick={() => setShowCreatePageModal(false)}>
+          <div
+            className="vlearn-modal-dialog"
+            style={{ maxWidth: 540 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="vlearn-modal-header">
+              <div>
+                <h3 style={{ margin: 0 }}>New Campaign Learn More Page</h3>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6e6e73" }}>
+                  Creates a data-driven `/learn-more/slug` editorial page ready for draft editing, preview, and live publishing.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="vlearn-icon-btn"
+                onClick={() => setShowCreatePageModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="vlearn-modal-content" style={{ padding: "20px 24px" }}>
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Campaign / Product Name</label>
+                <input
+                  type="text"
+                  data-testid="new-learn-more-name-input"
+                  className="vlearn-input"
+                  placeholder="e.g. Gifts They'll Love"
+                  value={newPageName}
+                  onChange={(e) => setNewPageName(e.target.value)}
+                />
+              </div>
+
+              <div className="vlearn-grid-2">
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">URL Slug</label>
+                  <input
+                    type="text"
+                    data-testid="new-learn-more-slug-input"
+                    className="vlearn-input"
+                    placeholder="e.g. gifts-theyll-love"
+                    value={newPageSlug}
+                    onChange={(e) => setNewPageSlug(e.target.value)}
+                  />
+                </div>
+                <div className="vlearn-form-group">
+                  <label className="vlearn-form-label">Default Hero Tone</label>
+                  <select
+                    className="vlearn-select"
+                    value={newPageTone}
+                    onChange={(e) => setNewPageTone(e.target.value as "ink" | "light")}
+                  >
+                    <option value="ink">Cinematic Dark Hero (Ink)</option>
+                    <option value="light">Crisp Light Hero</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="vlearn-form-group">
+                <label className="vlearn-form-label">Headline / Tagline</label>
+                <input
+                  type="text"
+                  className="vlearn-input"
+                  placeholder="Short editorial promise"
+                  value={newPageTagline}
+                  onChange={(e) => setNewPageTagline(e.target.value)}
+                />
+              </div>
+
+              <div className="vlearn-form-group" style={{ marginBottom: 20 }}>
+                <label className="vlearn-form-label">Primary Buy / Shop Destination</label>
+                <input
+                  type="text"
+                  className="vlearn-input"
+                  placeholder="/store"
+                  value={newPageBuyPath}
+                  onChange={(e) => setNewPageBuyPath(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <button
+                  type="button"
+                  className="vlearn-btn"
+                  onClick={() => setShowCreatePageModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  data-testid="confirm-create-learn-more-btn"
+                  className="vlearn-btn vlearn-btn-primary"
+                  onClick={() => void handleCreateCustomPage()}
+                >
+                  <Plus size={14} /> Create &amp; Edit Page
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

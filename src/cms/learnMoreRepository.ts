@@ -1,11 +1,18 @@
 import * as tus from "tus-js-client";
-import { assertAdminAal2, isPreviewMode } from "../admin/adminAuthorization";
+import { assertAdminAal2, isLocalAdminActive, isPreviewMode } from "../admin/adminAuthorization";
 import { editorialStories, type EditorialStory } from "../catalog/editorialStories";
 import { defaultEditorialShowcases } from "../catalog/minimalEditorialSections";
 import { getProductFamily, productBuyPath, productStories, type ProductFamilyKey, type ProductStoryDefinition } from "../catalog/productExperience";
 import { seedCatalog } from "../catalog/productCatalog";
 import { iphone18ProEducation, type IphoneEducationContent } from "../data/iphone18ProEducation";
 import { macStudioStory, type MacStudioStory } from "../data/macStudioStory";
+import {
+  getLocalStagedMediaRecord,
+  isLocalMediaUri,
+  validateLocalMediaFile,
+  type LocalMediaKind,
+  type LocalStagedMediaRecord,
+} from "./localMediaStore";
 import { getSupabaseOrThrow, supabase } from "../lib/supabase";
 import type { Product } from "../types/product";
 import { localCatalogueImageBySlug } from "../utils/catalogueProductImages";
@@ -40,23 +47,31 @@ export interface LearnMoreSectionItem {
 
 export interface LearnMoreSection {
   id: string;
+  internalName?: string;
   type: LearnMoreSectionType;
   enabled: boolean;
   placement?: string;
   eyebrow: string;
   title: string;
+  subtitle?: string;
   body: string;
   supportingText?: string;
   backgroundColor?: "white" | "soft-gray" | "dark" | string;
+  backgroundGradient?: string;
+  tone?: "light" | "dark";
+  spacing?: "compact" | "normal" | "spacious";
+  containerMode?: "contained" | "full-width";
   textAlignment?: "left" | "center" | "right";
-  layout?: "split-left" | "split-right" | "stacked" | "grid-2" | "grid-3" | "carousel";
+  layout?: "split-left" | "split-right" | "stacked" | "grid-2" | "grid-3" | "carousel" | "full-width";
   animationPreset?: "fade" | "slide-up" | "zoom" | "none";
   image?: string;
   mobileImage?: string;
   images?: string[];
+  galleryCaptions?: string[];
   alt?: string;
   fit?: "contain" | "cover";
   position?: string;
+  mobilePosition?: string;
   frameAspectRatio?: number;
   video?: string;
   mobileVideo?: string;
@@ -327,8 +342,13 @@ export async function fetchPublishedLearnMore(id: string, forceRefresh = false):
   return content;
 }
 
+const isOfflinePreviewDraftMode = (): boolean =>
+  !supabase && (isLocalAdminActive() || isPreviewMode());
+
 export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent | null> {
-  await assertAdminAal2();
+  if (!isOfflinePreviewDraftMode()) {
+    await assertAdminAal2();
+  }
   if (typeof window !== "undefined") {
     try {
       const raw = sessionStorage.getItem(`buyandsell_learn_more_draft_${id}`) || localStorage.getItem(`buyandsell_learn_more_draft_${id}`);
@@ -337,6 +357,9 @@ export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent 
         if (validContent(parsed, id)) return normalizeLearnMoreContent(parsed, id);
       }
     } catch {}
+  }
+  if (isOfflinePreviewDraftMode()) {
+    return null;
   }
   try {
     const { data, error } = await getSupabaseOrThrow().from("learn_more_drafts")
@@ -349,23 +372,28 @@ export async function fetchDraftLearnMore(id: string): Promise<LearnMoreContent 
 }
 
 export async function saveDraftLearnMore(content: LearnMoreContent): Promise<void> {
-  await assertAdminAal2();
+  const offlinePreview = isOfflinePreviewDraftMode();
+  if (!offlinePreview) {
+    await assertAdminAal2();
+  }
   const normalized = normalizeLearnMoreContent(content);
   const pageId = normalized.story.slug;
-  const client = getSupabaseOrThrow();
 
   let savedToSupabase = false;
-  try {
-    const { error } = await client.from("learn_more_drafts").upsert({
-      id: pageId, content: normalized, updated_at: new Date().toISOString(),
-    });
-    if (!error) {
-      savedToSupabase = true;
-    } else if (!isPreviewMode()) {
-      throw error;
+  if (!offlinePreview) {
+    const client = getSupabaseOrThrow();
+    try {
+      const { error } = await client.from("learn_more_drafts").upsert({
+        id: pageId, content: normalized, updated_at: new Date().toISOString(),
+      });
+      if (!error) {
+        savedToSupabase = true;
+      } else if (!isPreviewMode()) {
+        throw error;
+      }
+    } catch (err) {
+      if (!isPreviewMode()) throw err;
     }
-  } catch (err) {
-    if (!isPreviewMode()) throw err;
   }
 
   // Always mirror draft to local storage
@@ -379,7 +407,7 @@ export async function saveDraftLearnMore(content: LearnMoreContent): Promise<voi
 
   if (savedToSupabase) {
     // Read-back verification for live Supabase drafts
-    const { data: verifyDraft, error: verifyErr } = await client
+    const { data: verifyDraft, error: verifyErr } = await getSupabaseOrThrow()
       .from("learn_more_drafts")
       .select("content")
       .eq("id", pageId)
@@ -406,6 +434,7 @@ export async function saveDraftLearnMore(content: LearnMoreContent): Promise<voi
 }
 
 export async function fetchLearnMoreRevisions(id: string): Promise<LearnMoreRevision[]> {
+  if (isOfflinePreviewDraftMode()) return [];
   await assertAdminAal2();
   try {
     const { data, error } = await getSupabaseOrThrow()
@@ -426,6 +455,224 @@ export async function fetchLearnMoreRevisions(id: string): Promise<LearnMoreRevi
   }
 }
 
+export interface LearnMoreMediaRef {
+  uri: string;
+  expectedKind: LocalMediaKind;
+}
+
+export function collectLearnMoreMediaReferences(content: LearnMoreContent): {
+  localRefs: LearnMoreMediaRef[];
+  transientBlobUris: string[];
+} {
+  const localRefs = new Map<string, LearnMoreMediaRef>();
+  const transientBlobs = new Set<string>();
+
+  const inspect = (raw: unknown, expectedKind: LocalMediaKind) => {
+    if (typeof raw !== "string") return;
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    if (isLocalMediaUri(trimmed)) {
+      if (!localRefs.has(trimmed)) {
+        localRefs.set(trimmed, { uri: trimmed, expectedKind });
+      }
+    } else if (trimmed.startsWith("blob:")) {
+      transientBlobs.add(trimmed);
+    }
+  };
+
+  if (content.kind === "editorial" && content.story) {
+    inspect(content.story.hero?.src, "image");
+    inspect(content.story.hero?.mobileSrc, "image");
+    inspect(content.story.hero?.posterSrc, "image");
+    inspect(content.story.hero?.videoSrc, "video");
+    inspect(content.story.hero?.mobileVideoSrc, "video");
+    if (content.story.cinematicVideo) {
+      inspect(content.story.cinematicVideo.src, "video");
+      inspect(content.story.cinematicVideo.mobileSrc, "video");
+      inspect(content.story.cinematicVideo.poster, "image");
+    }
+    inspect(content.story.finalImage?.src, "image");
+  } else if (content.kind === "mac-studio" && content.story) {
+    inspect(content.story.image?.src, "image");
+    inspect(content.story.image?.mobileSrc, "image");
+  } else if (content.kind === "catalog" && content.story) {
+    inspect(
+      content.story.media?.src,
+      content.story.media?.type === "video" ? "video" : "image"
+    );
+    inspect(content.story.designMedia?.src, "image");
+    for (const g of content.story.galleryMedia || []) {
+      inspect(g?.src, "image");
+    }
+  }
+
+  for (const section of content.sections || []) {
+    inspect(section.image, "image");
+    inspect(section.mobileImage, "image");
+    inspect(section.poster, "image");
+    inspect(section.video, "video");
+    inspect(section.mobileVideo, "video");
+    for (const img of section.images || []) {
+      inspect(img, "image");
+    }
+    for (const item of section.items || []) {
+      inspect(item?.image, "image");
+    }
+  }
+
+  return {
+    localRefs: Array.from(localRefs.values()),
+    transientBlobUris: Array.from(transientBlobs),
+  };
+}
+
+export function replaceLearnMoreMediaReferences(
+  content: LearnMoreContent,
+  urlMap: Map<string, string>
+): LearnMoreContent {
+  const next = structuredClone(content);
+  const sub = (val?: string): string | undefined => {
+    if (!val) return val;
+    const mapped = urlMap.get(val.trim());
+    return mapped || val;
+  };
+
+  if (next.kind === "editorial" && next.story) {
+    if (next.story.hero) {
+      next.story.hero.src = sub(next.story.hero.src) || "";
+      next.story.hero.mobileSrc = sub(next.story.hero.mobileSrc);
+      next.story.hero.posterSrc = sub(next.story.hero.posterSrc);
+      next.story.hero.videoSrc = sub(next.story.hero.videoSrc);
+      next.story.hero.mobileVideoSrc = sub(next.story.hero.mobileVideoSrc);
+    }
+    if (next.story.cinematicVideo) {
+      next.story.cinematicVideo.src = sub(next.story.cinematicVideo.src) || "";
+      next.story.cinematicVideo.mobileSrc = sub(next.story.cinematicVideo.mobileSrc);
+      next.story.cinematicVideo.poster = sub(next.story.cinematicVideo.poster) || "";
+    }
+    if (next.story.finalImage) {
+      next.story.finalImage.src = sub(next.story.finalImage.src) || "";
+    }
+  } else if (next.kind === "mac-studio" && next.story?.image) {
+    next.story.image.src = sub(next.story.image.src) || "";
+    next.story.image.mobileSrc = sub(next.story.image.mobileSrc) || "";
+  } else if (next.kind === "catalog" && next.story) {
+    if (next.story.media) {
+      next.story.media.src = sub(next.story.media.src) || "";
+    }
+    if (next.story.designMedia) {
+      next.story.designMedia.src = sub(next.story.designMedia.src) || "";
+    }
+    if (next.story.galleryMedia) {
+      next.story.galleryMedia = next.story.galleryMedia.map((g) => ({
+        ...g,
+        src: sub(g.src) || "",
+      }));
+    }
+  }
+
+  if (Array.isArray(next.sections)) {
+    next.sections = next.sections.map((section) => ({
+      ...section,
+      image: sub(section.image),
+      mobileImage: sub(section.mobileImage),
+      poster: sub(section.poster),
+      video: sub(section.video),
+      mobileVideo: sub(section.mobileVideo),
+      images: section.images?.map((img) => sub(img) || ""),
+      items: section.items?.map((item) => ({
+        ...item,
+        image: sub(item.image),
+      })),
+    }));
+  }
+
+  return next;
+}
+
+async function uploadLearnMoreStagedRecordToSupabase(
+  record: LocalStagedMediaRecord,
+  expectedKind: LocalMediaKind
+): Promise<string> {
+  const fileLike = {
+    name: record.filename,
+    type: record.mimeType,
+    size: record.blob?.size ?? record.size,
+    slice: (start?: number, end?: number) => record.blob.slice(start, end),
+  };
+  const validated = await validateLocalMediaFile(fileLike, expectedKind);
+  const uploadFile =
+    record.blob instanceof File
+      ? record.blob
+      : new File([record.blob], record.filename || `media.${validated.extension}`, {
+          type: validated.normalizedMimeType,
+        });
+  const publicUrl = await uploadLearnMoreMedia(uploadFile);
+  if (typeof fetch === "function" && publicUrl.startsWith("http")) {
+    const res = await fetch(publicUrl, { method: "HEAD", cache: "no-store" }).catch(() => null);
+    if (res && res.status >= 400) {
+      throw new Error(
+        `Uploaded Learn More media "${record.filename}" returned HTTP ${res.status}. Publish cancelled and draft preserved.`
+      );
+    }
+  }
+  return publicUrl;
+}
+
+export async function promoteLearnMoreLocalMediaForPublish(
+  content: LearnMoreContent,
+  deps?: {
+    assertAuth?: () => Promise<unknown>;
+    getStagedRecord?: (uri: string) => Promise<LocalStagedMediaRecord | null>;
+    uploadStagedRecord?: (
+      record: LocalStagedMediaRecord,
+      expectedKind: LocalMediaKind
+    ) => Promise<string>;
+  }
+): Promise<LearnMoreContent> {
+  await (deps?.assertAuth ? deps.assertAuth() : assertAdminAal2());
+
+  const { localRefs, transientBlobUris } = collectLearnMoreMediaReferences(content);
+  if (transientBlobUris.length > 0) {
+    throw new Error(
+      "Cannot publish temporary browser blob URLs on Learn More pages. Re-upload the affected image or video before publishing."
+    );
+  }
+  if (localRefs.length === 0) {
+    return content;
+  }
+
+  const resolveRecord = deps?.getStagedRecord ?? getLocalStagedMediaRecord;
+  const uploadRecord = deps?.uploadStagedRecord ?? uploadLearnMoreStagedRecordToSupabase;
+  const uploadedUrlMap = new Map<string, string>();
+
+  for (const ref of localRefs) {
+    const stagedRecord = await resolveRecord(ref.uri);
+    if (!stagedRecord || !stagedRecord.blob || stagedRecord.blob.size <= 0) {
+      throw new Error(
+        `Staged local Learn More media "${ref.uri}" could not be read from browser storage. Re-upload it before publishing; your draft remains saved.`
+      );
+    }
+    const permanentUrl = await uploadRecord(stagedRecord, ref.expectedKind);
+    if (!permanentUrl || isLocalMediaUri(permanentUrl) || permanentUrl.startsWith("blob:")) {
+      throw new Error(
+        `Media upload for "${stagedRecord.filename}" did not return a permanent public URL.`
+      );
+    }
+    uploadedUrlMap.set(ref.uri, permanentUrl);
+  }
+
+  const resolvedContent = replaceLearnMoreMediaReferences(content, uploadedUrlMap);
+  const remaining = collectLearnMoreMediaReferences(resolvedContent);
+  if (remaining.localRefs.length > 0 || remaining.transientBlobUris.length > 0) {
+    throw new Error(
+      "Publish blocked: unresolved local Learn More media references remained after upload. Your draft has not been altered."
+    );
+  }
+
+  return resolvedContent;
+}
+
 export interface PublishResult {
   revisionNumber: number;
   verifiedContent: LearnMoreContent;
@@ -434,7 +681,14 @@ export interface PublishResult {
 
 export async function publishLearnMore(content: LearnMoreContent, notes?: string): Promise<PublishResult> {
   await assertAdminAal2();
-  const normalized = normalizeLearnMoreContent(content);
+  const normalizedInput = normalizeLearnMoreContent(content);
+  const promoted = await promoteLearnMoreLocalMediaForPublish(normalizedInput);
+  const normalized = normalizeLearnMoreContent(promoted);
+  const remainingMedia = collectLearnMoreMediaReferences(normalized);
+  if (remainingMedia.localRefs.length > 0 || remainingMedia.transientBlobUris.length > 0) {
+    throw new Error("Publish blocked: unresolved local media references remain in Learn More payload.");
+  }
+
   const pageId = normalized.story.slug;
   const client = getSupabaseOrThrow();
   let nextRev = 1;
@@ -466,7 +720,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
     }
 
     if (!pubError) {
-      // Insert revision record
+      // Insert revision record (do NOT delete draft until read-back verification succeeds)
       try {
         const { data: revData } = await client
           .from("learn_more_revisions")
@@ -482,9 +736,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
           notes: notes || "Published via Visual Admin Editor",
           created_at: new Date().toISOString(),
         });
-        await client.from("learn_more_drafts").delete().eq("id", pageId);
       } catch {
-        await client.from("learn_more_drafts").delete().eq("id", pageId);
         nextRev = 1;
       }
     } else if (!isPreviewMode()) {
@@ -492,13 +744,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
     }
   }
 
-  // Clear local draft in preview storage
-  if (typeof window !== "undefined") {
-    sessionStorage.removeItem(`buyandsell_learn_more_draft_${pageId}`);
-    localStorage.removeItem(`buyandsell_learn_more_draft_${pageId}`);
-  }
-
-  // 3. READ-BACK VERIFICATION:
+  // 3. READ-BACK VERIFICATION (preserve draft until verification passes!):
   let persistedContent = normalized;
   const expectedSectionIds = (normalized.sections || []).map((s) => s.id);
   let persistedSectionIds = expectedSectionIds;
@@ -512,7 +758,7 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
 
     if (readBackErr || !readBack?.content) {
       throw new Error(
-        `Publish verification failed: could not confirm published record in Supabase (${readBackErr?.message || "empty response"}).`
+        `Publish verification failed: could not confirm published record in Supabase (${readBackErr?.message || "empty response"}). Your draft was preserved.`
       );
     }
 
@@ -520,6 +766,13 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
     if (!validContent(rawPersisted, pageId)) {
       throw new Error(
         `Publish verification failed: persisted content in Supabase does not match valid Learn More schema.`
+      );
+    }
+
+    const readBackMedia = collectLearnMoreMediaReferences(rawPersisted);
+    if (readBackMedia.localRefs.length > 0 || readBackMedia.transientBlobUris.length > 0) {
+      throw new Error(
+        "Publish verification failed: local media references remained in the saved Learn More record."
       );
     }
 
@@ -536,22 +789,19 @@ export async function publishLearnMore(content: LearnMoreContent, notes?: string
     }
   }
 
-  // 4. Update fast-cache, memory cache, and broadcast live update across tabs
+  // 4. Only AFTER read-back verification passes: clear draft and update published fast-cache
+  try {
+    await client.from("learn_more_drafts").delete().eq("id", pageId);
+  } catch {}
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem(`buyandsell_learn_more_draft_${pageId}`);
+    localStorage.removeItem(`buyandsell_learn_more_draft_${pageId}`);
+  }
+
   invalidateLearnMoreCache(pageId);
   savePublishedLearnMoreToFastCache(pageId, persistedContent);
   publicCache.set(pageId, { content: persistedContent, fetchedAt: Date.now(), isNetworkFresh: true });
   broadcastPublishedUpdate("learn-more", pageId);
-
-  return {
-    revisionNumber: nextRev,
-    verifiedContent: persistedContent,
-    persistedSectionIds,
-  };
-
-  // 4. Verification passed: update fast-cache, memory cache, and broadcast live update across tabs
-  invalidateLearnMoreCache(pageId);
-  savePublishedLearnMoreToFastCache(pageId, persistedContent);
-  publicCache.set(pageId, { content: persistedContent, fetchedAt: Date.now(), isNetworkFresh: true });
 
   return {
     revisionNumber: nextRev,
@@ -665,6 +915,7 @@ export async function uploadLearnMoreMedia(
 }
 
 export async function listLearnMoreMedia(): Promise<string[]> {
+  if (isOfflinePreviewDraftMode()) return [];
   await assertAdminAal2();
   const client = getSupabaseOrThrow();
   const folders = await Promise.all(["images", "videos"].map(async (folder) => {
@@ -710,12 +961,112 @@ export async function fetchLearnMoreStatusMap(): Promise<Record<string, LearnMor
   }
 }
 
-export function getLearnMoreFamily(content: LearnMoreContent): ProductFamilyKey {
+export type LearnMoreFamilyKey = ProductFamilyKey | "custom";
+
+export const CUSTOM_LEARN_MORE_REGISTRY_KEY = "buyandsell_learn_more_custom_pages_v1";
+
+export function getCustomLearnMoreRegistryEntries(): LearnMoreContent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CUSTOM_LEARN_MORE_REGISTRY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is LearnMoreContent =>
+        Boolean(item && typeof item === "object" && (item as LearnMoreContent).story?.slug)
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomLearnMoreRegistryEntry(entry: LearnMoreContent): void {
+  if (typeof window === "undefined" || !entry?.story?.slug) return;
+  try {
+    const current = getCustomLearnMoreRegistryEntries();
+    const filtered = current.filter((c) => c.story.slug !== entry.story.slug);
+    const updated = [normalizeLearnMoreContent(entry, entry.story.slug), ...filtered];
+    localStorage.setItem(CUSTOM_LEARN_MORE_REGISTRY_KEY, JSON.stringify(updated));
+  } catch {
+    // non-blocking
+  }
+}
+
+export function createCustomEditorialLearnMorePage(opts: {
+  slug: string;
+  name: string;
+  eyebrow?: string;
+  tagline?: string;
+  introText?: string;
+  buyPath?: string;
+  buyLabel?: string;
+  customRoute?: string;
+  heroTone?: "ink" | "light" | "blue" | "plum" | "sage";
+  heroImage?: string;
+  heroVideo?: string;
+  posterImage?: string;
+}): LearnMoreContent {
+  const cleanSlug =
+    opts.slug
+      .toLowerCase()
+      .replace(/['’]/g, "")
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || `campaign-${Date.now()}`;
+
+  const defaultRoute = opts.customRoute || `/learn-more/${cleanSlug}`;
+  const isVideo = Boolean(opts.heroVideo?.trim());
+  const tone = opts.heroTone || "ink";
+
+  return {
+    kind: "editorial",
+    story: {
+      slug: cleanSlug,
+      name: opts.name || "Featured Campaign",
+      eyebrow: opts.eyebrow || "BUY & SELL GH FEATURED STORY",
+      tagline: opts.tagline || "Original hardware and curated offers in Accra.",
+      introText: opts.introText || "",
+      buyPath: opts.buyPath || "/store",
+      buyLabel: opts.buyLabel || "Shop now",
+      customRoute: defaultRoute,
+      heroTone: tone,
+      hero: {
+        src: opts.heroImage || opts.posterImage || "",
+        posterSrc: opts.posterImage || opts.heroImage || "",
+        videoSrc: opts.heroVideo || undefined,
+        mediaMode: isVideo ? "video" : "image",
+        autoplay: true,
+        muted: true,
+        loop: true,
+        controls: false,
+        layout: "contained",
+        fit: "contain",
+        position: "center",
+        alt: `${opts.name || "Featured Campaign"} showcase`,
+        cmsAssetOverride: true,
+      },
+      highlights: [],
+      chapters: [],
+      information: {
+        eyebrow: "BUY & SELL GH GUARANTEE",
+        title: "Verified quality and trusted local support.",
+        intro: "Every device is tested for genuine hardware, verified battery health, and backed by Buy & Sell GH warranty in Accra.",
+        items: [],
+      },
+    },
+    sections: [],
+  };
+}
+
+export function getLearnMoreFamily(content: LearnMoreContent): LearnMoreFamilyKey {
   if (content.kind === "catalog") {
     return content.story.family;
   }
   if (content.kind === "mac-studio") {
     return "mac";
+  }
+  if (content.story.customRoute?.startsWith("/learn-more/") || content.story.customRoute?.startsWith("/campaigns/")) {
+    return "custom";
   }
   const slug = content.story.slug.toLowerCase();
   const buyPath = (content.story.buyPath || "").toLowerCase();
@@ -724,20 +1075,34 @@ export function getLearnMoreFamily(content: LearnMoreContent): ProductFamilyKey 
   if (buyPath.includes("/buy-ipad/") || slug.includes("ipad")) return "ipad";
   if (buyPath.includes("/buy-watch/") || slug.includes("watch")) return "watch";
   if (buyPath.includes("/buy-airpods/") || slug.includes("airpod")) return "airpods";
-  return "accessories";
+  if (buyPath.includes("/buy-accessory/") || slug.includes("adapter") || slug.includes("charger") || slug.includes("airtag")) {
+    return "accessories";
+  }
+  return "custom";
 }
 
 export function getLearnMorePublicPath(content: LearnMoreContent): string {
   const slug = content.story.slug;
+  if (content.kind === "editorial" && content.story.customRoute?.trim()) {
+    return content.story.customRoute.trim();
+  }
   if (slug === "mac-mini") return "/mac-mini";
   if (slug === "mac-studio") return "/mac-studio";
   const family = getLearnMoreFamily(content);
+  if (family === "custom") {
+    return `/learn-more/${slug}`;
+  }
   return `/${family}/${slug}`;
 }
 
 export function getLearnMoreHeroThumbnail(content: LearnMoreContent): string {
   if (content.kind === "editorial") {
-    return content.story.hero.src || content.story.cinematicVideo?.poster || "";
+    return (
+      content.story.hero.posterSrc ||
+      content.story.hero.src ||
+      content.story.cinematicVideo?.poster ||
+      ""
+    );
   }
   if (content.kind === "mac-studio") {
     return content.story.image.src || "";
@@ -754,26 +1119,37 @@ export function createEmptyLearnMorePage(product: Product): LearnMoreContent {
   const primaryImg = resolveAdminProductImage(product)?.src || "";
 
   return {
-    kind: "catalog",
+    kind: "editorial",
     story: {
-      family,
       slug: product.slug,
       name: product.name,
-      eyebrow: product.generation || product.subcategory || product.category,
-      tagline: "",
-      introduction: "",
-      media: {
-        type: "image",
-        src: primaryImg,
-        alt: product.name,
-      },
-      theme: family === "mac" || family === "watch" ? "ink" : "light",
+      eyebrow: product.generation || product.subcategory || product.category || "BUY & SELL GH",
+      tagline: product.shortDescription || `Explore ${product.name}.`,
+      introText: product.description || "",
       buyPath,
+      buyLabel: "Buy",
+      heroTone: family === "mac" || family === "watch" ? "ink" : "light",
+      hero: {
+        src: primaryImg,
+        posterSrc: primaryImg,
+        mediaMode: "image",
+        autoplay: true,
+        muted: true,
+        loop: true,
+        layout: "contained",
+        fit: "contain",
+        position: "center",
+        alt: product.name,
+        cmsAssetOverride: true,
+      },
       highlights: [],
-      designTitle: "",
-      designCopy: "",
-      finalCtaHeadline: "",
-      detailGroups: [],
+      chapters: [],
+      information: {
+        eyebrow: "BUY & SELL GH",
+        title: `${product.name} Details`,
+        intro: product.shortDescription || "Original certified hardware available at Buy & Sell GH.",
+        items: [],
+      },
     },
     sections: [],
     isEmptyPage: true,
@@ -802,8 +1178,8 @@ export function resolveApprovedProductThumbnail(
 
   // 3. If content has an active/published hero or visual asset
   if (content) {
-    if (content.kind === "editorial" && content.story.hero?.src && !isUnwantedAiAsset(content.story.hero.src)) {
-      return content.story.hero.src;
+    if (content.kind === "editorial" && (content.story.hero?.posterSrc || content.story.hero?.src) && !isUnwantedAiAsset(content.story.hero.posterSrc || content.story.hero.src)) {
+      return content.story.hero.posterSrc || content.story.hero.src;
     }
     if (content.kind === "mac-studio" && content.story.image?.src && !isUnwantedAiAsset(content.story.image.src)) {
       return content.story.image.src;
@@ -836,7 +1212,7 @@ export function hasUsableLearnMoreContent(
   const content = publishedContent ?? getPublishedLearnMoreSync(slug);
   if (content) {
     if (content.sections && content.sections.some((s) => s.enabled)) return true;
-    if (content.kind === "editorial" && content.story.hero?.src) return true;
+    if (content.kind === "editorial" && (content.story.hero?.src || content.story.hero?.videoSrc)) return true;
     if (content.kind === "catalog" && !content.isEmptyPage && content.story.introduction) return true;
   }
 
@@ -848,10 +1224,8 @@ export function hasUsableLearnMoreContent(
 }
 
 /**
- * Returns Learn More page configurations for every product in the catalog.
- * Preserves existing editorial and catalog stories while generating
- * clean, empty Learn More pages for all other products across
- * iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories.
+ * Returns Learn More page configurations for every product in the catalog,
+ * custom campaigns, and any dynamically registered Learn More pages.
  */
 export function getEligibleLearnMoreProducts(
   catalogProducts: Product[] = [],
@@ -877,7 +1251,8 @@ export function getEligibleLearnMoreProducts(
   ];
 
   const seenSlugs = new Set(choices.map((item) => item.story.slug));
-  for (const extra of extraRegistered) {
+  const combinedExtras = [...extraRegistered, ...getCustomLearnMoreRegistryEntries()];
+  for (const extra of combinedExtras) {
     if (extra?.story?.slug && !seenSlugs.has(extra.story.slug)) {
       seenSlugs.add(extra.story.slug);
       choices.push(extra);

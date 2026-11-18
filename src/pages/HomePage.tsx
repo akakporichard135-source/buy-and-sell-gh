@@ -98,51 +98,47 @@ function normalizeHomepageCampaign(campaign: Campaign): Campaign {
 }
 
 function withPublishedProductAction(campaign: Campaign, products: Product[]): Campaign {
-  if (!campaign.secondary) return campaign;
+  if (!campaign.secondary || !campaign.secondary.to) return campaign;
   const isDefaultBuyRoute = campaign.secondary.to.startsWith("/shop/buy-");
   const isDefaultLabel =
     campaign.secondary.label === "Buy" || campaign.secondary.label === "View pricing";
 
-  // Respect custom secondary CTA labels or custom non-buy routes configured by the administrator
-  if (!isDefaultBuyRoute && !campaign.productId) {
-    return campaign;
-  }
-
-  const destinationSlug = isDefaultBuyRoute
-    ? campaign.secondary.to.split("?")[0].split("/").pop()
-    : undefined;
-  const product = products.find(
-    (item) =>
-      !item.archived &&
-      ((campaign.productId &&
-        (item.id === campaign.productId || item.slug === campaign.productId)) ||
-        (destinationSlug && item.slug === destinationSlug))
-  );
-  if (!product) {
-    return isDefaultBuyRoute && isDefaultLabel
-      ? { ...campaign, secondary: { ...campaign.secondary, label: "Buy" } }
-      : campaign;
-  }
+  // Always preserve custom non-buy routes or custom CTA labels configured by the administrator
   if (!isDefaultBuyRoute || !isDefaultLabel) {
     return campaign;
   }
+
+  // Match strictly by the destination slug in campaign.secondary.to so changing a campaign never reverts to a previous product's route
+  const destinationSlug = campaign.secondary.to.split("?")[0].split("/").pop();
+  if (!destinationSlug) {
+    return campaign;
+  }
+
+  const product = products.find(
+    (item) => !item.archived && item.slug === destinationSlug
+  );
+  if (!product) {
+    return campaign;
+  }
+
   const action = getPublicPurchaseAction(product);
-  const to =
-    action === "enquire"
-      ? whatsappUrl(
+  if (action === "enquire") {
+    return {
+      ...campaign,
+      secondary: {
+        label: "Enquire on WhatsApp",
+        to: whatsappUrl(
           `Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`
-        )
-      : productBuyPath(getProductFamily(product), product.slug);
+        ),
+      },
+    };
+  }
+
   return {
     ...campaign,
     secondary: {
-      label:
-        action === "buy"
-          ? "Buy"
-          : action === "enquire"
-          ? "Enquire on WhatsApp"
-          : "View pricing",
-      to,
+      label: action === "buy" ? "Buy" : "View pricing",
+      to: campaign.secondary.to,
     },
   };
 }
@@ -472,9 +468,7 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
     <section
       className={`home-ref-hero home-ref-${tone} ${
         mediaFit === "cover" ? "home-ref-media-cover" : "home-ref-media-contain"
-      } ${hasMobileArt ? "has-mobile-hero" : ""}${
-        campaign.placement === "bottom" ? " home-ref-copy-bottom" : ""
-      }`}
+      } ${hasMobileArt ? "has-mobile-hero" : ""}`}
       data-campaign-id={campaign.id}
       data-tone={tone}
       data-bg={backgroundColor}
@@ -602,7 +596,7 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
     <section
       className={`home-ref-tile home-ref-${tone} ${
         mediaFit === "cover" ? "home-ref-media-cover" : "home-ref-media-contain"
-      }${campaign.placement === "bottom" ? " home-ref-copy-bottom" : ""}`}
+      }`}
       data-campaign-id={campaign.id}
       data-tone={tone}
       data-bg={backgroundColor}
@@ -727,11 +721,19 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
 
   const isSplit = variant === "split-left" || variant === "split-right";
 
+  const customMinHeight = isMobile
+    ? section.minHeightMobile
+      ? `${section.minHeightMobile}px`
+      : undefined
+    : section.minHeightDesktop
+    ? `${section.minHeightDesktop}px`
+    : undefined;
+
   return (
     <section
       className={`home-ref-hero home-ref-custom-section home-ref-variant-${variant} home-ref-${tone} ${
         mediaFit === "cover" && !isSplit ? "home-ref-media-cover" : "home-ref-media-contain"
-      }${section.placement === "bottom" && !isSplit ? " home-ref-copy-bottom" : ""}`}
+      }`}
       data-custom-section-id={section.id}
       data-campaign-id={section.id}
       data-tone={tone}
@@ -743,6 +745,7 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
         backgroundImage,
         backgroundSize: resolvedBgImage ? "cover" : undefined,
         backgroundPosition: resolvedBgImage ? "center" : undefined,
+        minHeight: customMinHeight,
       }}
       aria-labelledby={`home-ref-custom-${section.id}-title`}
     >

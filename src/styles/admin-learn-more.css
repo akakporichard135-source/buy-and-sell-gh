@@ -769,18 +769,31 @@
   max-height: 100%;
 }
 
-.vlearn-device-bezel.is-desktop {
+.vlearn-device-bezel.is-desktop,
+.vlearn-device-bezel.is-1440 {
   width: 100%;
-  max-width: 1240px;
+  max-width: 1440px;
 }
 
-.vlearn-device-bezel.is-tablet {
-  width: 768px;
+.vlearn-device-bezel.is-1024 {
+  width: 1024px;
   max-width: 100%;
 }
 
-.vlearn-device-bezel.is-mobile {
+.vlearn-device-bezel.is-tablet,
+.vlearn-device-bezel.is-834 {
+  width: 834px;
+  max-width: 100%;
+}
+
+.vlearn-device-bezel.is-mobile,
+.vlearn-device-bezel.is-390 {
   width: 390px;
+  max-width: 100%;
+}
+
+.vlearn-device-bezel.is-375 {
+  width: 375px;
   max-width: 100%;
 }
 

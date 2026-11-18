@@ -25,10 +25,9 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
     let active = true;
     const fetchLatest = (force = false) => {
       void fetchPublishedLearnMore(product, force).catch(() => null).then((content) => {
-        if (active && content) {
-          setPublished(content);
-          setIsResolving(false);
-        }
+        if (!active) return;
+        if (content) setPublished(content);
+        setIsResolving(false);
       });
     };
     fetchLatest(false);

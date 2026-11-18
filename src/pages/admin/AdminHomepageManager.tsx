@@ -2,10 +2,12 @@ import {
   AlertCircle,
   ArrowDown,
   ArrowUp,
+  BookOpen,
   CheckCircle2,
   ExternalLink,
   Eye,
   Film,
+  Gift,
   Grid,
   GripVertical,
   Image as ImageIcon,
@@ -25,11 +27,15 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultHomepageSections } from "../../cms/defaultCmsData";
 import {
   applyProductToCampaign,
   createDefaultCustomHomepageSection,
+  createGiftCampaignHomepageSection,
+  deriveCampaignLearnMorePath,
+  deriveCampaignLearnMoreSlug,
   extractLegacyMediaUnit,
   inferLegacyMediaAttributesForUrl,
   reorderListById,
@@ -48,6 +54,10 @@ import {
   useResolvedMediaUrl,
   validateLocalMediaFile,
 } from "../../cms/localMediaStore";
+import {
+  createCustomEditorialLearnMorePage,
+  saveCustomLearnMoreRegistryEntry,
+} from "../../cms/learnMoreRepository";
 import { collectHomepageMediaReferences } from "../../cms/supabaseCmsRepository";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { resolveAdminProductImage } from "../../utils/productImages";
@@ -140,6 +150,7 @@ export function AdminHomepageManager() {
     discardHomepageLegacyDraftConfig,
   } = useCms();
   const { products } = useProductCatalog();
+  const navigate = useNavigate();
 
   // Unified Homepage Editor defaults directly to the live-publishable homepage ("legacy")
   const [editorMode] = useState<"modular" | "legacy">("legacy");
@@ -539,6 +550,69 @@ export function AdminHomepageManager() {
     setActiveTab("customSections");
   };
 
+  const handleAddGiftCampaignSection = () => {
+    const existing = content.customSections || [];
+    const nextSection = createGiftCampaignHomepageSection(existing.length + 1);
+    setContent({
+      ...content,
+      customSections: [...existing, nextSection],
+    });
+    setActiveTab("customSections");
+  };
+
+  const handleOpenCampaignLearnMoreEditor = async (
+    campaign: HeroCampaign | PromoTile | CustomHomepageSection
+  ) => {
+    const slug = deriveCampaignLearnMoreSlug(campaign);
+    const learnMorePath = deriveCampaignLearnMorePath(campaign);
+    const fallbackBuyPath =
+      (campaign.secondary?.to?.startsWith("/shop/buy-")
+        ? campaign.secondary.to
+        : undefined) ||
+      (campaign.primary?.to?.startsWith("/shop/")
+        ? campaign.primary.to
+        : undefined) ||
+      campaign.secondary?.to ||
+      "/store";
+
+    // Register custom campaign Learn More scaffold so any new campaign opens immediately in the Learn More builder
+    const scaffold = createCustomEditorialLearnMorePage({
+      slug,
+      name: campaign.deviceName || campaign.title || "Featured Campaign",
+      eyebrow: campaign.eyebrow || "BUY & SELL GH FEATURED CAMPAIGN",
+      tagline: campaign.subtitle || "",
+      introText: campaign.description || "",
+      buyPath: fallbackBuyPath,
+      buyLabel: campaign.secondary?.label || campaign.primary?.label || "Shop now",
+      customRoute: learnMorePath,
+      heroTone: campaign.tone === "dark" ? "ink" : "light",
+      heroImage: campaign.image || undefined,
+      heroVideo: campaign.mediaMode === "video" ? campaign.videoUrl : undefined,
+      posterImage: campaign.posterUrl || campaign.image || undefined,
+    });
+    saveCustomLearnMoreRegistryEntry(scaffold);
+
+    // Save current homepage edits as draft before switching route so changes are preserved
+    try {
+      await saveHomepageLegacyDraftConfig({
+        ...content,
+        layoutMode: "legacy",
+      });
+      hasLocalLegacyEditsRef.current = false;
+    } catch {
+      // Non-blocking fallback
+    }
+
+    const params = new URLSearchParams({
+      slug,
+      name: campaign.deviceName || campaign.title || "Featured Campaign",
+      subtitle: campaign.subtitle || "",
+      buyTo: fallbackBuyPath,
+      route: learnMorePath,
+    });
+    navigate(`/admin/learn-more?${params.toString()}`);
+  };
+
   const openFullWebsitePreview = () => {
     writePreviewSessionSnapshot(HOMEPAGE_PREVIEW_SESSION_KEY_LEGACY, {
       ...content,
@@ -598,6 +672,16 @@ export function AdminHomepageManager() {
           >
             <Plus size={15} />
             <span>Add New Section</span>
+          </button>
+
+          <button
+            type="button"
+            data-testid="add-gift-campaign-btn"
+            onClick={handleAddGiftCampaignSection}
+            className="admin-btn admin-btn-secondary"
+          >
+            <Gift size={15} />
+            <span>+ Add Gift Campaign</span>
           </button>
 
           <button
@@ -1108,82 +1192,107 @@ export function AdminHomepageManager() {
                       </div>
 
                       {/* Primary & Secondary CTAs */}
-                      <div className="md:col-span-2 xl:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                        <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100 min-w-0">
-                          <span className="font-bold text-slate-800 block">
-                            Primary Action Button
-                          </span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={hero.primary.label}
-                              onChange={(e) => {
-                                const heroes = [...content.heroes];
-                                heroes[index] = {
-                                  ...heroes[index],
-                                  primary: { ...hero.primary, label: e.target.value },
-                                };
-                                setContent({ ...content, heroes });
-                              }}
-                              placeholder="Button Label (e.g. Learn more)"
-                              className="p-2 rounded border border-slate-200 bg-white"
-                            />
-                            <input
-                              type="text"
-                              value={hero.primary.to}
-                              onChange={(e) => {
-                                const heroes = [...content.heroes];
-                                heroes[index] = {
-                                  ...heroes[index],
-                                  primary: { ...hero.primary, to: e.target.value },
-                                };
-                                setContent({ ...content, heroes });
-                              }}
-                              placeholder="Destination URL (e.g. /iphone/iphone-18-pro)"
-                              className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                            />
+                      <div className="md:col-span-2 xl:col-span-3 space-y-3 pt-2 border-t border-slate-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100 min-w-0">
+                            <span className="font-bold text-slate-800 block">
+                              Primary Action Button
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                data-testid={`campaign-primary-label-hero-${index}`}
+                                value={hero.primary.label}
+                                onChange={(e) => {
+                                  const heroes = [...content.heroes];
+                                  heroes[index] = {
+                                    ...heroes[index],
+                                    primary: { ...hero.primary, label: e.target.value },
+                                  };
+                                  setContent({ ...content, heroes });
+                                }}
+                                placeholder="Button Label (e.g. Learn more)"
+                                className="p-2 rounded border border-slate-200 bg-white"
+                              />
+                              <input
+                                type="text"
+                                data-testid={`campaign-primary-to-hero-${index}`}
+                                value={hero.primary.to}
+                                onChange={(e) => {
+                                  const heroes = [...content.heroes];
+                                  heroes[index] = {
+                                    ...heroes[index],
+                                    primary: { ...hero.primary, to: e.target.value },
+                                  };
+                                  setContent({ ...content, heroes });
+                                }}
+                                placeholder="Destination URL (e.g. /iphone/iphone-18-pro)"
+                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100 min-w-0">
+                            <span className="font-bold text-slate-800 block">
+                              Secondary Action Button (Optional)
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                data-testid={`campaign-secondary-label-hero-${index}`}
+                                value={hero.secondary?.label || ""}
+                                onChange={(e) => {
+                                  const heroes = [...content.heroes];
+                                  const label = e.target.value;
+                                  heroes[index] = {
+                                    ...heroes[index],
+                                    secondary: label
+                                      ? { label, to: hero.secondary?.to || "/store" }
+                                      : undefined,
+                                  };
+                                  setContent({ ...content, heroes });
+                                }}
+                                placeholder="Button Label (e.g. Buy)"
+                                className="p-2 rounded border border-slate-200 bg-white"
+                              />
+                              <input
+                                type="text"
+                                data-testid={`campaign-secondary-to-hero-${index}`}
+                                value={hero.secondary?.to || ""}
+                                onChange={(e) => {
+                                  const heroes = [...content.heroes];
+                                  const to = e.target.value;
+                                  heroes[index] = {
+                                    ...heroes[index],
+                                    secondary: { label: hero.secondary?.label || "Buy", to },
+                                  };
+                                  setContent({ ...content, heroes });
+                                }}
+                                placeholder="Destination URL (e.g. /shop/buy-iphone/...)"
+                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100 min-w-0">
-                          <span className="font-bold text-slate-800 block">
-                            Secondary Action Button (Optional)
-                          </span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={hero.secondary?.label || ""}
-                              onChange={(e) => {
-                                const heroes = [...content.heroes];
-                                const label = e.target.value;
-                                heroes[index] = {
-                                  ...heroes[index],
-                                  secondary: label
-                                    ? { label, to: hero.secondary?.to || "/store" }
-                                    : undefined,
-                                };
-                                setContent({ ...content, heroes });
-                              }}
-                              placeholder="Button Label (e.g. Buy)"
-                              className="p-2 rounded border border-slate-200 bg-white"
-                            />
-                            <input
-                              type="text"
-                              value={hero.secondary?.to || ""}
-                              onChange={(e) => {
-                                const heroes = [...content.heroes];
-                                const to = e.target.value;
-                                heroes[index] = {
-                                  ...heroes[index],
-                                  secondary: { label: hero.secondary?.label || "Buy", to },
-                                };
-                                setContent({ ...content, heroes });
-                              }}
-                              placeholder="Destination URL (e.g. /shop/buy-iphone/...)"
-                              className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                            />
-                          </div>
-                        </div>
+                        <CampaignLearnMoreBar
+                          testId={`open-learn-more-hero-${index}`}
+                          campaign={hero}
+                          onChangeSlug={(nextSlug, nextRoute) => {
+                            const heroes = [...content.heroes];
+                            heroes[index] = {
+                              ...heroes[index],
+                              learnMoreSlug: nextSlug || undefined,
+                              primary:
+                                !heroes[index].primary.label ||
+                                heroes[index].primary.label.toLowerCase() === "learn more"
+                                  ? { ...heroes[index].primary, to: nextRoute }
+                                  : heroes[index].primary,
+                            };
+                            setContent({ ...content, heroes });
+                          }}
+                          onOpenEditor={() => void handleOpenCampaignLearnMoreEditor(hero)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1469,30 +1578,30 @@ export function AdminHomepageManager() {
                         </div>
                         <div>
                           <label className="block font-bold text-slate-700 mb-0.5">
-                            Copy Placement
+                            Promotional Eyebrow / Badge
                           </label>
-                          <select
-                            value={tile.placement || "top"}
+                          <input
+                            type="text"
+                            data-testid={`campaign-eyebrow-tile-${index}`}
+                            value={tile.eyebrow || ""}
                             onChange={(e) => {
                               const tiles = [...content.tiles];
                               tiles[index] = {
                                 ...tiles[index],
-                                placement: e.target.value === "bottom" ? "bottom" : undefined,
+                                eyebrow: e.target.value || undefined,
                               };
                               setContent({ ...content, tiles });
                             }}
-                            className="w-full p-2 rounded-lg border border-slate-200 bg-white font-semibold"
-                          >
-                            <option value="top">Top Aligned (Default)</option>
-                            <option value="bottom">Bottom Aligned</option>
-                          </select>
+                            className="w-full p-2 rounded-lg border border-slate-200 bg-white"
+                            placeholder="e.g. IMMERSIVE SOUND"
+                          />
                         </div>
                       </div>
 
                       <LegacyMediaBackgroundEditor
                         slotRef={{ kind: "tile", index }}
                         unit={extractLegacyMediaUnit(tile)}
-                        supportsMobileImage={false}
+                        supportsMobileImage
                         swapTargets={swapTargets}
                         dragMediaSlot={dragMediaSlot}
                         onDragMediaStart={setDragMediaSlot}
@@ -1518,78 +1627,103 @@ export function AdminHomepageManager() {
                         }
                       />
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <span className="font-semibold text-[0.68rem] text-slate-500 block mb-1">
-                            Primary CTA
-                          </span>
-                          <input
-                            type="text"
-                            value={tile.primary.label}
-                            onChange={(e) => {
-                              const tiles = [...content.tiles];
-                              tiles[index] = {
-                                ...tiles[index],
-                                primary: { ...tile.primary, label: e.target.value },
-                              };
-                              setContent({ ...content, tiles });
-                            }}
-                            placeholder="Label"
-                            className="w-full p-1.5 rounded border border-slate-200 bg-white mb-1"
-                          />
-                          <input
-                            type="text"
-                            value={tile.primary.to}
-                            onChange={(e) => {
-                              const tiles = [...content.tiles];
-                              tiles[index] = {
-                                ...tiles[index],
-                                primary: { ...tile.primary, to: e.target.value },
-                              };
-                              setContent({ ...content, tiles });
-                            }}
-                            placeholder="URL"
-                            className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
-                          />
+                      <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <span className="font-semibold text-[0.68rem] text-slate-500 block mb-1">
+                              Primary CTA
+                            </span>
+                            <input
+                              type="text"
+                              data-testid={`campaign-primary-label-tile-${index}`}
+                              value={tile.primary.label}
+                              onChange={(e) => {
+                                const tiles = [...content.tiles];
+                                tiles[index] = {
+                                  ...tiles[index],
+                                  primary: { ...tile.primary, label: e.target.value },
+                                };
+                                setContent({ ...content, tiles });
+                              }}
+                              placeholder="Label"
+                              className="w-full p-1.5 rounded border border-slate-200 bg-white mb-1"
+                            />
+                            <input
+                              type="text"
+                              data-testid={`campaign-primary-to-tile-${index}`}
+                              value={tile.primary.to}
+                              onChange={(e) => {
+                                const tiles = [...content.tiles];
+                                tiles[index] = {
+                                  ...tiles[index],
+                                  primary: { ...tile.primary, to: e.target.value },
+                                };
+                                setContent({ ...content, tiles });
+                              }}
+                              placeholder="URL"
+                              className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
+                            />
+                          </div>
+
+                          <div>
+                            <span className="font-semibold text-[0.68rem] text-slate-500 block mb-1">
+                              Secondary CTA (Optional)
+                            </span>
+                            <input
+                              type="text"
+                              data-testid={`campaign-secondary-label-tile-${index}`}
+                              value={tile.secondary?.label || ""}
+                              onChange={(e) => {
+                                const tiles = [...content.tiles];
+                                const label = e.target.value;
+                                tiles[index] = {
+                                  ...tiles[index],
+                                  secondary: label
+                                    ? { label, to: tile.secondary?.to || "/store" }
+                                    : undefined,
+                                };
+                                setContent({ ...content, tiles });
+                              }}
+                              placeholder="Label (Leave blank to hide)"
+                              className="w-full p-1.5 rounded border border-slate-200 bg-white mb-1"
+                            />
+                            <input
+                              type="text"
+                              data-testid={`campaign-secondary-to-tile-${index}`}
+                              value={tile.secondary?.to || ""}
+                              onChange={(e) => {
+                                const tiles = [...content.tiles];
+                                const to = e.target.value;
+                                tiles[index] = {
+                                  ...tiles[index],
+                                  secondary: { label: tile.secondary?.label || "Buy", to },
+                                };
+                                setContent({ ...content, tiles });
+                              }}
+                              placeholder="URL"
+                              className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
+                            />
+                          </div>
                         </div>
 
-                        <div>
-                          <span className="font-semibold text-[0.68rem] text-slate-500 block mb-1">
-                            Secondary CTA (Optional)
-                          </span>
-                          <input
-                            type="text"
-                            value={tile.secondary?.label || ""}
-                            onChange={(e) => {
-                              const tiles = [...content.tiles];
-                              const label = e.target.value;
-                              tiles[index] = {
-                                ...tiles[index],
-                                secondary: label
-                                  ? { label, to: tile.secondary?.to || "/store" }
-                                  : undefined,
-                              };
-                              setContent({ ...content, tiles });
-                            }}
-                            placeholder="Label (Leave blank to hide)"
-                            className="w-full p-1.5 rounded border border-slate-200 bg-white mb-1"
-                          />
-                          <input
-                            type="text"
-                            value={tile.secondary?.to || ""}
-                            onChange={(e) => {
-                              const tiles = [...content.tiles];
-                              const to = e.target.value;
-                              tiles[index] = {
-                                ...tiles[index],
-                                secondary: { label: tile.secondary?.label || "Buy", to },
-                              };
-                              setContent({ ...content, tiles });
-                            }}
-                            placeholder="URL"
-                            className="w-full p-1.5 rounded border border-slate-200 bg-white font-mono text-[0.68rem]"
-                          />
-                        </div>
+                        <CampaignLearnMoreBar
+                          testId={`open-learn-more-tile-${index}`}
+                          campaign={tile}
+                          onChangeSlug={(nextSlug, nextRoute) => {
+                            const tiles = [...content.tiles];
+                            tiles[index] = {
+                              ...tiles[index],
+                              learnMoreSlug: nextSlug || undefined,
+                              primary:
+                                !tiles[index].primary.label ||
+                                tiles[index].primary.label.toLowerCase() === "learn more"
+                                  ? { ...tiles[index].primary, to: nextRoute }
+                                  : tiles[index].primary,
+                            };
+                            setContent({ ...content, tiles });
+                          }}
+                          onOpenEditor={() => void handleOpenCampaignLearnMoreEditor(tile)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1607,18 +1741,29 @@ export function AdminHomepageManager() {
                     Custom Homepage Sections
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Create complete data-driven homepage sections with product selection, copy, images, videos, backgrounds, and placement controls.
+                    Create unlimited homepage sections (including Gifts Campaigns, product launches, split showcases, or banners) with dedicated Learn More pages.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  data-testid="tab-add-custom-section-btn"
-                  onClick={handleAddNewCustomSection}
-                  className="admin-btn admin-btn-sm admin-btn-primary"
-                >
-                  <Plus size={14} />
-                  <span>Add New Section</span>
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    data-testid="tab-add-gift-campaign-btn"
+                    onClick={handleAddGiftCampaignSection}
+                    className="admin-btn admin-btn-sm admin-btn-secondary"
+                  >
+                    <Gift size={14} />
+                    <span>+ Add Gift Campaign</span>
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="tab-add-custom-section-btn"
+                    onClick={handleAddNewCustomSection}
+                    className="admin-btn admin-btn-sm admin-btn-primary"
+                  >
+                    <Plus size={14} />
+                    <span>Add New Section</span>
+                  </button>
+                </div>
               </div>
 
               {customSectionsList.length === 0 ? (
@@ -1627,9 +1772,17 @@ export function AdminHomepageManager() {
                     No custom homepage sections added yet.
                   </p>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Click <strong>Add New Section</strong> to create a custom hero, split showcase, or promotional banner section on the homepage.
+                    Click <strong>Add Gift Campaign</strong> or <strong>Add New Section</strong> to create a custom hero, split showcase, or holiday gift section on the homepage.
                   </p>
-                  <div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAddGiftCampaignSection}
+                      className="admin-btn admin-btn-secondary admin-btn-sm"
+                    >
+                      <Gift size={14} />
+                      <span>+ Add Gift Campaign</span>
+                    </button>
                     <button
                       type="button"
                       onClick={handleAddNewCustomSection}
@@ -1781,7 +1934,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Holiday Mac Launch"
+                            placeholder="e.g. Holiday Gift Campaign"
                           />
                         </div>
 
@@ -1841,6 +1994,7 @@ export function AdminHomepageManager() {
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white font-semibold"
                           >
                             <option value="full-hero">Full-Width Hero Section</option>
+                            <option value="gift-showcase">Gift Campaign Showcase</option>
                             <option value="split-left">Split Left (Media Left, Copy Right)</option>
                             <option value="split-right">Split Right (Copy Left, Media Right)</option>
                             <option value="compact-banner">Compact Promotional Banner</option>
@@ -1873,7 +2027,7 @@ export function AdminHomepageManager() {
 
                         <div>
                           <label className="block font-bold text-slate-700 mb-1">
-                            Device / Product Name
+                            Device / Campaign Name
                           </label>
                           <input
                             type="text"
@@ -1894,7 +2048,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Mac Studio M5"
+                            placeholder="e.g. Gifts They'll Love"
                           />
                         </div>
 
@@ -1921,7 +2075,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Mac Studio"
+                            placeholder="e.g. Gifts They'll Love"
                           />
                         </div>
 
@@ -1939,7 +2093,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. NEW ARRIVAL"
+                            placeholder="e.g. BUY & SELL GH GIFT GUIDE"
                           />
                         </div>
 
@@ -1957,7 +2111,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Supercharged for pros."
+                            placeholder="e.g. Find their perfect match this holiday."
                           />
                         </div>
 
@@ -1993,7 +2147,7 @@ export function AdminHomepageManager() {
                               setContent({ ...content, customSections: next });
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
-                            placeholder="e.g. Flexible Pay Small-Small available"
+                            placeholder="e.g. Same-day Accra delivery available"
                           />
                         </div>
 
@@ -2011,6 +2165,52 @@ export function AdminHomepageManager() {
                             }}
                             className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
                             placeholder="Descriptive image summary"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">
+                            Desktop Min Height (px, optional)
+                          </label>
+                          <input
+                            type="number"
+                            min={320}
+                            max={1200}
+                            value={section.minHeightDesktop || ""}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const next = [...customSectionsList];
+                              next[index] = {
+                                ...next[index],
+                                minHeightDesktop: Number.isFinite(val) && val > 0 ? val : undefined,
+                              };
+                              setContent({ ...content, customSections: next });
+                            }}
+                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                            placeholder="Auto (620)"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">
+                            Mobile Min Height (px, optional)
+                          </label>
+                          <input
+                            type="number"
+                            min={280}
+                            max={900}
+                            value={section.minHeightMobile || ""}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              const next = [...customSectionsList];
+                              next[index] = {
+                                ...next[index],
+                                minHeightMobile: Number.isFinite(val) && val > 0 ? val : undefined,
+                              };
+                              setContent({ ...content, customSections: next });
+                            }}
+                            className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
+                            placeholder="Auto (520)"
                           />
                         </div>
 
@@ -2056,87 +2256,110 @@ export function AdminHomepageManager() {
                           />
                         </div>
 
-                        <div className="md:col-span-2 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                          <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
-                            <span className="font-bold text-slate-800 block">
-                              Primary Action Button
-                            </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                data-testid={`custom-section-primary-label-${index}`}
-                                value={section.primary.label}
-                                onChange={(e) => {
-                                  const next = [...customSectionsList];
-                                  next[index] = {
-                                    ...next[index],
-                                    primary: { ...section.primary, label: e.target.value },
-                                  };
-                                  setContent({ ...content, customSections: next });
-                                }}
-                                placeholder="Button Label (e.g. Learn more)"
-                                className="p-2 rounded border border-slate-200 bg-white"
-                              />
-                              <input
-                                type="text"
-                                data-testid={`custom-section-primary-to-${index}`}
-                                value={section.primary.to}
-                                onChange={(e) => {
-                                  const next = [...customSectionsList];
-                                  next[index] = {
-                                    ...next[index],
-                                    primary: { ...section.primary, to: e.target.value },
-                                  };
-                                  setContent({ ...content, customSections: next });
-                                }}
-                                placeholder="Destination URL"
-                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                              />
+                        <div className="md:col-span-2 xl:col-span-4 space-y-3 pt-2 border-t border-slate-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
+                              <span className="font-bold text-slate-800 block">
+                                Primary Action Button
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  data-testid={`custom-section-primary-label-${index}`}
+                                  value={section.primary.label}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    next[index] = {
+                                      ...next[index],
+                                      primary: { ...section.primary, label: e.target.value },
+                                    };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Button Label (e.g. Shop Gifts)"
+                                  className="p-2 rounded border border-slate-200 bg-white"
+                                />
+                                <input
+                                  type="text"
+                                  data-testid={`custom-section-primary-to-${index}`}
+                                  value={section.primary.to}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    next[index] = {
+                                      ...next[index],
+                                      primary: { ...section.primary, to: e.target.value },
+                                    };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Destination URL (e.g. /store)"
+                                  className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
+                              <span className="font-bold text-slate-800 block">
+                                Secondary Action Button (Optional)
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  data-testid={`custom-section-secondary-label-${index}`}
+                                  value={section.secondary?.label || ""}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    const label = e.target.value;
+                                    next[index] = {
+                                      ...next[index],
+                                      secondary: label
+                                        ? { label, to: section.secondary?.to || "/store" }
+                                        : undefined,
+                                    };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Button Label (e.g. Learn more)"
+                                  className="p-2 rounded border border-slate-200 bg-white"
+                                />
+                                <input
+                                  type="text"
+                                  data-testid={`custom-section-secondary-to-${index}`}
+                                  value={section.secondary?.to || ""}
+                                  onChange={(e) => {
+                                    const next = [...customSectionsList];
+                                    const to = e.target.value;
+                                    next[index] = {
+                                      ...next[index],
+                                      secondary: {
+                                        label: section.secondary?.label || "Learn more",
+                                        to,
+                                      },
+                                    };
+                                    setContent({ ...content, customSections: next });
+                                  }}
+                                  placeholder="Destination URL"
+                                  className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="space-y-2 p-3 rounded-lg bg-slate-50/70 border border-slate-100">
-                            <span className="font-bold text-slate-800 block">
-                              Secondary Action Button (Optional)
-                            </span>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                value={section.secondary?.label || ""}
-                                onChange={(e) => {
-                                  const next = [...customSectionsList];
-                                  const label = e.target.value;
-                                  next[index] = {
-                                    ...next[index],
-                                    secondary: label
-                                      ? { label, to: section.secondary?.to || "/store" }
-                                      : undefined,
-                                  };
-                                  setContent({ ...content, customSections: next });
-                                }}
-                                placeholder="Button Label (e.g. Buy)"
-                                className="p-2 rounded border border-slate-200 bg-white"
-                              />
-                              <input
-                                type="text"
-                                value={section.secondary?.to || ""}
-                                onChange={(e) => {
-                                  const next = [...customSectionsList];
-                                  const to = e.target.value;
-                                  next[index] = {
-                                    ...next[index],
-                                    secondary: {
-                                      label: section.secondary?.label || "Buy",
-                                      to,
-                                    },
-                                  };
-                                  setContent({ ...content, customSections: next });
-                                }}
-                                placeholder="Destination URL"
-                                className="p-2 rounded border border-slate-200 bg-white font-mono text-[0.7rem]"
-                              />
-                            </div>
-                          </div>
+                          <CampaignLearnMoreBar
+                            testId={`open-learn-more-customSection-${index}`}
+                            campaign={section}
+                            onChangeSlug={(nextSlug, nextRoute) => {
+                              const next = [...customSectionsList];
+                              next[index] = {
+                                ...next[index],
+                                learnMoreSlug: nextSlug || undefined,
+                                secondary:
+                                  !next[index].secondary ||
+                                  next[index].secondary?.label.toLowerCase() === "learn more"
+                                    ? { label: "Learn more", to: nextRoute }
+                                    : next[index].secondary,
+                              };
+                              setContent({ ...content, customSections: next });
+                            }}
+                            onOpenEditor={() => void handleOpenCampaignLearnMoreEditor(section)}
+                          />
                         </div>
                       </div>
                     </div>
@@ -2522,6 +2745,61 @@ export function AdminHomepageManager() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function CampaignLearnMoreBar({
+  testId,
+  campaign,
+  onChangeSlug,
+  onOpenEditor,
+}: {
+  testId: string;
+  campaign: HeroCampaign | PromoTile | CustomHomepageSection;
+  onChangeSlug: (slug: string, route: string) => void;
+  onOpenEditor: () => void;
+}) {
+  const derivedSlug = deriveCampaignLearnMoreSlug(campaign);
+  const derivedRoute = deriveCampaignLearnMorePath(campaign);
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-[#fbf8ef] border border-[#d4af37]/30">
+      <div className="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#8c6411] shrink-0">
+          <BookOpen size={13} />
+          <span>Learn More Page ID:</span>
+        </span>
+        <input
+          type="text"
+          value={campaign.learnMoreSlug || derivedSlug}
+          onChange={(e) => {
+            const cleaned = e.target.value
+              .toLowerCase()
+              .replace(/[^a-z0-9-]+/g, "-")
+              .replace(/^-+/, "");
+            const nextRoute = deriveCampaignLearnMorePath({
+              ...campaign,
+              learnMoreSlug: cleaned || derivedSlug,
+            });
+            onChangeSlug(cleaned, nextRoute);
+          }}
+          className="px-2 py-1 rounded border border-[#d4af37]/40 bg-white font-mono text-[11px] text-slate-800 w-44 max-w-full"
+          placeholder="campaign-slug"
+        />
+        <span className="text-[11px] font-mono text-slate-500 truncate">
+          Route: <strong>{derivedRoute}</strong>
+        </span>
+      </div>
+      <button
+        type="button"
+        data-testid={testId}
+        onClick={onOpenEditor}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition shrink-0 whitespace-nowrap"
+      >
+        <BookOpen size={12} />
+        <span>Edit Learn More Page &rarr;</span>
+      </button>
     </div>
   );
 }
