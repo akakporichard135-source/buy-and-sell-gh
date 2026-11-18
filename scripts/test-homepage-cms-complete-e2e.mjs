@@ -193,17 +193,14 @@ const avifRes = await localMedia.validateLocalMediaFile(
 );
 assert.equal(avifRes.normalizedMimeType, "image/avif");
 
+assert.deepEqual([...utils.SUPPORTED_LOCAL_VIDEO_FORMATS], ["mp4", "webm"]);
+assert.equal(utils.SUPPORTED_VIDEO_ACCEPT, "video/mp4,video/webm,.mp4,.webm");
+
 const mp4Res = await localMedia.validateLocalMediaFile(
   new File([MP4_BYTES], "hero.mp4", { type: "video/mp4" }),
   "video"
 );
 assert.equal(mp4Res.normalizedMimeType, "video/mp4");
-
-const m4vRes = await localMedia.validateLocalMediaFile(
-  new File([M4V_BYTES], "clip.m4v", { type: "video/x-m4v" }),
-  "video"
-);
-assert.equal(m4vRes.normalizedMimeType, "video/mp4");
 
 const webmRes = await localMedia.validateLocalMediaFile(
   new File([WEBM_BYTES], "mobile.webm", { type: "video/webm" }),
@@ -211,20 +208,27 @@ const webmRes = await localMedia.validateLocalMediaFile(
 );
 assert.equal(webmRes.normalizedMimeType, "video/webm");
 
-// Rejections: spoofed MP4, QuickTime MOV, empty file, wrong slot type, oversized image
+// Rejections: spoofed MP4, QuickTime MOV, M4V, empty file, wrong slot type, oversized image
 await assert.rejects(
   localMedia.validateLocalMediaFile(
     new File([Buffer.from("plain text pretending to be mp4")], "fake.mp4", { type: "video/mp4" }),
     "video"
   ),
-  /Invalid MP4\/M4V video header/i
+  /Invalid MP4 video header/i
 );
 await assert.rejects(
   localMedia.validateLocalMediaFile(
     new File([MP4_BYTES], "quicktime.mov", { type: "video/quicktime" }),
     "video"
   ),
-  /QuickTime \(\.mov\) files are not universally supported/i
+  /QuickTime \(\.mov\) videos cannot be played/i
+);
+await assert.rejects(
+  localMedia.validateLocalMediaFile(
+    new File([M4V_BYTES], "clip.m4v", { type: "video/x-m4v" }),
+    "video"
+  ),
+  /Unsupported video format/i
 );
 await assert.rejects(
   localMedia.validateLocalMediaFile(new File([], "empty.png", { type: "image/png" }), "image"),
@@ -503,6 +507,87 @@ if (mobileHeroUrl && mobileHeroUrl.startsWith("https://")) {
   assert.equal(headRes.ok, true, `Public Storage asset must return HTTP 200 (got ${headRes.status})`);
   console.log(`   - Live public Storage CDN URL HTTP ${headRes.status} verified (${mobileHeroUrl.split("/").pop()})`);
 }
+
+// ---------------------------------------------------------------------------
+// TEST 6: Legacy Draft Lifecycle & Image+Background Atomic Swap Verification
+// ---------------------------------------------------------------------------
+console.log("6. Verifying Legacy Save Draft -> Refresh -> Image+Background Swap & Validation...");
+localStorage.clear();
+await cmsRepo.saveHomepageDraft({
+  ...defaults.defaultHomepageContent,
+  layoutMode: "modular",
+  sections: defaults.defaultHomepageSections,
+});
+assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_DRAFT), "Modular WIP draft stored");
+
+// Swap Hero 0 (iPhone 18 Pro, #000000 dark normal) <-> Hero 1 (iPhone Duo, #ffffff light multiply)
+const swappedHeroesContent = utils.swapLegacyMediaUnits(
+  defaults.defaultHomepageContent,
+  { kind: "hero", index: 0 },
+  { kind: "hero", index: 1 }
+);
+assert.equal(swappedHeroesContent.heroes[0].title, "iPhone 18 Pro", "Target hero headline must remain");
+assert.equal(swappedHeroesContent.heroes[0].image, "/products/homepage/iphone-duo.webp");
+assert.equal(swappedHeroesContent.heroes[0].backgroundColor, "#ffffff");
+assert.equal(swappedHeroesContent.heroes[0].tone, "light");
+assert.equal(swappedHeroesContent.heroes[0].mediaBlendMode, "multiply");
+assert.equal(swappedHeroesContent.heroes[0].mobileImage, undefined, "Swapped Hero 0 must not inherit old mobile portrait");
+
+assert.equal(swappedHeroesContent.heroes[1].title, "iPhone Duo", "Target hero 1 headline must remain");
+assert.equal(swappedHeroesContent.heroes[1].image, "/products/homepage/iphone-18-pro-hero-2x.webp");
+assert.equal(swappedHeroesContent.heroes[1].backgroundColor, "#000000");
+assert.equal(swappedHeroesContent.heroes[1].tone, "dark");
+assert.equal(swappedHeroesContent.heroes[1].mediaBlendMode, "normal");
+assert.ok(swappedHeroesContent.heroes[1].mobileImage, "Burgundy mobile portrait follows Burgundy Hero unit");
+
+// Cross-container swap: Hero 0 <-> Tile 3 (MacBook Air, mist #e9f5fa multiply)
+const crossSwappedContent = utils.swapLegacyMediaUnits(
+  swappedHeroesContent,
+  { kind: "hero", index: 0 },
+  { kind: "tile", index: 3 }
+);
+assert.equal(crossSwappedContent.heroes[0].image, "/products/homepage/macbook-air.jpg");
+assert.equal(crossSwappedContent.heroes[0].backgroundColor, "#e9f5fa");
+assert.equal(crossSwappedContent.heroes[0].tone, "mist");
+assert.equal(crossSwappedContent.heroes[0].mediaBlendMode, "multiply");
+assert.equal(crossSwappedContent.tiles[3].title, "MacBook Air", "Tile title stays in Tile 3");
+assert.equal(crossSwappedContent.tiles[3].image, "/products/homepage/iphone-duo.webp");
+assert.equal(crossSwappedContent.tiles[3].backgroundColor, "#ffffff");
+assert.equal(crossSwappedContent.tiles[3].tone, "light");
+
+// Save Legacy Draft -> verify isolated key & survive refresh/normalization
+const savedLegacy = await cmsRepo.saveHomepageLegacyDraft(crossSwappedContent);
+assert.equal(savedLegacy.layoutMode, "legacy");
+assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT), "Legacy draft saved");
+assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_DRAFT), "Modular draft must NOT be clobbered by Legacy draft");
+
+const reloadedLegacy = cmsRepo.getInitialHomepageLegacyDraft();
+assert.ok(reloadedLegacy);
+assert.equal(reloadedLegacy.heroes[0].backgroundColor, "#e9f5fa", "Background must survive save & refresh");
+assert.equal(reloadedLegacy.heroes[0].tone, "mist");
+assert.equal(reloadedLegacy.tiles[3].backgroundColor, "#ffffff");
+
+assert.throws(
+  () =>
+    cmsRepo.validateHomepagePayloadForPublish({
+      ...reloadedLegacy,
+      heroes: reloadedLegacy.heroes.map((h) => ({ ...h, enabled: false })),
+    }),
+  /At least one active Hero Slide/i
+);
+assert.throws(
+  () =>
+    cmsRepo.validateHomepagePayloadForPublish({
+      ...reloadedLegacy,
+      heroes: [{ ...reloadedLegacy.heroes[0], image: "local-media://unresolved" }],
+    }),
+  /unresolved local media/i
+);
+
+await cmsRepo.discardHomepageLegacyDraft();
+assert.equal(cmsRepo.getInitialHomepageLegacyDraft(), null);
+assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_DRAFT), "Discarding legacy draft preserves modular draft");
+console.log("   [PASS] Legacy draft persistence, swapLegacyMediaUnits & publish validation verified\n");
 
 console.log("\n=== ALL HOMEPAGE CMS E2E, PROMOTION & RECOVERY CHECKS PASSED ===");
 process.exit(0);

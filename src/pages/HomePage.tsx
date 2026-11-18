@@ -2,7 +2,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
-import { defaultHomepageSections } from "../cms/defaultCmsData";
+import { defaultHomepageContent, defaultHomepageSections } from "../cms/defaultCmsData";
+import { useResolvedMediaUrl } from "../cms/localMediaStore";
+import { resolveLegacyBackgroundColor } from "../cms/homepageBuilderUtils";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { getProductFamily, productBuyPath } from "../catalog/productExperience";
@@ -11,7 +13,7 @@ import { HomepageSectionRenderer } from "../components/homepage/HomepageSectionR
 import { PromotionalAnnouncementBar } from "../components/promotions/PromotionalAnnouncementBar";
 import { HomepagePromotionalCarousel } from "../components/promotions/HomepagePromotionalCarousel";
 import { whatsappUrl } from "../utils/whatsapp";
-import type { HomepageContent } from "../cms/types";
+import type { HeroCampaign, HomepageContent, HomepageMediaFit, PromoTile, ServiceFlyer } from "../cms/types";
 import type { Product } from "../types/product";
 import "../styles/homepage-reference.css";
 
@@ -24,136 +26,52 @@ type Campaign = {
   mobileImage?: string;
   alt: string;
   tone: "dark" | "light" | "mist";
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  mediaFit?: HomepageMediaFit;
+  mediaPosition?: string;
+  mediaBlendMode?: "normal" | "multiply";
   primary: Action;
   secondary?: Action;
   placement?: "bottom";
 };
 
-const heroes: Campaign[] = [
-  {
-    id: "iphone-18-pro",
-    title: "iPhone 18 Pro",
-    subtitle: "Pro further.",
-    image: "/products/homepage/iphone-18-pro-hero-2x.webp",
-    mobileImage: "/products/homepage/iphone-18-pro-hero-mobile.jpg",
-    alt: "Burgundy iPhone 18 Pro in front of a metallic PRO composition",
-    tone: "dark",
-    primary: { label: "Learn more", to: "/iphone/iphone-18-pro" },
-    secondary: { label: "Buy", to: "/shop/buy-iphone/iphone-18-pro" },
-  },
-  {
-    id: "iphone-duo",
-    title: "iPhone Duo",
-    subtitle: "Open up more room for everything you do.",
-    image: "/products/homepage/iphone-duo.webp",
-    alt: "Open iPhone Duo held in two hands",
-    tone: "light",
-    primary: { label: "Learn more", to: "/iphone/iphone-duo" },
-    secondary: { label: "Buy", to: "/shop/buy-iphone/iphone-duo" },
-  },
-  {
-    id: "watch-series-12",
-    title: "Apple Watch Series 12",
-    subtitle: "Stay connected to what moves you.",
-    image: "/products/homepage/watch-series-12.webp",
-    alt: "Black Apple Watch Series 12 with a dark watch face",
-    tone: "dark",
-    primary: { label: "Learn more", to: "/watch/apple-watch-series-12" },
-    secondary: { label: "Buy", to: "/shop/buy-watch/apple-watch-series-12" },
-  },
-];
-
-const tileRows: Campaign[][] = [
-  [
-    {
-      id: "watch-ultra-4",
-      title: "Apple Watch Ultra 4",
-      subtitle: "Built for beyond.",
-      image: "/products/homepage/watch-ultra-4.webp",
-      alt: "Close view of the Apple Watch Ultra 4 case and display",
-      tone: "dark",
-      primary: { label: "Learn more", to: "/watch/apple-watch-ultra-4" },
-      secondary: { label: "Buy", to: "/shop/buy-watch/apple-watch-ultra-4" },
-    },
-    {
-      id: "airpods-pro-3",
-      title: "AirPods Pro 3",
-      subtitle: "Premium sound. A more immersive experience.",
-      image: "/products/story/airpods-pro-3-apple.jpg",
-      alt: "AirPods Pro 3 earbuds above their open MagSafe Charging Case",
-      tone: "light",
-      primary: { label: "Learn more", to: "/airpods/airpods-pro-3" },
-      secondary: { label: "Buy", to: "/shop/buy-airpods/airpods-pro-3" },
-      placement: "bottom",
-    },
-  ],
-  [
-    {
-      id: "ipad-air",
-      title: "iPad Air",
-      subtitle: "Room for every idea.",
-      image: "/products/homepage/homepage-ipad-air-white.webp",
-      alt: "iPad Air front and back in light finishes",
-      tone: "light",
-      primary: { label: "Learn more", to: "/ipad/ipad-air" },
-      secondary: { label: "Buy", to: "/shop/buy-ipad/ipad-air" },
-    },
-    {
-      id: "macbook-air",
-      title: "MacBook Air",
-      subtitle: "Light to carry. Ready for everything.",
-      image: "/products/homepage/macbook-air.jpg",
-      alt: "MacBook Air opening to show its thin profile and display",
-      tone: "mist",
-      primary: { label: "Learn more", to: "/mac/macbook-air" },
-      secondary: { label: "Buy", to: "/shop/buy-mac/macbook-air" },
-    },
-  ],
-  [
-    {
-      id: "visa-card-trading",
-      title: "Visa Card Trading",
-      subtitle: "Check supported cards with our team.",
-      image: "/products/homepage/homepage-visa-card-white.webp",
-      alt: "Original unbranded black and gold card for Visa card trading enquiries",
-      tone: "light",
-      primary: { label: "Enquire", to: "/gift-cards" },
-    },
-    {
-      id: "mac-mini",
-      title: "Mac mini",
-      subtitle: "Small footprint. Serious capability.",
-      image: "/products/homepage/mac-mini-device.jpg",
-      alt: "Mac mini held in hand",
-      tone: "light",
-      primary: { label: "Learn more", to: "/mac-mini" },
-      secondary: { label: "Buy", to: "/shop/buy-mac/mac-mini" },
-    },
-  ],
-];
+function resolveCssObjectPosition(pos?: string): string {
+  switch ((pos || "").toLowerCase()) {
+    case "top":
+      return "center top";
+    case "bottom":
+      return "center bottom";
+    case "left":
+      return "left center";
+    case "right":
+      return "right center";
+    case "center":
+      return "center center";
+    default:
+      return pos || "center bottom";
+  }
+}
 
 function normalizeHomepageCampaign(campaign: Campaign): Campaign {
-  let normalized = campaign;
-  if (campaign.id === "iphone-18-pro") {
-    const rawImage = campaign.image || "";
-    const rawMobile = campaign.mobileImage || "";
-    const isLegacySeedDesktop =
-      !rawImage ||
-      rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
-      rawImage === "/products/homepage/iphone-18-pro-hero.webp" ||
-      rawImage === "/products/homepage/iphone-18-pro-hero.jpg";
-    const isLegacySeedMobile =
-      !rawMobile ||
-      rawMobile.includes("1792004900948-iphone-18-promax-1.jpg") ||
-      rawMobile === "/products/homepage/iphone-18-pro-hero-mobile.jpg" ||
-      rawMobile === "/products/homepage/iphone-18-pro-hero-mobile.webp";
-    normalized = {
+  if (
+    (campaign.id === "iphone-18-pro" && !campaign.image) ||
+    campaign.image?.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
+    campaign.image === "/products/homepage/iphone-18-pro-hero.webp" ||
+    campaign.image === "/products/homepage/iphone-18-pro-hero.jpg"
+  ) {
+    return {
       ...campaign,
-      image: isLegacySeedDesktop ? "/products/homepage/iphone-18-pro-hero-2x.webp" : rawImage,
-      mobileImage: isLegacySeedMobile ? "/products/homepage/iphone-18-pro-hero-mobile.jpg" : rawMobile,
+      image: "/products/homepage/iphone-18-pro-hero-2x.webp",
+      mobileImage:
+        campaign.mobileImage &&
+        !campaign.mobileImage.includes("1792004900948-iphone-18-promax-1.jpg") &&
+        campaign.mobileImage !== "/products/homepage/iphone-18-pro-hero-mobile.webp"
+          ? campaign.mobileImage
+          : "/products/homepage/iphone-18-pro-hero-mobile.jpg",
     };
   }
-  return normalized;
+  return campaign;
 }
 
 function withPublishedProductAction(campaign: Campaign, products: Product[]): Campaign {
@@ -177,27 +95,29 @@ function withPublishedProductAction(campaign: Campaign, products: Product[]): Ca
   };
 }
 
-const serviceFlyers = [
-  { title: "Repairs", image: "/services/repairs.png", alt: "Buy & Sell GH repairs flyer for phones, laptops and game consoles", to: "/repairs" },
-  { title: "Installment Payment", image: "/services/installment-payment.png", alt: "Buy & Sell GH installment payment flyer", to: "/installment" },
-  { title: "Upgrade & Save", image: "/services/upgrade-and-save.png", alt: "Buy & Sell GH upgrade and trade-in flyer", to: "/sell-or-trade?mode=upgrade" },
-  { title: "Sell Your Device", image: "/services/sell-your-device.png", alt: "Buy & Sell GH device selling flyer", to: "/sell-or-trade" },
-  { title: "Refer a Friend", image: "/services/refer-a-friend.png", alt: "Buy & Sell GH referral flyer", to: "/refer-a-friend" },
-];
+const serviceFlyers: ServiceFlyer[] = defaultHomepageContent.serviceFlyers;
 
-export function HomePage() {
+export interface HomePageProps {
+  overrideContent?: HomepageContent;
+  isAdminDraftPreview?: boolean;
+}
+
+export function HomePage({ overrideContent, isAdminDraftPreview = false }: HomePageProps = {}) {
   const { homepage, homepageDraft, loading, hasVerifiedHomepage } = useCms();
   const { products } = useProductCatalog();
   const location = useLocation();
 
+  const effectiveSource = overrideContent || homepage;
   const searchParams = new URLSearchParams(location.search);
   const isLocalHost =
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
   const isLocalPreviewModular =
-    (import.meta.env.DEV || isLocalHost) && searchParams.get("preview") === "modular";
+    !overrideContent &&
+    (import.meta.env.DEV || isLocalHost) &&
+    searchParams.get("preview") === "modular";
 
-  if (loading && !hasVerifiedHomepage && !isLocalPreviewModular) {
+  if (!overrideContent && loading && !hasVerifiedHomepage && !isLocalPreviewModular) {
     return (
       <main className="storefront-home home-reference">
         <SEO
@@ -220,17 +140,19 @@ export function HomePage() {
     );
   }
 
-  if (isLocalPreviewModular || homepage?.layoutMode === "modular") {
-    const modularContent: HomepageContent = isLocalPreviewModular
+  if (isLocalPreviewModular || effectiveSource?.layoutMode === "modular") {
+    const modularContent: HomepageContent = overrideContent
+      ? overrideContent
+      : isLocalPreviewModular
       ? homepageDraft || {
-          ...homepage,
+          ...effectiveSource,
           layoutMode: "modular",
           sections:
-            homepage?.sections && homepage.sections.length > 0
-              ? homepage.sections
+            effectiveSource?.sections && effectiveSource.sections.length > 0
+              ? effectiveSource.sections
               : defaultHomepageSections,
         }
-      : homepage;
+      : effectiveSource;
 
     return (
       <>
@@ -303,16 +225,22 @@ export function HomePage() {
   }
 
   const rawHeroes: Campaign[] =
-    homepage?.heroes?.filter((h) => h.enabled) && homepage.heroes.filter((h) => h.enabled).length > 0
-      ? (homepage.heroes.filter((h) => h.enabled) as Campaign[])
-      : heroes;
-  const activeHeroes = rawHeroes.map((campaign) => withPublishedProductAction(normalizeHomepageCampaign(campaign), products));
+    effectiveSource?.heroes?.filter((h) => h.enabled) &&
+    effectiveSource.heroes.filter((h) => h.enabled).length > 0
+      ? (effectiveSource.heroes.filter((h) => h.enabled) as Campaign[])
+      : (defaultHomepageContent.heroes as Campaign[]).filter((h) => (h as HeroCampaign).enabled !== false);
+  const activeHeroes = rawHeroes.map((campaign) =>
+    withPublishedProductAction(normalizeHomepageCampaign(campaign), products)
+  );
 
   const rawTiles: Campaign[] =
-    homepage?.tiles?.filter((t) => t.enabled) && homepage.tiles.filter((t) => t.enabled).length > 0
-      ? (homepage.tiles.filter((t) => t.enabled) as Campaign[])
-      : tileRows.flat();
-  const activeTiles = rawTiles.map((campaign) => withPublishedProductAction(normalizeHomepageCampaign(campaign), products));
+    effectiveSource?.tiles?.filter((t) => t.enabled) &&
+    effectiveSource.tiles.filter((t) => t.enabled).length > 0
+      ? (effectiveSource.tiles.filter((t) => t.enabled) as Campaign[])
+      : (defaultHomepageContent.tiles as Campaign[]).filter((t) => (t as PromoTile).enabled !== false);
+  const activeTiles = rawTiles.map((campaign) =>
+    withPublishedProductAction(normalizeHomepageCampaign(campaign), products)
+  );
 
   const tileGridRows: Campaign[][] = [];
   for (let i = 0; i < activeTiles.length; i += 2) {
@@ -320,11 +248,10 @@ export function HomePage() {
   }
 
   const activeFlyers =
-    homepage?.serviceFlyers?.filter((f) => f.enabled) && homepage.serviceFlyers.filter((f) => f.enabled).length > 0
-      ? homepage.serviceFlyers.filter((f) => f.enabled)
+    effectiveSource?.serviceFlyers?.filter((f) => f.enabled) &&
+    effectiveSource.serviceFlyers.filter((f) => f.enabled).length > 0
+      ? effectiveSource.serviceFlyers.filter((f) => f.enabled)
       : serviceFlyers;
-
-  const announcement = homepage?.announcement;
 
   return (
     <>
@@ -332,38 +259,33 @@ export function HomePage() {
         title="Premium Tech Store in Accra | Buy & Sell GH"
         description="Shop original devices and get trusted trade-in, repair, installment and customer support from Buy & Sell GH in Accra."
       />
-      <main className="storefront-home home-reference">
-        <PromotionalAnnouncementBar />
-        {heroes.map((fallbackCampaign, index) => {
-          if (index >= activeHeroes.length) return null;
-          const campaign = activeHeroes[index] || fallbackCampaign;
-          return <ProductHero campaign={campaign} key={campaign.id} priority={index < 2} />;
-        })}
-        {activeHeroes.slice(heroes.length).map((campaign) => (
-          <ProductHero campaign={campaign} key={campaign.id} priority={false} />
+      <main className="storefront-home home-reference" data-admin-draft-preview={isAdminDraftPreview ? "true" : undefined}>
+        {isAdminDraftPreview && effectiveSource?.announcement?.enabled ? (
+          <div className="home-ref-announcement" role="region" aria-label="Announcement">
+            <span>{effectiveSource.announcement.text}</span>
+            {effectiveSource.announcement.linkText ? (
+              <Link to={effectiveSource.announcement.linkTo || "/store"}>
+                {effectiveSource.announcement.linkText} &rsaquo;
+              </Link>
+            ) : null}
+          </div>
+        ) : (
+          <PromotionalAnnouncementBar />
+        )}
+        {activeHeroes.map((campaign, index) => (
+          <ProductHero campaign={campaign} key={`${campaign.id}-${index}`} priority={index < 2} />
         ))}
         <div className="home-ref-grid">
-          {tileRows.map((fallbackRow, rowIndex) => {
-            if (rowIndex >= tileGridRows.length) return null;
-            const row = tileGridRows[rowIndex] || fallbackRow;
-            return (
-              <div className="home-ref-row" key={row[0].id}>
-                {row.map((campaign) => (
-                  <ProductTile campaign={campaign} key={campaign.id} />
-                ))}
-              </div>
-            );
-          })}
-          {tileGridRows.slice(tileRows.length).map((row) => (
-            <div className="home-ref-row" key={row[0].id}>
-              {row.map((campaign) => (
-                <ProductTile campaign={campaign} key={campaign.id} />
+          {tileGridRows.map((row, rowIdx) => (
+            <div className="home-ref-row" key={`${row[0].id}-${rowIdx}`}>
+              {row.map((campaign, tileIdx) => (
+                <ProductTile campaign={campaign} key={`${campaign.id}-${tileIdx}`} />
               ))}
             </div>
           ))}
         </div>
         <HomepagePromotionalCarousel />
-        <ServiceFlyerCarousel />
+        <ServiceFlyerCarousel flyers={activeFlyers} />
       </main>
     </>
   );
@@ -380,23 +302,32 @@ function CampaignActions({ primary, secondary }: { primary: Action; secondary?: 
   );
 }
 
-const defaultMobileHeroes: Record<string, string> = {
-  "iphone-18-pro": "/products/homepage/iphone-18-pro-hero-mobile.jpg",
-};
-
 function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boolean }) {
-  const mobileImg =
-    campaign.mobileImage ||
-    defaultMobileHeroes[campaign.id] ||
-    undefined;
+  const { resolvedUrl: resolvedDesktop } = useResolvedMediaUrl(campaign.image);
+  const { resolvedUrl: resolvedMobile } = useResolvedMediaUrl(campaign.mobileImage);
+  const mobileImg = resolvedMobile || undefined;
+  const hasMobileArt = Boolean(mobileImg && mobileImg !== resolvedDesktop);
 
-  const hasMobileArt = Boolean(mobileImg && mobileImg !== campaign.image);
+  const tone = campaign.tone || "dark";
+  const backgroundColor = resolveLegacyBackgroundColor(tone, campaign.backgroundColor);
+  const mediaFit = campaign.mediaFit || "contain";
+  const objectPosition = resolveCssObjectPosition(
+    campaign.mediaPosition || (mediaFit === "cover" ? "center" : "bottom")
+  );
+  const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
 
   return (
     <section
-      className={`home-ref-hero home-ref-${campaign.id} home-ref-${campaign.tone} ${
-        hasMobileArt ? "has-mobile-hero" : ""
-      }`}
+      className={`home-ref-hero home-ref-${tone} ${
+        mediaFit === "cover" ? "home-ref-media-cover" : "home-ref-media-contain"
+      } ${hasMobileArt ? "has-mobile-hero" : ""}`}
+      data-campaign-id={campaign.id}
+      data-tone={tone}
+      data-bg={backgroundColor}
+      style={{
+        backgroundColor,
+        backgroundImage: campaign.backgroundGradient || undefined,
+      }}
       aria-labelledby={`home-ref-${campaign.id}-title`}
     >
       <div className="home-ref-copy">
@@ -405,20 +336,17 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
       {mobileImg ? (
-        <picture key={`${campaign.id}-${campaign.image}`} className="home-ref-hero-picture">
-          <source
-            media="(max-width: 768px)"
-            srcSet={mobileImg}
-            width={campaign.id === "iphone-18-pro" ? 680 : undefined}
-            height={campaign.id === "iphone-18-pro" ? 880 : undefined}
-          />
+        <picture key={`${campaign.id}-${resolvedDesktop}-${mobileImg}`} className="home-ref-hero-picture">
+          <source media="(max-width: 768px)" srcSet={mobileImg} />
           <img
-            key={`${campaign.id}-${campaign.image}`}
-            className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
-            src={campaign.image}
+            className="home-ref-hero-image"
+            src={resolvedDesktop}
             alt={campaign.alt}
-            width={campaign.id === "iphone-18-pro" ? 734 : undefined}
-            height={campaign.id === "iphone-18-pro" ? 413 : undefined}
+            style={{
+              objectFit: mediaFit,
+              objectPosition,
+              mixBlendMode,
+            }}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : undefined}
             decoding={priority ? "sync" : "async"}
@@ -426,12 +354,15 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         </picture>
       ) : (
         <img
-          key={`${campaign.id}-${campaign.image}`}
-          className={campaign.id === "iphone-18-pro" ? "home-ref-hero-image iphone18-hero-img" : "home-ref-hero-image"}
-          src={campaign.image}
+          key={`${campaign.id}-${resolvedDesktop}`}
+          className="home-ref-hero-image"
+          src={resolvedDesktop}
           alt={campaign.alt}
-          width={campaign.id === "iphone-18-pro" ? 734 : undefined}
-          height={campaign.id === "iphone-18-pro" ? 413 : undefined}
+          style={{
+            objectFit: mediaFit,
+            objectPosition,
+            mixBlendMode,
+          }}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : undefined}
           decoding={priority ? "sync" : "async"}
@@ -442,9 +373,28 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
 }
 
 function ProductTile({ campaign }: { campaign: Campaign }) {
+  const { resolvedUrl: resolvedDesktop } = useResolvedMediaUrl(campaign.image);
+  const { resolvedUrl: resolvedMobile } = useResolvedMediaUrl(campaign.mobileImage);
+  const tone = campaign.tone || "light";
+  const backgroundColor = resolveLegacyBackgroundColor(tone, campaign.backgroundColor);
+  const mediaFit = campaign.mediaFit || "contain";
+  const objectPosition = resolveCssObjectPosition(
+    campaign.mediaPosition || (mediaFit === "cover" ? "center" : "bottom")
+  );
+  const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
+
   return (
     <section
-      className={`home-ref-tile home-ref-${campaign.id} home-ref-${campaign.tone}${campaign.placement === "bottom" ? " home-ref-copy-bottom" : ""}`}
+      className={`home-ref-tile home-ref-${tone} ${
+        mediaFit === "cover" ? "home-ref-media-cover" : "home-ref-media-contain"
+      }${campaign.placement === "bottom" ? " home-ref-copy-bottom" : ""}`}
+      data-campaign-id={campaign.id}
+      data-tone={tone}
+      data-bg={backgroundColor}
+      style={{
+        backgroundColor,
+        backgroundImage: campaign.backgroundGradient || undefined,
+      }}
       aria-labelledby={`home-ref-${campaign.id}-title`}
     >
       <div className="home-ref-copy">
@@ -452,22 +402,67 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
         <p>{campaign.subtitle}</p>
         <CampaignActions primary={campaign.primary} secondary={campaign.secondary} />
       </div>
-      <img
-        key={`${campaign.id}-${campaign.image}`}
-        className="home-ref-tile-image"
-        src={campaign.image}
-        alt={campaign.alt}
-        loading="lazy"
-        decoding="async"
-      />
+      {resolvedMobile ? (
+        <picture key={`${campaign.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
+          <source media="(max-width: 768px)" srcSet={resolvedMobile} />
+          <img
+            className="home-ref-tile-image"
+            src={resolvedDesktop}
+            alt={campaign.alt}
+            style={{
+              objectFit: mediaFit,
+              objectPosition,
+              mixBlendMode,
+            }}
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
+      ) : (
+        <img
+          key={`${campaign.id}-${resolvedDesktop}`}
+          className="home-ref-tile-image"
+          src={resolvedDesktop}
+          alt={campaign.alt}
+          style={{
+            objectFit: mediaFit,
+            objectPosition,
+            mixBlendMode,
+          }}
+          loading="lazy"
+          decoding="async"
+        />
+      )}
     </section>
   );
 }
 
-function ServiceFlyerCarousel() {
+function ServiceFlyerCard({ flyer }: { flyer: Pick<ServiceFlyer, "title" | "image" | "alt" | "to" | "backgroundColor"> }) {
+  const { resolvedUrl } = useResolvedMediaUrl(flyer.image);
+  const src = resolvedUrl || flyer.image;
+  const isLocalPublicPng = !src.startsWith("blob:") && src.endsWith(".png") && !src.startsWith("http");
+  const webpSrc = isLocalPublicPng ? src.replace(/\.png$/, ".webp") : src;
+  return (
+    <Link
+      className="home-ref-service-card"
+      to={flyer.to}
+      aria-label={flyer.title}
+      style={flyer.backgroundColor ? { backgroundColor: flyer.backgroundColor } : undefined}
+    >
+      <picture>
+        {webpSrc !== src ? <source type="image/webp" srcSet={webpSrc} /> : null}
+        <img src={src} alt={flyer.alt} width={1024} height={1536} loading="eager" decoding="async" />
+      </picture>
+    </Link>
+  );
+}
+
+function ServiceFlyerCarousel({ flyers }: { flyers?: ServiceFlyer[] }) {
   const { homepage } = useCms();
   const activeFlyers =
-    homepage?.serviceFlyers?.filter((f) => f.enabled) && homepage.serviceFlyers.filter((f) => f.enabled).length > 0
+    flyers && flyers.length > 0
+      ? flyers
+      : homepage?.serviceFlyers?.filter((f) => f.enabled) && homepage.serviceFlyers.filter((f) => f.enabled).length > 0
       ? homepage.serviceFlyers.filter((f) => f.enabled)
       : serviceFlyers;
 
@@ -516,18 +511,9 @@ function ServiceFlyerCarousel() {
         </div>
       </div>
       <div className="home-ref-service-track" ref={trackRef} role="region" aria-label="Buy & Sell GH service flyers" tabIndex={0}>
-        {activeFlyers.map((flyer) => {
-          const webpSrc = flyer.image.endsWith(".png") ? flyer.image.replace(/\.png$/, ".webp") : flyer.image;
-          const pngSrc = flyer.image.endsWith(".webp") ? flyer.image.replace(/\.webp$/, ".png") : flyer.image;
-          return (
-            <Link className="home-ref-service-card" to={flyer.to} key={flyer.title} aria-label={flyer.title}>
-              <picture>
-                <source type="image/webp" srcSet={webpSrc} />
-                <img src={pngSrc} alt={flyer.alt} width={1024} height={1536} loading="eager" decoding="async" />
-              </picture>
-            </Link>
-          );
-        })}
+        {activeFlyers.map((flyer, index) => (
+          <ServiceFlyerCard flyer={flyer} key={`${flyer.id || flyer.title}-${index}`} />
+        ))}
       </div>
     </section>
   );

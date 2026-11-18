@@ -4,7 +4,7 @@
  */
 
 export function isAdminHostname(hostname?: string): boolean {
-  if (typeof window === "undefined" && !hostname) return false;
+  if (!hostname && (typeof window === "undefined" || !window.location?.hostname)) return false;
   const currentHost = (hostname || window.location.hostname).toLowerCase();
 
   // Explicit admin host override via environment variable (e.g. VITE_ADMIN_HOST="admin.buyandsellgh.com")

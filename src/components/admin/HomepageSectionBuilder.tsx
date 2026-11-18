@@ -65,6 +65,7 @@ import type {
   Tone,
 } from "../../cms/types";
 import { isProductImageEligible, resolveProductImage } from "../../utils/productImages";
+import { isAdminHostname } from "../../config/adminHost";
 import { getCardPriceDisplay } from "../../utils/productPricing";
 import type { Product } from "../../types/product";
 import { HomepageSectionRenderer } from "../homepage/HomepageSectionRenderer";
@@ -468,12 +469,12 @@ export function HomepageSectionBuilder({
           <p className="text-xs text-slate-600 leading-relaxed w-full">
             Edits and local IndexedDB media uploads save locally to your browser draft and preview safely at{" "}
             <a
-              href="/?preview=modular"
+              href={typeof window !== "undefined" && isAdminHostname() ? "/admin/homepage-preview?mode=modular" : "/?preview=modular"}
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold text-[#8f650e] hover:text-[#b89726] underline decoration-[#d4af37]/60 underline-offset-2 whitespace-nowrap"
             >
-              /?preview=modular
+              {typeof window !== "undefined" && isAdminHostname() ? "/admin/homepage-preview" : "/?preview=modular"}
             </a>{" "}
             without altering the live website until explicitly published.
           </p>
@@ -2370,7 +2371,7 @@ function UnifiedMediaModeEditor({
               <span>Loop</span>
             </label>
             <span className="text-[11px] text-slate-500 ml-auto">
-              Formats: MP4, WebM, MOV, M4V
+              Supported Formats: MP4, WebM (max 200 MB)
             </span>
           </div>
 

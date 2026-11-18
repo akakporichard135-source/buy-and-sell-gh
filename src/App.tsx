@@ -17,6 +17,7 @@ const AdminLoginPage = lazy(() => import("./pages/admin/AdminLoginPage").then((m
 const AdminMfaPage = lazy(() => import("./pages/admin/AdminMfaPage").then((module) => ({ default: module.AdminMfaPage })));
 const AdminResetPasswordPage = lazy(() => import("./pages/admin/AdminResetPasswordPage").then((module) => ({ default: module.AdminResetPasswordPage })));
 const AdminSectionPage = lazy(() => import("./pages/admin/AdminSectionPage").then((module) => ({ default: module.AdminSectionPage })));
+const AdminHomepagePreviewPage = lazy(() => import("./pages/admin/AdminHomepagePreviewPage").then((module) => ({ default: module.AdminHomepagePreviewPage })));
 const AdminOrderDetailPage = lazy(() => import("./pages/admin/AdminOrderDetailPage").then((module) => ({ default: module.AdminOrderDetailPage })));
 const CartPage = lazy(() => import("./pages/CartPage").then((module) => ({ default: module.CartPage })));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage").then((module) => ({ default: module.CheckoutPage })));
@@ -60,6 +61,7 @@ export default function App() {
               <Route path="/admin/mfa" element={<AdminMfaPage />} />
               <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
               <Route element={<ProtectedAdminRoute />}>
+                <Route path="/admin/homepage-preview" element={<AdminHomepagePreviewPage />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboardPage />} />
                   <Route path="products" element={<AdminSectionPage section="products" />} />

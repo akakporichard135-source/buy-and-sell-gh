@@ -11,10 +11,12 @@ import {
   deleteMediaItemById,
   deleteMediaItemPermanently,
   discardHomepageDraft,
+  discardHomepageLegacyDraft,
   discardMainStoreDraft,
   fetchFaqs,
   fetchHomepageContent,
   fetchHomepageDraft,
+  fetchHomepageLegacyDraft,
   fetchMainStoreContent,
   fetchMainStoreDraft,
   fetchMediaLibrary,
@@ -24,6 +26,7 @@ import {
   getInitialFaqs,
   getInitialHomepageContent,
   getInitialHomepageDraft,
+  getInitialHomepageLegacyDraft,
   getInitialMainStoreContent,
   getInitialMainStoreDraft,
   getInitialMediaLibrary,
@@ -35,6 +38,7 @@ import {
   saveFaqs,
   saveHomepageContent,
   saveHomepageDraft,
+  saveHomepageLegacyDraft,
   saveMainStoreContent,
   saveMainStoreDraft,
   savePageContent,
@@ -59,6 +63,7 @@ interface CmsContextValue {
   settings: SiteSettings;
   homepage: HomepageContent;
   homepageDraft: HomepageContent | null;
+  homepageLegacyDraft: HomepageContent | null;
   mainStore: MainStoreConfig;
   mainStoreDraft: MainStoreConfig | null;
   media: MediaItem[];
@@ -72,6 +77,8 @@ interface CmsContextValue {
   updateHomepage: (content: HomepageContent) => Promise<HomepageContent>;
   saveHomepageDraftConfig: (content: HomepageContent) => Promise<HomepageContent>;
   discardHomepageDraftConfig: () => Promise<void>;
+  saveHomepageLegacyDraftConfig: (content: HomepageContent) => Promise<HomepageContent>;
+  discardHomepageLegacyDraftConfig: () => Promise<void>;
   updateMainStore: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   saveMainStoreDraftConfig: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   discardMainStoreDraftConfig: () => Promise<void>;
@@ -110,6 +117,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(() => getInitialSiteSettings());
   const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
   const [homepageDraft, setHomepageDraft] = useState<HomepageContent | null>(() => getInitialHomepageDraft());
+  const [homepageLegacyDraft, setHomepageLegacyDraft] = useState<HomepageContent | null>(() => getInitialHomepageLegacyDraft());
   const [mainStore, setMainStore] = useState<MainStoreConfig>(() => getInitialMainStoreContent());
   const [mainStoreDraft, setMainStoreDraft] = useState<MainStoreConfig | null>(() => getInitialMainStoreDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
@@ -121,10 +129,11 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
   const loadAll = async () => {
     try {
-      const [s, h, hDraft, m, f, p, d, ms, msDraft] = await Promise.all([
+      const [s, h, hDraft, hLegacyDraft, m, f, p, d, ms, msDraft] = await Promise.all([
         fetchSiteSettings(),
         fetchHomepageContent(),
         fetchHomepageDraft(),
+        fetchHomepageLegacyDraft(),
         fetchMediaLibrary(),
         fetchFaqs(),
         fetchPageContent(),
@@ -137,6 +146,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         setSettings(s);
         setHomepage(h);
         setHomepageDraft(hDraft);
+        setHomepageLegacyDraft(hLegacyDraft);
         setMedia(m);
         setFaqs(f);
         setPages(p);
@@ -174,7 +184,11 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const handleUpdateHomepage = async (content: HomepageContent) => {
     const updated = await saveHomepageContent(content);
     setHomepage(updated);
-    setHomepageDraft(null);
+    if (updated.layoutMode === "modular") {
+      setHomepageDraft(null);
+    } else {
+      setHomepageLegacyDraft(null);
+    }
     return updated;
   };
 
@@ -187,6 +201,17 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const handleDiscardHomepageDraft = async () => {
     await discardHomepageDraft();
     setHomepageDraft(null);
+  };
+
+  const handleSaveHomepageLegacyDraft = async (content: HomepageContent) => {
+    const draft = await saveHomepageLegacyDraft(content);
+    setHomepageLegacyDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardHomepageLegacyDraft = async () => {
+    await discardHomepageLegacyDraft();
+    setHomepageLegacyDraft(null);
   };
 
   const handleUploadMedia = async (
@@ -281,6 +306,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         settings,
         homepage,
         homepageDraft,
+        homepageLegacyDraft,
         mainStore,
         mainStoreDraft,
         media,
@@ -294,6 +320,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateHomepage: handleUpdateHomepage,
         saveHomepageDraftConfig: handleSaveHomepageDraft,
         discardHomepageDraftConfig: handleDiscardHomepageDraft,
+        saveHomepageLegacyDraftConfig: handleSaveHomepageLegacyDraft,
+        discardHomepageLegacyDraftConfig: handleDiscardHomepageLegacyDraft,
         updateMainStore: handleUpdateMainStore,
         saveMainStoreDraftConfig: handleSaveMainStoreDraft,
         discardMainStoreDraftConfig: handleDiscardMainStoreDraft,

@@ -2,6 +2,7 @@ import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supaba
 import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import { broadcastPublishedUpdate } from "../utils/imageVersioning";
+import { inferLegacyMediaAttributesForUrl } from "./homepageBuilderUtils";
 import {
   getLocalStagedMediaRecord,
   isLocalMediaUri,
@@ -42,6 +43,7 @@ import type {
 const CMS_STORAGE_KEY_SETTINGS = "buyandsell_cms_settings_v1";
 const CMS_STORAGE_KEY_HOMEPAGE = "buyandsell_cms_homepage_v1";
 export const CMS_STORAGE_KEY_HOMEPAGE_DRAFT = "buyandsell_cms_homepage_draft_v1";
+export const CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT = "buyandsell_cms_homepage_legacy_draft_v1";
 const CMS_STORAGE_KEY_HOMEPAGE_VERIFIED = "buyandsell_cms_homepage_verified_v1";
 const CMS_STORAGE_KEY_MEDIA = "buyandsell_cms_media_v1";
 const CMS_STORAGE_KEY_FAQS = "buyandsell_cms_faqs_v1";
@@ -375,35 +377,106 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     return item;
   };
 
+  const resolveFallbackBg = (tone: "dark" | "light" | "mist", idDefaultBg?: string) => {
+    if (idDefaultBg) return idDefaultBg;
+    if (tone === "dark") return "#000000";
+    if (tone === "mist") return "#e9f5fa";
+    return "#ffffff";
+  };
+
   const mergedHeroes = (source.heroes || defaultHomepageContent.heroes).map((h) => {
     const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
-    const rawImage = h.image || def?.image || "";
-    const rawMobileImage = h.mobileImage || def?.mobileImage;
-    const isLegacySeedIphone18ProDesktop =
-      h.id === "iphone-18-pro" &&
-      (!rawImage ||
+    const hasExplicitBackground = h.backgroundColor !== undefined;
+    const rawImage = h.image !== undefined ? h.image : (def?.image || "");
+    const hasExplicitMobileKey = "mobileImage" in h;
+    const rawMobileImage = hasExplicitMobileKey ? h.mobileImage : def?.mobileImage;
+
+    const isDeprecatedIphone18Desktop =
+      !hasExplicitBackground &&
+      ((h.id === "iphone-18-pro" && !rawImage) ||
         rawImage.includes("1792586241422-iphone-18-pro-the-new-features-you-should-try-1.jpg") ||
         rawImage === "/products/homepage/iphone-18-pro-hero.webp" ||
         rawImage === "/products/homepage/iphone-18-pro-hero.jpg");
-    const isLegacySeedIphone18ProMobile =
-      h.id === "iphone-18-pro" &&
-      (!rawMobileImage ||
-        rawMobileImage.includes("1792004900948-iphone-18-promax-1.jpg") ||
-        rawMobileImage === "/products/homepage/iphone-18-pro-hero-mobile.jpg" ||
+
+    const finalImage = isDeprecatedIphone18Desktop ? APPROVED_IPHONE_18_PRO_DESKTOP_HERO : rawImage;
+    const isUsingApprovedIphone18Desktop = finalImage === APPROVED_IPHONE_18_PRO_DESKTOP_HERO;
+
+    const isDeprecatedIphone18Mobile =
+      isUsingApprovedIphone18Desktop &&
+      ((!hasExplicitMobileKey && !rawMobileImage) ||
+        rawMobileImage?.includes("1792004900948-iphone-18-promax-1.jpg") ||
         rawMobileImage === "/products/homepage/iphone-18-pro-hero-mobile.webp");
+
+    const inferredFromImage = !hasExplicitBackground
+      ? inferLegacyMediaAttributesForUrl(finalImage)
+      : null;
+
+    const finalTone =
+      h.backgroundColor !== undefined
+        ? h.tone || inferredFromImage?.tone || def?.tone || "dark"
+        : inferredFromImage?.tone || h.tone || def?.tone || "dark";
+    const finalBackground =
+      h.backgroundColor !== undefined
+        ? h.backgroundColor
+        : inferredFromImage?.backgroundColor || resolveFallbackBg(finalTone, def?.backgroundColor);
+    const finalBlend =
+      finalTone === "dark"
+        ? "normal"
+        : h.mediaBlendMode !== undefined
+        ? h.mediaBlendMode
+        : inferredFromImage?.mediaBlendMode || def?.mediaBlendMode || "normal";
 
     const combined = {
       ...def,
       ...h,
-      image: isLegacySeedIphone18ProDesktop ? APPROVED_IPHONE_18_PRO_DESKTOP_HERO : rawImage,
-      mobileImage: isLegacySeedIphone18ProMobile ? APPROVED_IPHONE_18_PRO_MOBILE_HERO : rawMobileImage,
+      tone: finalTone,
+      backgroundColor: finalBackground,
+      backgroundGradient:
+        "backgroundGradient" in h ? h.backgroundGradient : def?.backgroundGradient,
+      mediaFit: h.mediaFit || def?.mediaFit || "contain",
+      mediaPosition: h.mediaPosition || def?.mediaPosition || "bottom",
+      mediaBlendMode: finalBlend,
+      image: finalImage,
+      mobileImage: isDeprecatedIphone18Mobile
+        ? APPROVED_IPHONE_18_PRO_MOBILE_HERO
+        : rawMobileImage || undefined,
     };
     return normalizeSecondary(combined);
   });
 
   const mergedTiles = (source.tiles || defaultHomepageContent.tiles).map((t) => {
     const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
-    const combined = { ...def, ...t };
+    const hasExplicitBackground = t.backgroundColor !== undefined;
+    const rawTileImage = t.image !== undefined ? t.image : (def?.image || "");
+    const inferredFromImage = !hasExplicitBackground
+      ? inferLegacyMediaAttributesForUrl(rawTileImage)
+      : null;
+    const finalTone =
+      hasExplicitBackground
+        ? t.tone || inferredFromImage?.tone || def?.tone || "light"
+        : inferredFromImage?.tone || t.tone || def?.tone || "light";
+    const finalBackground = hasExplicitBackground
+      ? t.backgroundColor
+      : inferredFromImage?.backgroundColor || resolveFallbackBg(finalTone, def?.backgroundColor);
+    const finalBlend =
+      finalTone === "dark"
+        ? "normal"
+        : t.mediaBlendMode !== undefined
+        ? t.mediaBlendMode
+        : inferredFromImage?.mediaBlendMode || def?.mediaBlendMode || "normal";
+
+    const combined = {
+      ...def,
+      ...t,
+      tone: finalTone,
+      backgroundColor: finalBackground,
+      backgroundGradient:
+        "backgroundGradient" in t ? t.backgroundGradient : def?.backgroundGradient,
+      mediaFit: t.mediaFit || def?.mediaFit || "contain",
+      mediaPosition: t.mediaPosition || def?.mediaPosition || "bottom",
+      mediaBlendMode: finalBlend,
+      mobileImage: "mobileImage" in t ? t.mobileImage || undefined : def?.mobileImage,
+    };
     return normalizeSecondary(combined);
   });
 
@@ -501,6 +574,49 @@ export const saveHomepageDraft = async (
 export const discardHomepageDraft = async (): Promise<void> => {
   try {
     localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+  } catch {
+    // ignore
+  }
+  notifyListeners();
+};
+
+export const getInitialHomepageLegacyDraft = (): HomepageContent | null => {
+  try {
+    const raw = localStorage.getItem(CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<HomepageContent>;
+    return normalizeHomepageContent({
+      ...parsed,
+      layoutMode: "legacy",
+      hasDraft: true,
+    });
+  } catch {
+    return null;
+  }
+};
+
+export const fetchHomepageLegacyDraft = async (): Promise<HomepageContent | null> => {
+  return getInitialHomepageLegacyDraft();
+};
+
+export const saveHomepageLegacyDraft = async (
+  content: HomepageContent
+): Promise<HomepageContent> => {
+  const normalized = normalizeHomepageContent({
+    ...content,
+    layoutMode: "legacy",
+    hasDraft: true,
+    updatedAt: new Date().toISOString(),
+  });
+
+  writeLocal(CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT, normalized);
+  notifyListeners();
+  return normalized;
+};
+
+export const discardHomepageLegacyDraft = async (): Promise<void> => {
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT);
   } catch {
     // ignore
   }
@@ -797,6 +913,29 @@ async function uploadHomepageStagedRecordToSupabase(
   if (!publicUrl || (!publicUrl.startsWith("https://") && !publicUrl.startsWith("http://"))) {
     throw new Error(`Could not obtain a public URL for "${record.filename}". Publish cancelled.`);
   }
+
+  // Verify the uploaded permanent media URL is publicly retrievable before committing CMS record
+  if (typeof fetch === "function") {
+    let headStatus = 0;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const res = await fetch(publicUrl, { method: "HEAD", cache: "no-store" });
+        headStatus = res.status;
+        if (res.ok) break;
+      } catch {
+        headStatus = 0;
+      }
+      if (attempt === 0) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    }
+    if (headStatus >= 400) {
+      throw new Error(
+        `Uploaded media "${record.filename}" returned HTTP ${headStatus} from public storage (${publicUrl}). Publish cancelled and draft preserved.`
+      );
+    }
+  }
+
   return publicUrl;
 }
 
@@ -855,6 +994,32 @@ export async function promoteHomepageLocalMediaForPublish(
   return resolvedContent;
 }
 
+export function validateHomepagePayloadForPublish(content: HomepageContent): void {
+  const remaining = collectHomepageMediaReferences(content);
+  if (remaining.localRefs.length > 0 || remaining.transientBlobUris.length > 0) {
+    throw new Error(
+      "Publish blocked: unresolved local media or temporary blob URLs remain in payload. Your draft was preserved."
+    );
+  }
+
+  if (content.layoutMode !== "modular") {
+    const activeHeroes = (content.heroes || []).filter((h) => h.enabled);
+    if (activeHeroes.length === 0) {
+      throw new Error(
+        "At least one active Hero Slide is required before publishing the legacy homepage."
+      );
+    }
+    for (const hero of activeHeroes) {
+      if (!hero.title?.trim()) {
+        throw new Error("Every active Hero Slide must have a non-empty Headline Title.");
+      }
+      if (!hero.image?.trim()) {
+        throw new Error(`Hero Slide "${hero.title}" is missing a Desktop Hero Image.`);
+      }
+    }
+  }
+}
+
 export const saveHomepageContent = async (
   content: HomepageContent
 ): Promise<HomepageContent> => {
@@ -862,13 +1027,14 @@ export const saveHomepageContent = async (
   const client = getSupabaseOrThrow();
 
   const resolvedContent = await promoteHomepageLocalMediaForPublish(content);
-
   const cleanContent: HomepageContent = {
     ...resolvedContent,
     layoutMode: resolvedContent.layoutMode === "modular" ? "modular" : "legacy",
     hasDraft: false,
     updatedAt: new Date().toISOString(),
   };
+
+  validateHomepagePayloadForPublish(cleanContent);
 
   const { error } = await client.from("homepage_content").upsert({
     id: "main",
@@ -882,9 +1048,29 @@ export const saveHomepageContent = async (
     );
   }
 
-  // Clear unpublished local draft only AFTER authoritative Supabase write succeeds
+  // Verify the published record is readable after upsert
+  const { data: verifyRow, error: verifyErr } = await client
+    .from("homepage_content")
+    .select("id, updated_at")
+    .eq("id", "main")
+    .maybeSingle();
+
+  if (verifyErr) {
+    throw new Error(
+      `Published write succeeded, but public verification read failed (${verifyErr.message}). Check Supabase availability.`
+    );
+  }
+  if (!verifyRow) {
+    throw new Error("Published homepage verification returned empty row.");
+  }
+
+  // Clear matching unpublished local draft only AFTER authoritative Supabase write & verify succeed
   try {
-    localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+    if (cleanContent.layoutMode === "modular") {
+      localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_DRAFT);
+    } else {
+      localStorage.removeItem(CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT);
+    }
   } catch {
     // ignore
   }

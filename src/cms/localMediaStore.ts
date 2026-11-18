@@ -229,7 +229,7 @@ export const validateLocalMediaFile = async (
     throw new Error(
       expectedKind === "image"
         ? `This slot expects an image file (JPG, PNG, WebP, or AVIF). "${file.name}" looks like a video.`
-        : `This slot expects a video file (MP4, WebM, or M4V). "${file.name}" looks like an image.`
+        : `This slot expects a video file (MP4 or WebM). "${file.name}" looks like an image.`
     );
   }
 
@@ -262,21 +262,17 @@ export const validateLocalMediaFile = async (
 
   const rawType = (file.type || "").toLowerCase();
   if (rawType === "video/quicktime" || ext === "mov") {
-    const quickTimePlayable = checkBrowserVideoCodecSupport("video/quicktime");
-    if (!quickTimePlayable || rawType === "video/quicktime" || ext === "mov") {
-      throw new Error(
-        `QuickTime (.mov) files are not universally supported by visitor browsers or Supabase Storage ("video/mp4" and "video/webm" are allowed). Please export "${file.name}" as H.264 MP4 (.mp4) or WebM (.webm).`
-      );
-    }
+    throw new Error(
+      `QuickTime (.mov) videos cannot be played across all visitor browsers or uploaded to cloud video storage. Supported formats: MP4 (.mp4) and WebM (.webm). Please export "${file.name}" as MP4 or WebM.`
+    );
   }
 
   const isWebmExt = ext === "webm" || rawType === "video/webm";
-  const isMp4OrM4v =
-    ["mp4", "m4v"].includes(ext) || rawType === "video/mp4" || rawType === "video/x-m4v";
+  const isMp4Ext = ext === "mp4" || rawType === "video/mp4";
 
-  if (!isWebmExt && !isMp4OrM4v) {
+  if (!isWebmExt && !isMp4Ext) {
     throw new Error(
-      `Unsupported video format "${rawType || ext || file.name}". Supported browser and publish formats: MP4 (H.264) and WebM (VP8/VP9).`
+      `Unsupported video format "${rawType || ext || file.name}". Supported formats: MP4 (.mp4) and WebM (.webm).`
     );
   }
 
@@ -288,20 +284,20 @@ export const validateLocalMediaFile = async (
       bytes[2] === 0xdf &&
       bytes[3] === 0xa3;
     if (!validEbml) {
-      throw new Error(`Invalid WebM video signature for "${file.name}". Please upload an authentic WebM video.`);
+      throw new Error(`Invalid WebM video signature for "${file.name}". Please upload an authentic WebM (.webm) video.`);
     }
     if (!checkBrowserVideoCodecSupport("video/webm")) {
-      throw new Error(`This browser cannot play WebM videos cleanly. Please use H.264 MP4 instead.`);
+      throw new Error(`This browser cannot play WebM videos cleanly. Please use H.264 MP4 (.mp4) instead.`);
     }
     return { kind: "video", normalizedMimeType: "video/webm", extension: "webm" };
   }
 
-  // ISO Base Media File Format (MP4 / M4V)
+  // ISO Base Media File Format (MP4)
   const ftypMarker = asciiSlice(bytes, 4, 8);
   const majorBrand = asciiSlice(bytes, 8, 12);
   if (ftypMarker !== "ftyp" || majorBrand === "qt  ") {
     throw new Error(
-      `Invalid MP4/M4V video header for "${file.name}". Export as standard ISO MP4 (H.264/AAC) or WebM.`
+      `Invalid MP4 video header for "${file.name}". Export as standard ISO MP4 (H.264/AAC) or WebM (.webm).`
     );
   }
   if (!checkBrowserVideoCodecSupport("video/mp4")) {

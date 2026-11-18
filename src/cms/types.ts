@@ -15,6 +15,11 @@ export interface HeroCampaign {
   mobileImage?: string;
   alt: string;
   tone: Tone;
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  mediaFit?: HomepageMediaFit;
+  mediaPosition?: HomepageMediaFocalPoint | string;
+  mediaBlendMode?: "normal" | "multiply";
   primary: ActionLink;
   secondary?: ActionLink;
   enabled: boolean;
@@ -26,8 +31,14 @@ export interface PromoTile {
   title: string;
   subtitle: string;
   image: string;
+  mobileImage?: string;
   alt: string;
   tone: Tone;
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  mediaFit?: HomepageMediaFit;
+  mediaPosition?: HomepageMediaFocalPoint | string;
+  mediaBlendMode?: "normal" | "multiply";
   primary: ActionLink;
   secondary?: ActionLink;
   placement?: "bottom";
@@ -41,6 +52,7 @@ export interface ServiceFlyer {
   image: string;
   alt: string;
   to: string;
+  backgroundColor?: string;
   enabled: boolean;
   order: number;
 }

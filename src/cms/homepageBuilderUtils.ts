@@ -1,16 +1,20 @@
 import type {
+  HeroCampaign,
   HomepageBentoTile,
   HomepageCarouselCard,
+  HomepageContent,
+  HomepageMediaFit,
+  HomepageMediaFocalPoint,
   HomepageMediaMode,
   HomepagePromoPanel,
   HomepageSection,
   HomepageSectionType,
+  PromoTile,
   Tone,
 } from "./types";
 
-export const SUPPORTED_LOCAL_VIDEO_FORMATS = ["mp4", "webm", "mov", "m4v"] as const;
-export const SUPPORTED_VIDEO_ACCEPT =
-  "video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.webm,.mov,.m4v";
+export const SUPPORTED_LOCAL_VIDEO_FORMATS = ["mp4", "webm"] as const;
+export const SUPPORTED_VIDEO_ACCEPT = "video/mp4,video/webm,.mp4,.webm";
 export const SUPPORTED_IMAGE_ACCEPT =
   "image/webp,image/png,image/jpeg,image/avif,.webp,.png,.jpg,.jpeg,.avif";
 
@@ -417,5 +421,273 @@ export function createEmptySectionFromPreset(
     buttonDestination: preset.type === "footnotes" ? "" : "/store",
     visible: true,
     order: nextOrder,
+  };
+}
+
+export interface LegacyMediaUnit {
+  image: string;
+  mobileImage?: string;
+  alt: string;
+  tone: Tone;
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  mediaFit?: HomepageMediaFit;
+  mediaPosition?: HomepageMediaFocalPoint | string;
+  mediaBlendMode?: "normal" | "multiply";
+}
+
+export function resolveLegacyBackgroundColor(tone?: Tone | null, explicitBg?: string | null): string {
+  const cleaned = (explicitBg || "").trim();
+  if (cleaned) return cleaned;
+  if (tone === "dark") return "#000000";
+  if (tone === "mist") return "#e9f5fa";
+  return "#ffffff";
+}
+
+export function inferLegacyMediaAttributesForUrl(
+  imageUrl: string,
+  currentContent?: HomepageContent
+): Partial<LegacyMediaUnit> | null {
+  const lower = (imageUrl || "").trim().toLowerCase();
+  if (!lower) return null;
+
+  if (currentContent) {
+    const matchHero = (currentContent.heroes || []).find(
+      (h) => (h.image || "").trim().toLowerCase() === lower
+    );
+    if (matchHero) {
+      const unit = extractLegacyMediaUnit(matchHero);
+      return {
+        tone: unit.tone,
+        backgroundColor: unit.backgroundColor,
+        backgroundGradient: unit.backgroundGradient,
+        mediaFit: unit.mediaFit,
+        mediaPosition: unit.mediaPosition,
+        mediaBlendMode: unit.mediaBlendMode,
+        mobileImage: unit.mobileImage,
+      };
+    }
+    const matchTile = (currentContent.tiles || []).find(
+      (t) => (t.image || "").trim().toLowerCase() === lower
+    );
+    if (matchTile) {
+      const unit = extractLegacyMediaUnit(matchTile);
+      return {
+        tone: unit.tone,
+        backgroundColor: unit.backgroundColor,
+        backgroundGradient: unit.backgroundGradient,
+        mediaFit: unit.mediaFit,
+        mediaPosition: unit.mediaPosition,
+        mediaBlendMode: unit.mediaBlendMode,
+        mobileImage: unit.mobileImage,
+      };
+    }
+  }
+
+  if (
+    lower.includes("iphone-18-pro") ||
+    lower.includes("iphone-18-promax") ||
+    lower.includes("watch-series-12") ||
+    lower.includes("apple-india") ||
+    lower.includes("watch-ultra-4")
+  ) {
+    return {
+      tone: "dark",
+      backgroundColor: "#000000",
+      mediaBlendMode: "normal",
+    };
+  }
+
+  if (lower.includes("macbook-air")) {
+    return {
+      tone: "mist",
+      backgroundColor: "#e9f5fa",
+      mediaBlendMode: "multiply",
+    };
+  }
+
+  if (
+    lower.includes("iphone-duo") ||
+    lower.includes("airpods-pro-3") ||
+    lower.includes("ipad-air") ||
+    lower.includes("visa-card") ||
+    lower.includes("mac-mini")
+  ) {
+    return {
+      tone: "light",
+      backgroundColor: "#ffffff",
+      mediaBlendMode: "normal",
+    };
+  }
+
+  return null;
+}
+
+export function extractLegacyMediaUnit(
+  slot: Partial<HeroCampaign | PromoTile>
+): LegacyMediaUnit {
+  const tone: Tone = slot.tone || "light";
+  const backgroundColor = resolveLegacyBackgroundColor(tone, slot.backgroundColor);
+  return {
+    image: slot.image || "",
+    mobileImage: slot.mobileImage,
+    alt: slot.alt || "",
+    tone,
+    backgroundColor,
+    backgroundGradient: slot.backgroundGradient,
+    mediaFit: slot.mediaFit || "contain",
+    mediaPosition: slot.mediaPosition || "bottom",
+    mediaBlendMode:
+      tone === "dark" ? "normal" : slot.mediaBlendMode || "normal",
+  };
+}
+
+export function applyLegacyMediaUnit<T extends HeroCampaign | PromoTile>(
+  slot: T,
+  unit: LegacyMediaUnit
+): T {
+  const tone: Tone = unit.tone || slot.tone || "light";
+  return {
+    ...slot,
+    image: unit.image,
+    mobileImage: unit.mobileImage,
+    alt: unit.alt || slot.alt,
+    tone,
+    backgroundColor: resolveLegacyBackgroundColor(tone, unit.backgroundColor),
+    backgroundGradient: unit.backgroundGradient,
+    mediaFit: unit.mediaFit || "contain",
+    mediaPosition: unit.mediaPosition || "bottom",
+    mediaBlendMode:
+      tone === "dark" ? "normal" : unit.mediaBlendMode || "normal",
+  };
+}
+
+export interface LegacyMediaSlotRef {
+  kind: "hero" | "tile";
+  index: number;
+}
+
+/**
+ * Atomically swaps an image and all of its associated visual background properties
+ * (backgroundColor, backgroundGradient, tone, mediaFit, mediaPosition, mediaBlendMode)
+ * between any two Legacy Hero Slides or Promotional Tiles without disturbing target
+ * headlines, subtitles, CTAs, placement, or visibility.
+ */
+export function swapLegacyMediaUnits(
+  content: HomepageContent,
+  from: LegacyMediaSlotRef,
+  to: LegacyMediaSlotRef
+): HomepageContent {
+  if (from.kind === to.kind && from.index === to.index) {
+    return content;
+  }
+
+  const heroes = [...(content.heroes || [])];
+  const tiles = [...(content.tiles || [])];
+
+  const getSlot = (ref: LegacyMediaSlotRef): HeroCampaign | PromoTile | undefined =>
+    ref.kind === "hero" ? heroes[ref.index] : tiles[ref.index];
+
+  const sourceSlot = getSlot(from);
+  const destSlot = getSlot(to);
+  if (!sourceSlot || !destSlot) {
+    return content;
+  }
+
+  const unitFrom = extractLegacyMediaUnit(sourceSlot);
+  const unitTo = extractLegacyMediaUnit(destSlot);
+
+  if (from.kind === "hero") {
+    heroes[from.index] = applyLegacyMediaUnit(heroes[from.index], unitTo);
+  } else {
+    tiles[from.index] = applyLegacyMediaUnit(tiles[from.index], unitTo);
+  }
+
+  if (to.kind === "hero") {
+    heroes[to.index] = applyLegacyMediaUnit(heroes[to.index], unitFrom);
+  } else {
+    tiles[to.index] = applyLegacyMediaUnit(tiles[to.index], unitFrom);
+  }
+
+  return {
+    ...content,
+    heroes,
+    tiles,
+  };
+}
+
+export interface HomepagePublishChangeSummary {
+  heroCount: number;
+  changedHeroes: number;
+  tileCount: number;
+  changedTiles: number;
+  flyerCount: number;
+  changedFlyers: number;
+  announcementChanged: boolean;
+  pendingLocalMediaCount: number;
+  summaryLines: string[];
+}
+
+export function summarizeLegacyHomepageChanges(
+  live: HomepageContent,
+  candidate: HomepageContent,
+  pendingLocalMediaCount: number
+): HomepagePublishChangeSummary {
+  const liveHeroes = live.heroes || [];
+  const nextHeroes = candidate.heroes || [];
+  const liveTiles = live.tiles || [];
+  const nextTiles = candidate.tiles || [];
+  const liveFlyers = live.serviceFlyers || [];
+  const nextFlyers = candidate.serviceFlyers || [];
+
+  const countDiffs = <T,>(a: T[], b: T[]): number => {
+    const maxLen = Math.max(a.length, b.length);
+    let diffs = 0;
+    for (let i = 0; i < maxLen; i += 1) {
+      if (JSON.stringify(a[i] || null) !== JSON.stringify(b[i] || null)) {
+        diffs += 1;
+      }
+    }
+    return diffs;
+  };
+
+  const changedHeroes = countDiffs(liveHeroes, nextHeroes);
+  const changedTiles = countDiffs(liveTiles, nextTiles);
+  const changedFlyers = countDiffs(liveFlyers, nextFlyers);
+  const announcementChanged =
+    JSON.stringify(live.announcement || null) !== JSON.stringify(candidate.announcement || null);
+
+  const summaryLines: string[] = [];
+  if (changedHeroes > 0) {
+    summaryLines.push(`${changedHeroes} Hero slide slot(s) updated or reordered`);
+  }
+  if (changedTiles > 0) {
+    summaryLines.push(`${changedTiles} Promotional tile slot(s) updated or reordered`);
+  }
+  if (changedFlyers > 0) {
+    summaryLines.push(`${changedFlyers} Service flyer slot(s) updated or reordered`);
+  }
+  if (announcementChanged) {
+    summaryLines.push("Announcement banner updated");
+  }
+  if (pendingLocalMediaCount > 0) {
+    summaryLines.push(
+      `${pendingLocalMediaCount} staged local media file(s) will be uploaded to Supabase Storage`
+    );
+  }
+  if (summaryLines.length === 0) {
+    summaryLines.push("Confirm re-publishing current homepage configuration to live website");
+  }
+
+  return {
+    heroCount: nextHeroes.length,
+    changedHeroes,
+    tileCount: nextTiles.length,
+    changedTiles,
+    flyerCount: nextFlyers.length,
+    changedFlyers,
+    announcementChanged,
+    pendingLocalMediaCount,
+    summaryLines,
   };
 }
