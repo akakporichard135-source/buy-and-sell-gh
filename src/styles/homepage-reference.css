@@ -82,15 +82,53 @@
   letter-spacing: 0;
 }
 
-.home-ref-hero .home-ref-copy h1 {
+.home-ref-hero .home-ref-copy h1,
+.home-ref-hero .home-ref-copy .home-ref-custom-heading {
   font-size: clamp(2.8rem, 4vw, 3.7rem);
   line-height: 1.08;
+}
+
+.home-ref-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b17d12;
+  margin-bottom: 6px;
+}
+
+.home-ref-dark .home-ref-eyebrow {
+  color: var(--brand-gold-soft);
 }
 
 .home-ref-copy p {
   margin: 7px 0 0;
   font-size: clamp(1rem, 1.55vw, 1.35rem);
   line-height: 1.35;
+}
+
+.home-ref-copy .home-ref-description {
+  margin-top: 8px;
+  max-width: 640px;
+  font-size: clamp(0.88rem, 1.15vw, 1.02rem);
+  line-height: 1.45;
+  color: #515154;
+}
+
+.home-ref-dark .home-ref-copy .home-ref-description {
+  color: #c7c7cc;
+}
+
+.home-ref-copy .home-ref-promo-text {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #8c6411;
+}
+
+.home-ref-dark .home-ref-copy .home-ref-promo-text {
+  color: var(--brand-gold-soft);
 }
 
 .home-ref-dark .home-ref-copy p {
@@ -249,26 +287,82 @@
   margin: 14px auto 8px;
 }
 
-/* Bottom copy alignment on contained tiles stacks copy cleanly below image without overlap */
+/* Bottom copy alignment on contained heroes/tiles stacks copy cleanly below image without overlap */
+.home-ref-hero.home-ref-copy-bottom.home-ref-media-contain,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-contain {
   flex-direction: column-reverse;
   justify-content: space-between;
 }
 
+.home-ref-hero.home-ref-copy-bottom.home-ref-media-contain .home-ref-copy,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-contain .home-ref-copy {
   padding: 8px 18px 26px;
 }
 
+.home-ref-hero.home-ref-copy-bottom.home-ref-media-contain .home-ref-hero-image,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-contain .home-ref-tile-image {
   margin: 18px auto 4px;
 }
 
+.home-ref-hero.home-ref-copy-bottom.home-ref-media-cover,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-cover {
   justify-content: flex-end;
 }
 
+.home-ref-hero.home-ref-copy-bottom.home-ref-media-cover .home-ref-copy,
 .home-ref-tile.home-ref-copy-bottom.home-ref-media-cover .home-ref-copy {
   padding: 20px 18px 28px;
+}
+
+/* Custom Homepage Section layout variants */
+.home-ref-custom-section {
+  margin-top: 12px;
+}
+
+.home-ref-variant-compact-banner {
+  height: auto;
+  min-height: 420px;
+  padding-bottom: 20px;
+}
+
+@media (min-width: 900px) {
+  .home-ref-variant-split-left,
+  .home-ref-variant-split-right {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    padding: 36px max(32px, calc((100vw - 1240px) / 2));
+    gap: 36px;
+    height: auto;
+    min-height: 520px;
+  }
+
+  .home-ref-variant-split-left {
+    flex-direction: row-reverse;
+  }
+
+  .home-ref-variant-split-left .home-ref-copy,
+  .home-ref-variant-split-right .home-ref-copy {
+    flex: 1 1 46%;
+    max-width: 540px;
+    justify-items: start;
+    text-align: left;
+    padding: 0;
+  }
+
+  .home-ref-variant-split-left .home-ref-actions,
+  .home-ref-variant-split-right .home-ref-actions {
+    justify-content: flex-start;
+  }
+
+  .home-ref-variant-split-left .home-ref-hero-image,
+  .home-ref-variant-split-right .home-ref-hero-image {
+    flex: 1 1 50%;
+    max-width: 580px;
+    max-height: 440px;
+    margin: 0;
+  }
 }
 
 .home-ref-services {

@@ -1,126 +1,22 @@
-/* ============================================================================
-   Buy & Sell GH — Homepage Content & Campaigns Admin CMS Styles
-   Scoped strictly to .homepage-cms-builder using established brand tokens:
-   Obsidian/Charcoal (#0a0a0c / #111215 / #0f172a), Crisp Neutrals (#ffffff /
-   #f8fafc / #e2e8f0), and Brand Gold (#d4af37 / #b89726 / #8f650e).
-   ============================================================================ */
-
-.homepage-cms-builder {
-  --hp-gold: var(--admin-gold, #d4af37);
-  --hp-gold-hover: var(--admin-gold-hover, #b89726);
-  --hp-gold-ink: #8f650e;
-  --hp-gold-tint: rgba(212, 175, 55, 0.1);
-  --hp-gold-ring: rgba(212, 175, 55, 0.25);
-  --hp-charcoal: #111215;
-  --hp-ink: #0f172a;
-}
-
-.homepage-cms-builder input:not([type="checkbox"]):not([type="color"]),
-.homepage-cms-builder select,
-.homepage-cms-builder textarea {
-  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
-}
-
-.homepage-cms-builder input:not([type="checkbox"]):not([type="color"]):focus,
-.homepage-cms-builder select:focus,
-.homepage-cms-builder textarea:focus {
-  outline: none;
-  border-color: var(--hp-gold) !important;
-  box-shadow: 0 0 0 3px var(--hp-gold-ring);
-}
-
-.homepage-cms-builder button:focus-visible,
-.homepage-cms-builder a:focus-visible {
-  outline: 2px solid var(--hp-gold);
-  outline-offset: 2px;
-}
-
-.homepage-cms-builder input[type="checkbox"] {
-  accent-color: #b89726;
-}
-
-@media (max-width: 1279px) {
-  .homepage-cms-builder .admin-header-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-.homepage-cms-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
-}
-
-.homepage-cms-section-list {
-  min-width: 0;
-}
-
-.homepage-cms-inspector {
-  min-width: 0;
-  container-type: inline-size;
-}
-
-@media (min-width: 1280px) {
-  .homepage-cms-workspace {
-    grid-template-columns: minmax(320px, 375px) minmax(560px, 1fr);
-  }
-
-  .homepage-cms-inspector {
-    position: sticky;
-    top: 1rem;
-    max-height: calc(100dvh - 7.5rem);
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-  }
-}
-
-@media (min-width: 1536px) {
-  .homepage-cms-workspace {
-    grid-template-columns: minmax(340px, 410px) minmax(640px, 1fr);
-  }
-}
-
-.homepage-cms-inspector::-webkit-scrollbar,
-.homepage-cms-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.homepage-cms-inspector::-webkit-scrollbar-thumb,
-.homepage-cms-scroll::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.28);
-  border-radius: 999px;
-}
+/* Minimal scoped layout helpers for Homepage media previews */
 
 .homepage-cms-media-grid {
-  container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
   align-items: stretch;
 }
 
-@container (min-width: 560px) {
+@media (min-width: 768px) {
   .homepage-cms-media-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.homepage-cms-media-card {
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-}
-
 .homepage-cms-media-preview {
   position: relative;
   height: 7.5rem;
-  margin-top: auto;
   border-radius: 0.625rem;
-  background: radial-gradient(circle at 50% 35%, #1d1e24 0%, #0d0e11 100%);
   border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
@@ -128,32 +24,4 @@
   overflow: hidden;
   padding: 0.35rem;
   flex-shrink: 0;
-}
-
-.homepage-cms-media-actions {
-  display: grid;
-  grid-template-columns: minmax(118px, 1fr) auto auto;
-  gap: 0.4rem;
-  align-items: center;
-  padding-top: 0.25rem;
-}
-
-.homepage-cms-media-actions:not(:has([data-media-remove="true"])) {
-  grid-template-columns: minmax(118px, 1fr) auto;
-}
-
-.homepage-cms-media-actions button {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-@container (max-width: 255px) {
-  .homepage-cms-media-actions,
-  .homepage-cms-media-actions:not(:has([data-media-remove="true"])) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .homepage-cms-media-actions [data-media-upload="true"] {
-    grid-column: 1 / -1;
-  }
 }

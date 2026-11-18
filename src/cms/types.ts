@@ -7,12 +7,39 @@ export interface ActionLink {
 
 import type { ProductFamilyKey } from "../catalog/productExperience";
 
+export type CustomSectionLayoutVariant =
+  | "full-hero"
+  | "split-left"
+  | "split-right"
+  | "compact-banner";
+
+export type CustomSectionPlacement =
+  | "after-heroes"
+  | "after-tiles"
+  | "before-services"
+  | "after-services";
+
 export interface HeroCampaign {
   id: string;
+  internalName?: string;
+  deviceName?: string;
+  productId?: string;
+  eyebrow?: string;
   title: string;
   subtitle: string;
+  description?: string;
+  promoText?: string;
   image: string;
   mobileImage?: string;
+  mediaMode?: HomepageMediaMode;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  backgroundImage?: string;
   alt: string;
   tone: Tone;
   backgroundColor?: string;
@@ -22,16 +49,32 @@ export interface HeroCampaign {
   mediaBlendMode?: "normal" | "multiply";
   primary: ActionLink;
   secondary?: ActionLink;
+  placement?: "top" | "bottom";
   enabled: boolean;
   order: number;
 }
 
 export interface PromoTile {
   id: string;
+  internalName?: string;
+  deviceName?: string;
+  productId?: string;
+  eyebrow?: string;
   title: string;
   subtitle: string;
+  description?: string;
+  promoText?: string;
   image: string;
   mobileImage?: string;
+  mediaMode?: HomepageMediaMode;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  backgroundImage?: string;
   alt: string;
   tone: Tone;
   backgroundColor?: string;
@@ -41,7 +84,44 @@ export interface PromoTile {
   mediaBlendMode?: "normal" | "multiply";
   primary: ActionLink;
   secondary?: ActionLink;
-  placement?: "bottom";
+  placement?: "top" | "bottom";
+  enabled: boolean;
+  order: number;
+}
+
+export interface CustomHomepageSection {
+  id: string;
+  internalName: string;
+  deviceName?: string;
+  productId?: string;
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  description?: string;
+  promoText?: string;
+  image: string;
+  mobileImage?: string;
+  mediaMode?: HomepageMediaMode;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  backgroundImage?: string;
+  alt: string;
+  tone: Tone;
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  mediaFit?: HomepageMediaFit;
+  mediaPosition?: HomepageMediaFocalPoint | string;
+  mediaBlendMode?: "normal" | "multiply";
+  layoutVariant?: CustomSectionLayoutVariant;
+  sectionPlacement?: CustomSectionPlacement;
+  primary: ActionLink;
+  secondary?: ActionLink;
+  placement?: "top" | "bottom";
   enabled: boolean;
   order: number;
 }
@@ -217,6 +297,7 @@ export interface HomepageContent {
   };
   heroes: HeroCampaign[];
   tiles: PromoTile[];
+  customSections?: CustomHomepageSection[];
   serviceFlyers: ServiceFlyer[];
   sections?: HomepageSection[];
   hasDraft?: boolean;

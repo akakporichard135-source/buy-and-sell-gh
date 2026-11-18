@@ -1,4 +1,6 @@
 import type {
+  ActionLink,
+  CustomHomepageSection,
   HeroCampaign,
   HomepageBentoTile,
   HomepageCarouselCard,
@@ -425,8 +427,26 @@ export function createEmptySectionFromPreset(
 }
 
 export interface LegacyMediaUnit {
+  id?: string;
+  internalName?: string;
+  deviceName?: string;
+  productId?: string;
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  promoText?: string;
   image: string;
   mobileImage?: string;
+  mediaMode?: HomepageMediaMode;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoLoop?: boolean;
+  backgroundImage?: string;
   alt: string;
   tone: Tone;
   backgroundColor?: string;
@@ -434,6 +454,10 @@ export interface LegacyMediaUnit {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
+  primary?: ActionLink;
+  secondary?: ActionLink;
+  placement?: "top" | "bottom";
+  enabled?: boolean;
 }
 
 export function resolveLegacyBackgroundColor(tone?: Tone | null, explicitBg?: string | null): string {
@@ -524,13 +548,31 @@ export function inferLegacyMediaAttributesForUrl(
 }
 
 export function extractLegacyMediaUnit(
-  slot: Partial<HeroCampaign | PromoTile>
+  slot: Partial<HeroCampaign | PromoTile | CustomHomepageSection>
 ): LegacyMediaUnit {
   const tone: Tone = slot.tone || "light";
   const backgroundColor = resolveLegacyBackgroundColor(tone, slot.backgroundColor);
   return {
+    id: slot.id,
+    internalName: slot.internalName,
+    deviceName: slot.deviceName ?? slot.title,
+    productId: slot.productId,
+    eyebrow: slot.eyebrow,
+    title: slot.title,
+    subtitle: slot.subtitle,
+    description: slot.description,
+    promoText: slot.promoText,
     image: slot.image || "",
     mobileImage: slot.mobileImage,
+    mediaMode: slot.mediaMode || (slot.videoUrl ? "video" : "image"),
+    videoUrl: slot.videoUrl,
+    mobileVideoUrl: slot.mobileVideoUrl,
+    posterUrl: slot.posterUrl,
+    mobilePosterUrl: slot.mobilePosterUrl,
+    videoAutoplay: slot.videoAutoplay,
+    videoMuted: slot.videoMuted,
+    videoLoop: slot.videoLoop,
+    backgroundImage: slot.backgroundImage,
     alt: slot.alt || "",
     tone,
     backgroundColor,
@@ -539,18 +581,43 @@ export function extractLegacyMediaUnit(
     mediaPosition: slot.mediaPosition || "bottom",
     mediaBlendMode:
       tone === "dark" ? "normal" : slot.mediaBlendMode || "normal",
+    primary: slot.primary ? { ...slot.primary } : undefined,
+    secondary: slot.secondary ? { ...slot.secondary } : undefined,
+    placement: slot.placement,
+    enabled: slot.enabled,
   };
 }
 
-export function applyLegacyMediaUnit<T extends HeroCampaign | PromoTile>(
-  slot: T,
-  unit: LegacyMediaUnit
-): T {
+export function applyLegacyMediaUnit<
+  T extends HeroCampaign | PromoTile | CustomHomepageSection
+>(slot: T, unit: LegacyMediaUnit): T {
   const tone: Tone = unit.tone || slot.tone || "light";
+  const nextTitle = unit.title !== undefined ? unit.title : slot.title;
+  const nextDeviceName =
+    unit.deviceName !== undefined ? unit.deviceName : nextTitle;
   return {
     ...slot,
+    id: unit.id || slot.id,
+    internalName:
+      unit.internalName !== undefined ? unit.internalName : slot.internalName,
+    deviceName: nextDeviceName,
+    productId: unit.productId,
+    eyebrow: unit.eyebrow,
+    title: nextTitle,
+    subtitle: unit.subtitle !== undefined ? unit.subtitle : slot.subtitle,
+    description: unit.description,
+    promoText: unit.promoText,
     image: unit.image,
     mobileImage: unit.mobileImage,
+    mediaMode: unit.mediaMode || "image",
+    videoUrl: unit.videoUrl,
+    mobileVideoUrl: unit.mobileVideoUrl,
+    posterUrl: unit.posterUrl,
+    mobilePosterUrl: unit.mobilePosterUrl,
+    videoAutoplay: unit.videoAutoplay,
+    videoMuted: unit.videoMuted,
+    videoLoop: unit.videoLoop,
+    backgroundImage: unit.backgroundImage,
     alt: unit.alt || slot.alt,
     tone,
     backgroundColor: resolveLegacyBackgroundColor(tone, unit.backgroundColor),
@@ -559,19 +626,25 @@ export function applyLegacyMediaUnit<T extends HeroCampaign | PromoTile>(
     mediaPosition: unit.mediaPosition || "bottom",
     mediaBlendMode:
       tone === "dark" ? "normal" : unit.mediaBlendMode || "normal",
+    primary: unit.primary ? { ...unit.primary } : slot.primary,
+    secondary: unit.secondary ? { ...unit.secondary } : undefined,
+    placement: unit.placement,
+    enabled: unit.enabled !== undefined ? unit.enabled : slot.enabled,
+    order: slot.order,
   };
 }
 
 export interface LegacyMediaSlotRef {
-  kind: "hero" | "tile";
+  kind: "hero" | "tile" | "customSection";
   index: number;
 }
 
 /**
- * Atomically swaps an image and all of its associated visual background properties
- * (backgroundColor, backgroundGradient, tone, mediaFit, mediaPosition, mediaBlendMode)
- * between any two Legacy Hero Slides or Promotional Tiles without disturbing target
- * headlines, subtitles, CTAs, placement, or visibility.
+ * Atomically swaps two complete campaigns (including device/product name, headline,
+ * subtitle, description, CTAs, desktop/mobile images, video settings, background
+ * colour/gradient, tone, media fit/position/blend mode) between any two Hero,
+ * Promotional Tile, or Custom Section slots while preserving each destination
+ * slot's responsive layout container and position order.
  */
 export function swapLegacyMediaUnits(
   content: HomepageContent,
@@ -584,9 +657,15 @@ export function swapLegacyMediaUnits(
 
   const heroes = [...(content.heroes || [])];
   const tiles = [...(content.tiles || [])];
+  const customSections = [...(content.customSections || [])];
 
-  const getSlot = (ref: LegacyMediaSlotRef): HeroCampaign | PromoTile | undefined =>
-    ref.kind === "hero" ? heroes[ref.index] : tiles[ref.index];
+  const getSlot = (
+    ref: LegacyMediaSlotRef
+  ): HeroCampaign | PromoTile | CustomHomepageSection | undefined => {
+    if (ref.kind === "hero") return heroes[ref.index];
+    if (ref.kind === "tile") return tiles[ref.index];
+    return customSections[ref.index];
+  };
 
   const sourceSlot = getSlot(from);
   const destSlot = getSlot(to);
@@ -599,20 +678,153 @@ export function swapLegacyMediaUnits(
 
   if (from.kind === "hero") {
     heroes[from.index] = applyLegacyMediaUnit(heroes[from.index], unitTo);
-  } else {
+  } else if (from.kind === "tile") {
     tiles[from.index] = applyLegacyMediaUnit(tiles[from.index], unitTo);
+  } else {
+    customSections[from.index] = applyLegacyMediaUnit(
+      customSections[from.index],
+      unitTo
+    );
   }
 
   if (to.kind === "hero") {
     heroes[to.index] = applyLegacyMediaUnit(heroes[to.index], unitFrom);
-  } else {
+  } else if (to.kind === "tile") {
     tiles[to.index] = applyLegacyMediaUnit(tiles[to.index], unitFrom);
+  } else {
+    customSections[to.index] = applyLegacyMediaUnit(
+      customSections[to.index],
+      unitFrom
+    );
   }
 
   return {
     ...content,
     heroes,
     tiles,
+    customSections,
+  };
+}
+
+export const swapLegacyCampaigns = swapLegacyMediaUnits;
+
+export interface CatalogProductLike {
+  id: string;
+  slug: string;
+  name: string;
+  category?: string;
+  subcategory?: string;
+  generation?: string;
+  shortDescription?: string;
+  description?: string;
+  images?: Array<{ src: string; alt?: string }>;
+  primaryImageIndex?: number;
+}
+
+function resolveProductFamilyKey(product: CatalogProductLike): string {
+  const cat = `${product.category || ""} ${product.subcategory || ""} ${product.slug || ""}`.toLowerCase();
+  if (cat.includes("iphone") || cat.includes("phone")) return "iphone";
+  if (cat.includes("mac") || cat.includes("macbook") || cat.includes("imac")) return "mac";
+  if (cat.includes("ipad")) return "ipad";
+  if (cat.includes("watch")) return "watch";
+  if (cat.includes("airpod")) return "airpods";
+  return "accessories";
+}
+
+/**
+ * Updates a homepage campaign or custom section to display a selected catalogue product
+ * without mutating, overwriting, or deleting the underlying product in the catalogue.
+ */
+export function applyProductToCampaign<
+  T extends HeroCampaign | PromoTile | CustomHomepageSection
+>(slot: T, product: CatalogProductLike, resolvedImageUrl?: string): T {
+  const family = resolveProductFamilyKey(product);
+  const primaryIdx = product.primaryImageIndex ?? 0;
+  const fallbackImg =
+    product.images?.[primaryIdx]?.src || product.images?.[0]?.src || "";
+  const chosenImage = (resolvedImageUrl || fallbackImg || slot.image || "").trim();
+  const inferredBg = inferLegacyMediaAttributesForUrl(chosenImage);
+
+  const learnMorePath =
+    product.slug === "mac-mini"
+      ? "/mac-mini"
+      : product.slug === "mac-studio"
+      ? "/mac-studio"
+      : `/${family}/${product.slug}`;
+  const buyPath = `/shop/buy-${family}/${product.slug}`;
+
+  return {
+    ...slot,
+    productId: product.id || product.slug,
+    deviceName: product.name,
+    title: product.name,
+    eyebrow: product.generation || product.subcategory || slot.eyebrow,
+    subtitle: product.shortDescription || slot.subtitle || "Available at Buy & Sell GH.",
+    image: chosenImage,
+    alt: product.name,
+    ...(inferredBg
+      ? {
+          tone: inferredBg.tone || slot.tone,
+          backgroundColor: inferredBg.backgroundColor || slot.backgroundColor,
+          mediaBlendMode: inferredBg.mediaBlendMode || slot.mediaBlendMode,
+        }
+      : {}),
+    primary: {
+      label: slot.primary?.label || "Learn more",
+      to: learnMorePath,
+    },
+    secondary: {
+      label: slot.secondary?.label || "Buy",
+      to: buyPath,
+    },
+  };
+}
+
+export function createDefaultCustomHomepageSection(
+  order: number,
+  overrides?: Partial<CustomHomepageSection>
+): CustomHomepageSection {
+  const id = overrides?.id || `custom-section-${Date.now()}-${order}`;
+  const tone: Tone = overrides?.tone || "light";
+  const backgroundColor = resolveLegacyBackgroundColor(tone, overrides?.backgroundColor);
+  return {
+    id,
+    internalName: overrides?.internalName || `Custom Section ${order}`,
+    deviceName: overrides?.deviceName || "Featured Device",
+    productId: overrides?.productId,
+    eyebrow: overrides?.eyebrow || "FEATURED CAMPAIGN",
+    title: overrides?.title || "Featured Device",
+    subtitle: overrides?.subtitle || "Engineered for extraordinary performance.",
+    description:
+      overrides?.description ||
+      "Available with official Buy & Sell GH inspection warranty and flexible payment options in Accra.",
+    promoText: overrides?.promoText || "",
+    image: overrides?.image || "/products/homepage/iphone-duo.webp",
+    mobileImage: overrides?.mobileImage,
+    mediaMode: overrides?.mediaMode || "image",
+    videoUrl: overrides?.videoUrl,
+    mobileVideoUrl: overrides?.mobileVideoUrl,
+    posterUrl: overrides?.posterUrl,
+    mobilePosterUrl: overrides?.mobilePosterUrl,
+    videoAutoplay: overrides?.videoAutoplay ?? true,
+    videoMuted: overrides?.videoMuted ?? true,
+    videoLoop: overrides?.videoLoop ?? true,
+    backgroundImage: overrides?.backgroundImage,
+    alt: overrides?.alt || overrides?.title || "Featured homepage section",
+    tone,
+    backgroundColor,
+    backgroundGradient: overrides?.backgroundGradient,
+    mediaFit: overrides?.mediaFit || "contain",
+    mediaPosition: overrides?.mediaPosition || "bottom",
+    mediaBlendMode:
+      tone === "dark" ? "normal" : overrides?.mediaBlendMode || "normal",
+    layoutVariant: overrides?.layoutVariant || "full-hero",
+    sectionPlacement: overrides?.sectionPlacement || "after-heroes",
+    primary: overrides?.primary || { label: "Learn more", to: "/store" },
+    secondary: overrides?.secondary || { label: "Buy", to: "/store" },
+    placement: overrides?.placement || "top",
+    enabled: overrides?.enabled ?? true,
+    order,
   };
 }
 
@@ -621,6 +833,8 @@ export interface HomepagePublishChangeSummary {
   changedHeroes: number;
   tileCount: number;
   changedTiles: number;
+  customSectionCount: number;
+  changedCustomSections: number;
   flyerCount: number;
   changedFlyers: number;
   announcementChanged: boolean;
@@ -637,6 +851,8 @@ export function summarizeLegacyHomepageChanges(
   const nextHeroes = candidate.heroes || [];
   const liveTiles = live.tiles || [];
   const nextTiles = candidate.tiles || [];
+  const liveCustom = live.customSections || [];
+  const nextCustom = candidate.customSections || [];
   const liveFlyers = live.serviceFlyers || [];
   const nextFlyers = candidate.serviceFlyers || [];
 
@@ -653,6 +869,7 @@ export function summarizeLegacyHomepageChanges(
 
   const changedHeroes = countDiffs(liveHeroes, nextHeroes);
   const changedTiles = countDiffs(liveTiles, nextTiles);
+  const changedCustomSections = countDiffs(liveCustom, nextCustom);
   const changedFlyers = countDiffs(liveFlyers, nextFlyers);
   const announcementChanged =
     JSON.stringify(live.announcement || null) !== JSON.stringify(candidate.announcement || null);
@@ -663,6 +880,9 @@ export function summarizeLegacyHomepageChanges(
   }
   if (changedTiles > 0) {
     summaryLines.push(`${changedTiles} Promotional tile slot(s) updated or reordered`);
+  }
+  if (changedCustomSections > 0) {
+    summaryLines.push(`${changedCustomSections} Custom homepage section(s) added or updated`);
   }
   if (changedFlyers > 0) {
     summaryLines.push(`${changedFlyers} Service flyer slot(s) updated or reordered`);
@@ -684,6 +904,8 @@ export function summarizeLegacyHomepageChanges(
     changedHeroes,
     tileCount: nextTiles.length,
     changedTiles,
+    customSectionCount: nextCustom.length,
+    changedCustomSections,
     flyerCount: nextFlyers.length,
     changedFlyers,
     announcementChanged,

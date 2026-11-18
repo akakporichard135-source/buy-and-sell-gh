@@ -509,9 +509,9 @@ if (mobileHeroUrl && mobileHeroUrl.startsWith("https://")) {
 }
 
 // ---------------------------------------------------------------------------
-// TEST 6: Legacy Draft Lifecycle & Image+Background Atomic Swap Verification
+// TEST 6: Complete Campaign Swap, Editable Names, Custom Sections, Product Selection & Video Promotion
 // ---------------------------------------------------------------------------
-console.log("6. Verifying Legacy Save Draft -> Refresh -> Image+Background Swap & Validation...");
+console.log("6. Verifying Complete Campaign Swap, Editable Names, Custom Sections, Product Selection & Video Promotion...");
 localStorage.clear();
 await cmsRepo.saveHomepageDraft({
   ...defaults.defaultHomepageContent,
@@ -526,60 +526,181 @@ const swappedHeroesContent = utils.swapLegacyMediaUnits(
   { kind: "hero", index: 0 },
   { kind: "hero", index: 1 }
 );
-assert.equal(swappedHeroesContent.heroes[0].title, "iPhone 18 Pro", "Target hero headline must remain");
+assert.equal(swappedHeroesContent.heroes[0].title, "iPhone Duo", "Swapped Hero 0 must carry iPhone Duo headline");
+assert.equal(swappedHeroesContent.heroes[0].deviceName, "iPhone Duo", "Swapped Hero 0 must carry iPhone Duo deviceName");
+assert.equal(swappedHeroesContent.heroes[0].subtitle, "Open up more room for everything you do.");
 assert.equal(swappedHeroesContent.heroes[0].image, "/products/homepage/iphone-duo.webp");
 assert.equal(swappedHeroesContent.heroes[0].backgroundColor, "#ffffff");
 assert.equal(swappedHeroesContent.heroes[0].tone, "light");
 assert.equal(swappedHeroesContent.heroes[0].mediaBlendMode, "multiply");
+assert.equal(swappedHeroesContent.heroes[0].primary.to, "/iphone/iphone-duo");
+assert.equal(swappedHeroesContent.heroes[0].secondary?.to, "/shop/buy-iphone/iphone-duo");
 assert.equal(swappedHeroesContent.heroes[0].mobileImage, undefined, "Swapped Hero 0 must not inherit old mobile portrait");
+assert.equal(swappedHeroesContent.heroes[0].order, 1, "Hero 0 keeps position order 1");
 
-assert.equal(swappedHeroesContent.heroes[1].title, "iPhone Duo", "Target hero 1 headline must remain");
+assert.equal(swappedHeroesContent.heroes[1].title, "iPhone 18 Pro", "Swapped Hero 1 must carry iPhone 18 Pro headline");
+assert.equal(swappedHeroesContent.heroes[1].deviceName, "iPhone 18 Pro", "Swapped Hero 1 must carry iPhone 18 Pro deviceName");
+assert.equal(swappedHeroesContent.heroes[1].subtitle, "Pro further.");
 assert.equal(swappedHeroesContent.heroes[1].image, "/products/homepage/iphone-18-pro-hero-2x.webp");
 assert.equal(swappedHeroesContent.heroes[1].backgroundColor, "#000000");
 assert.equal(swappedHeroesContent.heroes[1].tone, "dark");
 assert.equal(swappedHeroesContent.heroes[1].mediaBlendMode, "normal");
+assert.equal(swappedHeroesContent.heroes[1].primary.to, "/iphone/iphone-18-pro");
 assert.ok(swappedHeroesContent.heroes[1].mobileImage, "Burgundy mobile portrait follows Burgundy Hero unit");
+assert.equal(swappedHeroesContent.heroes[1].order, 2, "Hero 1 keeps position order 2");
 
-// Cross-container swap: Hero 0 <-> Tile 3 (MacBook Air, mist #e9f5fa multiply)
+// Cross-container swap: Hero 0 (now iPhone Duo) <-> Tile 3 (MacBook Air, mist #e9f5fa multiply)
 const crossSwappedContent = utils.swapLegacyMediaUnits(
   swappedHeroesContent,
   { kind: "hero", index: 0 },
   { kind: "tile", index: 3 }
 );
+assert.equal(crossSwappedContent.heroes[0].title, "MacBook Air", "Hero 0 now carries MacBook Air title");
+assert.equal(crossSwappedContent.heroes[0].deviceName, "MacBook Air");
+assert.equal(crossSwappedContent.heroes[0].subtitle, "Light to carry. Ready for everything.");
 assert.equal(crossSwappedContent.heroes[0].image, "/products/homepage/macbook-air.jpg");
 assert.equal(crossSwappedContent.heroes[0].backgroundColor, "#e9f5fa");
 assert.equal(crossSwappedContent.heroes[0].tone, "mist");
 assert.equal(crossSwappedContent.heroes[0].mediaBlendMode, "multiply");
-assert.equal(crossSwappedContent.tiles[3].title, "MacBook Air", "Tile title stays in Tile 3");
+
+assert.equal(crossSwappedContent.tiles[3].title, "iPhone Duo", "Tile 3 now carries iPhone Duo title");
+assert.equal(crossSwappedContent.tiles[3].deviceName, "iPhone Duo");
+assert.equal(crossSwappedContent.tiles[3].subtitle, "Open up more room for everything you do.");
 assert.equal(crossSwappedContent.tiles[3].image, "/products/homepage/iphone-duo.webp");
 assert.equal(crossSwappedContent.tiles[3].backgroundColor, "#ffffff");
 assert.equal(crossSwappedContent.tiles[3].tone, "light");
 
+// Test Product/Device Selection without mutating original product
+const sampleCatalog = [
+  {
+    id: "prod-iphone-18-pro",
+    slug: "iphone-18-pro",
+    name: "iPhone 18 Pro",
+    category: "iPhone",
+    shortDescription: "Pro further.",
+    images: [{ src: "/products/homepage/iphone-18-pro-hero-2x.webp" }],
+  },
+  {
+    id: "prod-ipad-pro-m5",
+    slug: "ipad-pro-m5",
+    name: "iPad Pro M5",
+    category: "iPad",
+    generation: "M5",
+    shortDescription: "Thinpossible power.",
+    images: [{ src: "/products/homepage/homepage-ipad-air-white.webp" }],
+  },
+];
+const catalogSnapshotBefore = JSON.stringify(sampleCatalog);
+const updatedHeroWithNewDevice = utils.applyProductToCampaign(
+  crossSwappedContent.heroes[1],
+  sampleCatalog[1]
+);
+assert.equal(updatedHeroWithNewDevice.deviceName, "iPad Pro M5");
+assert.equal(updatedHeroWithNewDevice.title, "iPad Pro M5");
+assert.equal(updatedHeroWithNewDevice.productId, "prod-ipad-pro-m5");
+assert.equal(updatedHeroWithNewDevice.primary.to, "/ipad/ipad-pro-m5");
+assert.equal(updatedHeroWithNewDevice.secondary?.to, "/shop/buy-ipad/ipad-pro-m5");
+assert.equal(
+  JSON.stringify(sampleCatalog),
+  catalogSnapshotBefore,
+  "Original catalogue products must remain 100% untouched when replacing a homepage campaign device"
+);
+
+// Test adding a Custom Homepage Section + Video upload promotion on Hero & Custom Section
+const newCustomSection = utils.createDefaultCustomHomepageSection(1, {
+  internalName: "Mac Studio Launch Section",
+  deviceName: "Mac Studio M5 Ultra",
+  title: "Mac Studio M5 Ultra",
+  subtitle: "Supercharged for pros in Accra.",
+  description: "Extreme workstation performance with official warranty.",
+  mediaMode: "video",
+  videoUrl: "local-media://staged-custom-sec-vid",
+  posterUrl: "local-media://staged-custom-sec-poster",
+  tone: "dark",
+  backgroundColor: "#000000",
+  layoutVariant: "split-right",
+  sectionPlacement: "after-heroes",
+});
+
+const draftWithCustomAndVideo = {
+  ...crossSwappedContent,
+  heroes: [
+    {
+      ...crossSwappedContent.heroes[0],
+      title: "Renamed Flagship Hero",
+      deviceName: "Renamed Flagship Hero",
+      mediaMode: "video",
+      videoUrl: "local-media://staged-legacy-hero-vid",
+    },
+    updatedHeroWithNewDevice,
+    crossSwappedContent.heroes[2],
+  ],
+  customSections: [newCustomSection],
+};
+
 // Save Legacy Draft -> verify isolated key & survive refresh/normalization
-const savedLegacy = await cmsRepo.saveHomepageLegacyDraft(crossSwappedContent);
+const savedLegacy = await cmsRepo.saveHomepageLegacyDraft(draftWithCustomAndVideo);
 assert.equal(savedLegacy.layoutMode, "legacy");
 assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_LEGACY_DRAFT), "Legacy draft saved");
 assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_DRAFT), "Modular draft must NOT be clobbered by Legacy draft");
 
 const reloadedLegacy = cmsRepo.getInitialHomepageLegacyDraft();
 assert.ok(reloadedLegacy);
+assert.equal(reloadedLegacy.heroes[0].title, "Renamed Flagship Hero", "Renamed campaign title must survive save & refresh");
+assert.equal(reloadedLegacy.heroes[0].deviceName, "Renamed Flagship Hero");
 assert.equal(reloadedLegacy.heroes[0].backgroundColor, "#e9f5fa", "Background must survive save & refresh");
-assert.equal(reloadedLegacy.heroes[0].tone, "mist");
-assert.equal(reloadedLegacy.tiles[3].backgroundColor, "#ffffff");
+assert.equal(reloadedLegacy.heroes[0].videoUrl, "local-media://staged-legacy-hero-vid", "Staged hero video URI must survive draft reload");
+assert.equal(reloadedLegacy.heroes[1].title, "iPad Pro M5", "Replaced device must survive draft reload");
+assert.equal(reloadedLegacy.customSections?.length, 1, "Custom section must survive draft reload");
+assert.equal(reloadedLegacy.customSections?.[0].title, "Mac Studio M5 Ultra");
+assert.equal(reloadedLegacy.customSections?.[0].videoUrl, "local-media://staged-custom-sec-vid");
+
+// Promote staged video + poster on Legacy Hero and Custom Section via promoteHomepageLocalMediaForPublish
+const promotedLegacy = await cmsRepo.promoteHomepageLocalMediaForPublish(reloadedLegacy, {
+  assertAuth: async () => true,
+  getStagedRecord: async (uri) => ({
+    id: uri,
+    uri,
+    filename: uri.includes("vid") ? "promo-hero.mp4" : "poster.webp",
+    mimeType: uri.includes("vid") ? "video/mp4" : "image/webp",
+    size: 4096,
+    blob: new Blob([new Uint8Array(64)], {
+      type: uri.includes("vid") ? "video/mp4" : "image/webp",
+    }),
+  }),
+  uploadStagedRecord: async (rec, kind) =>
+    kind === "video"
+      ? `https://example.supabase.co/storage/v1/object/public/learn-more-media/videos/${rec.id.replace("local-media://", "")}.mp4`
+      : `https://example.supabase.co/storage/v1/object/public/product-images/media/homepage/images/${rec.id.replace("local-media://", "")}.webp`,
+});
+assert.equal(
+  promotedLegacy.heroes[0].videoUrl,
+  "https://example.supabase.co/storage/v1/object/public/learn-more-media/videos/staged-legacy-hero-vid.mp4"
+);
+assert.equal(
+  promotedLegacy.customSections?.[0].videoUrl,
+  "https://example.supabase.co/storage/v1/object/public/learn-more-media/videos/staged-custom-sec-vid.mp4"
+);
+assert.equal(
+  promotedLegacy.customSections?.[0].posterUrl,
+  "https://example.supabase.co/storage/v1/object/public/product-images/media/homepage/images/staged-custom-sec-poster.webp"
+);
+cmsRepo.validateHomepagePayloadForPublish(promotedLegacy);
 
 assert.throws(
   () =>
     cmsRepo.validateHomepagePayloadForPublish({
-      ...reloadedLegacy,
-      heroes: reloadedLegacy.heroes.map((h) => ({ ...h, enabled: false })),
+      ...promotedLegacy,
+      heroes: promotedLegacy.heroes.map((h) => ({ ...h, enabled: false })),
+      customSections: [],
     }),
   /At least one active Hero Slide/i
 );
 assert.throws(
   () =>
     cmsRepo.validateHomepagePayloadForPublish({
-      ...reloadedLegacy,
-      heroes: [{ ...reloadedLegacy.heroes[0], image: "local-media://unresolved" }],
+      ...promotedLegacy,
+      heroes: [{ ...promotedLegacy.heroes[0], image: "local-media://unresolved" }],
     }),
   /unresolved local media/i
 );
@@ -587,7 +708,7 @@ assert.throws(
 await cmsRepo.discardHomepageLegacyDraft();
 assert.equal(cmsRepo.getInitialHomepageLegacyDraft(), null);
 assert.ok(localStorage.getItem(cmsRepo.CMS_STORAGE_KEY_HOMEPAGE_DRAFT), "Discarding legacy draft preserves modular draft");
-console.log("   [PASS] Legacy draft persistence, swapLegacyMediaUnits & publish validation verified\n");
+console.log("   [PASS] Complete campaign swap, editable names, custom sections, product selection & video promotion verified\n");
 
 console.log("\n=== ALL HOMEPAGE CMS E2E, PROMOTION & RECOVERY CHECKS PASSED ===");
 process.exit(0);

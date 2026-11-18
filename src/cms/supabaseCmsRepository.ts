@@ -363,19 +363,6 @@ const normalizeHomepageSection = (
 export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent> | null): HomepageContent => {
   const source = savedContent || defaultHomepageContent;
   const layoutMode: HomepageLayoutMode = source.layoutMode === "modular" ? "modular" : "legacy";
-  const normalizeSecondary = <T extends { id: string; secondary?: { label: string; to: string } }>(item: T): T => {
-    if (item.id === "iphone-duo") return item;
-    if (item.secondary && item.secondary.label === "View pricing") {
-      return {
-        ...item,
-        secondary: {
-          ...item.secondary,
-          label: "Buy",
-        },
-      };
-    }
-    return item;
-  };
 
   const resolveFallbackBg = (tone: "dark" | "light" | "mist", idDefaultBg?: string) => {
     if (idDefaultBg) return idDefaultBg;
@@ -384,7 +371,7 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     return "#ffffff";
   };
 
-  const mergedHeroes = (source.heroes || defaultHomepageContent.heroes).map((h) => {
+  const mergedHeroes = (source.heroes || defaultHomepageContent.heroes).map((h, idx) => {
     const def = defaultHomepageContent.heroes.find((d) => d.id === h.id);
     const hasExplicitBackground = h.backgroundColor !== undefined;
     const rawImage = h.image !== undefined ? h.image : (def?.image || "");
@@ -426,9 +413,17 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
         ? h.mediaBlendMode
         : inferredFromImage?.mediaBlendMode || def?.mediaBlendMode || "normal";
 
-    const combined = {
+    const finalTitle = h.title !== undefined ? h.title : (def?.title || "Featured Campaign");
+    const finalDeviceName =
+      h.deviceName !== undefined ? h.deviceName : finalTitle;
+
+    return {
       ...def,
       ...h,
+      id: h.id || def?.id || `hero-${idx + 1}`,
+      deviceName: finalDeviceName,
+      title: finalTitle,
+      subtitle: h.subtitle !== undefined ? h.subtitle : (def?.subtitle || ""),
       tone: finalTone,
       backgroundColor: finalBackground,
       backgroundGradient:
@@ -436,15 +431,16 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       mediaFit: h.mediaFit || def?.mediaFit || "contain",
       mediaPosition: h.mediaPosition || def?.mediaPosition || "bottom",
       mediaBlendMode: finalBlend,
+      mediaMode: h.mediaMode || (h.videoUrl ? "video" : "image"),
       image: finalImage,
       mobileImage: isDeprecatedIphone18Mobile
         ? APPROVED_IPHONE_18_PRO_MOBILE_HERO
         : rawMobileImage || undefined,
+      order: typeof h.order === "number" ? h.order : idx + 1,
     };
-    return normalizeSecondary(combined);
   });
 
-  const mergedTiles = (source.tiles || defaultHomepageContent.tiles).map((t) => {
+  const mergedTiles = (source.tiles || defaultHomepageContent.tiles).map((t, idx) => {
     const def = defaultHomepageContent.tiles.find((d) => d.id === t.id);
     const hasExplicitBackground = t.backgroundColor !== undefined;
     const rawTileImage = t.image !== undefined ? t.image : (def?.image || "");
@@ -465,9 +461,17 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
         ? t.mediaBlendMode
         : inferredFromImage?.mediaBlendMode || def?.mediaBlendMode || "normal";
 
-    const combined = {
+    const finalTitle = t.title !== undefined ? t.title : (def?.title || "Promotional Tile");
+    const finalDeviceName =
+      t.deviceName !== undefined ? t.deviceName : finalTitle;
+
+    return {
       ...def,
       ...t,
+      id: t.id || def?.id || `tile-${idx + 1}`,
+      deviceName: finalDeviceName,
+      title: finalTitle,
+      subtitle: t.subtitle !== undefined ? t.subtitle : (def?.subtitle || ""),
       tone: finalTone,
       backgroundColor: finalBackground,
       backgroundGradient:
@@ -475,10 +479,44 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       mediaFit: t.mediaFit || def?.mediaFit || "contain",
       mediaPosition: t.mediaPosition || def?.mediaPosition || "bottom",
       mediaBlendMode: finalBlend,
+      mediaMode: t.mediaMode || (t.videoUrl ? "video" : "image"),
       mobileImage: "mobileImage" in t ? t.mobileImage || undefined : def?.mobileImage,
+      order: typeof t.order === "number" ? t.order : idx + 1,
     };
-    return normalizeSecondary(combined);
   });
+
+  const mergedCustomSections = Array.isArray(source.customSections)
+    ? source.customSections.map((cs, idx) => {
+        const finalTone = cs.tone || "light";
+        const finalBackground =
+          cs.backgroundColor !== undefined
+            ? cs.backgroundColor
+            : resolveFallbackBg(finalTone);
+        const finalTitle = cs.title || cs.deviceName || `Custom Section ${idx + 1}`;
+        return {
+          ...cs,
+          id: cs.id || `custom-section-${idx + 1}`,
+          internalName: cs.internalName || finalTitle,
+          deviceName: cs.deviceName !== undefined ? cs.deviceName : finalTitle,
+          title: finalTitle,
+          subtitle: cs.subtitle || "",
+          image: cs.image || "",
+          alt: cs.alt || finalTitle,
+          tone: finalTone,
+          backgroundColor: finalBackground,
+          mediaFit: cs.mediaFit || "contain",
+          mediaPosition: cs.mediaPosition || "bottom",
+          mediaBlendMode:
+            finalTone === "dark" ? "normal" : cs.mediaBlendMode || "normal",
+          mediaMode: cs.mediaMode || (cs.videoUrl ? "video" : "image"),
+          layoutVariant: cs.layoutVariant || "full-hero",
+          sectionPlacement: cs.sectionPlacement || "after-heroes",
+          primary: cs.primary || { label: "Learn more", to: "/store" },
+          enabled: cs.enabled ?? true,
+          order: typeof cs.order === "number" ? cs.order : idx + 1,
+        };
+      })
+    : [];
 
   const sections =
     Array.isArray(source.sections) && source.sections.length > 0
@@ -491,6 +529,7 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
     layoutMode,
     heroes: mergedHeroes,
     tiles: mergedTiles,
+    customSections: mergedCustomSections,
     sections,
     hasDraft: Boolean(source.hasDraft),
     updatedAt: source.updatedAt,
@@ -630,7 +669,14 @@ type StagedSlotRef = {
   expectedKind: LocalMediaKind;
 };
 
-const MEDIA_IMAGE_FIELDS = ["desktopImage", "mobileImage", "posterUrl", "mobilePosterUrl"] as const;
+const MEDIA_IMAGE_FIELDS = [
+  "image",
+  "desktopImage",
+  "mobileImage",
+  "posterUrl",
+  "mobilePosterUrl",
+  "backgroundImage",
+] as const;
 const MEDIA_VIDEO_FIELDS = ["videoUrl", "mobileVideoUrl"] as const;
 
 function collectFromMediaFields(
@@ -667,25 +713,17 @@ export function collectHomepageMediaReferences(content: HomepageContent): {
   const localRefs = new Map<string, StagedSlotRef>();
   const transientBlobs = new Set<string>();
 
-  const inspectScalarImage = (raw?: string) => {
-    if (!raw) return;
-    const trimmed = raw.trim();
-    if (isLocalMediaUri(trimmed) && !localRefs.has(trimmed)) {
-      localRefs.set(trimmed, { uri: trimmed, expectedKind: "image" });
-    } else if (trimmed.startsWith("blob:")) {
-      transientBlobs.add(trimmed);
-    }
-  };
-
   for (const hero of content.heroes || []) {
-    inspectScalarImage(hero.image);
-    inspectScalarImage(hero.mobileImage);
+    collectFromMediaFields(hero as unknown as Record<string, unknown>, localRefs, transientBlobs);
   }
   for (const tile of content.tiles || []) {
-    inspectScalarImage(tile.image);
+    collectFromMediaFields(tile as unknown as Record<string, unknown>, localRefs, transientBlobs);
+  }
+  for (const customSec of content.customSections || []) {
+    collectFromMediaFields(customSec as unknown as Record<string, unknown>, localRefs, transientBlobs);
   }
   for (const flyer of content.serviceFlyers || []) {
-    inspectScalarImage(flyer.image);
+    collectFromMediaFields(flyer as unknown as Record<string, unknown>, localRefs, transientBlobs);
   }
   for (const section of content.sections || []) {
     collectFromMediaFields(section as unknown as Record<string, unknown>, localRefs, transientBlobs);
@@ -722,23 +760,16 @@ export function replaceHomepageMediaReferences(
   content: HomepageContent,
   urlMap: Map<string, string>
 ): HomepageContent {
-  const mapScalar = (val?: string) => (val && urlMap.get(val.trim())) || val;
-
   return {
     ...content,
-    heroes: (content.heroes || []).map((hero) => ({
-      ...hero,
-      image: mapScalar(hero.image) || hero.image,
-      mobileImage: mapScalar(hero.mobileImage),
-    })),
-    tiles: (content.tiles || []).map((tile) => ({
-      ...tile,
-      image: mapScalar(tile.image) || tile.image,
-    })),
-    serviceFlyers: (content.serviceFlyers || []).map((flyer) => ({
-      ...flyer,
-      image: mapScalar(flyer.image) || flyer.image,
-    })),
+    heroes: (content.heroes || []).map((hero) => replaceFieldsInObject(hero, urlMap)),
+    tiles: (content.tiles || []).map((tile) => replaceFieldsInObject(tile, urlMap)),
+    customSections: content.customSections
+      ? content.customSections.map((cs) => replaceFieldsInObject(cs, urlMap))
+      : undefined,
+    serviceFlyers: (content.serviceFlyers || []).map((flyer) =>
+      replaceFieldsInObject(flyer, urlMap)
+    ),
     sections: content.sections
       ? content.sections.map((section) => {
           const nextSection = replaceFieldsInObject(section, urlMap);
@@ -869,7 +900,7 @@ async function uploadHomepageStagedRecordToSupabase(
 
   const isVideo = validated.kind === "video";
   const bucket = isVideo ? HOMEPAGE_VIDEO_BUCKET : productImagesBucket;
-  const folder = isVideo ? "homepage/videos" : "media/homepage/images";
+  const folder = isVideo ? "videos" : "media/homepage/images";
   const storagePath = `${folder}/${uniqueToken}-${cleanBase}.${validated.extension}`;
 
   const uploadBlob =
@@ -887,14 +918,43 @@ async function uploadHomepageStagedRecordToSupabase(
     }
     const projectUrl = import.meta.env.VITE_SUPABASE_URL as string;
     const projectId = new URL(projectUrl).hostname.split(".")[0];
-    await uploadResumableTusWithFetch({
-      projectId,
-      token,
-      bucket,
-      storagePath,
-      contentType: validated.normalizedMimeType,
-      blob: uploadBlob,
-    });
+    if (typeof XMLHttpRequest !== "undefined") {
+      const tus = await import("tus-js-client");
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(uploadBlob, {
+          endpoint: `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`,
+          headers: { authorization: `Bearer ${token}`, "x-upsert": "false" },
+          metadata: {
+            bucketName: bucket,
+            objectName: storagePath,
+            contentType: validated.normalizedMimeType,
+            cacheControl: "31536000",
+          },
+          chunkSize: 6 * 1024 * 1024,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          onError: reject,
+          onSuccess: () => resolve(),
+        });
+        void upload
+          .findPreviousUploads()
+          .then((previous) => {
+            if (previous.length) upload.resumeFromPreviousUpload(previous[0]);
+            upload.start();
+          })
+          .catch(reject);
+      });
+    } else {
+      await uploadResumableTusWithFetch({
+        projectId,
+        token,
+        bucket,
+        storagePath,
+        contentType: validated.normalizedMimeType,
+        blob: uploadBlob,
+      });
+    }
   } else {
     const { error: uploadErr } = await client.storage.from(bucket).upload(storagePath, uploadBlob, {
       cacheControl: "31536000",
@@ -1004,17 +1064,36 @@ export function validateHomepagePayloadForPublish(content: HomepageContent): voi
 
   if (content.layoutMode !== "modular") {
     const activeHeroes = (content.heroes || []).filter((h) => h.enabled);
-    if (activeHeroes.length === 0) {
+    const activeCustom = (content.customSections || []).filter((s) => s.enabled);
+    if (activeHeroes.length === 0 && activeCustom.length === 0) {
       throw new Error(
         "At least one active Hero Slide is required before publishing the legacy homepage."
       );
     }
     for (const hero of activeHeroes) {
-      if (!hero.title?.trim()) {
+      if (!hero.title?.trim() && !hero.deviceName?.trim()) {
         throw new Error("Every active Hero Slide must have a non-empty Headline Title.");
       }
-      if (!hero.image?.trim()) {
-        throw new Error(`Hero Slide "${hero.title}" is missing a Desktop Hero Image.`);
+      const hasMedia =
+        Boolean(hero.image?.trim()) ||
+        (hero.mediaMode === "video" && Boolean(hero.videoUrl?.trim()));
+      if (!hasMedia) {
+        throw new Error(
+          `Hero Slide "${hero.title || hero.deviceName}" is missing a Desktop Hero Image or Video.`
+        );
+      }
+    }
+    for (const cs of activeCustom) {
+      if (!cs.title?.trim() && !cs.deviceName?.trim()) {
+        throw new Error("Every active Custom Section must have a non-empty Heading.");
+      }
+      const hasMedia =
+        Boolean(cs.image?.trim()) ||
+        (cs.mediaMode === "video" && Boolean(cs.videoUrl?.trim()));
+      if (!hasMedia) {
+        throw new Error(
+          `Custom Section "${cs.title || cs.internalName}" is missing an Image or Video.`
+        );
       }
     }
   }
@@ -1048,10 +1127,10 @@ export const saveHomepageContent = async (
     );
   }
 
-  // Verify the published record is readable after upsert
+  // Verify the published record is readable after upsert and contains no local media references
   const { data: verifyRow, error: verifyErr } = await client
     .from("homepage_content")
-    .select("id, updated_at")
+    .select("id, updated_at, content")
     .eq("id", "main")
     .maybeSingle();
 
@@ -1062,6 +1141,14 @@ export const saveHomepageContent = async (
   }
   if (!verifyRow) {
     throw new Error("Published homepage verification returned empty row.");
+  }
+  if (verifyRow.content) {
+    const verifyMedia = collectHomepageMediaReferences(verifyRow.content as HomepageContent);
+    if (verifyMedia.localRefs.length > 0 || verifyMedia.transientBlobUris.length > 0) {
+      throw new Error(
+        "Published record verification failed: local media references were found in the saved record."
+      );
+    }
   }
 
   // Clear matching unpublished local draft only AFTER authoritative Supabase write & verify succeed
