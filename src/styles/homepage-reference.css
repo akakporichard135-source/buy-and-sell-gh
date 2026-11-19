@@ -644,8 +644,8 @@ body:has(.home-reference) .store-footer {
   }
 
   .home-ref-hero[data-media-mode="video"].home-ref-media-contain .home-ref-video-media {
-    transform: scale(1.18);
-    transform-origin: center 15%;
+    transform: scale(1.06);
+    transform-origin: center 18%;
     width: 100% !important;
     height: 100% !important;
     max-width: none !important;

@@ -1201,3 +1201,47 @@ export function summarizeLegacyHomepageChanges(
     summaryLines,
   };
 }
+
+/**
+ * Maps the two legacy 720x720 square-boxed / MPEG-4-Part-2 iPhone Duo campaign video URLs
+ * to the revised seamless full-hands 16:9 H.264 cinema cut while preserving the original
+ * Supabase asset untouched as an automatic rollback fallback and never overriding any new
+ * video uploaded through the Admin Dashboard.
+ */
+export const LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS = new Set<string>([
+  "https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/learn-more-media/videos/4da87228-2ac3-42ee-bf6b-dbbf74ebdfe8-buyandsellgh-16x9-h264.mp4",
+  "https://kgbcytxhyqalzawkdghn.supabase.co/storage/v1/object/public/learn-more-media/videos/45c5ed5e-b47f-4b23-9d01-0476387e9d06-buyandsellgh-16x9-pure-white-background-1.mp4",
+]);
+
+export const REVISED_IPHONE_DUO_CINEMA_VIDEO_URL =
+  "/videos/homepage/iphone-duo-unfold-cinema.mp4";
+
+export function resolveHomepageCampaignVideoUrl(url?: string): string | undefined {
+  const trimmed = url?.trim();
+  if (!trimmed) return undefined;
+  if (LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS.has(trimmed)) {
+    return REVISED_IPHONE_DUO_CINEMA_VIDEO_URL;
+  }
+  return trimmed;
+}
+
+export function expandHomepageCampaignVideoSources(
+  sources: Array<string | undefined>
+): string[] {
+  const ordered: string[] = [];
+  const pushUnique = (value?: string) => {
+    const trimmed = value?.trim();
+    if (trimmed && !ordered.includes(trimmed)) {
+      ordered.push(trimmed);
+    }
+  };
+  for (const raw of sources) {
+    const trimmed = raw?.trim();
+    if (!trimmed) continue;
+    if (LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS.has(trimmed)) {
+      pushUnique(REVISED_IPHONE_DUO_CINEMA_VIDEO_URL);
+    }
+    pushUnique(trimmed);
+  }
+  return ordered;
+}

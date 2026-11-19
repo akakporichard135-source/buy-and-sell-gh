@@ -39,6 +39,7 @@ import {
   inferLegacyMediaAttributesForUrl,
   reorderListById,
   reorderListByIndex,
+  resolveHomepageCampaignVideoUrl,
   resolveLegacyBackgroundColor,
   summarizeLegacyHomepageChanges,
   SUPPORTED_IMAGE_ACCEPT,
@@ -3139,7 +3140,8 @@ function LegacyMediaBackgroundEditor({
 
   const { resolvedUrl: desktopResolved } = useResolvedMediaUrl(unit.image);
   const { resolvedUrl: mobileResolved } = useResolvedMediaUrl(unit.mobileImage);
-  const { resolvedUrl: videoResolved } = useResolvedMediaUrl(unit.videoUrl);
+  const { resolvedUrl: videoResolvedRaw } = useResolvedMediaUrl(unit.videoUrl);
+  const videoResolved = resolveHomepageCampaignVideoUrl(videoResolvedRaw) || videoResolvedRaw;
   const { resolvedUrl: posterResolved } = useResolvedMediaUrl(unit.posterUrl);
 
   const currentKey = `${slotRef.kind}:${slotRef.index}`;

@@ -4,7 +4,10 @@ import { Link, useLocation } from "react-router-dom";
 import { useCms } from "../cms/CmsContext";
 import { defaultHomepageContent, defaultHomepageSections } from "../cms/defaultCmsData";
 import { useResolvedMediaUrl } from "../cms/localMediaStore";
-import { resolveLegacyBackgroundColor } from "../cms/homepageBuilderUtils";
+import {
+  expandHomepageCampaignVideoSources,
+  resolveLegacyBackgroundColor,
+} from "../cms/homepageBuilderUtils";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { getProductFamily, productBuyPath } from "../catalog/productExperience";
@@ -491,9 +494,7 @@ function CampaignVideo({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
-  const orderedSources = sources
-    .map((s) => s?.trim())
-    .filter((s, i, arr): s is string => Boolean(s) && arr.indexOf(s) === i);
+  const orderedSources = expandHomepageCampaignVideoSources(sources);
 
   const activeSrc = orderedSources.find((src) => !failedUrls[src]);
 
