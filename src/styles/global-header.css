@@ -1,6 +1,6 @@
 /* ==========================================================================
    Apple-Style Global Header Design System — Buy & Sell GH
-   One Navigation System Only
+   Hierarchical Two-Level Mobile Navigation + Smooth Curtain Transitions
    ========================================================================== */
 
 :root {
@@ -20,7 +20,7 @@ html {
   height: var(--global-header-height) !important;
   min-height: var(--global-header-height) !important;
   max-height: var(--global-header-height) !important;
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 255, 255, 0.86) !important;
   backdrop-filter: saturate(180%) blur(20px) !important;
   -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -28,7 +28,7 @@ html {
   padding: 0 !important;
   margin: 0 !important;
   box-sizing: border-box;
-  transform: translateZ(0);
+  transition: background-color 280ms ease;
 }
 
 .global-header-inner {
@@ -130,17 +130,17 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 0 !important;
   margin: 0 !important;
-  color: rgba(0, 0, 0, 0.75) !important;
+  color: rgba(0, 0, 0, 0.78) !important;
   cursor: pointer;
   position: relative;
   text-decoration: none;
@@ -154,7 +154,7 @@ html {
 /* Subtle Cart Badge */
 .global-header-badge {
   position: absolute;
-  top: 1px;
+  top: 2px;
   right: 1px;
   display: inline-flex;
   align-items: center;
@@ -170,37 +170,69 @@ html {
   color: #ffffff;
 }
 
-/* Mobile Menu Toggle Button (hidden on desktop) */
+/* Mobile Menu Toggle Button with Smooth Animated Two-Line Hamburger -> X Morph */
 .global-header-menu-btn {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
   margin: 0 !important;
-  color: rgba(0, 0, 0, 0.8) !important;
+  color: #1d1d1f !important;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.global-hamburger-icon {
+  position: relative;
+  width: 17px;
+  height: 12px;
+  display: block;
+}
+
+.global-hamburger-line {
+  position: absolute;
+  left: 0;
+  width: 17px;
+  height: 1.7px;
+  border-radius: 999px;
+  background-color: #1d1d1f;
+  transform-origin: center;
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 220ms ease;
+}
+
+.global-hamburger-line.is-top {
+  top: 2px;
+}
+
+.global-hamburger-line.is-bottom {
+  bottom: 2px;
+}
+
+.global-header-menu-btn.is-open .global-hamburger-line.is-top {
+  transform: translateY(3.15px) rotate(45deg);
+}
+
+.global-header-menu-btn.is-open .global-hamburger-line.is-bottom {
+  transform: translateY(-3.15px) rotate(-45deg);
 }
 
 /* ==========================================================================
    Responsive Breakpoints (Desktop vs Mobile/Tablet)
    ========================================================================== */
 
-/* Breakpoint: <= 834px collapses into Mobile Header */
 @media (max-width: 834px) {
   .site-header.global-header {
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
-  }
-
-  .site-header.global-header.nav-hidden {
-    transform: translateY(-100%) !important;
+    /* Lightweight translucent bar avoids heavy mobile scroll GPU blur stutter */
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: saturate(150%) blur(12px) !important;
+    -webkit-backdrop-filter: saturate(150%) blur(12px) !important;
   }
 
   .global-header-nav {
@@ -212,46 +244,41 @@ html {
   }
 
   .global-header-actions {
-    gap: 8px;
+    gap: 10px;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .site-header.global-header {
-    transition: none !important;
-  }
-}
-
-/* /* ==========================================================================
-   Apple-Inspired Curtain Mobile Navigation
+/* ==========================================================================
+   Hierarchical Apple-Inspired Full-Screen Mobile Navigation Curtain
    ========================================================================== */
+.global-mobile-backdrop,
 .global-mobile-curtain {
   display: none;
 }
 
-@keyframes globalCurtainDrop {
-  0% {
-    transform: translate3d(0, -100%, 0);
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
-}
-
-@keyframes globalCurtainRetract {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(0, -100%, 0);
-    opacity: 0.9;
-  }
-}
-
 @media (max-width: 834px) {
+  .global-mobile-backdrop {
+    display: block;
+    position: fixed;
+    top: var(--global-header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 12, 0.28);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 360ms cubic-bezier(0.28, 0.11, 0.32, 1);
+  }
+
+  .global-mobile-backdrop.is-visible {
+    opacity: 1;
+  }
+
+  .global-mobile-backdrop.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .global-mobile-drawer.global-mobile-curtain {
     display: flex;
     flex-direction: column;
@@ -260,41 +287,109 @@ html {
     left: 0;
     right: 0;
     bottom: 0;
-    width: 100vw;
+    width: 100%;
     height: calc(100vh - var(--global-header-height));
     height: calc(100dvh - var(--global-header-height));
     background: #ffffff !important;
-    z-index: 999; /* Sits cleanly beneath header (z-index: 1000) */
+    z-index: 999;
     box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
+    overflow: hidden;
+    opacity: 0;
+    transform: translate3d(0, -18px, 0);
+    transition:
+      transform 400ms cubic-bezier(0.28, 0.11, 0.32, 1),
+      opacity 340ms cubic-bezier(0.28, 0.11, 0.32, 1);
+    will-change: transform, opacity;
+  }
+
+  .global-mobile-drawer.global-mobile-curtain.is-open {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    pointer-events: auto;
+  }
+
+  .global-mobile-drawer.global-mobile-curtain.is-closing {
+    opacity: 0;
+    transform: translate3d(0, -14px, 0);
+    transition:
+      transform 360ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  /* Solid crisp fixed header when menu is open — stays anchored at top:0 even when body is scroll-locked at -scrollY */
+  .site-header.global-header.menu-is-active {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1001 !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Two-Level Sliding Viewport */
+  .global-curtain-viewport {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .global-curtain-level {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     touch-action: pan-y;
+    background: #ffffff;
+    box-sizing: border-box;
     scrollbar-width: none;
-    padding-bottom: env(safe-area-inset-bottom, 24px);
+    transition:
+      transform 360ms cubic-bezier(0.28, 0.11, 0.32, 1),
+      opacity 280ms cubic-bezier(0.28, 0.11, 0.32, 1);
+    will-change: transform, opacity;
   }
 
-  .global-mobile-drawer.global-mobile-curtain::-webkit-scrollbar {
+  .global-curtain-level::-webkit-scrollbar {
     display: none;
   }
 
-  .global-mobile-drawer.global-mobile-curtain.is-open {
-    animation: globalCurtainDrop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Level 1 (Main Categories) States */
+  .global-curtain-level.is-root.is-active {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
   }
 
-  .global-mobile-drawer.global-mobile-curtain.is-closing {
-    animation: globalCurtainRetract 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  .global-curtain-level.is-root.is-behind {
+    transform: translate3d(-26%, 0, 0);
+    opacity: 0;
     pointer-events: none;
   }
 
-  /* Make header solid white when menu is active to prevent curtain show-through */
-  .site-header.global-header.menu-is-active {
-    background: #ffffff !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  /* Level 2 (Category Submenu) States */
+  .global-curtain-level.is-submenu.is-offscreen {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .global-curtain-level.is-submenu.is-active {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
   }
 
   .global-curtain-inner {
@@ -302,7 +397,7 @@ html {
     flex-direction: column;
     justify-content: space-between;
     min-height: 100%;
-    padding: clamp(10px, 2.2vh, 18px) 24px clamp(14px, 2.5vh, 20px);
+    padding: 16px 24px calc(28px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
   }
 
@@ -314,118 +409,242 @@ html {
 
   .global-curtain-item {
     width: 100%;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(29, 29, 31, 0.08);
     opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translate3d(0, 8px, 0);
+    transition:
+      opacity 300ms cubic-bezier(0.28, 0.11, 0.32, 1),
+      transform 340ms cubic-bezier(0.28, 0.11, 0.32, 1);
+  }
+
+  .global-curtain-item:last-child {
+    border-bottom: none;
   }
 
   .global-mobile-curtain.is-open .global-curtain-item {
     opacity: 1;
-    transform: translateY(0);
-    transition-delay: calc(var(--item-idx, 0) * 20ms + 50ms);
+    transform: translate3d(0, 0, 0);
+    transition-delay: calc(var(--item-idx, 0) * 22ms + 60ms);
   }
 
   .global-mobile-curtain.is-closing .global-curtain-item {
-    transition: none !important;
+    opacity: 0;
+    transform: translate3d(0, -4px, 0);
+    transition-delay: 0ms;
+    transition-duration: 220ms;
   }
 
-  .global-curtain-heading-btn,
-  .global-curtain-link {
+  .global-curtain-heading-btn {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    padding: clamp(8px, 1.5vh, 11px) 0 !important;
+    min-height: 54px;
+    padding: 12px 2px !important;
     background: transparent !important;
     border: none !important;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif !important;
-    font-size: clamp(19px, 4.6vw, 22px) !important;
+    font-size: clamp(21px, 5.4vw, 25px) !important;
     font-weight: 600 !important;
-    letter-spacing: -0.015em !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.018em !important;
     color: #1d1d1f !important;
-    text-decoration: none !important;
     text-align: left !important;
     cursor: pointer !important;
-    transition: color 0.15s ease;
-    word-break: normal;
-    overflow-wrap: break-word;
-    hyphens: none;
+    transition: color 180ms ease;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .global-curtain-heading-btn:hover,
-  .global-curtain-heading-btn.is-expanded,
-  .global-curtain-link:hover,
-  .global-curtain-link:active {
-    color: var(--brand-gold-strong, #c59f27) !important;
+  .global-curtain-heading-btn:active {
+    color: var(--brand-gold-strong, #b17d12) !important;
   }
 
   .global-curtain-chevron {
-    color: rgba(0, 0, 0, 0.45);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    color: rgba(29, 29, 31, 0.36);
+    transition: transform 200ms ease, color 180ms ease;
     flex-shrink: 0;
   }
 
-  .global-curtain-chevron.is-rotated {
-    transform: rotate(180deg);
-    color: var(--brand-gold-strong, #c59f27);
+  .global-curtain-heading-btn:hover .global-curtain-chevron,
+  .global-curtain-heading-btn:active .global-curtain-chevron {
+    color: var(--brand-gold-strong, #b17d12);
+    transform: translateX(2px);
   }
 
-  /* CSS Grid 0fr -> 1fr animation for smooth hardware-accelerated accordion */
-  .global-curtain-submenu {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    overflow: hidden;
-  }
-
-  .global-curtain-submenu.is-open {
-    grid-template-rows: 1fr;
-  }
-
-  .global-curtain-submenu-inner {
-    overflow: hidden;
+  /* ==========================================================================
+     Level 2 Dedicated Category Submenu View
+     ========================================================================== */
+  .global-curtain-submenu-view {
     display: flex;
     flex-direction: column;
-    padding: 2px 0 10px 12px;
-    gap: 6px;
+    min-height: 100%;
+    padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .global-curtain-submenu-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid rgba(29, 29, 31, 0.08);
+  }
+
+  .global-curtain-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 6px 10px 6px 2px;
+    background: transparent !important;
+    border: none !important;
+    color: #1d1d1f !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: color 160ms ease, transform 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .global-curtain-back-btn:hover,
+  .global-curtain-back-btn:active {
+    color: var(--brand-gold-strong, #b17d12) !important;
+    transform: translateX(-2px);
+  }
+
+  .global-curtain-submenu-body {
+    padding: 20px 26px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .global-curtain-submenu-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(29, 29, 31, 0.08);
+  }
+
+  .global-curtain-submenu-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-gold-strong, #b17d12);
+  }
+
+  .global-curtain-submenu-title {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Helvetica, Arial, sans-serif;
+    font-size: clamp(26px, 6.8vw, 31px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+    color: #1d1d1f;
+  }
+
+  .global-curtain-submenu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .global-curtain-sublink {
-    font-size: 15px !important;
-    font-weight: 500 !important;
-    color: rgba(0, 0, 0, 0.72) !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: 46px;
+    padding: 9px 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Helvetica, Arial, sans-serif !important;
+    font-size: clamp(18px, 4.6vw, 20px) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.014em !important;
+    color: #1d1d1f !important;
     text-decoration: none !important;
-    padding: 3px 0 !important;
-    display: inline-block !important;
-    transition: color 0.15s ease, transform 0.15s ease;
+    border-bottom: 1px solid rgba(29, 29, 31, 0.05);
+    transition: color 160ms ease, transform 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .global-curtain-sublink:last-child {
+    border-bottom: none;
+  }
+
+  .global-curtain-sublink.is-explore-link {
+    color: var(--brand-gold-strong, #b17d12) !important;
+    font-weight: 700 !important;
   }
 
   .global-curtain-sublink:hover,
   .global-curtain-sublink:active {
-    color: var(--brand-gold-strong, #c59f27) !important;
+    color: var(--brand-gold-strong, #b17d12) !important;
     transform: translateX(3px);
   }
 
-  .global-curtain-sublink.is-explore-link {
-    color: #1d1d1f !important;
-    font-weight: 600 !important;
+  .global-curtain-submenu-secondary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(29, 29, 31, 0.08);
   }
 
+  .global-curtain-submenu-group-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6e6e73;
+    letter-spacing: 0.01em;
+    margin-bottom: 2px;
+  }
+
+  .global-curtain-submenu-secondary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .global-curtain-sublink-secondary {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 42px;
+    padding: 7px 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif !important;
+    font-size: 15.5px !important;
+    font-weight: 500 !important;
+    color: rgba(29, 29, 31, 0.78) !important;
+    text-decoration: none !important;
+    transition: color 160ms ease, transform 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .global-curtain-sublink-secondary:hover,
+  .global-curtain-sublink-secondary:active {
+    color: #1d1d1f !important;
+    transform: translateX(3px);
+  }
+
+  /* Footer inside Level 1 Root Menu */
   .global-curtain-footer {
     display: flex;
     flex-direction: column;
-    margin-top: clamp(10px, 2vh, 18px);
-    padding-top: clamp(10px, 1.8vh, 14px);
-    border-top: 1px solid rgba(0, 0, 0, 0.07);
-    gap: 8px;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(29, 29, 31, 0.08);
+    gap: 10px;
   }
 
   .global-curtain-quick-links {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px 10px;
+    gap: 8px 10px;
   }
 
   .global-curtain-quick-link {
@@ -434,7 +653,8 @@ html {
     font-weight: 500;
     color: #6e6e73;
     text-decoration: none;
-    transition: color 0.15s ease;
+    padding: 4px 0;
+    transition: color 160ms ease;
   }
 
   .global-curtain-quick-link:hover,
@@ -467,16 +687,22 @@ html {
   }
 }
 
+/* Respect Reduced Motion Accessibility Preferences */
 @media (prefers-reduced-motion: reduce) {
+  .site-header.global-header,
+  .global-hamburger-line,
+  .global-mobile-backdrop,
+  .global-mobile-drawer.global-mobile-curtain,
   .global-mobile-drawer.global-mobile-curtain.is-open,
-  .global-mobile-drawer.global-mobile-curtain.is-closing {
+  .global-mobile-drawer.global-mobile-curtain.is-closing,
+  .global-curtain-level,
+  .global-curtain-item,
+  .global-curtain-chevron,
+  .global-curtain-back-btn,
+  .global-curtain-sublink,
+  .global-curtain-sublink-secondary {
     animation: none !important;
-    transform: none !important;
     transition: none !important;
-  }
-  .global-curtain-link {
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+    transition-delay: 0ms !important;
   }
 }

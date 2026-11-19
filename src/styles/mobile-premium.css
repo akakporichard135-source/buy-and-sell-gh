@@ -672,7 +672,9 @@
     padding: 0 var(--mobile-gutter) 14px 0;
     overscroll-behavior-inline: contain;
     scroll-padding-inline: var(--mobile-gutter);
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
     scrollbar-width: none;
   }
 
@@ -682,7 +684,7 @@
     min-height: min(660px, 76svh);
     grid-column: auto;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
 
   .store-new-campaign-copy {
@@ -905,7 +907,9 @@
     padding: 0 var(--mobile-gutter) 14px 0;
     overscroll-behavior-inline: contain;
     scroll-padding-inline: var(--mobile-gutter);
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
     scrollbar-width: none;
   }
 
@@ -913,7 +917,7 @@
   .family-product {
     min-height: min(650px, 78svh);
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
 
   .family-feature-grid-1 .family-feature-panel {
@@ -1048,7 +1052,7 @@
     height: 480px;
     min-height: 480px;
     padding: 1.75rem 1.35rem 0;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
   }
 
   .story-highlight-visual {
@@ -1221,7 +1225,9 @@
     overflow-x: auto;
     padding-right: var(--mobile-gutter);
     scroll-padding-inline: var(--mobile-gutter);
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
     scrollbar-width: none;
   }
 

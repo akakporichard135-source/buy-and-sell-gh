@@ -173,8 +173,9 @@ export function useCinematicScrollAnimation(
         });
       }
 
-      // 4. Subtle Hardware Close-up Parallax (Non-intrusive)
-      if (enableParallax) {
+      // 4. Subtle Hardware Close-up Parallax (Desktop fine pointers only — avoids mobile touch scroll jitter)
+      const isTouchPointer = window.matchMedia("(pointer: coarse)").matches;
+      if (enableParallax && !isTouchPointer) {
         const parallaxImages = container.querySelectorAll<HTMLElement>(
           ".editorial-hardware-anchor-art img, .learn-more-extra-image.is-hardware-closeup img"
         );

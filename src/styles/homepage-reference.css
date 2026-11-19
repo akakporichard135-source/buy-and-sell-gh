@@ -233,6 +233,7 @@
   max-height: clamp(480px, 68vh, 720px);
   margin: 2px auto 0;
   overflow: hidden;
+  touch-action: pan-y;
 }
 
 .home-ref-video-stage .home-ref-hero-image,
@@ -243,6 +244,8 @@
   max-height: none;
   margin: 0;
   display: block;
+  pointer-events: none;
+  touch-action: pan-y;
 }
 
 /* Blend off-white studio video backdrops (#fcfcfc) seamlessly into pure white canvases with no box seam */
@@ -760,11 +763,11 @@ body:has(.home-reference) .store-footer {
     gap: 12px;
     padding-inline: 20px;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    scroll-snap-type: x proximity;
     overscroll-behavior-inline: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     scrollbar-width: none;
   }
 
