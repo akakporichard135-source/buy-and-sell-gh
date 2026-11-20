@@ -2,7 +2,10 @@ import macMiniHero from "../assets/homepage/homepage-mac-mini-white.webp";
 import macMiniDetail from "../assets/homepage/homepage-mac-mini-m6-launch.webp";
 import airpodsPro3Catalogue from "../assets/catalogue-products/airpods-pro-3-premium.webp";
 import ipadAirBlueWhite from "../assets/catalogue-products/ipad-air-11-inch-m3-premium.webp";
+import ipadPro11M4Catalogue from "../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
 import ipadKeyboardWhite from "../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
+import macbookAir13M4Catalogue from "../assets/catalogue-products/macbook-air-13-inch-m4-premium.webp";
+import macbookPro14M4Catalogue from "../assets/catalogue-products/macbook-pro-14-inch-m4-premium.webp";
 
 export type EditorialTone = "light" | "ink" | "blue" | "plum" | "sage";
 
@@ -824,13 +827,13 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Featherlight Power",
     tagline: "Lean. Mean. Apple Silicon machine.",
     buyPath: "/shop/buy-mac/macbook-air",
-    hero: { src: "/products/catalogue/macbook-air-13-m4.webp", alt: "MacBook Air Liquid Retina display in Midnight aluminum chassis" },
+    hero: { src: macbookAir13M4Catalogue, alt: "MacBook Air Liquid Retina display in Midnight aluminum chassis" },
     heroTone: "light",
     highlights: [
       { label: "Liquid Retina", title: "1 billion colors. Razor-sharp clarity.", image: { src: `${campaign}/macbook-air-cutout.webp`, alt: "MacBook Air open Liquid Retina display" }, tone: "ink" },
       { label: "Design", title: "Under half an inch thin. Solid unibody.", image: { src: `${campaign}/macbook-air-midnight-shell.webp`, alt: "MacBook Air contoured anodized aluminum shell" }, tone: "ink" },
       { label: "Silence", title: "Zero fan noise. Pure uninterrupted focus.", image: { src: `${campaign}/macbook-air-starlight-studio.jpg`, alt: "MacBook Air in Starlight on studio stage" }, tone: "light" },
-      { label: "Pro Power", title: "Extreme energy efficiency for heavy workflows.", image: { src: "/products/catalogue/macbook-pro-14-m4.webp", alt: "MacBook Pro Liquid Retina XDR workstation" }, tone: "ink" },
+      { label: "Pro Power", title: "Extreme energy efficiency for heavy workflows.", image: { src: macbookPro14M4Catalogue, alt: "MacBook Pro Liquid Retina XDR workstation" }, tone: "ink" },
       { label: "MagSafe", title: "MagSafe 3, Spatial Audio, 1080p FaceTime.", image: { src: `${campaign}/accessory-macbook-charger.webp`, alt: "MacBook MagSafe 3 charging cable and power adapter" }, tone: "light" },
     ],
     chapters: [
@@ -935,11 +938,11 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Mind-blowing. Head-turning.",
     tagline: "A work of smart. Pro power beyond limits.",
     buyPath: "/shop/buy-mac/macbook-pro",
-    hero: { src: "/products/catalogue/macbook-pro-14-m4.webp", alt: "MacBook Pro Liquid Retina XDR display in Space Black enclosure" },
+    hero: { src: macbookPro14M4Catalogue, alt: "MacBook Pro Liquid Retina XDR display in Space Black enclosure" },
     heroTone: "light",
     highlights: [
       { label: "Liquid Retina XDR", title: "Up to 1600 nits peak HDR. 120Hz ProMotion precision.", image: { src: `${campaign}/macbook-pro-cutout.webp`, alt: "MacBook Pro open display showing vivid Liquid Retina XDR panel" }, tone: "ink" },
-      { label: "Apple Silicon", title: "M4, M4 Pro, and M4 Max. Extreme multithreaded compute.", image: { src: "/products/catalogue/macbook-pro-14-m4.webp", alt: "MacBook Pro workstation in Space Black" }, tone: "ink" },
+      { label: "Apple Silicon", title: "M4, M4 Pro, and M4 Max. Extreme multithreaded compute.", image: { src: macbookPro14M4Catalogue, alt: "MacBook Pro workstation in Space Black" }, tone: "ink" },
       { label: "Enclosure", title: "Space Black with breakthrough anodization seal.", image: { src: `${campaign}/macbook-air-lineup.webp`, alt: "MacBook Pro anodized Space Black chassis" }, tone: "ink" },
       { label: "Battery Life", title: "Up to 24 hours. The longest battery life in a Mac ever.", image: { src: `${campaign}/macbook-air-cutout.webp`, alt: "MacBook Pro all-day power efficiency" }, tone: "light" },
       { label: "Pro I/O", title: "Thunderbolt 5, HDMI 8K, SDXC card slot, MagSafe 3.", image: { src: `${campaign}/accessory-macbook-charger.webp`, alt: "MacBook MagSafe 3 power cable and connectivity" }, tone: "light" },
@@ -1258,11 +1261,11 @@ export const editorialStories: Record<string, EditorialStory> = {
     eyebrow: "Thinpossible",
     tagline: "Outrageously thin. Unbelievably powerful.",
     buyPath: "/shop/buy-ipad/ipad-pro",
-    hero: { src: "/products/catalogue/ipad-pro-11-m4.webp", alt: "iPad Pro Ultra Retina XDR Tandem OLED display on white background" },
+    hero: { src: ipadPro11M4Catalogue, alt: "iPad Pro Ultra Retina XDR Tandem OLED display on white background" },
     heroTone: "light",
     highlights: [
       { label: "Thinness", title: "5.1 mm. The thinnest Apple product ever made.", image: { src: `${campaign}/ipad-pro-13.webp`, alt: "iPad Pro ultra-thin 5.1mm profile" }, tone: "light" },
-      { label: "Tandem OLED", title: "Ultra Retina XDR display with groundbreaking precision.", image: { src: "/products/catalogue/ipad-pro-11-m4.webp", alt: "iPad Pro Ultra Retina XDR Tandem OLED display" }, tone: "ink" },
+      { label: "Tandem OLED", title: "Ultra Retina XDR display with groundbreaking precision.", image: { src: ipadPro11M4Catalogue, alt: "iPad Pro Ultra Retina XDR Tandem OLED display" }, tone: "ink" },
       { label: "M4 Silicon", title: "Next-generation Apple M4 chip with 3nm architecture.", image: { src: `${campaign}/ipad-pro-11.webp`, alt: "iPad Pro M4 compute engine" }, tone: "light" },
       { label: "Apple Pencil Pro", title: "Barrel roll, haptic feedback, and squeeze gestures.", image: { src: `${campaign}/ipad-air-blue.webp`, alt: "Apple Pencil Pro magnetic pairing and drawing canvas" }, tone: "blue" },
       { label: "Magic Keyboard", title: "Sleek aluminum palm rest with function keys and trackpad.", image: { src: `${campaign}/ipad-keyboard-accessory.webp`, alt: "iPad Pro redesigned aluminum Magic Keyboard" }, tone: "ink" },

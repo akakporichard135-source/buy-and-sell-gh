@@ -23,10 +23,17 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
   useEffect(() => {
     if (preview) return;
     let active = true;
+    const fallbackTimer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => {
+            if (active) setIsResolving(false);
+          }, 3500)
+        : null;
     const fetchLatest = (force = false) => {
       void fetchPublishedLearnMore(product, force).catch(() => null).then((content) => {
         if (!active) return;
         if (content) setPublished(content);
+        if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
         setIsResolving(false);
       });
     };
@@ -40,6 +47,7 @@ export function MacLaunchPage({ product, preview }: { product: NewMacLaunchKey; 
 
     return () => {
       active = false;
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
       unsubscribe();
     };
   }, [product, preview]);

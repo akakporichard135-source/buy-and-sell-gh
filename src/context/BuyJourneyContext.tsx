@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { isOthersProduct } from "../catalog/catalogueDiscovery";
 import { familyMatchesProduct, productBuyPath, type ProductFamilyKey } from "../catalog/productExperience";
 import { ORDER_SUCCESS_STORAGE_KEY, type FulfilmentType, type OrderCustomerDetails, type StoredOrderRequest } from "../types/order";
 import type { CartItem, Product, ProductVariant } from "../types/product";
@@ -11,6 +12,7 @@ import { useCart } from "./CartContext";
 export interface CustomerDraft {
   fullName: string;
   whatsapp: string;
+  email: string;
   fulfilmentType: FulfilmentType;
   region: string;
   city: string;
@@ -39,16 +41,19 @@ interface BuyJourneyValue {
 }
 
 const DRAFT_KEY = "buyandsell-gh-customer-draft";
+const DEFAULT_GHANA_REGION = "Greater Accra";
 const initialCustomer: CustomerDraft = {
   fullName: "",
   whatsapp: "",
+  email: "",
   fulfilmentType: "pickup",
-  region: "",
+  region: DEFAULT_GHANA_REGION,
   city: "",
   deliveryAddress: "",
   additionalNote: "",
 };
 const phonePattern = /^(?:\+?233|0)[25]\d{8}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const BuyJourneyContext = createContext<BuyJourneyValue | null>(null);
 
@@ -59,8 +64,12 @@ function readCustomerDraft(): CustomerDraft {
     return {
       fullName: typeof stored.fullName === "string" ? stored.fullName : "",
       whatsapp: typeof stored.whatsapp === "string" ? stored.whatsapp : "",
+      email: typeof stored.email === "string" ? stored.email : "",
       fulfilmentType: stored.fulfilmentType === "delivery" ? "delivery" : "pickup",
-      region: typeof stored.region === "string" ? stored.region : "",
+      region:
+        typeof stored.region === "string" && stored.region.trim()
+          ? stored.region
+          : DEFAULT_GHANA_REGION,
       city: typeof stored.city === "string" ? stored.city : "",
       deliveryAddress: typeof stored.deliveryAddress === "string" ? stored.deliveryAddress : "",
       additionalNote: typeof stored.additionalNote === "string" ? stored.additionalNote : "",
@@ -79,8 +88,12 @@ export function validateCustomerDraft(customer: CustomerDraft, quantity: number)
   if (!customer.fullName.trim()) errors.fullName = "Enter your full name.";
   else if (customer.fullName.trim().length > 120) errors.fullName = "Keep your name under 120 characters.";
   if (!phonePattern.test(cleanCustomerPhone(customer.whatsapp))) errors.whatsapp = "Enter a valid Ghana WhatsApp number.";
+  const trimmedEmail = customer.email.trim();
+  if (trimmedEmail && (trimmedEmail.length > 160 || !emailPattern.test(trimmedEmail))) {
+    errors.email = "Enter a valid email address or leave this field blank.";
+  }
   if (customer.fulfilmentType === "delivery") {
-    if (!customer.region.trim()) errors.region = "Enter your region.";
+    if (!(customer.region || DEFAULT_GHANA_REGION).trim()) errors.region = "Enter your region.";
     if (!customer.city.trim()) errors.city = "Enter your city or area.";
     if (!customer.deliveryAddress.trim()) errors.deliveryAddress = "Enter your delivery address.";
   }
@@ -91,12 +104,14 @@ export function validateCustomerDraft(customer: CustomerDraft, quantity: number)
 
 export function customerDraftToOrderDetails(customer: CustomerDraft): OrderCustomerDetails {
   const whatsapp = cleanCustomerPhone(customer.whatsapp);
+  const resolvedRegion = (customer.region || DEFAULT_GHANA_REGION).trim();
   return {
     fullName: customer.fullName.trim(),
     phone: whatsapp,
     whatsapp,
+    email: customer.email.trim() || undefined,
     fulfilmentType: customer.fulfilmentType,
-    region: customer.fulfilmentType === "delivery" ? customer.region.trim() : undefined,
+    region: customer.fulfilmentType === "delivery" ? resolvedRegion : undefined,
     city: customer.fulfilmentType === "delivery" ? customer.city.trim() : undefined,
     deliveryAddress: customer.fulfilmentType === "delivery" ? customer.deliveryAddress.trim() : undefined,
     preferredPaymentMethod: customer.fulfilmentType === "pickup" ? "Pay on Pickup" : "Mobile Money on Confirmation",
@@ -105,6 +120,9 @@ export function customerDraftToOrderDetails(customer: CustomerDraft): OrderCusto
 }
 
 function buyPathForProduct(product: Product): string {
+  if (isOthersProduct(product)) {
+    return `/product/${product.slug}`;
+  }
   const families: ProductFamilyKey[] = ["iphone", "mac", "ipad", "watch", "airpods", "accessories"];
   const family = families.find((candidate) => familyMatchesProduct(product, candidate)) ?? "accessories";
   return productBuyPath(family, product.slug);
@@ -140,7 +158,13 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   const editingItem = useMemo(() => items.find((item) => cartEditKey(item) === editingKey || cartItemKey(item) === editingKey) ?? null, [editingKey, items]);
 
   const updateCustomer: BuyJourneyValue["updateCustomer"] = (field, value) => {
-    setCustomer((current) => ({ ...current, [field]: value }));
+    setCustomer((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === "fulfilmentType" && value === "delivery" && !current.region.trim()
+        ? { region: DEFAULT_GHANA_REGION }
+        : {}),
+    }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setOrderError("");
   };

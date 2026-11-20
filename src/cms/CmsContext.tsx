@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
+import { isAdminHostname } from "../config/adminHost";
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import {
   defaultFaqs,
@@ -113,6 +114,47 @@ interface CmsContextValue {
 
 const CmsContext = createContext<CmsContextValue | null>(null);
 
+const PUBLIC_CMS_TIMEOUT_MS = 3500;
+
+function withTimeoutFallback<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    let settled = false;
+    const timer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              resolve(fallback);
+            }
+          }, timeoutMs)
+        : null;
+
+    promise
+      .then((value) => {
+        if (!settled) {
+          settled = true;
+          if (timer !== null) window.clearTimeout(timer);
+          resolve(value);
+        }
+      })
+      .catch(() => {
+        if (!settled) {
+          settled = true;
+          if (timer !== null) window.clearTimeout(timer);
+          resolve(fallback);
+        }
+      });
+  });
+}
+
+function shouldLoadAdminCmsSlices(): boolean {
+  if (isAdminHostname()) return true;
+  if (typeof window === "undefined") return false;
+  const pathname = window.location.pathname || "";
+  const search = window.location.search || "";
+  return pathname.startsWith("/admin") || search.includes("preview=") || search.includes("admin_preview=1");
+}
+
 export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<SiteSettings>(() => getInitialSiteSettings());
   const [homepage, setHomepage] = useState<HomepageContent>(() => getInitialHomepageContent());
@@ -124,41 +166,63 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
   const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(() => getInitialStorefrontContent());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !hasVerifiedLocalHomepageContent());
   const [, startTransition] = useTransition();
 
   const loadAll = async () => {
-    try {
-      const [s, h, hDraft, hLegacyDraft, m, f, p, d, ms, msDraft] = await Promise.all([
-        fetchSiteSettings(),
-        fetchHomepageContent(),
-        fetchHomepageDraft(),
-        fetchHomepageLegacyDraft(),
-        fetchMediaLibrary(),
-        fetchFaqs(),
-        fetchPageContent(),
-        fetchStorefrontContent(),
-        fetchMainStoreContent(),
-        fetchMainStoreDraft(),
-      ]);
+    const includeAdminSlices = shouldLoadAdminCmsSlices();
 
-      startTransition(() => {
-        setSettings(s);
-        setHomepage(h);
-        setHomepageDraft(hDraft);
-        setHomepageLegacyDraft(hLegacyDraft);
-        setMedia(m);
-        setFaqs(f);
-        setPages(p);
-        setDepartments(d);
-        setMainStore(ms);
-        setMainStoreDraft(msDraft);
+    // 1. Resolve public homepage independently with a safe timeout so slow/offline Supabase
+    //    or secondary/admin-only queries NEVER freeze the homepage on a blank skeleton.
+    const homepagePromise = withTimeoutFallback(
+      fetchHomepageContent(),
+      PUBLIC_CMS_TIMEOUT_MS,
+      getInitialHomepageContent()
+    )
+      .then((h) => {
+        startTransition(() => {
+          setHomepage(h);
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    } catch {
-      // Graceful fallback to initial values
-    } finally {
-      setLoading(false);
-    }
+
+    // 2. Load remaining public storefront CMS slices concurrently without blocking homepage paint.
+    const publicSecondaryPromise = Promise.allSettled([
+      withTimeoutFallback(fetchSiteSettings(), PUBLIC_CMS_TIMEOUT_MS, getInitialSiteSettings()),
+      withTimeoutFallback(fetchFaqs(), PUBLIC_CMS_TIMEOUT_MS, getInitialFaqs()),
+      withTimeoutFallback(fetchPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialPageContent()),
+      withTimeoutFallback(fetchStorefrontContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialStorefrontContent()),
+      withTimeoutFallback(fetchMainStoreContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMainStoreContent()),
+    ]).then(([sRes, fRes, pRes, dRes, msRes]) => {
+      startTransition(() => {
+        if (sRes.status === "fulfilled") setSettings(sRes.value);
+        if (fRes.status === "fulfilled") setFaqs(fRes.value);
+        if (pRes.status === "fulfilled") setPages(pRes.value);
+        if (dRes.status === "fulfilled") setDepartments(dRes.value);
+        if (msRes.status === "fulfilled") setMainStore(msRes.value);
+      });
+    });
+
+    // 3. Load admin-only drafts and Media Library strictly in Admin / preview sessions.
+    const adminSlicesPromise = includeAdminSlices
+      ? Promise.allSettled([
+          fetchHomepageDraft(),
+          fetchHomepageLegacyDraft(),
+          fetchMediaLibrary(),
+          fetchMainStoreDraft(),
+        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes]) => {
+          startTransition(() => {
+            if (hDraftRes.status === "fulfilled") setHomepageDraft(hDraftRes.value);
+            if (hLegacyDraftRes.status === "fulfilled") setHomepageLegacyDraft(hLegacyDraftRes.value);
+            if (mRes.status === "fulfilled") setMedia(mRes.value);
+            if (msDraftRes.status === "fulfilled") setMainStoreDraft(msDraftRes.value);
+          });
+        })
+      : Promise.resolve();
+
+    await Promise.allSettled([homepagePromise, publicSecondaryPromise, adminSlicesPromise]);
   };
 
   useEffect(() => {

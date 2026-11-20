@@ -58,9 +58,8 @@ export const productWhatsAppUrl = (
 
 export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
   const lines = order.items.flatMap((item, index) => {
-    const line = `${index + 1}. ${item.quantity}x ${item.productName} - ${item.storage}, ${item.colour}, ${item.condition} (${formatGhs(
-      item.lineTotal,
-    )})`;
+    const priceLabel = item.isFreeGift ? `Free Gift - ${formatGhs(0)}` : formatGhs(item.lineTotal);
+    const line = `${index + 1}. ${item.quantity}x ${item.productName} - ${item.storage}, ${item.colour}, ${item.condition} (${priceLabel})`;
     const photoUrl = toAbsoluteProductImageUrl(item.productImage);
     const details = Object.entries(item.specifications ?? {})
       .filter(([, value]) => value)
@@ -85,6 +84,8 @@ export const orderRequestWhatsAppUrl = (order: OrderRequestPayload) => {
       "Items:",
       ...lines,
       "",
+      order.promotionSnapshot?.title ? `Promotion: ${order.promotionSnapshot.title}` : "",
+      order.discountAmount && order.discountAmount > 0 ? `Promotional discount: -${formatGhs(order.discountAmount)}` : "",
       `Order total: ${formatGhs(order.total)}`,
       `Delivery method: ${order.customer.fulfilmentType === "delivery" ? "Delivery" : "Store Pickup"}`,
       `Location: ${location || "To confirm"}`,

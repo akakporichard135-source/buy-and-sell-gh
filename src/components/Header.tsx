@@ -1,9 +1,16 @@
 import { ChevronLeft, ChevronRight, Search, ShoppingBag } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
+import { useProductCatalog } from "../catalog/ProductCatalogContext";
+import { seedCatalog } from "../catalog/productCatalog";
+import {
+  buildDesktopMegaMenu,
+  type DesktopNavCategoryId,
+} from "../catalog/desktopNavMenuBuilder";
 import { useCart } from "../context/CartContext";
 import { useBuyJourney } from "../context/BuyJourneyContext";
+import { DesktopMegaMenu } from "./DesktopMegaMenu";
 import { Logo } from "./Logo";
 import { InstantSearch } from "./InstantSearch";
 import "../styles/global-header.css";
@@ -165,12 +172,14 @@ export const MOBILE_NAV_SECTIONS: MobileNavSection[] = [
 ];
 
 export interface GlobalNavItem {
+  id: DesktopNavCategoryId;
   label: string;
   to: string;
   matchPrefixes: string[];
 }
 
 export const GLOBAL_NAV_ITEMS: GlobalNavItem[] = MOBILE_NAV_SECTIONS.map((sec) => ({
+  id: sec.id as DesktopNavCategoryId,
   label: sec.label,
   to: sec.to,
   matchPrefixes: sec.matchPrefixes,
@@ -178,10 +187,22 @@ export const GLOBAL_NAV_ITEMS: GlobalNavItem[] = MOBILE_NAV_SECTIONS.map((sec) =
 
 const MENU_CLOSE_MS = 380;
 const SUBMENU_EXIT_MS = 360;
+const DESKTOP_OPEN_DELAY_MS = 55;
+const DESKTOP_CLOSE_DELAY_MS = 165;
+const DESKTOP_UNMOUNT_MS = 260;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function isDesktopHoverEnvironment(): boolean {
+  if (typeof window === "undefined") return false;
+  if (window.innerWidth <= 834) return false;
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
+  return true;
 }
 
 export function Header() {
@@ -191,9 +212,16 @@ export function Header() {
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [renderedSectionId, setRenderedSectionId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [desktopMenuCategory, setDesktopMenuCategory] = useState<DesktopNavCategoryId | null>(null);
+  const [renderedDesktopCategory, setRenderedDesktopCategory] =
+    useState<DesktopNavCategoryId | null>(null);
+  const [isDesktopMenuVisible, setIsDesktopMenuVisible] = useState(false);
+  const { activeProducts } = useProductCatalog();
   const { totalItems } = useCart();
   const { openBag } = useBuyJourney();
   const location = useLocation();
+  const headerRef = useRef<HTMLElement>(null);
+  const desktopTriggerRefs = useRef<Partial<Record<DesktopNavCategoryId, HTMLAnchorElement | null>>>({});
   const rootPanelRef = useRef<HTMLDivElement>(null);
   const submenuPanelRef = useRef<HTMLDivElement>(null);
   const savedScrollYRef = useRef(0);
@@ -202,6 +230,135 @@ export function Header() {
   const submenuTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openRaf1Ref = useRef<number | null>(null);
   const openRaf2Ref = useRef<number | null>(null);
+  const desktopOpenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopUnmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopRaf1Ref = useRef<number | null>(null);
+  const desktopRaf2Ref = useRef<number | null>(null);
+  const desktopActiveRef = useRef<DesktopNavCategoryId | null>(null);
+  const suppressNextFocusOpenRef = useRef(false);
+
+  const clearDesktopTimers = useCallback(() => {
+    if (desktopOpenTimerRef.current) {
+      clearTimeout(desktopOpenTimerRef.current);
+      desktopOpenTimerRef.current = null;
+    }
+    if (desktopCloseTimerRef.current) {
+      clearTimeout(desktopCloseTimerRef.current);
+      desktopCloseTimerRef.current = null;
+    }
+    if (desktopUnmountTimerRef.current) {
+      clearTimeout(desktopUnmountTimerRef.current);
+      desktopUnmountTimerRef.current = null;
+    }
+    if (desktopRaf1Ref.current !== null) {
+      cancelAnimationFrame(desktopRaf1Ref.current);
+      desktopRaf1Ref.current = null;
+    }
+    if (desktopRaf2Ref.current !== null) {
+      cancelAnimationFrame(desktopRaf2Ref.current);
+      desktopRaf2Ref.current = null;
+    }
+  }, []);
+
+  const openDesktopCategoryNow = useCallback(
+    (categoryId: DesktopNavCategoryId) => {
+      if (typeof window !== "undefined" && window.innerWidth <= 834) return;
+      clearDesktopTimers();
+      const wasAlreadyOpen = Boolean(desktopActiveRef.current);
+      desktopActiveRef.current = categoryId;
+      setDesktopMenuCategory(categoryId);
+      setRenderedDesktopCategory(categoryId);
+
+      if (wasAlreadyOpen || prefersReducedMotion()) {
+        setIsDesktopMenuVisible(true);
+        return;
+      }
+
+      setIsDesktopMenuVisible(false);
+      desktopRaf1Ref.current = requestAnimationFrame(() => {
+        desktopRaf2Ref.current = requestAnimationFrame(() => {
+          setIsDesktopMenuVisible(true);
+        });
+      });
+    },
+    [clearDesktopTimers]
+  );
+
+  const scheduleDesktopOpen = useCallback(
+    (categoryId: DesktopNavCategoryId) => {
+      if (desktopCloseTimerRef.current) {
+        clearTimeout(desktopCloseTimerRef.current);
+        desktopCloseTimerRef.current = null;
+      }
+      if (desktopUnmountTimerRef.current) {
+        clearTimeout(desktopUnmountTimerRef.current);
+        desktopUnmountTimerRef.current = null;
+      }
+      if (desktopOpenTimerRef.current) {
+        clearTimeout(desktopOpenTimerRef.current);
+        desktopOpenTimerRef.current = null;
+      }
+
+      // Instant smooth switch when moving between categories while already open
+      if (desktopActiveRef.current) {
+        openDesktopCategoryNow(categoryId);
+        return;
+      }
+
+      desktopOpenTimerRef.current = setTimeout(() => {
+        openDesktopCategoryNow(categoryId);
+      }, DESKTOP_OPEN_DELAY_MS);
+    },
+    [openDesktopCategoryNow]
+  );
+
+  const closeDesktopMenu = useCallback(
+    (immediate = false) => {
+      if (!immediate && !desktopActiveRef.current && desktopUnmountTimerRef.current) {
+        return;
+      }
+      clearDesktopTimers();
+      desktopActiveRef.current = null;
+      setDesktopMenuCategory(null);
+      setIsDesktopMenuVisible(false);
+
+      if (immediate || prefersReducedMotion()) {
+        setRenderedDesktopCategory(null);
+        return;
+      }
+
+      desktopUnmountTimerRef.current = setTimeout(() => {
+        desktopUnmountTimerRef.current = null;
+        setRenderedDesktopCategory(null);
+      }, DESKTOP_UNMOUNT_MS);
+    },
+    [clearDesktopTimers]
+  );
+
+  const scheduleDesktopClose = useCallback(() => {
+    if (desktopOpenTimerRef.current) {
+      clearTimeout(desktopOpenTimerRef.current);
+      desktopOpenTimerRef.current = null;
+    }
+    if (desktopCloseTimerRef.current) {
+      clearTimeout(desktopCloseTimerRef.current);
+    }
+    desktopCloseTimerRef.current = setTimeout(() => {
+      closeDesktopMenu(false);
+    }, DESKTOP_CLOSE_DELAY_MS);
+  }, [closeDesktopMenu]);
+
+  const cancelDesktopClose = useCallback(() => {
+    if (desktopCloseTimerRef.current) {
+      clearTimeout(desktopCloseTimerRef.current);
+      desktopCloseTimerRef.current = null;
+    }
+    if (desktopUnmountTimerRef.current) {
+      clearTimeout(desktopUnmountTimerRef.current);
+      desktopUnmountTimerRef.current = null;
+    }
+  }, []);
 
   const clearPendingAnimations = () => {
     if (closeTimerRef.current) {
@@ -309,7 +466,7 @@ export function Header() {
     }
   };
 
-  // Close mobile menu cleanly on route pathname change (ignore query param updates on same page)
+  // Close mobile menu and desktop mega-menu cleanly on route pathname change
   useEffect(() => {
     clearPendingAnimations();
     setMobileMenuOpen(false);
@@ -317,11 +474,68 @@ export function Header() {
     setIsMenuMounted(false);
     setActiveSectionId(null);
     setRenderedSectionId(null);
-  }, [location.pathname]);
+    closeDesktopMenu(true);
+  }, [location.pathname, closeDesktopMenu]);
 
   useEffect(() => {
-    return () => clearPendingAnimations();
-  }, []);
+    return () => {
+      clearPendingAnimations();
+      clearDesktopTimers();
+    };
+  }, [clearDesktopTimers]);
+
+  // Close desktop mega-menu cleanly on Escape, outside click, or resize into mobile breakpoint
+  useEffect(() => {
+    if (!renderedDesktopCategory) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        const triggerCat = desktopActiveRef.current;
+        suppressNextFocusOpenRef.current = true;
+        closeDesktopMenu(false);
+        if (triggerCat) {
+          desktopTriggerRefs.current[triggerCat]?.focus();
+        }
+      }
+    };
+
+    const handlePointerDownOutside = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (headerRef.current?.contains(target)) return;
+      const megaEl = document.getElementById("global-desktop-mega-menu");
+      if (megaEl?.contains(target)) return;
+      closeDesktopMenu(false);
+    };
+
+    const handleResize = () => {
+      if (window.innerWidth <= 834) {
+        closeDesktopMenu(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDownOutside);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDownOutside);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [renderedDesktopCategory, closeDesktopMenu]);
+
+  const desktopCatalogProducts = useMemo(
+    () => (activeProducts.length > 0 ? activeProducts : seedCatalog),
+    [activeProducts]
+  );
+
+  const desktopMegaMenuData = useMemo(
+    () =>
+      renderedDesktopCategory
+        ? buildDesktopMegaMenu(renderedDesktopCategory, desktopCatalogProducts)
+        : null,
+    [renderedDesktopCategory, desktopCatalogProducts]
+  );
 
   // Native position-fixed background scroll lock while menu is mounted:
   // Blocks background scroll on iOS Safari, Android Chrome, and desktop without attaching
@@ -404,20 +618,91 @@ export function Header() {
   const secondarySubitems = displayedSection?.subitems.filter((s) => s.group === "secondary") || [];
 
   return (
-    <header className={`site-header global-header sticky top-0 z-50 ${isMenuMounted ? "menu-is-active" : ""}`}>
+    <header
+      ref={headerRef}
+      className={`site-header global-header sticky top-0 z-50 ${
+        isMenuMounted ? "menu-is-active" : ""
+      } ${renderedDesktopCategory ? "desktop-mega-active" : ""}`}
+      onMouseLeave={() => {
+        if (renderedDesktopCategory) scheduleDesktopClose();
+      }}
+      onBlur={(e) => {
+        const nextFocused = e.relatedTarget as Node | null;
+        if (!renderedDesktopCategory) return;
+        const megaEl = document.getElementById("global-desktop-mega-menu");
+        if (
+          nextFocused &&
+          (headerRef.current?.contains(nextFocused) || megaEl?.contains(nextFocused))
+        ) {
+          return;
+        }
+        closeDesktopMenu(false);
+      }}
+    >
       <div className="global-header-inner">
         <Logo compact className="global-header-brand" />
 
-        {/* Desktop horizontal navigation (preserved untouched) */}
-        <nav className="global-header-nav" aria-label="Global Navigation">
+        {/* Desktop horizontal navigation with Apple-style hover & keyboard mega-menu */}
+        <nav
+          className="global-header-nav"
+          aria-label="Global Navigation"
+          onMouseEnter={cancelDesktopClose}
+        >
           {GLOBAL_NAV_ITEMS.map((item) => {
             const active = isItemActive(item);
+            const isExpanded = desktopMenuCategory === item.id;
             return (
               <Link
-                key={item.label}
+                key={item.id}
+                ref={(el) => {
+                  desktopTriggerRefs.current[item.id] = el;
+                }}
                 to={item.to}
-                className={`global-header-link ${active ? "is-active" : ""}`}
+                data-testid={`desktop-nav-item-${item.id}`}
+                className={`global-header-link ${active ? "is-active" : ""} ${
+                  isExpanded ? "is-mega-open" : ""
+                }`}
                 aria-current={active ? "page" : undefined}
+                aria-haspopup="true"
+                aria-expanded={isExpanded}
+                aria-controls={isExpanded ? "global-desktop-mega-menu" : undefined}
+                onPointerEnter={(e) => {
+                  if (e.pointerType !== "mouse" && e.pointerType !== "pen") return;
+                  if (!isDesktopHoverEnvironment()) return;
+                  scheduleDesktopOpen(item.id);
+                }}
+                onMouseEnter={() => {
+                  if (!isDesktopHoverEnvironment()) return;
+                  scheduleDesktopOpen(item.id);
+                }}
+                onFocus={(e) => {
+                  if (typeof window === "undefined" || window.innerWidth <= 834) return;
+                  if (suppressNextFocusOpenRef.current) {
+                    suppressNextFocusOpenRef.current = false;
+                    return;
+                  }
+                  // Open for keyboard navigation without hijacking touch taps
+                  if (e.currentTarget.matches?.(":focus-visible")) {
+                    openDesktopCategoryNow(item.id);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (typeof window === "undefined" || window.innerWidth <= 834) return;
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    openDesktopCategoryNow(item.id);
+                    requestAnimationFrame(() => {
+                      const firstLink = document.querySelector<HTMLAnchorElement>(
+                        `[data-testid="desktop-mega-link-${item.id}-0-0"]`
+                      );
+                      firstLink?.focus();
+                    });
+                  } else if (e.key === "Escape" && desktopMenuCategory) {
+                    e.preventDefault();
+                    closeDesktopMenu(false);
+                  }
+                }}
+                onClick={() => closeDesktopMenu(true)}
               >
                 {item.label}
               </Link>
@@ -433,6 +718,7 @@ export function Header() {
             aria-label="Search products"
             onClick={() => {
               if (mobileMenuOpen) handleCloseMenu();
+              if (renderedDesktopCategory) closeDesktopMenu(true);
               setSearchOpen(true);
             }}
           >
@@ -445,6 +731,7 @@ export function Header() {
             aria-label={totalItems > 0 ? `Shopping Bag with ${totalItems} items` : "Shopping Bag"}
             onClick={() => {
               if (mobileMenuOpen) handleCloseMenu();
+              if (renderedDesktopCategory) closeDesktopMenu(true);
               openBag();
             }}
           >
@@ -668,6 +955,28 @@ export function Header() {
           </>,
           document.body
         )}
+
+      {/* Desktop Hover Mega-Menu (rendered strictly on desktop > 834px; mobile untouched) */}
+      <DesktopMegaMenu
+        menu={desktopMegaMenuData}
+        isOpen={isDesktopMenuVisible}
+        onMouseEnter={cancelDesktopClose}
+        onMouseLeave={scheduleDesktopClose}
+        onClose={() => closeDesktopMenu(false)}
+        onNavigate={() => closeDesktopMenu(true)}
+        onBlur={(e) => {
+          const nextFocused = e.relatedTarget as Node | null;
+          if (!renderedDesktopCategory) return;
+          const megaEl = document.getElementById("global-desktop-mega-menu");
+          if (
+            nextFocused &&
+            (headerRef.current?.contains(nextFocused) || megaEl?.contains(nextFocused))
+          ) {
+            return;
+          }
+          closeDesktopMenu(false);
+        }}
+      />
 
       {/* Global Instant Search modal */}
       <InstantSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

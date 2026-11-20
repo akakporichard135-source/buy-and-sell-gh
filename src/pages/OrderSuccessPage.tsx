@@ -93,8 +93,8 @@ export function OrderSuccessPage() {
               </div>
 
               <div className="apple-bag-items">
-                {order.items.map((item) => (
-                  <article className="apple-bag-item" key={`${item.productId}-${item.storage}-${item.colour}`} style={{ padding: "18px 0" }}>
+                {order.items.map((item, index) => (
+                  <article className="apple-bag-item" key={`${item.productId}-${item.storage}-${item.colour}-${item.isFreeGift ? "gift" : "paid"}-${index}`} style={{ padding: "18px 0" }}>
                     <div className="apple-bag-item-image" style={{ width: 90, height: 90, borderRadius: 12 }}>
                       {item.productImage ? (
                         <img src={item.productImage} alt={item.productName} loading="lazy" />
@@ -148,6 +148,12 @@ export function OrderSuccessPage() {
                   <span>Phone / WhatsApp</span>
                   <span>{order.customer.phone}</span>
                 </div>
+                {order.customer.email && (
+                  <div className="apple-bag-summary-row">
+                    <span>Email</span>
+                    <span>{order.customer.email}</span>
+                  </div>
+                )}
                 <div className="apple-bag-summary-row">
                   <span>Fulfillment</span>
                   <span>{order.customer.fulfilmentType === "delivery" ? "Doorstep Delivery" : "Store Pickup"}</span>

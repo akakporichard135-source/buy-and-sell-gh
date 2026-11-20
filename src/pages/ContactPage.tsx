@@ -1,4 +1,4 @@
-import { ExternalLink, MapPin, Phone } from "lucide-react";
+import { ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import { useCms } from "../cms/CmsContext";
 import { defaultPageContent } from "../cms/defaultCmsData";
 import { FormField } from "../components/FormField";
@@ -28,6 +28,7 @@ export function ContactPage() {
   const waPrimary = settings?.whatsapp?.primary || business.whatsapp.primary;
   const waSecondary = settings?.whatsapp?.secondary || business.whatsapp.secondary;
   const storeLocation = settings?.location || business.location;
+  const supportEmail = settings?.email || business.email || "support@buyandsellgh.com";
   const hours = settings?.hours && settings.hours.length > 0 ? settings.hours : business.hours;
   const username = settings?.username || business.username;
 
@@ -57,6 +58,15 @@ export function ContactPage() {
               <div>
                 <strong>{phoneSecondary}</strong>
                 <span>Secondary phone and WhatsApp</span>
+              </div>
+            </a>
+          )}
+          {supportEmail && (
+            <a href={`mailto:${supportEmail}`} data-testid="contact-email-link">
+              <Mail />{" "}
+              <div>
+                <strong>{supportEmail}</strong>
+                <span>Email support &amp; inquiries</span>
               </div>
             </a>
           )}

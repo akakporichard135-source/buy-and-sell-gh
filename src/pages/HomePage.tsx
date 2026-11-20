@@ -7,6 +7,7 @@ import { useResolvedMediaUrl } from "../cms/localMediaStore";
 import {
   expandHomepageCampaignVideoSources,
   resolveLegacyBackgroundColor,
+  resolveUnifiedCampaignVideoMedia,
 } from "../cms/homepageBuilderUtils";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
@@ -458,10 +459,29 @@ function buildSectionBackgroundImage(
   return parts.length > 0 ? parts.join(", ") : undefined;
 }
 
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState<boolean>(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false
+  );
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  return reduced;
+}
+
 /**
- * Resilient campaign video player that handles format decode failures (including
- * audio-only/unplayable mobile crops returning videoWidth === 0) by cleanly
- * advancing through fallback streams before falling back to the poster image.
+ * Resilient, hardware-smooth campaign video player:
+ * - Respects prefers-reduced-motion by presenting the static poster/fallback cleanly.
+ * - Avoids premature fallback/remount flicker during slow network buffering.
+ * - Pauses smoothly when scrolled offscreen and resumes cleanly when visible.
+ * - Cross-fades smoothly from matching poster to decoded first frame without visual snap.
  */
 function CampaignVideo({
   id,
@@ -494,56 +514,106 @@ function CampaignVideo({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [failedUrls, setFailedUrls] = useState<Record<string, boolean>>({});
-  const orderedSources = expandHomepageCampaignVideoSources(sources);
+  const [frameReady, setFrameReady] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  const sourcesKey = sources.map((s) => (s || "").trim()).filter(Boolean).join("|");
+  const orderedSources = expandHomepageCampaignVideoSources(
+    sourcesKey ? sourcesKey.split("|") : []
+  );
 
   const activeSrc = orderedSources.find((src) => !failedUrls[src]);
+  const effectiveAutoplay = autoplay && !prefersReducedMotion;
+  const effectiveMuted = effectiveAutoplay ? true : muted;
 
   const markFailed = (src: string) => {
     setFailedUrls((prev) => (prev[src] ? prev : { ...prev, [src]: true }));
   };
 
   useEffect(() => {
+    setFrameReady(false);
+  }, [activeSrc]);
+
+  useEffect(() => {
     const el = videoRef.current;
     if (!el || !activeSrc) return;
 
-    const validateTrackHealth = () => {
-      if (el.error || (el.readyState >= 1 && (el.videoWidth === 0 || el.videoHeight === 0))) {
-        markFailed(activeSrc);
-        return false;
-      }
-      return true;
-    };
+    if (!effectiveAutoplay) {
+      el.pause();
+      return;
+    }
+
+    let inViewport = true;
 
     const tryPlay = () => {
-      if (!autoplay || !validateTrackHealth()) return;
+      if (!inViewport || !effectiveAutoplay) return;
+      if (el.error) {
+        markFailed(activeSrc);
+        return;
+      }
       if (el.paused) {
-        void el.play().catch(() => {});
+        const p = el.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {});
+        }
       }
     };
 
     tryPlay();
-    const t1 = window.setTimeout(tryPlay, 300);
-    const t2 = window.setTimeout(validateTrackHealth, 1200);
 
     let observer: IntersectionObserver | undefined;
     if (typeof IntersectionObserver !== "undefined") {
       observer = new IntersectionObserver(
         (entries) => {
-          if (entries.some((entry) => entry.isIntersecting)) tryPlay();
+          const visible = entries.some((entry) => entry.isIntersecting);
+          inViewport = visible;
+          if (visible) {
+            tryPlay();
+          } else if (!el.paused) {
+            el.pause();
+          }
         },
-        { threshold: 0.15 }
+        { threshold: 0.05 }
       );
       observer.observe(el);
     }
 
-    return () => {
-      window.clearTimeout(t1);
-      window.clearTimeout(t2);
-      observer?.disconnect();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && inViewport) {
+        tryPlay();
+      } else if (document.visibilityState !== "visible" && !el.paused) {
+        el.pause();
+      }
     };
-  }, [activeSrc, autoplay]);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      observer?.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [activeSrc, effectiveAutoplay]);
 
   if (!activeSrc) {
+    return <>{fallbackNode}</>;
+  }
+
+  if (prefersReducedMotion) {
+    if (poster) {
+      const reducedImg = (
+        <img
+          data-testid="homepage-campaign-video-reduced-motion"
+          className={className}
+          src={poster}
+          alt=""
+          style={{
+            objectFit: mediaFit,
+            objectPosition,
+            mixBlendMode,
+          }}
+        />
+      );
+      return wrapStage ? <div className="home-ref-video-stage">{reducedImg}</div> : reducedImg;
+    }
     return <>{fallbackNode}</>;
   }
 
@@ -552,34 +622,38 @@ function CampaignVideo({
       ref={videoRef}
       key={`${id}-vid-${activeSrc}`}
       data-testid="homepage-campaign-video"
-      className={className}
+      data-video-ready={frameReady ? "true" : "false"}
+      className={`${className} ${frameReady ? "is-video-ready" : "is-video-loading"}`}
       src={activeSrc}
       poster={poster}
-      autoPlay={autoplay}
-      muted={muted}
+      autoPlay={effectiveAutoplay}
+      muted={effectiveMuted}
       loop={loop}
       playsInline
+      disablePictureInPicture
+      disableRemotePlayback
       preload={priority ? "auto" : "metadata"}
-      onCanPlay={(e) => {
+      onLoadedData={(e) => {
         const v = e.currentTarget;
-        if (v.videoWidth === 0 || v.videoHeight === 0) {
+        if (v.readyState >= 2 && (v.videoWidth === 0 || v.videoHeight === 0)) {
           markFailed(activeSrc);
           return;
         }
-        if (autoplay && v.paused) {
+        setFrameReady(true);
+        if (effectiveAutoplay && v.paused) {
           void v.play().catch(() => {});
         }
       }}
-      onLoadedData={(e) => {
-        const v = e.currentTarget;
-        if (v.videoWidth === 0 || v.videoHeight === 0) {
-          markFailed(activeSrc);
-        }
+      onPlaying={() => {
+        setFrameReady(true);
       }}
-      onLoadedMetadata={(e) => {
+      onCanPlay={(e) => {
         const v = e.currentTarget;
-        if (v.videoWidth === 0 || v.videoHeight === 0) {
-          markFailed(activeSrc);
+        if (v.readyState >= 2 && v.videoWidth > 0 && v.videoHeight > 0) {
+          setFrameReady(true);
+          if (effectiveAutoplay && v.paused) {
+            void v.play().catch(() => {});
+          }
         }
       }}
       onError={() => markFailed(activeSrc)}
@@ -592,7 +666,26 @@ function CampaignVideo({
   );
 
   if (wrapStage) {
-    return <div className="home-ref-video-stage">{videoEl}</div>;
+    return (
+      <div className="home-ref-video-stage">
+        {poster ? (
+          <img
+            className="home-ref-video-poster-underlay"
+            src={poster}
+            alt=""
+            aria-hidden="true"
+            decoding="async"
+            fetchPriority={priority ? "high" : undefined}
+            style={{
+              objectFit: mediaFit,
+              objectPosition,
+              mixBlendMode,
+            }}
+          />
+        ) : null}
+        {videoEl}
+      </div>
+    );
   }
   return videoEl;
 }
@@ -619,14 +712,19 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
   );
   const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
 
-  const videoSources = isMobile
-    ? [resolvedMobileVideo, resolvedVideo]
-    : [resolvedVideo, resolvedMobileVideo];
-  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.some(Boolean);
-  const activePosterSrc =
-    (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
-    (isMobile && mobileImg ? mobileImg : resolvedDesktop) ||
-    undefined;
+  const unifiedVideo = resolveUnifiedCampaignVideoMedia({
+    campaignId: campaign.id,
+    videoUrl: resolvedVideo,
+    mobileVideoUrl: resolvedMobileVideo,
+    posterUrl: resolvedPoster,
+    mobilePosterUrl: resolvedMobilePoster,
+    desktopImage: resolvedDesktop,
+    mobileImage: mobileImg,
+    isMobile,
+  });
+  const videoSources = unifiedVideo.sources;
+  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.length > 0;
+  const activePosterSrc = unifiedVideo.poster;
 
   const headingText = campaign.title || campaign.deviceName || "Featured Campaign";
   const distinctEyebrow =
@@ -747,14 +845,19 @@ function ProductTile({ campaign }: { campaign: Campaign }) {
   );
   const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
 
-  const videoSources = isMobile
-    ? [resolvedMobileVideo, resolvedVideo]
-    : [resolvedVideo, resolvedMobileVideo];
-  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.some(Boolean);
-  const activePosterSrc =
-    (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
-    (isMobile && resolvedMobile ? resolvedMobile : resolvedDesktop) ||
-    undefined;
+  const unifiedVideo = resolveUnifiedCampaignVideoMedia({
+    campaignId: campaign.id,
+    videoUrl: resolvedVideo,
+    mobileVideoUrl: resolvedMobileVideo,
+    posterUrl: resolvedPoster,
+    mobilePosterUrl: resolvedMobilePoster,
+    desktopImage: resolvedDesktop,
+    mobileImage: resolvedMobile,
+    isMobile,
+  });
+  const videoSources = unifiedVideo.sources;
+  const hasAnyVideo = campaign.mediaMode === "video" && videoSources.length > 0;
+  const activePosterSrc = unifiedVideo.poster;
 
   const headingText = campaign.title || campaign.deviceName || "Featured Tile";
   const distinctEyebrow =
@@ -915,16 +1018,21 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
   const mixBlendMode = tone === "dark" ? "normal" : section.mediaBlendMode || "normal";
   const variant = section.layoutVariant || "full-hero";
 
-  const videoSources = isMobile
-    ? [resolvedMobileVideo, resolvedVideo]
-    : [resolvedVideo, resolvedMobileVideo];
+  const unifiedVideo = resolveUnifiedCampaignVideoMedia({
+    campaignId: section.id,
+    videoUrl: resolvedVideo,
+    mobileVideoUrl: resolvedMobileVideo,
+    posterUrl: resolvedPoster,
+    mobilePosterUrl: resolvedMobilePoster,
+    desktopImage: resolvedDesktop,
+    mobileImage: resolvedMobile,
+    isMobile,
+  });
+  const videoSources = unifiedVideo.sources;
   const hasAnyVideo =
     (section.mediaMode === "video" || variant === "video-showcase") &&
-    videoSources.some(Boolean);
-  const activePosterSrc =
-    (isMobile && resolvedMobilePoster ? resolvedMobilePoster : resolvedPoster) ||
-    (isMobile && resolvedMobile ? resolvedMobile : resolvedDesktop) ||
-    undefined;
+    videoSources.length > 0;
+  const activePosterSrc = unifiedVideo.poster;
 
   const headingText = section.title || section.deviceName || section.internalName || "Featured Section";
   const distinctEyebrow =

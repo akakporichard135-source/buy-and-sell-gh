@@ -1,16 +1,12 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  Check,
   ChevronLeft,
   Lock,
   MessageCircle,
-  Phone,
   ShieldCheck,
   ShoppingBag,
   Store,
   Truck,
-  User,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
@@ -44,8 +40,7 @@ function itemImage(item: CartItem): string {
 }
 
 export function AppleCheckout() {
-  const navigate = useNavigate();
-  const { items, effectiveItems, subtotal, rawSubtotal, discountAmount, promotionResult, totalItems } = useCart();
+  const { effectiveItems, subtotal, rawSubtotal, discountAmount, promotionResult } = useCart();
   const {
     customer,
     updateCustomer,
@@ -54,21 +49,6 @@ export function AppleCheckout() {
     orderError,
     placeOrder,
   } = useBuyJourney();
-
-  const [sameAsPhone, setSameAsPhone] = useState(
-    customer.whatsapp === customer.fullName ? false : true
-  );
-
-  const handlePhoneChange = (val: string) => {
-    updateCustomer("whatsapp", sameAsPhone ? val : customer.whatsapp);
-  };
-
-  const handleSameAsPhoneToggle = (checked: boolean) => {
-    setSameAsPhone(checked);
-    if (checked && customer.whatsapp) {
-      // keep current whatsapp
-    }
-  };
 
   if (effectiveItems.length === 0) {
     return (
@@ -151,7 +131,7 @@ export function AppleCheckout() {
                   {errors.whatsapp && <span className="apple-checkout-error-text">{errors.whatsapp}</span>}
                 </div>
 
-                <div className="apple-checkout-field is-full">
+                <div className={`apple-checkout-field is-full ${errors.email ? "has-error" : ""}`}>
                   <label htmlFor="chk-email">Email Address <span style={{ color: "#86868b", fontWeight: 400 }}>(Optional, for receipt copy)</span></label>
                   <input
                     id="chk-email"
@@ -159,14 +139,10 @@ export function AppleCheckout() {
                     autoComplete="email"
                     placeholder="you@example.com"
                     className="apple-checkout-input"
-                    value={customer.additionalNote?.match(/Email: ([^\s|]+)/)?.[1] || ""}
-                    onChange={(e) => {
-                      const email = e.target.value.trim();
-                      const noteWithoutEmail = customer.additionalNote?.replace(/Email: [^\s|]+\s*\|?\s*/, "") || "";
-                      const nextNote = email ? `Email: ${email} | ${noteWithoutEmail}` : noteWithoutEmail;
-                      updateCustomer("additionalNote", nextNote);
-                    }}
+                    value={customer.email}
+                    onChange={(e) => updateCustomer("email", e.target.value)}
                   />
+                  {errors.email && <span className="apple-checkout-error-text">{errors.email}</span>}
                 </div>
               </div>
             </section>
@@ -261,12 +237,8 @@ export function AppleCheckout() {
                   rows={2}
                   placeholder="e.g. Please call before arrival, or I will come around 3 PM"
                   className="apple-checkout-textarea"
-                  value={customer.additionalNote?.replace(/Email: [^\s|]+\s*\|?\s*/, "") || ""}
-                  onChange={(e) => {
-                    const custom = e.target.value;
-                    const email = customer.additionalNote?.match(/Email: ([^\s|]+)/)?.[1] || "";
-                    updateCustomer("additionalNote", email ? `Email: ${email} | ${custom}` : custom);
-                  }}
+                  value={customer.additionalNote}
+                  onChange={(e) => updateCustomer("additionalNote", e.target.value)}
                 />
               </div>
             </section>

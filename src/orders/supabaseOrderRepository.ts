@@ -112,12 +112,15 @@ const orderSelect = `
   landmark,
   customer_notes,
   subtotal,
+  discount_amount,
   delivery_fee,
   total_amount,
   payment_method,
   payment_status,
   order_status,
   admin_note,
+  applied_promotion_id,
+  promotion_snapshot,
   archived_at,
   archived_by,
   deleted_at,
@@ -136,7 +139,11 @@ const orderSelect = `
     warranty,
     quantity,
     unit_price,
-    line_total
+    line_total,
+    is_free_gift,
+    promotional_discount,
+    applied_promotion_id,
+    qualifying_product_id
   )
 `;
 
@@ -216,12 +223,12 @@ const CATALOG_SLUG_ALIASES: Record<string, string> = {
   "apple-watch-ultra-4": "apple-watch-ultra-3",
   "apple-watch-series-12": "apple-watch-series-11",
   "airpods-5": "airpods-4",
-  "ipad-air": "ipad-air-m3",
+  "ipad-air": "ipad-air-11-inch-m3",
   "macbook-air": "macbook-air-13-inch-m4",
   "macbook-air-13-m4": "macbook-air-13-inch-m4",
   "macbook-air-15-m4": "macbook-air-15-inch-m4",
-  "macbook-pro": "macbook-pro-14-inch-m5",
-  "macbook-pro-14-m4": "macbook-pro-14-inch-m5",
+  "macbook-pro": "macbook-pro-14-inch-m5-pro-m5-max",
+  "macbook-pro-14-m4": "macbook-pro-14-inch-m4",
   "macbook-pro-16-m4-pro-max": "macbook-pro-16-inch-m5-pro-m5-max",
   "charging-and-power": "apple-magsafe-charger",
 };
@@ -333,21 +340,38 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
   if (error) throw new Error(error.message || "Order request could not be saved.");
   const createdOrder = orderFromResponse(data as OrderRpcResponse);
 
-  // Broadcast new order to open admin dashboards instantly
+  // Broadcast new order to open admin dashboards instantly and clean up channel afterwards
   try {
     const realtimeChannel = client.channel("admin-orders-realtime");
+    let cleanedUp = false;
+    const cleanupChannel = () => {
+      if (cleanedUp) return;
+      cleanedUp = true;
+      void client.removeChannel(realtimeChannel);
+    };
+    const cleanupTimer =
+      typeof window !== "undefined" ? window.setTimeout(cleanupChannel, 5000) : null;
+
     realtimeChannel.subscribe((status) => {
       if (status === "SUBSCRIBED") {
-        void realtimeChannel.send({
-          type: "broadcast",
-          event: "new_order",
-          payload: {
-            id: createdOrder.id,
-            referenceNumber: createdOrder.referenceNumber,
-            customerName: createdOrder.customer.fullName,
-            createdAt: createdOrder.createdAt,
-          },
-        });
+        void realtimeChannel
+          .send({
+            type: "broadcast",
+            event: "new_order",
+            payload: {
+              id: createdOrder.id,
+              referenceNumber: createdOrder.referenceNumber,
+              customerName: createdOrder.customer.fullName,
+              createdAt: createdOrder.createdAt,
+            },
+          })
+          .finally(() => {
+            if (cleanupTimer !== null) window.clearTimeout(cleanupTimer);
+            cleanupChannel();
+          });
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+        if (cleanupTimer !== null) window.clearTimeout(cleanupTimer);
+        cleanupChannel();
       }
     });
   } catch {

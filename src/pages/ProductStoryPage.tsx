@@ -84,6 +84,12 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey | "custo
 
   useEffect(() => {
     let active = true;
+    const fallbackTimer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => {
+            if (active) setIsResolving(false);
+          }, 3500)
+        : null;
     const fetchLatest = (force = false) => {
       const loader = previewActive
         ? fetchDraftLearnMore(slug)
@@ -102,6 +108,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey | "custo
           if (content) {
             setPublished(content);
           }
+          if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
           setIsResolving(false);
         });
     };
@@ -115,6 +122,7 @@ export function ProductStoryPage({ family }: { family: ProductFamilyKey | "custo
 
     return () => {
       active = false;
+      if (fallbackTimer !== null) window.clearTimeout(fallbackTimer);
       unsubscribe();
     };
   }, [slug, resolvedSlug, previewActive]);

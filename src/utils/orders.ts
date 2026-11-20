@@ -75,15 +75,33 @@ export const submitOrderRequest = async (
 ): Promise<OrderSubmissionResult> => {
   try {
     const saved = await submitOrderToSupabase(input);
+    const usedPayloadIndices = new Set<number>();
     const enrichedItems = saved.items.map((savedItem, index) => {
-      const matchingPayloadItem =
-        order.items.find(
-          (candidate) =>
-            (candidate.productId === savedItem.productId || candidate.productSlug === savedItem.productSlug) &&
-            candidate.storage === savedItem.storage &&
-            candidate.colour === savedItem.colour,
-        ) ?? order.items[index];
+      let matchedIndex = order.items.findIndex(
+        (candidate, candidateIndex) =>
+          !usedPayloadIndices.has(candidateIndex) &&
+          (candidate.productId === savedItem.productId || candidate.productSlug === savedItem.productSlug) &&
+          candidate.storage === savedItem.storage &&
+          candidate.colour === savedItem.colour &&
+          Boolean(candidate.isFreeGift) === Boolean(savedItem.isFreeGift),
+      );
+      if (matchedIndex === -1 && index < order.items.length && !usedPayloadIndices.has(index)) {
+        matchedIndex = index;
+      }
+      if (matchedIndex === -1) {
+        matchedIndex = order.items.findIndex(
+          (candidate, candidateIndex) =>
+            !usedPayloadIndices.has(candidateIndex) &&
+            (candidate.productId === savedItem.productId || candidate.productSlug === savedItem.productSlug),
+        );
+      }
+      if (matchedIndex >= 0) {
+        usedPayloadIndices.add(matchedIndex);
+      }
+      const matchingPayloadItem = matchedIndex >= 0 ? order.items[matchedIndex] : undefined;
       const quantity = savedItem.quantity || matchingPayloadItem?.quantity || 1;
+      const isFreeGift = Boolean(savedItem.isFreeGift || matchingPayloadItem?.isFreeGift);
+      const unitPrice = isFreeGift ? 0 : savedItem.unitPrice;
       return {
         ...savedItem,
         productSlug: matchingPayloadItem?.productSlug || savedItem.productSlug,
@@ -91,18 +109,43 @@ export const submitOrderRequest = async (
         productImage: matchingPayloadItem?.productImage || savedItem.productImage || "",
         condition: matchingPayloadItem?.condition || savedItem.condition,
         specifications: matchingPayloadItem?.specifications,
-        unitPrice: savedItem.unitPrice,
-        lineTotal: savedItem.unitPrice * quantity,
+        isFreeGift,
+        promotionalDiscount:
+          savedItem.promotionalDiscount ?? matchingPayloadItem?.promotionalDiscount,
+        appliedPromotionId:
+          savedItem.appliedPromotionId ?? matchingPayloadItem?.appliedPromotionId,
+        qualifyingProductId:
+          savedItem.qualifyingProductId ?? matchingPayloadItem?.qualifyingProductId,
+        unitPrice,
+        lineTotal: isFreeGift ? 0 : unitPrice * quantity,
       };
     });
-    const subtotal = enrichedItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const rawSubtotal = enrichedItems.reduce(
+      (sum, item) => sum + (item.isFreeGift ? 0 : item.lineTotal),
+      0
+    );
+    const discountAmount = Math.max(
+      0,
+      Number.isFinite(saved.discountAmount) && (saved.discountAmount ?? 0) > 0
+        ? saved.discountAmount!
+        : order.discountAmount ?? 0
+    );
+    const discountedSubtotal = Math.max(0, rawSubtotal - discountAmount);
+    const subtotal =
+      Number.isFinite(saved.subtotal) && saved.subtotal >= 0 && saved.subtotal <= rawSubtotal
+        ? Math.min(saved.subtotal, discountedSubtotal)
+        : discountedSubtotal;
+    const total = Math.max(0, subtotal + (saved.deliveryFee ?? 0));
     return {
       status: "saved",
       order: {
         ...saved,
         items: enrichedItems,
+        discountAmount,
+        appliedPromotionId: saved.appliedPromotionId ?? order.appliedPromotionId ?? null,
+        promotionSnapshot: saved.promotionSnapshot ?? order.promotionSnapshot ?? null,
         subtotal,
-        total: subtotal + (saved.deliveryFee ?? 0),
+        total,
       },
     };
   } catch (failure) {

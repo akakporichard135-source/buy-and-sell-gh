@@ -73,14 +73,22 @@ export function resolveResponsiveVideoPlayback(
   const muted = shouldAutoplay ? true : slot.videoMuted !== false;
   const loop = slot.videoLoop !== false;
 
-  const activeVideoUrl = (isMobile && slot.mobileVideoUrl) || slot.videoUrl || slot.mobileVideoUrl || "";
-  const activePosterUrl =
-    (isMobile && slot.mobilePosterUrl) ||
-    slot.posterUrl ||
-    slot.mobilePosterUrl ||
-    (isMobile && slot.mobileImage) ||
-    slot.desktopImage ||
-    "";
+  const rawDesktopVideo = resolveHomepageCampaignVideoUrl(slot.videoUrl) || "";
+  const rawMobileVideo = resolveHomepageCampaignVideoUrl(slot.mobileVideoUrl) || "";
+  const usesDuoCinema =
+    rawDesktopVideo === REVISED_IPHONE_DUO_CINEMA_VIDEO_URL ||
+    rawMobileVideo === REVISED_IPHONE_DUO_CINEMA_VIDEO_URL;
+  const activeVideoUrl = usesDuoCinema
+    ? REVISED_IPHONE_DUO_CINEMA_VIDEO_URL
+    : (isMobile && rawMobileVideo) || rawDesktopVideo || rawMobileVideo || "";
+  const activePosterUrl = usesDuoCinema
+    ? REVISED_IPHONE_DUO_CINEMA_POSTER_URL
+    : (isMobile && slot.mobilePosterUrl) ||
+      slot.posterUrl ||
+      slot.mobilePosterUrl ||
+      (isMobile && slot.mobileImage) ||
+      slot.desktopImage ||
+      "";
 
   return {
     activeVideoUrl: activeVideoUrl.trim(),
@@ -1216,6 +1224,18 @@ export const LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS = new Set<string>([
 export const REVISED_IPHONE_DUO_CINEMA_VIDEO_URL =
   "/videos/homepage/iphone-duo-unfold-cinema.mp4";
 
+export const REVISED_IPHONE_DUO_CINEMA_POSTER_URL =
+  "/videos/homepage/iphone-duo-unfold-poster.jpg";
+
+export function isLegacyOrRevisedDuoVideoUrl(url?: string): boolean {
+  const trimmed = url?.trim();
+  if (!trimmed) return false;
+  return (
+    trimmed === REVISED_IPHONE_DUO_CINEMA_VIDEO_URL ||
+    LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS.has(trimmed)
+  );
+}
+
 export function resolveHomepageCampaignVideoUrl(url?: string): string | undefined {
   const trimmed = url?.trim();
   if (!trimmed) return undefined;
@@ -1240,8 +1260,92 @@ export function expandHomepageCampaignVideoSources(
     if (!trimmed) continue;
     if (LEGACY_BOXED_IPHONE_DUO_VIDEO_URLS.has(trimmed)) {
       pushUnique(REVISED_IPHONE_DUO_CINEMA_VIDEO_URL);
+      // Do NOT fall back to two different older legacy videos between desktop & mobile — keep the revised cut canonical
+      continue;
     }
     pushUnique(trimmed);
   }
   return ordered;
+}
+
+/**
+ * Guarantees Desktop and Mobile render the exact same underlying cinematic video
+ * asset, poster, and playback settings for the iPhone Duo campaign (and whenever
+ * legacy Duo URLs or single-source videos are configured), while preserving explicit
+ * non-legacy responsive overrides for other campaigns.
+ */
+export function resolveUnifiedCampaignVideoMedia(input: {
+  campaignId?: string;
+  videoUrl?: string;
+  mobileVideoUrl?: string;
+  posterUrl?: string;
+  mobilePosterUrl?: string;
+  desktopImage?: string;
+  mobileImage?: string;
+  isMobile: boolean;
+}): {
+  sources: string[];
+  poster?: string;
+  isUnifiedCinema: boolean;
+} {
+  const resolvedDesktop = resolveHomepageCampaignVideoUrl(input.videoUrl);
+  const resolvedMobile = resolveHomepageCampaignVideoUrl(input.mobileVideoUrl);
+
+  const isDuoCampaign =
+    (input.campaignId || "").toLowerCase() === "iphone-duo" ||
+    isLegacyOrRevisedDuoVideoUrl(input.videoUrl) ||
+    isLegacyOrRevisedDuoVideoUrl(input.mobileVideoUrl);
+
+  if (isDuoCampaign) {
+    // Prefer a newly uploaded non-legacy admin video if present in either slot, else the canonical revised cinema cut.
+    // Crucially: BOTH desktop and mobile receive the EXACT SAME source list and EXACT SAME poster!
+    const customNonLegacyDesktop =
+      resolvedDesktop && resolvedDesktop !== REVISED_IPHONE_DUO_CINEMA_VIDEO_URL
+        ? resolvedDesktop
+        : undefined;
+    const customNonLegacyMobile =
+      resolvedMobile && resolvedMobile !== REVISED_IPHONE_DUO_CINEMA_VIDEO_URL
+        ? resolvedMobile
+        : undefined;
+
+    const unifiedPrimary =
+      customNonLegacyDesktop ||
+      customNonLegacyMobile ||
+      (resolvedDesktop || resolvedMobile ? REVISED_IPHONE_DUO_CINEMA_VIDEO_URL : undefined);
+
+    const sources = unifiedPrimary ? [unifiedPrimary] : [];
+    const usesRevisedCinema = unifiedPrimary === REVISED_IPHONE_DUO_CINEMA_VIDEO_URL;
+    const unifiedPoster = usesRevisedCinema
+      ? REVISED_IPHONE_DUO_CINEMA_POSTER_URL
+      : input.posterUrl?.trim() ||
+        input.mobilePosterUrl?.trim() ||
+        input.desktopImage?.trim() ||
+        input.mobileImage?.trim() ||
+        undefined;
+
+    return {
+      sources,
+      poster: unifiedPoster,
+      isUnifiedCinema: true,
+    };
+  }
+
+  const rawOrdered = input.isMobile
+    ? [resolvedMobile, resolvedDesktop]
+    : [resolvedDesktop, resolvedMobile];
+  const sources = expandHomepageCampaignVideoSources(rawOrdered);
+  const poster =
+    (input.isMobile && input.mobilePosterUrl?.trim()
+      ? input.mobilePosterUrl.trim()
+      : input.posterUrl?.trim()) ||
+    (input.isMobile && input.mobileImage?.trim()
+      ? input.mobileImage.trim()
+      : input.desktopImage?.trim()) ||
+    undefined;
+
+  return {
+    sources,
+    poster,
+    isUnifiedCinema: false,
+  };
 }
