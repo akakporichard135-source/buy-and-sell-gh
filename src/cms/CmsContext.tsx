@@ -116,7 +116,12 @@ const CmsContext = createContext<CmsContextValue | null>(null);
 
 const PUBLIC_CMS_TIMEOUT_MS = 3500;
 
-function withTimeoutFallback<T>(promise: Promise<T>, timeoutMs: number, fallback: T): Promise<T> {
+function withTimeoutFallback<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallback: T,
+  onLateResolve?: (value: T) => void
+): Promise<T> {
   return new Promise<T>((resolve) => {
     let settled = false;
     const timer =
@@ -135,6 +140,8 @@ function withTimeoutFallback<T>(promise: Promise<T>, timeoutMs: number, fallback
           settled = true;
           if (timer !== null) window.clearTimeout(timer);
           resolve(value);
+        } else if (onLateResolve) {
+          onLateResolve(value);
         }
       })
       .catch(() => {
@@ -174,10 +181,16 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
     // 1. Resolve public homepage independently with a safe timeout so slow/offline Supabase
     //    or secondary/admin-only queries NEVER freeze the homepage on a blank skeleton.
+    //    If Supabase finishes after the timeout, still hydrate the live CMS state seamlessly.
     const homepagePromise = withTimeoutFallback(
       fetchHomepageContent(),
       PUBLIC_CMS_TIMEOUT_MS,
-      getInitialHomepageContent()
+      getInitialHomepageContent(),
+      (liveHomepage) => {
+        startTransition(() => {
+          setHomepage(liveHomepage);
+        });
+      }
     )
       .then((h) => {
         startTransition(() => {
@@ -190,11 +203,21 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Load remaining public storefront CMS slices concurrently without blocking homepage paint.
     const publicSecondaryPromise = Promise.allSettled([
-      withTimeoutFallback(fetchSiteSettings(), PUBLIC_CMS_TIMEOUT_MS, getInitialSiteSettings()),
-      withTimeoutFallback(fetchFaqs(), PUBLIC_CMS_TIMEOUT_MS, getInitialFaqs()),
-      withTimeoutFallback(fetchPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialPageContent()),
-      withTimeoutFallback(fetchStorefrontContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialStorefrontContent()),
-      withTimeoutFallback(fetchMainStoreContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMainStoreContent()),
+      withTimeoutFallback(fetchSiteSettings(), PUBLIC_CMS_TIMEOUT_MS, getInitialSiteSettings(), (v) =>
+        startTransition(() => setSettings(v))
+      ),
+      withTimeoutFallback(fetchFaqs(), PUBLIC_CMS_TIMEOUT_MS, getInitialFaqs(), (v) =>
+        startTransition(() => setFaqs(v))
+      ),
+      withTimeoutFallback(fetchPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialPageContent(), (v) =>
+        startTransition(() => setPages(v))
+      ),
+      withTimeoutFallback(fetchStorefrontContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialStorefrontContent(), (v) =>
+        startTransition(() => setDepartments(v))
+      ),
+      withTimeoutFallback(fetchMainStoreContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMainStoreContent(), (v) =>
+        startTransition(() => setMainStore(v))
+      ),
     ]).then(([sRes, fRes, pRes, dRes, msRes]) => {
       startTransition(() => {
         if (sRes.status === "fulfilled") setSettings(sRes.value);
