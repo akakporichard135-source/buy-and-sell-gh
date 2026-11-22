@@ -33,6 +33,21 @@ export interface CustomSectionGalleryImage {
   caption?: string;
 }
 
+export interface ResponsiveImageTransform {
+  /** Uniform proportional desktop scale percentage (50–160, default 100) */
+  desktopScale?: number;
+  /** Independent desktop horizontal offset percentage (-45 to +45, default 0) */
+  desktopOffsetX?: number;
+  /** Independent desktop vertical offset percentage (-45 to +45, default 0) */
+  desktopOffsetY?: number;
+  /** Uniform proportional mobile scale percentage (50–160, default 100) */
+  mobileScale?: number;
+  /** Independent mobile horizontal offset percentage (-45 to +45, default 0) */
+  mobileOffsetX?: number;
+  /** Independent mobile vertical offset percentage (-45 to +45, default 0) */
+  mobileOffsetY?: number;
+}
+
 export interface HeroCampaign {
   id: string;
   internalName?: string;
@@ -62,6 +77,7 @@ export interface HeroCampaign {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
+  imageTransform?: ResponsiveImageTransform;
   primary: ActionLink;
   secondary?: ActionLink;
   placement?: "top" | "bottom";
@@ -98,6 +114,7 @@ export interface PromoTile {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
+  imageTransform?: ResponsiveImageTransform;
   primary: ActionLink;
   secondary?: ActionLink;
   placement?: "top" | "bottom";
@@ -134,6 +151,7 @@ export interface CustomHomepageSection {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
+  imageTransform?: ResponsiveImageTransform;
   layoutVariant?: CustomSectionLayoutVariant;
   mobileLayout?: "stack" | "media-first" | "compact";
   containerWidth?: "full" | "wide" | "contained";
@@ -292,6 +310,7 @@ export interface HomepageSection {
   imageAlt?: string;
   focalPoint?: HomepageMediaFocalPoint;
   objectFit?: HomepageMediaFit;
+  imageTransform?: ResponsiveImageTransform;
   caption?: string;
   copyPlacement?: "top" | "bottom";
   backgroundColor?: string;

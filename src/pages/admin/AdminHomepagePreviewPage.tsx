@@ -47,7 +47,7 @@ export function AdminHomepagePreviewPage() {
       requestedMode
     )
   );
-  const [viewportWidth, setViewportWidth] = useState<"full" | 1440 | 1024 | 834 | 390 | 375>("full");
+  const [viewportWidth, setViewportWidth] = useState<"full" | 1440 | 1024 | 834 | 430 | 390 | 375>("full");
 
   useEffect(() => {
     const key =
@@ -128,6 +128,7 @@ export function AdminHomepagePreviewPage() {
               { id: 1440, label: "1440px", Icon: Monitor },
               { id: 1024, label: "1024px", Icon: Monitor },
               { id: 834, label: "834px", Icon: Tablet },
+              { id: 430, label: "430px", Icon: Smartphone },
               { id: 390, label: "390px", Icon: Smartphone },
               { id: 375, label: "375px", Icon: Smartphone },
             ] as const

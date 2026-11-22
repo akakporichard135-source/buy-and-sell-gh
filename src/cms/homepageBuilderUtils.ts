@@ -12,8 +12,10 @@ import type {
   HomepageSection,
   HomepageSectionType,
   PromoTile,
+  ResponsiveImageTransform,
   Tone,
 } from "./types";
+import { sanitizeHeroImageTransformForStorage } from "./heroImageTransform";
 
 export const SUPPORTED_LOCAL_VIDEO_FORMATS = ["mp4", "webm"] as const;
 export const SUPPORTED_VIDEO_ACCEPT = "video/mp4,video/webm,.mp4,.webm";
@@ -463,6 +465,7 @@ export interface LegacyMediaUnit {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: HomepageMediaFocalPoint | string;
   mediaBlendMode?: "normal" | "multiply";
+  imageTransform?: ResponsiveImageTransform;
   primary?: ActionLink;
   secondary?: ActionLink;
   placement?: "top" | "bottom";
@@ -591,6 +594,7 @@ export function extractLegacyMediaUnit(
     mediaPosition: slot.mediaPosition || "bottom",
     mediaBlendMode:
       tone === "dark" ? "normal" : slot.mediaBlendMode || "normal",
+    imageTransform: sanitizeHeroImageTransformForStorage(slot.imageTransform),
     primary: slot.primary ? { ...slot.primary } : undefined,
     secondary: slot.secondary ? { ...slot.secondary } : undefined,
     placement: "top",
@@ -637,6 +641,7 @@ export function applyLegacyMediaUnit<
     mediaPosition: unit.mediaPosition || "bottom",
     mediaBlendMode:
       tone === "dark" ? "normal" : unit.mediaBlendMode || "normal",
+    imageTransform: sanitizeHeroImageTransformForStorage(unit.imageTransform),
     primary: unit.primary ? { ...unit.primary } : slot.primary,
     secondary: unit.secondary ? { ...unit.secondary } : undefined,
     placement: "top",

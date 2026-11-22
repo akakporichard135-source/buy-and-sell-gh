@@ -4,11 +4,13 @@ import {
   resolveEffectiveMediaMode,
   resolveResponsiveVideoPlayback,
 } from "../../cms/homepageBuilderUtils";
+import { resolveHeroImagePresentationStyle } from "../../cms/heroImageTransform";
 import { useResolvedMediaUrl } from "../../cms/localMediaStore";
 import type {
   HomepageMediaFit,
   HomepageMediaFocalPoint,
   HomepageMediaMode,
+  ResponsiveImageTransform,
   Tone,
 } from "../../cms/types";
 
@@ -28,6 +30,7 @@ export interface HomepageMediaSlotProps {
   imageAlt?: string;
   focalPoint?: HomepageMediaFocalPoint;
   objectFit?: HomepageMediaFit;
+  imageTransform?: ResponsiveImageTransform;
   tone?: Tone;
   backgroundColor?: string;
   caption?: string;
@@ -61,6 +64,7 @@ export const HomepageMediaSlot: React.FC<HomepageMediaSlotProps> = ({
   imageAlt = "",
   focalPoint = "bottom",
   objectFit = "contain",
+  imageTransform,
   tone = "dark",
   backgroundColor,
   caption,
@@ -180,6 +184,12 @@ export const HomepageMediaSlot: React.FC<HomepageMediaSlotProps> = ({
   const isEmpty = !hasRenderableVideo && !hasImage;
 
   const objectPosition = FOCAL_POINT_MAP[focalPoint] || "center bottom";
+  const imagePresentation = resolveHeroImagePresentationStyle({
+    transform: imageTransform,
+    isMobile: isMobileViewport,
+    mediaFit: objectFit,
+    mediaPosition: focalPoint,
+  });
 
   const handleToggleVideo = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -254,10 +264,11 @@ export const HomepageMediaSlot: React.FC<HomepageMediaSlotProps> = ({
             fetchPriority={priority ? "high" : "auto"}
             decoding={priority ? "sync" : "async"}
             onError={() => setImgError(true)}
-            style={{
-              objectFit,
-              objectPosition,
-            }}
+            data-hero-scale={String(imagePresentation.scale)}
+            data-hero-offset-x={String(imagePresentation.offsetX)}
+            data-hero-offset-y={String(imagePresentation.offsetY)}
+            data-hero-viewport={isMobileViewport ? "mobile" : "desktop"}
+            style={imagePresentation.style}
           />
         </picture>
       ) : (

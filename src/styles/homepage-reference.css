@@ -209,6 +209,12 @@
   margin: clamp(18px, 2.5vw, 32px) auto 12px;
 }
 
+.home-ref-hero-image[data-hero-transform-active="true"] {
+  position: relative;
+  z-index: 1;
+  will-change: transform;
+}
+
 /* Cinematic Hero Video Stage (Apple-caliber presence for contain & studio reveals like iPhone Duo) */
 .home-ref-hero[data-media-mode="video"].home-ref-media-contain {
   height: auto;

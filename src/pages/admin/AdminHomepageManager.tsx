@@ -75,6 +75,7 @@ import type {
 } from "../../cms/types";
 import { isAdminHostname } from "../../config/adminHost";
 import { HomepageSectionBuilder } from "../../components/admin/HomepageSectionBuilder";
+import { HeroImageTransformControls } from "../../components/admin/HeroImageTransformControls";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 import "../../styles/admin-homepage.css";
 
@@ -236,7 +237,7 @@ export function AdminHomepageManager() {
   } | null>(null);
 
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewViewport, setPreviewViewport] = useState<1440 | 1024 | 834 | 390 | 375>(1440);
+  const [previewViewport, setPreviewViewport] = useState<1440 | 1024 | 834 | 430 | 390 | 375>(1440);
 
   const hasSavedLegacyDraft = Boolean(homepageLegacyDraft);
   const isLegacyDirty = useMemo(() => {
@@ -2908,6 +2909,7 @@ export function AdminHomepageManager() {
                     { label: "Desktop 1440px", width: 1440, icon: Monitor },
                     { label: "Laptop 1024px", width: 1024, icon: Monitor },
                     { label: "Tablet 834px", width: 834, icon: Tablet },
+                    { label: "Mobile 430px", width: 430, icon: Smartphone },
                     { label: "Mobile 390px", width: 390, icon: Smartphone },
                     { label: "Mobile 375px", width: 375, icon: Smartphone },
                   ] as const
@@ -3714,6 +3716,27 @@ function LegacyMediaBackgroundEditor({
           </select>
         </div>
       </div>
+
+      {/* Homepage Hero Desktop & Mobile Scale + Independent Horizontal/Vertical Position Controls */}
+      {mediaMode !== "video" && (slotRef.kind === "hero" || slotRef.kind === "customSection") && (
+        <HeroImageTransformControls
+          slotKey={currentKey}
+          transform={unit.imageTransform}
+          desktopImageUrl={desktopResolved}
+          mobileImageUrl={mobileResolved}
+          tone={unit.tone}
+          backgroundColor={effectiveBg}
+          backgroundGradient={unit.backgroundGradient}
+          mediaFit={unit.mediaFit || "contain"}
+          mediaPosition={unit.mediaPosition || "bottom"}
+          blendMode={effectiveBlend}
+          heading={unit.title || unit.deviceName || "Featured Campaign"}
+          subtitle={unit.subtitle}
+          primaryLabel={unit.primary?.label}
+          secondaryLabel={unit.secondary?.label}
+          onChange={(nextTransform) => onPatch({ imageTransform: nextTransform })}
+        />
+      )}
 
       {/* Optional Background Image */}
       <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">

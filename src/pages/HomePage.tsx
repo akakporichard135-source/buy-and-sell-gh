@@ -9,6 +9,7 @@ import {
   resolveLegacyBackgroundColor,
   resolveUnifiedCampaignVideoMedia,
 } from "../cms/homepageBuilderUtils";
+import { resolveHeroImagePresentationStyle } from "../cms/heroImageTransform";
 import { useProductCatalog } from "../catalog/ProductCatalogContext";
 import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import { getProductFamily, productBuyPath } from "../catalog/productExperience";
@@ -24,6 +25,7 @@ import type {
   HomepageMediaFit,
   HomepageMediaMode,
   PromoTile,
+  ResponsiveImageTransform,
   ServiceFlyer,
 } from "../cms/types";
 import type { Product } from "../types/product";
@@ -58,6 +60,7 @@ type Campaign = {
   mediaFit?: HomepageMediaFit;
   mediaPosition?: string;
   mediaBlendMode?: "normal" | "multiply";
+  imageTransform?: ResponsiveImageTransform;
   primary: Action;
   secondary?: Action;
   placement?: "top" | "bottom";
@@ -711,6 +714,13 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
     campaign.mediaPosition || (mediaFit === "cover" ? "center" : "bottom")
   );
   const mixBlendMode = tone === "dark" ? "normal" : campaign.mediaBlendMode || "normal";
+  const heroPresentation = resolveHeroImagePresentationStyle({
+    transform: campaign.imageTransform,
+    isMobile,
+    mediaFit,
+    mediaPosition: campaign.mediaPosition,
+    mixBlendMode,
+  });
 
   const unifiedVideo = resolveUnifiedCampaignVideoMedia({
     campaignId: campaign.id,
@@ -734,6 +744,14 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
       ? campaign.deviceName.trim()
       : "");
 
+  const heroTransformAttrs = {
+    "data-hero-scale": String(heroPresentation.scale),
+    "data-hero-offset-x": String(heroPresentation.offsetX),
+    "data-hero-offset-y": String(heroPresentation.offsetY),
+    "data-hero-viewport": isMobile ? "mobile" : "desktop",
+    "data-hero-transform-active": heroPresentation.isCustomized ? "true" : "false",
+  };
+
   const imageFallback = mobileImg ? (
     <picture key={`${campaign.id}-${resolvedDesktop}-${mobileImg}`} className="home-ref-hero-picture">
       <source media="(max-width: 768px)" srcSet={mobileImg} />
@@ -741,11 +759,8 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
         className="home-ref-hero-image"
         src={resolvedDesktop || activePosterSrc}
         alt={campaign.alt || headingText}
-        style={{
-          objectFit: mediaFit,
-          objectPosition,
-          mixBlendMode,
-        }}
+        style={heroPresentation.style}
+        {...heroTransformAttrs}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}
         decoding={priority ? "sync" : "async"}
@@ -757,11 +772,8 @@ function ProductHero({ campaign, priority }: { campaign: Campaign; priority: boo
       className="home-ref-hero-image"
       src={resolvedDesktop || activePosterSrc}
       alt={campaign.alt || headingText}
-      style={{
-        objectFit: mediaFit,
-        objectPosition,
-        mixBlendMode,
-      }}
+      style={heroPresentation.style}
+      {...heroTransformAttrs}
       loading={priority ? "eager" : "lazy"}
       fetchPriority={priority ? "high" : undefined}
       decoding={priority ? "sync" : "async"}
@@ -1016,6 +1028,13 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
     section.mediaPosition || (mediaFit === "cover" ? "center" : "bottom")
   );
   const mixBlendMode = tone === "dark" ? "normal" : section.mediaBlendMode || "normal";
+  const sectionPresentation = resolveHeroImagePresentationStyle({
+    transform: section.imageTransform,
+    isMobile,
+    mediaFit,
+    mediaPosition: section.mediaPosition,
+    mixBlendMode,
+  });
   const variant = section.layoutVariant || "full-hero";
 
   const unifiedVideo = resolveUnifiedCampaignVideoMedia({
@@ -1054,6 +1073,14 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
     ? `${section.minHeightDesktop}px`
     : undefined;
 
+  const sectionTransformAttrs = {
+    "data-hero-scale": String(sectionPresentation.scale),
+    "data-hero-offset-x": String(sectionPresentation.offsetX),
+    "data-hero-offset-y": String(sectionPresentation.offsetY),
+    "data-hero-viewport": isMobile ? "mobile" : "desktop",
+    "data-hero-transform-active": sectionPresentation.isCustomized ? "true" : "false",
+  };
+
   const imageFallback = resolvedMobile ? (
     <picture key={`${section.id}-${resolvedDesktop}-${resolvedMobile}`} className="home-ref-hero-picture">
       <source media="(max-width: 768px)" srcSet={resolvedMobile} />
@@ -1061,11 +1088,8 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
         className="home-ref-hero-image"
         src={resolvedDesktop || activePosterSrc}
         alt={section.alt || headingText}
-        style={{
-          objectFit: mediaFit,
-          objectPosition,
-          mixBlendMode,
-        }}
+        style={sectionPresentation.style}
+        {...sectionTransformAttrs}
         loading="lazy"
         decoding="async"
       />
@@ -1076,11 +1100,8 @@ function CustomHomepageSectionView({ section }: { section: CustomHomepageSection
       className="home-ref-hero-image"
       src={resolvedDesktop || activePosterSrc}
       alt={section.alt || headingText}
-      style={{
-        objectFit: mediaFit,
-        objectPosition,
-        mixBlendMode,
-      }}
+      style={sectionPresentation.style}
+      {...sectionTransformAttrs}
       loading="lazy"
       decoding="async"
     />

@@ -46,6 +46,7 @@ function extractMediaSlotProps(
     caption?: string;
     focalPoint?: HomepageSection["focalPoint"];
     objectFit?: HomepageSection["objectFit"];
+    imageTransform?: HomepageSection["imageTransform"];
   }
 ) {
   return {
@@ -62,6 +63,7 @@ function extractMediaSlotProps(
     imageAlt: entity.imageAlt,
     focalPoint: entity.focalPoint,
     objectFit: entity.objectFit,
+    imageTransform: entity.imageTransform,
     caption: entity.caption,
   };
 }

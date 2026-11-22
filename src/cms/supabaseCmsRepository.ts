@@ -3,6 +3,7 @@ import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization
 import { CATEGORY_DEPARTMENTS } from "../components/store/category/categoryData";
 import { broadcastPublishedUpdate } from "../utils/imageVersioning";
 import { inferLegacyMediaAttributesForUrl } from "./homepageBuilderUtils";
+import { sanitizeHeroImageTransformForStorage } from "./heroImageTransform";
 import {
   getLocalStagedMediaRecord,
   isLocalMediaUri,
@@ -341,6 +342,9 @@ const normalizeHomepageSection = (
     imageAlt: section.imageAlt !== undefined ? section.imageAlt : (def?.imageAlt || section.heading || "Homepage section image"),
     focalPoint: section.focalPoint || def?.focalPoint || "bottom",
     objectFit: section.objectFit || def?.objectFit || "contain",
+    imageTransform: sanitizeHeroImageTransformForStorage(
+      section.imageTransform !== undefined ? section.imageTransform : def?.imageTransform
+    ),
     caption: section.caption !== undefined ? section.caption : (def?.caption || ""),
     copyPlacement: section.copyPlacement || def?.copyPlacement || "top",
     backgroundColor: section.backgroundColor || def?.backgroundColor || "#000000",
@@ -431,6 +435,9 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       mediaFit: h.mediaFit || def?.mediaFit || "contain",
       mediaPosition: h.mediaPosition || def?.mediaPosition || "bottom",
       mediaBlendMode: finalBlend,
+      imageTransform: sanitizeHeroImageTransformForStorage(
+        "imageTransform" in h ? h.imageTransform : def?.imageTransform
+      ),
       mediaMode: h.mediaMode || (h.videoUrl ? "video" : "image"),
       image: finalImage,
       mobileImage: isDeprecatedIphone18Mobile
@@ -501,6 +508,9 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
       mediaFit: t.mediaFit || def?.mediaFit || "contain",
       mediaPosition: normalizedMediaPosition,
       mediaBlendMode: finalBlend,
+      imageTransform: sanitizeHeroImageTransformForStorage(
+        "imageTransform" in t ? t.imageTransform : def?.imageTransform
+      ),
       mediaMode: t.mediaMode || (t.videoUrl ? "video" : "image"),
       mobileImage: "mobileImage" in t ? t.mobileImage || undefined : def?.mobileImage,
       placement: "top" as const,
@@ -531,6 +541,7 @@ export const normalizeHomepageContent = (savedContent?: Partial<HomepageContent>
           mediaPosition: cs.mediaPosition || "bottom",
           mediaBlendMode:
             finalTone === "dark" ? "normal" : cs.mediaBlendMode || "normal",
+          imageTransform: sanitizeHeroImageTransformForStorage(cs.imageTransform),
           mediaMode: cs.mediaMode || (cs.videoUrl ? "video" : "image"),
           layoutVariant: cs.layoutVariant || "full-hero",
           sectionPlacement: cs.sectionPlacement || "after-heroes",
