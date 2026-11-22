@@ -72,13 +72,26 @@ export const normalizeProduct = (product: Product, useSeedPricing = true): Produ
     ? normalizeCondition(seedPricing.condition as ProductCondition)
     : normalizeCondition(product.condition);
 
-  // Compute effective stock quantity: if parent is 0 or unassigned, compute from active variants
+  // Compute effective stock quantity & status:
+  // For authoritative Supabase rows (useSeedPricing === false), strictly honour explicit
+  // product-level Out of Stock / Sold / 0 quantity because Supabase order RPC validates products.stock_quantity.
+  // For local/seed fallback data (useSeedPricing === true), compute from active variants if parent is unassigned.
   const rawStock = typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
-  const stockQuantity = (rawStock > 0 || variants.length === 0) ? rawStock : totalVariantStock;
+  const isExplicitlyUnavailableInDb =
+    !useSeedPricing &&
+    (product.stockStatus === "Out of Stock" ||
+      product.stockStatus === "Sold" ||
+      (product.stockStatus as string) === "Sold Out" ||
+      rawStock < 1);
 
-  // Compute effective stock status: variants with inventory should not be marked Out of Stock
+  const stockQuantity = isExplicitlyUnavailableInDb
+    ? 0
+    : rawStock > 0 || variants.length === 0
+      ? rawStock
+      : totalVariantStock;
+
   let effectiveStatus = product.stockStatus;
-  if (effectiveStatus !== "Sold" && (effectiveStatus as string) !== "Sold Out") {
+  if (!isExplicitlyUnavailableInDb && effectiveStatus !== "Sold" && (effectiveStatus as string) !== "Sold Out") {
     if (totalVariantStock > 0 && (effectiveStatus === "Out of Stock" || rawStock < 1)) {
       effectiveStatus = totalVariantStock <= 3 ? "Low Stock" : "In Stock";
     }

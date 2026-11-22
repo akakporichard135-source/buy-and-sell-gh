@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -13,21 +15,15 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
-import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { resolveColorGallery } from "../../utils/productColorGallery";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const ULTRA_FINISHES: ColorOption[] = [
   resolveColorOption("Natural Titanium"),
   resolveColorOption("Black Titanium"),
 ];
-
-const ULTRA_FINISH_IMAGE_MAP: Record<string, string> = {
-  "Natural Titanium": "/products/campaigns/watch-ultra-4-rugged.webp",
-  "Black Titanium": "/products/campaigns/watch-ultra-4-hero.webp",
-};
 
 const ULTRA_BANDS = [
   { name: "Alpine Loop", desc: "Two textile layers woven into one continuous piece without stitching. Titanium G-hook ensures secure fit for outdoor adventure." },
@@ -43,6 +39,7 @@ const ULTRA_BAND_COLORS: ColorOption[] = [
 
 export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { color: entryColor } = useBuyEntrySelection();
 
   const [finish, setFinish] = useState("Natural Titanium");
@@ -54,7 +51,10 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (entryColor && ULTRA_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+    if (entryColor && ULTRA_FINISHES.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = ULTRA_FINISHES.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
   }, [entryColor]);
 
   useEffect(() => {
@@ -67,32 +67,14 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
     setTradeIn(options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  const currentFinishImg = ULTRA_FINISH_IMAGE_MAP[finish] || ULTRA_FINISH_IMAGE_MAP["Natural Titanium"];
-
-  // Preload Ultra finish images
   useEffect(() => {
-    preloadProductImages([
-      "/products/campaigns/watch-ultra-4-rugged.webp",
-      "/products/campaigns/watch-ultra-4-orange.webp",
-      "/products/campaigns/watch-ultra-4-hero.webp",
-      localCatalogueImageBySlug["apple-watch-ultra-3"],
-    ]);
-  }, []);
+    setActiveThumb(0);
+  }, [finish]);
 
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
-    }
-    return [
-      { src: currentFinishImg, alt: `${finish} Apple Watch Ultra with Alpine Loop on white` },
-      { src: "/products/campaigns/watch-ultra-4-orange.webp", alt: "Apple Watch Ultra high-contrast action display" },
-      { src: "/products/campaigns/watch-ultra-4-hero.webp", alt: "Apple Watch Ultra dual perspective" },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
-
-  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
+  const liveMatchedProduct = useMemo(() => {
+    if (catalogProduct) return catalogProduct;
+    return activeProducts.find((p) => p.slug === "apple-watch-ultra-4");
+  }, [catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const slug = "apple-watch-ultra-4";
@@ -112,7 +94,7 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       specs: ["49mm Titanium Case", "3000 Nits Sapphire Display", "Action Button", "100m Water Resistance", "EN13319 Dive Certified"],
       box: ["Apple Watch Ultra 4", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
       imageTone: "ink",
-      images: thumbnails,
+      images: [{ src: "/products/campaigns/watch-ultra-4-rugged.webp", alt: "Apple Watch Ultra 4 in Natural Titanium" }],
       variants: [
         { id: "awu4-49-cell", productId: slug, title: "49mm GPS + Cellular", screenSize: "49mm", connectivity: "GPS + Cellular", price: 14800, previousPrice: 15800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: true, stockStatus: "In Stock" as const },
       ],
@@ -121,15 +103,47 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       stockQuantity: 10,
       featured: true,
     };
-  }, [thumbnails]);
+  }, []);
 
-  const isExactMatch = Boolean(catalogProduct && (catalogProduct.slug === "apple-watch-ultra-4" || catalogProduct.name?.includes("4")));
-  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const activeProduct: Product = useMemo(() => {
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
+    return fallbackProduct;
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
+
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = ULTRA_FINISHES.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, "apple-watch-ultra-4");
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentFinishImg = primaryColorImage?.src || activeImage || "";
 
   const configured = resolveConfiguredPrice(activeProduct, {
     screenSize: "49mm",
     connectivity: "GPS + Cellular",
+    color: finish,
   });
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
@@ -137,10 +151,15 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fullConfigurationTitle = `Apple Watch Ultra 4 (49mm, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Connectivity: GPS + Cellular (Standard), Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentFinishImg ? ` Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${fullConfigurationTitle} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const added = addConfiguredItem(
       activeProduct,
       "49mm GPS + Cellular",
@@ -160,14 +179,16 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       categoryLabel="Watch"
       categoryPath="/watch"
       activeImageSrc={activeImage}
-      activeImageAlt="Apple Watch Ultra 4 in rugged titanium"
+      activeImageAlt={`Apple Watch Ultra 4 in ${finish}`}
       priceLabel={priceLabel}
       badge="Ultra"
       darkStage={true}
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -192,11 +213,13 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
         <BuyColorSwatches
           colors={ULTRA_FINISHES}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentFinishImg}
           previewImageAlt={`Apple Watch Ultra in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -245,6 +268,7 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
         <BuyColorSwatches
           colors={ULTRA_BAND_COLORS}
           selectedColor={bandColor}
+          labelPrefix="Band Color"
           onSelect={setBandColor}
         />
         <div className="apple-buy-cards-grid" style={{ marginTop: "12px" }}>
@@ -272,7 +296,7 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
       {/* Step 5: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 8: Order Summary & Bag Action */}
+      {/* Step 6: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your Apple Watch Ultra 4"
         items={[
@@ -286,8 +310,9 @@ export function WatchUltraBuyExperience({ catalogProduct }: { catalogProduct?: P
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

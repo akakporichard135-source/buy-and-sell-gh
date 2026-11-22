@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
-import { formatGhs } from "../../utils/format";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
-import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -16,9 +16,9 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
+import { resolveColorGallery } from "../../utils/productColorGallery";
 
 const MACBOOK_PRO_FINISHES: ColorOption[] = [
   resolveColorOption("Space Black"),
@@ -27,6 +27,7 @@ const MACBOOK_PRO_FINISHES: ColorOption[] = [
 
 export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const is16Initial = catalogProduct?.slug?.includes("16") ?? false;
@@ -43,7 +44,10 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
 
   useEffect(() => {
     if (entryStorage) setStorage(entryStorage);
-    if (entryColor && MACBOOK_PRO_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+    if (entryColor && MACBOOK_PRO_FINISHES.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = MACBOOK_PRO_FINISHES.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
   }, [entryStorage, entryColor]);
 
   useEffect(() => {
@@ -57,7 +61,6 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     setTradeIn(options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  // Sync state if catalogProduct arrives or updates
   useEffect(() => {
     if (catalogProduct) {
       if (catalogProduct.slug.includes("16")) {
@@ -71,8 +74,6 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     }
   }, [catalogProduct]);
 
-  // Adjust chip options when switching between 14-inch and 16-inch
-  // 16-inch MacBook Pro starts with M4 Pro or M4 Max
   useEffect(() => {
     if (screenSize === "16-inch" && chip === "M4") {
       setChip("M4 Pro");
@@ -81,59 +82,37 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
     }
   }, [screenSize, chip, memory, storage]);
 
-  const imageSlug = finish === "Silver"
-    ? (screenSize === "16-inch" ? "macbook-pro-16-m5-pro-max" : "macbook-pro-14-m4-pro-max")
-    : (screenSize === "16-inch" ? "macbook-pro-16-m4-pro-max" : "macbook-pro-14-m4");
-  const currentDisplayImg = imageSlug ? localCatalogueImageBySlug[imageSlug] : undefined;
-
   useEffect(() => {
-    const urls = [
-      localCatalogueImageBySlug["macbook-pro-14-m4"],
-      localCatalogueImageBySlug["macbook-pro-14-m4-pro-max"],
-      localCatalogueImageBySlug["macbook-pro-16-m4-pro-max"],
-      localCatalogueImageBySlug["macbook-pro-16-m5-pro-max"],
-      "/products/campaigns/macbook-pro-cutout.webp",
-    ];
-    preloadProductImages(urls);
-  }, []);
+    setActiveThumb(0);
+  }, [finish, screenSize]);
 
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
+  // Resolve real live Supabase MacBook Pro matching size without substituting fake synthetic variant IDs
+  const liveMatchedProduct = useMemo(() => {
+    const sizeToken = screenSize === "16-inch" ? "16" : "14";
+    if (catalogProduct && (catalogProduct.slug.includes(sizeToken) || catalogProduct.name.includes(sizeToken))) {
+      return catalogProduct;
     }
-    return [
-      ...(currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : []),
-      { src: "/products/campaigns/macbook-pro-cutout.webp", alt: `MacBook Pro ${screenSize} Liquid Retina XDR screen` },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, currentDisplayImg, screenSize, finish]);
-
-  const activeImage = thumbnails[activeThumb]?.src || currentDisplayImg;
+    const proMatches = activeProducts.filter(
+      (p) =>
+        p.slug.startsWith("macbook-pro") &&
+        (p.slug.includes(sizeToken) || p.name.includes(sizeToken)) &&
+        p.price > 0 &&
+        !p.priceOnRequest
+    );
+    const inStockMatch = proMatches.find((p) => isProductOrderable(p));
+    if (inStockMatch) return inStockMatch;
+    if (proMatches[0]) return proMatches[0];
+    if (catalogProduct) return catalogProduct;
+    return activeProducts.find((p) => p.slug.startsWith("macbook-pro"));
+  }, [screenSize, catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const is16 = screenSize === "16-inch";
     const basePrice = is16 ? 32000 : 22000;
     const slug = is16 ? "macbook-pro-16-inch-m5-pro-m5-max" : "macbook-pro-14-inch-m5";
-    const chipPriceAdd: Record<string, number> = {
-      M4: 0,
-      "M4 Pro": is16 ? 0 : 4000,
-      "M4 Max": is16 ? 8000 : 11000,
-    };
-    const memoryPriceAdd: Record<string, number> = {
-      "16GB": 0,
-      "24GB": 2000,
-      "36GB": 4500,
-      "48GB": 7000,
-      "64GB": 10000,
-      "128GB": 18000,
-    };
-    const storagePriceAdd: Record<string, number> = {
-      "512GB": 0,
-      "1TB": 3500,
-      "2TB": 7500,
-      "4TB": 14000,
-    };
+    const chipPriceAdd: Record<string, number> = { M4: 0, "M4 Pro": is16 ? 0 : 4000, "M4 Max": is16 ? 8000 : 11000 };
+    const memoryPriceAdd: Record<string, number> = { "16GB": 0, "24GB": 2000, "36GB": 4500, "48GB": 7000, "64GB": 10000, "128GB": 18000 };
+    const storagePriceAdd: Record<string, number> = { "512GB": 0, "1TB": 3500, "2TB": 7500, "4TB": 14000 };
     const chipsForSize = is16 ? (["M4 Pro", "M4 Max"] as const) : (["M4", "M4 Pro", "M4 Max"] as const);
     const memories = ["16GB", "24GB", "36GB", "48GB", "64GB", "128GB"] as const;
     const storages = ["512GB", "1TB", "2TB", "4TB"] as const;
@@ -173,37 +152,51 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       specs: ["Apple M4 / M4 Pro / M4 Max", "Liquid Retina XDR display", "120Hz ProMotion", "1600 nits peak brightness", "MagSafe 3 & HDMI"],
       box: ["MacBook Pro", "USB-C to MagSafe 3 Cable", "USB-C Power Adapter"],
       imageTone: "dark",
-      images: currentDisplayImg ? [{ src: currentDisplayImg, alt: `MacBook Pro ${screenSize} in ${finish}` }] : [],
+      images: [],
       variants,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
       featured: true,
     };
-  }, [screenSize, currentDisplayImg, finish]);
+  }, [screenSize]);
 
   const activeProduct: Product = useMemo(() => {
-    const is16 = screenSize === "16-inch";
-    const matchesCatalogSize = Boolean(
-      catalogProduct &&
-        (is16
-          ? catalogProduct.slug.includes("16") || catalogProduct.name.includes("16")
-          : catalogProduct.slug.includes("14") || catalogProduct.name.includes("14"))
-    );
-    if (matchesCatalogSize && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const hasMatchingVariant = Boolean(
-        catalogProduct.variants &&
-          catalogProduct.variants.some((v) => v.chip === chip && v.memory === memory && v.storage === storage)
-      );
-      return {
-        ...catalogProduct,
-        variants: hasMatchingVariant ? catalogProduct.variants : fallbackProduct.variants,
-      };
-    }
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
     return fallbackProduct;
-  }, [screenSize, chip, memory, storage, catalogProduct, fallbackProduct]);
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
 
-  const configured = resolveConfiguredPrice(activeProduct, { screenSize, chip, memory, storage });
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = MACBOOK_PRO_FINISHES.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        screenSize,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct, screenSize]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, "macbook-pro", screenSize);
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentDisplayImg = primaryColorImage?.src || activeImage || "";
+
+  const configured = resolveConfiguredPrice(activeProduct, { screenSize, chip, memory, storage, color: finish });
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
@@ -211,17 +204,22 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
   const fullConfigurationTitle = `MacBook Pro ${screenSize} (${chip}, ${memory} RAM, ${storage} SSD, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentDisplayImg || activeImage)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Chip: Apple ${chip}, Memory: ${memory}, Storage: ${storage}, Finish: ${finish}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentDisplayImg ? ` Product photo: ${toAbsoluteProductImageUrl(currentDisplayImg)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${fullConfigurationTitle} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const effectiveVariant = configured.variant
       ? {
           ...configured.variant,
           title: `MacBook Pro ${screenSize} (${chip}, ${memory} / ${storage})`,
         }
       : undefined;
-    const added = addConfiguredItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, effectiveVariant, currentDisplayImg || activeImage, {
+    const added = addConfiguredItem(activeProduct, storage, `${finish} / ${chip} / ${memory}`, effectiveVariant, currentDisplayImg, {
       screenSize, chip, storage, finish, memory, tradeIn: tradeIn ? "Yes" : "No",
     });
     if (added) {
@@ -235,13 +233,15 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       categoryLabel="Mac"
       categoryPath="/mac"
       activeImageSrc={activeImage}
-      activeImageAlt={`MacBook Pro ${screenSize}`}
+      activeImageAlt={`MacBook Pro ${screenSize} in ${finish}`}
       priceLabel={priceLabel}
       badge="Apple Silicon Pro"
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -268,13 +268,19 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
             title="14-inch MacBook Pro"
             subtitle="14.2-inch Liquid Retina XDR. Exceptional balance of workstation power and grab-and-go portability."
             selected={screenSize === "14-inch"}
-            onClick={() => setScreenSize("14-inch")}
+            onClick={() => {
+              setScreenSize("14-inch");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="16-inch MacBook Pro"
             subtitle="16.2-inch Liquid Retina XDR. Maximum thermal headroom, expansive canvas, and up to 24 hours battery life."
             selected={screenSize === "16-inch"}
-            onClick={() => setScreenSize("16-inch")}
+            onClick={() => {
+              setScreenSize("16-inch");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -291,20 +297,29 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
               title="Apple M4 chip"
               subtitle="10-core CPU, 10-core GPU. Blazing speed for software development, 4K video editing, and demanding productivity."
               selected={chip === "M4"}
-              onClick={() => setChip("M4")}
+              onClick={() => {
+                setChip("M4");
+                setNotice("");
+              }}
             />
           )}
           <BuyOptionCard
             title="Apple M4 Pro chip"
             subtitle="Up to 14-core CPU, up to 20-core GPU. Engineered for code compilation, 3D rendering, and multitrack audio production."
             selected={chip === "M4 Pro"}
-            onClick={() => setChip("M4 Pro")}
+            onClick={() => {
+              setChip("M4 Pro");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="Apple M4 Max chip"
             subtitle="Up to 16-core CPU, up to 40-core GPU. Colossal power ceiling for massive 3D scenes, 8K ProRes video, and machine learning."
             selected={chip === "M4 Max"}
-            onClick={() => setChip("M4 Max")}
+            onClick={() => {
+              setChip("M4 Max");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -318,11 +333,13 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
         <BuyColorSwatches
           colors={MACBOOK_PRO_FINISHES}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentDisplayImg}
           previewImageAlt={`MacBook Pro in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -339,21 +356,30 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
               title="16GB Unified Memory"
               subtitle="Fast, fluid everyday pro multitasking and creative app workflows."
               selected={memory === "16GB"}
-              onClick={() => setMemory("16GB")}
+              onClick={() => {
+                setMemory("16GB");
+                setNotice("");
+              }}
             />
           )}
           <BuyOptionCard
             title="24GB Unified Memory"
             subtitle="Recommended standard for heavy multitasking, video timelines, and virtualization."
             selected={memory === "24GB"}
-            onClick={() => setMemory("24GB")}
+            onClick={() => {
+              setMemory("24GB");
+              setNotice("");
+            }}
           />
           {(chip === "M4 Pro" || chip === "M4 Max") && (
             <BuyOptionCard
               title="36GB Unified Memory"
               subtitle="Expansive headroom for large datasets, multi-app production, and motion graphics."
               selected={memory === "36GB"}
-              onClick={() => setMemory("36GB")}
+              onClick={() => {
+                setMemory("36GB");
+                setNotice("");
+              }}
             />
           )}
           {chip === "M4 Pro" && (
@@ -361,7 +387,10 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
               title="48GB Unified Memory"
               subtitle="Advanced workstation capacity for complex compilation and high-resolution media."
               selected={memory === "48GB"}
-              onClick={() => setMemory("48GB")}
+              onClick={() => {
+                setMemory("48GB");
+                setNotice("");
+              }}
             />
           )}
           {chip === "M4 Max" && (
@@ -370,13 +399,19 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
                 title="64GB Unified Memory"
                 subtitle="High-end workstation memory for extreme 3D render pipelines and large language models."
                 selected={memory === "64GB"}
-                onClick={() => setMemory("64GB")}
+                onClick={() => {
+                  setMemory("64GB");
+                  setNotice("");
+                }}
               />
               <BuyOptionCard
                 title="128GB Unified Memory"
                 subtitle="The ultimate unified memory ceiling for demanding film studios and enterprise engineers."
                 selected={memory === "128GB"}
-                onClick={() => setMemory("128GB")}
+                onClick={() => {
+                  setMemory("128GB");
+                  setNotice("");
+                }}
               />
             </>
           )}
@@ -395,26 +430,38 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
               title="512GB SSD"
               subtitle="Essential fast pro storage for everyday apps, libraries, and active files."
               selected={storage === "512GB"}
-              onClick={() => setStorage("512GB")}
+              onClick={() => {
+                setStorage("512GB");
+                setNotice("");
+              }}
             />
           )}
           <BuyOptionCard
             title="1TB SSD"
             subtitle="Recommended balance for professional projects, 4K footage, and sound libraries."
             selected={storage === "1TB"}
-            onClick={() => setStorage("1TB")}
+            onClick={() => {
+              setStorage("1TB");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="2TB SSD"
             subtitle="Expansive capacity for large media archives, local databases, and heavy project caches."
             selected={storage === "2TB"}
-            onClick={() => setStorage("2TB")}
+            onClick={() => {
+              setStorage("2TB");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="4TB SSD"
             subtitle="High-capacity storage built for demanding on-set DIT and extensive studio libraries."
             selected={storage === "4TB"}
-            onClick={() => setStorage("4TB")}
+            onClick={() => {
+              setStorage("4TB");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -422,7 +469,7 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
       {/* Step 6: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 9: Order Summary & Bag Action */}
+      {/* Step 7: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your MacBook Pro"
         items={[
@@ -438,8 +485,9 @@ export function MacbookProBuyExperience({ catalogProduct }: { catalogProduct?: P
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

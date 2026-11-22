@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Link as LinkIcon, MessageCircle, Minus, Phone, Plus, Share2, ShoppingBag, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, MessageCircle, Minus, Phone, Plus, Share2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ProductGrid } from "../components/ProductGrid";
@@ -12,12 +12,16 @@ import { useCart } from "../context/CartContext";
 import type { Product } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { resolveConfiguredPrice } from "../utils/productPricing";
-import { getMacbookGeneration, getProductBadges, normalizeDisplayBadge, productBadgeClass } from "../utils/productPresentation";
-import { resolveProductColorImage } from "../utils/productColorImages";
-import { hasOwnerUploadedProductImages, requiresRealProductPhotos, resolveProductGallery, resolveProductImage } from "../utils/productImages";
+import { getMacbookGeneration, getProductBadges, productBadgeClass } from "../utils/productPresentation";
+import { preloadProductImages } from "../utils/productColorImages";
+import { resolveColorGallery } from "../utils/productColorGallery";
+import { resolveColorOptions } from "../utils/productColors";
+import { getSelectableStorageOptions } from "../utils/variantSelection";
+import { hasOwnerUploadedProductImages, resolveProductGallery, resolveProductImage } from "../utils/productImages";
 import { productWhatsAppUrl } from "../utils/whatsapp";
 import { SwipeableProductGallery } from "../components/buy/SwipeableProductGallery";
-import { useBuyGallery } from "../cms/buyGalleryRepository";
+import { BuyColorSwatches } from "../components/buy/BuyPrimitives";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../cms/buyGalleryRepository";
 
 const RECENTLY_VIEWED_KEY = "buyandsell-gh-recently-viewed";
 
@@ -45,23 +49,33 @@ export function ProductDetailsPage() {
   const { activeProducts: products, getProductBySlug, loading, error, refreshProducts } = useProductCatalog();
   const product = getProductBySlug(slug ?? "");
   const { addItem } = useCart();
-  const { setQuantity: setBuyQuantity } = useBuyJourney();
-  const [storage, setStorage] = useState(product?.storage[0] ?? "");
+  const { setQuantity: setBuyQuantity, openBag } = useBuyJourney();
+
+  const selectableStorageOptions = useMemo(() => getSelectableStorageOptions(product), [product]);
+  const colorOptions = useMemo(() => resolveColorOptions(product?.colors ?? []), [product?.colors]);
+
+  const [storage, setStorage] = useState(selectableStorageOptions[0] ?? "");
   const [color, setColor] = useState(product?.colors[0] ?? "");
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [zoomed, setZoomed] = useState(false);
   const [pageUrl, setPageUrl] = useState("");
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const [variantError, setVariantError] = useState("");
+  const [bagNotice, setBagNotice] = useState("");
 
-  const stockQuantity = Math.max(0, product?.stockQuantity ?? 0);
+  const configured = useMemo(
+    () => resolveConfiguredPrice(product, { storage, color }),
+    [product, storage, color]
+  );
+
+  const stockQuantity = Math.max(0, configured.effectiveStock || product?.stockQuantity || 0);
   const hasConfirmedStock =
     Boolean(product) &&
-    stockQuantity > 0 &&
+    (product?.stockQuantity ?? 0) > 0 &&
     (product?.stockStatus === "In Stock" || product?.stockStatus === "Low Stock") &&
     product?.available !== false;
   const isSoldOut = product ? (!hasConfirmedStock || isProductUnavailable(product)) : true;
+  const canBuySelection = Boolean(product && !isSoldOut && configured.purchasable && !configured.isEnquiry);
 
   const related = useMemo(
     () =>
@@ -98,12 +112,13 @@ export function ProductDetailsPage() {
 
   useEffect(() => {
     if (product) {
-      setStorage(product.storage[0]);
-      setColor(product.colors[0]);
+      const nextStorages = getSelectableStorageOptions(product);
+      setStorage(nextStorages[0] ?? "");
+      setColor(product.colors[0] ?? "");
       setQuantity(1);
       setActiveImage(0);
-      setZoomed(false);
       setVariantError("");
+      setBagNotice("");
       const currentUrl = window.location.href;
       setPageUrl(currentUrl);
       let saved: string[] = [];
@@ -117,30 +132,45 @@ export function ProductDetailsPage() {
       const next = [product.slug, ...saved.filter((item) => item !== product.slug)].slice(0, 8);
       localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
     }
+  }, [product?.id]);
+
+  // Reset active thumbnail to 0 whenever selected colour changes
+  useEffect(() => {
+    setActiveImage(0);
+  }, [color]);
+
+  // Preload colour-variant gallery primary images for instant swatch switching
+  useEffect(() => {
+    if (!product || colorOptions.length <= 1) return;
+    const published = getPublishedBuyGallerySync(product.slug);
+    const urls = colorOptions.flatMap((opt) => {
+      const resolved = resolveColorGallery({
+        product,
+        slug: product.slug,
+        selectedColor: opt.name,
+        publishedGallery: published,
+      });
+      return resolved.images.slice(0, 2).map((img) => img.src);
+    });
+    preloadProductImages(urls);
+  }, [product, colorOptions]);
+
+  const baseGallery = useMemo(() => {
+    if (!product) return [];
+    const resolved = resolveProductGallery(product);
+    if (resolved.length > 1) {
+      const genuinePhotos = resolved.filter((img) => !img.src.includes("/campaigns-"));
+      const flyerPhotos = resolved.filter((img) => img.src.includes("/campaigns-"));
+      if (genuinePhotos.length > 0) return [...genuinePhotos, ...flyerPhotos];
+    }
+    return resolved;
   }, [product]);
 
-  const hasOwnerImages = Boolean(product && hasOwnerUploadedProductImages(product));
-  const matchedFinishImage = product && !hasOwnerImages ? resolveProductColorImage(product, color) : undefined;
-  const baseGallery = product ? resolveProductGallery(product) : [];
-  const { images: publishedBuyGallery, isCustomPublished } = useBuyGallery(product, color);
-  const gallery = useMemo(() => {
-    if (isCustomPublished && publishedBuyGallery.length > 0) return publishedBuyGallery;
-    if (matchedFinishImage && product) {
-      return [
-        { src: matchedFinishImage, alt: `${product.name} in ${color}` },
-        ...baseGallery.filter((img) => img.src !== matchedFinishImage),
-      ];
-    }
-    // If baseGallery has genuine product photos alongside campaign flyers, prioritize genuine product photos
-    if (baseGallery.length > 1) {
-      const genuinePhotos = baseGallery.filter((img) => !img.src.includes("/campaigns-"));
-      const flyerPhotos = baseGallery.filter((img) => img.src.includes("/campaigns-"));
-      if (genuinePhotos.length > 0) {
-        return [...genuinePhotos, ...flyerPhotos];
-      }
-    }
-    return baseGallery;
-  }, [isCustomPublished, publishedBuyGallery, matchedFinishImage, product?.name, color, baseGallery]);
+  const {
+    images: gallery,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(product, color, product?.slug, undefined, baseGallery);
 
   if (loading) {
     return <section className="page-hero"><h1>Loading product</h1><p>Please wait while the catalogue loads.</p></section>;
@@ -166,14 +196,11 @@ export function ProductDetailsPage() {
     );
   }
 
-  const active = gallery[activeImage] ?? resolveProductImage(product);
-  const selectedColorImage = matchedFinishImage ?? active?.src;
-  const realPhotosPending = requiresRealProductPhotos(product);
-  const configured = resolveConfiguredPrice(product, { storage });
+  const active = gallery[activeImage] ?? primaryColorImage ?? resolveProductImage(product);
+  const selectedColorImage = primaryColorImage?.src ?? active?.src;
   const whatsappHref = productWhatsAppUrl(product, storage, color, pageUrl, configured.price, selectedColorImage);
   const studioFamily = getProductFamilyKey(product);
   const studioBuyPath = studioFamily ? productBuyPath(studioFamily, product.slug) : null;
-  const stockLabel = normalizeDisplayBadge(product.stockStatus);
   const isPriceOnRequest = configured.isEnquiry;
   const currentPriceLabel = configured.formattedPrice;
   const oldPriceLabel = configured.formattedPreviousPrice ?? (!isPriceOnRequest && product.oldPrice ? formatGhs(product.oldPrice) : undefined);
@@ -192,8 +219,8 @@ export function ProductDetailsPage() {
           ? "Edition / Storage"
         : "Storage";
 
-  const hasMultipleStorage = Boolean(product.storage && product.storage.length > 1);
-  const hasMultipleColors = Boolean(product.colors && product.colors.length > 1);
+  const hasMultipleStorage = selectableStorageOptions.length > 1;
+  const hasMultipleColors = colorOptions.length > 1;
   const showOptionSelectors = hasMultipleStorage || hasMultipleColors;
 
   const isMacbook = product.category === "MacBooks" || product.category === "Laptops";
@@ -206,28 +233,62 @@ export function ProductDetailsPage() {
   const accessoryPower = accessorySpecifications.find((item) => item.startsWith("Wattage:"))?.replace("Wattage:", "").trim();
   const accessoryCompatibility = accessorySpecifications.find((item) => item.startsWith("Compatibility:"))?.replace("Compatibility:", "").trim();
 
-  const handleBuyNow = () => {
+  const validateAndAdd = (): boolean => {
+    setVariantError("");
+    setBagNotice("");
     if (hasMultipleStorage && !storage) {
       setVariantError("Choose an option before continuing.");
-      return;
+      return false;
     }
     if (hasMultipleColors && !color) {
       setVariantError("Choose a colour option before continuing.");
-      return;
+      return false;
     }
-    if (quantity > product.stockQuantity) {
-      setVariantError(`Only ${product.stockQuantity} available right now.`);
-      return;
+    if (!configured.purchasable) {
+      setVariantError(configured.errorMessage || "The selected configuration is currently unavailable.");
+      return false;
     }
+    const maxQty = Math.max(1, configured.effectiveStock || product.stockQuantity);
+    if (quantity > maxQty) {
+      setVariantError(`Only ${maxQty} available right now.`);
+      return false;
+    }
+
     setBuyQuantity(quantity);
-    const selectedStorage = storage || (product.storage?.[0] ?? "Standard");
+    const selectedStorage = storage || (selectableStorageOptions[0] ?? "Standard");
     const selectedColor = color || (product.colors?.[0] ?? "Standard");
 
-    addItem(product, selectedStorage, selectedColor, quantity, undefined, selectedColorImage);
-    navigate("/checkout");
+    const added = addItem(
+      product,
+      selectedStorage,
+      selectedColor,
+      quantity,
+      configured.variant,
+      selectedColorImage,
+      {
+        storage: selectedStorage,
+        color: selectedColor,
+      }
+    );
+    if (!added) {
+      setVariantError(configured.errorMessage || "Unable to add the selected configuration to your bag.");
+      return false;
+    }
+    return true;
   };
 
-  const handleAddToCart = handleBuyNow;
+  const handleBuyNow = () => {
+    if (validateAndAdd()) {
+      navigate("/checkout");
+    }
+  };
+
+  const handleAddToBag = () => {
+    if (validateAndAdd()) {
+      setBagNotice(`${product.name}${storage ? ` (${storage})` : ""}${color ? ` — ${color}` : ""} added to your bag.`);
+      openBag();
+    }
+  };
 
   const handleShare = async () => {
     try {
@@ -240,6 +301,8 @@ export function ProductDetailsPage() {
       setVariantError("Sharing is not available in this browser. Copy the page link from the address bar.");
     }
   };
+
+  const maxStepperStock = Math.max(1, configured.effectiveStock || product.stockQuantity);
 
   return (
     <>
@@ -254,7 +317,7 @@ export function ProductDetailsPage() {
           ...(isPriceOnRequest ? {} : { offers: {
             "@type": "Offer",
             priceCurrency: "GHS",
-            price: product.price,
+            price: configured.price || product.price,
             availability: isSoldOut ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
           } }),
         })}
@@ -272,6 +335,8 @@ export function ProductDetailsPage() {
             activeIndex={activeImage}
             onSelectIndex={setActiveImage}
             productName={product.name}
+            activeColorKey={colorVariantId}
+            activeColorLabel={color || undefined}
           />
         </div>
         <div className="product-buy-panel">
@@ -300,13 +365,13 @@ export function ProductDetailsPage() {
             ) : isAirpods ? (
               <>
                 <span><CheckCircle2 size={17} /> Model: {product.generation ?? "Generation not specified"}</span>
-                <span><CheckCircle2 size={17} /> Case / Connector: {storage || product.storage[0] || "Confirm configuration"}</span>
+                <span><CheckCircle2 size={17} /> Case / Connector: {storage || selectableStorageOptions[0] || "Confirm configuration"}</span>
                 <span><CheckCircle2 size={17} /> Audio features: See verified specifications below</span>
               </>
             ) : isAccessory ? (
               <>
                 <span><CheckCircle2 size={17} /> Accessory family: {product.subcategory ?? "Apple Accessories"}</span>
-                <span><CheckCircle2 size={17} /> Connector: {accessoryConnector ?? storage ?? product.storage[0] ?? "Confirm option"}</span>
+                <span><CheckCircle2 size={17} /> Connector: {accessoryConnector ?? storage ?? selectableStorageOptions[0] ?? "Confirm option"}</span>
                 {accessoryPower && <span><CheckCircle2 size={17} /> Power: {accessoryPower}</span>}
                 <span><CheckCircle2 size={17} /> Compatibility: {accessoryCompatibility ?? "Confirm before payment"}</span>
               </>
@@ -320,46 +385,63 @@ export function ProductDetailsPage() {
               <>
                 <span><CheckCircle2 size={17} /> Brand: {product.brand}</span>
                 <span><CheckCircle2 size={17} /> Model: {product.model}</span>
-                <span><CheckCircle2 size={17} /> Configuration: {storage || product.storage[0] || "Confirm before payment"}</span>
+                <span><CheckCircle2 size={17} /> Configuration: {storage || selectableStorageOptions[0] || "Confirm before payment"}</span>
               </>
             )}
             <span><CheckCircle2 size={17} /> Pickup: {business.location}</span>
           </div>
 
           {showOptionSelectors && (
-            <div className="mt-7 grid gap-5 sm:grid-cols-2">
+            <div className="mt-7 grid gap-5">
               {hasMultipleStorage && (
                 <label className="choice-label">{primaryOptionLabel}
-                  <select value={storage} required onChange={(e) => setStorage(e.target.value)}>
-                    {product.storage.map((item) => <option key={item}>{item}</option>)}
+                  <select
+                    value={storage}
+                    required
+                    onChange={(e) => {
+                      setStorage(e.target.value);
+                      setVariantError("");
+                      setBagNotice("");
+                    }}
+                  >
+                    {selectableStorageOptions.map((item) => <option key={item} value={item}>{item}</option>)}
                   </select>
                 </label>
               )}
               {hasMultipleColors && (
-                <label className="choice-label">Colour
-                  <select
-                    value={color}
-                    required
-                    onChange={(e) => {
-                      setColor(e.target.value);
+                <div>
+                  <BuyColorSwatches
+                    colors={colorOptions}
+                    selectedColor={color}
+                    labelPrefix="Colour"
+                    productSlug={product.slug}
+                    onSelect={(selectedFinish) => {
+                      setColor(selectedFinish);
                       setActiveImage(0);
+                      setVariantError("");
+                      setBagNotice("");
                     }}
-                  >
-                    {product.colors.map((item) => <option key={item}>{item}</option>)}
-                  </select>
-                </label>
+                  />
+                </div>
               )}
             </div>
           )}
-          {variantError && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{variantError}</p>}
+
+          {!isSoldOut && !isPriceOnRequest && !configured.purchasable && configured.errorMessage && (
+            <p role="alert" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-800">
+              {configured.errorMessage}
+            </p>
+          )}
+          {variantError && <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{variantError}</p>}
+          {bagNotice && <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-800">{bagNotice}</p>}
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            {hasConfirmedStock && product.stockQuantity > 1 && (
+            {hasConfirmedStock && maxStepperStock > 1 && (
               <div className="quantity-stepper" aria-label="Quantity selector">
                 <button
                   type="button"
                   aria-label="Decrease quantity"
-                  disabled={isSoldOut}
+                  disabled={!canBuySelection}
                   onClick={() => setQuantity((value) => Math.max(1, value - 1))}
                 >
                   <Minus size={17} />
@@ -368,8 +450,8 @@ export function ProductDetailsPage() {
                 <button
                   type="button"
                   aria-label="Increase quantity"
-                  disabled={isSoldOut}
-                  onClick={() => setQuantity((value) => Math.min(product.stockQuantity, value + 1))}
+                  disabled={!canBuySelection}
+                  onClick={() => setQuantity((value) => Math.min(maxStepperStock, value + 1))}
                 >
                   <Plus size={17} />
                 </button>
@@ -379,11 +461,21 @@ export function ProductDetailsPage() {
               className="btn-primary disabled:cursor-not-allowed disabled:opacity-45"
               type="button"
               aria-label={isSoldOut ? "Sold Out" : isPriceOnRequest ? "Availability To Confirm" : "Buy Now"}
-              disabled={isSoldOut}
+              disabled={!canBuySelection}
               onClick={handleBuyNow}
             >
               <ShoppingBag size={18} /> {isSoldOut ? "Sold Out" : isPriceOnRequest ? "Availability To Confirm" : "Buy Now"}
             </button>
+            {canBuySelection && (
+              <button
+                className="btn-secondary"
+                type="button"
+                aria-label="Add to Bag"
+                onClick={handleAddToBag}
+              >
+                <ShoppingBag size={18} /> Add to Bag
+              </button>
+            )}
             {isPriceOnRequest && (
               <a className="btn-secondary" href={whatsappHref} target="_blank" rel="noopener noreferrer">
                 <Zap size={18} /> Confirm Availability
@@ -462,7 +554,7 @@ export function ProductDetailsPage() {
           <button
             className="btn-primary !py-2.5 !px-3.5 text-sm flex items-center gap-1.5 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-45"
             type="button"
-            disabled={isSoldOut}
+            disabled={!canBuySelection}
             onClick={handleBuyNow}
           >
             <ShoppingBag size={15} />

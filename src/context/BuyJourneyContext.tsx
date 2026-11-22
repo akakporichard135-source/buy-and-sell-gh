@@ -85,37 +85,37 @@ export function cleanCustomerPhone(value: string): string {
 
 export function validateCustomerDraft(customer: CustomerDraft, quantity: number): CustomerErrors {
   const errors: CustomerErrors = {};
-  if (!customer.fullName.trim()) errors.fullName = "Enter your full name.";
-  else if (customer.fullName.trim().length > 120) errors.fullName = "Keep your name under 120 characters.";
-  if (!phonePattern.test(cleanCustomerPhone(customer.whatsapp))) errors.whatsapp = "Enter a valid Ghana WhatsApp number.";
-  const trimmedEmail = customer.email.trim();
+  if (!(customer.fullName ?? "").trim()) errors.fullName = "Enter your full name.";
+  else if ((customer.fullName ?? "").trim().length > 120) errors.fullName = "Keep your name under 120 characters.";
+  if (!phonePattern.test(cleanCustomerPhone(customer.whatsapp ?? ""))) errors.whatsapp = "Enter a valid Ghana WhatsApp number.";
+  const trimmedEmail = (customer.email ?? "").trim();
   if (trimmedEmail && (trimmedEmail.length > 160 || !emailPattern.test(trimmedEmail))) {
     errors.email = "Enter a valid email address or leave this field blank.";
   }
   if (customer.fulfilmentType === "delivery") {
     if (!(customer.region || DEFAULT_GHANA_REGION).trim()) errors.region = "Enter your region.";
-    if (!customer.city.trim()) errors.city = "Enter your city or area.";
-    if (!customer.deliveryAddress.trim()) errors.deliveryAddress = "Enter your delivery address.";
+    if (!(customer.city ?? "").trim()) errors.city = "Enter your city or area.";
+    if (!(customer.deliveryAddress ?? "").trim()) errors.deliveryAddress = "Enter your delivery address.";
   }
-  if (customer.additionalNote.trim().length > 2000) errors.additionalNote = "Keep notes under 2,000 characters.";
+  if ((customer.additionalNote ?? "").trim().length > 2000) errors.additionalNote = "Keep notes under 2,000 characters.";
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) errors.quantity = "Choose a quantity from 1 to 999.";
   return errors;
 }
 
 export function customerDraftToOrderDetails(customer: CustomerDraft): OrderCustomerDetails {
-  const whatsapp = cleanCustomerPhone(customer.whatsapp);
+  const whatsapp = cleanCustomerPhone(customer.whatsapp ?? "");
   const resolvedRegion = (customer.region || DEFAULT_GHANA_REGION).trim();
   return {
-    fullName: customer.fullName.trim(),
+    fullName: (customer.fullName ?? "").trim(),
     phone: whatsapp,
     whatsapp,
-    email: customer.email.trim() || undefined,
+    email: (customer.email ?? "").trim() || undefined,
     fulfilmentType: customer.fulfilmentType,
     region: customer.fulfilmentType === "delivery" ? resolvedRegion : undefined,
-    city: customer.fulfilmentType === "delivery" ? customer.city.trim() : undefined,
-    deliveryAddress: customer.fulfilmentType === "delivery" ? customer.deliveryAddress.trim() : undefined,
+    city: customer.fulfilmentType === "delivery" ? (customer.city ?? "").trim() : undefined,
+    deliveryAddress: customer.fulfilmentType === "delivery" ? (customer.deliveryAddress ?? "").trim() : undefined,
     preferredPaymentMethod: customer.fulfilmentType === "pickup" ? "Pay on Pickup" : "Mobile Money on Confirmation",
-    additionalNote: customer.additionalNote.trim() || undefined,
+    additionalNote: (customer.additionalNote ?? "").trim() || undefined,
   };
 }
 

@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag, ImageOff } from "lucide-react";
+import { Check, ShieldCheck, Truck, Store, MessageCircle, ShoppingBag } from "lucide-react";
 import { SwipeableProductGallery } from "./SwipeableProductGallery";
+import { buildColorVariantId, normalizeColorKey } from "../../utils/variantSelection";
 import "../../styles/apple-buy-experience.css";
 
 export function useBuyEntrySelection(): { storage?: string; color?: string } {
@@ -29,6 +30,10 @@ export interface BuyLayoutProps {
   thumbnails?: { src: string; alt: string }[];
   activeThumbnailIndex?: number;
   onSelectThumbnail?: (index: number) => void;
+  activeColorKey?: string;
+  activeColorLabel?: string;
+  showThumbnails?: boolean;
+  enableZoom?: boolean;
   children: React.ReactNode;
   mobileActionLabel?: string;
   onMobileAction?: () => void;
@@ -46,6 +51,10 @@ export function BuyLayout({
   thumbnails = [],
   activeThumbnailIndex = 0,
   onSelectThumbnail,
+  activeColorKey,
+  activeColorLabel,
+  showThumbnails = true,
+  enableZoom = true,
   children,
   mobileActionLabel = "Add to Bag",
   onMobileAction,
@@ -78,7 +87,7 @@ export function BuyLayout({
       </nav>
 
       <main className="apple-buy-container">
-        {/* Left Column: Sticky Product Showcase with Swipeable Gallery & Dots */}
+        {/* Left Column: Sticky Product Showcase with Swipeable Gallery, Thumbnails & Zoom */}
         <div className="apple-buy-gallery-col">
           <SwipeableProductGallery
             images={galleryImages}
@@ -90,6 +99,10 @@ export function BuyLayout({
             }}
             productName={name}
             darkStage={darkStage}
+            showThumbnails={showThumbnails}
+            enableZoom={enableZoom}
+            activeColorKey={activeColorKey}
+            activeColorLabel={activeColorLabel}
           />
           <p className="apple-buy-stage-caption">
             100% genuine Apple hardware verified directly with Buy &amp; Sell GH in Accra.
@@ -161,6 +174,7 @@ export interface BuyColorSwatchesProps {
   selectedColor: string;
   onSelect: (color: string) => void;
   labelPrefix?: string;
+  productSlug?: string;
   previewImageSrc?: string;
   previewImageAlt?: string;
 }
@@ -170,6 +184,7 @@ export function BuyColorSwatches({
   selectedColor,
   onSelect,
   labelPrefix = "Finish",
+  productSlug,
   // previewImageSrc and previewImageAlt retained in props interface for backward-compatibility, but separate preview image is removed per design instruction
 }: BuyColorSwatchesProps) {
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -194,9 +209,9 @@ export function BuyColorSwatches({
   };
 
   return (
-    <div className="apple-buy-swatches">
+    <div className="apple-buy-swatches" data-testid="color-swatch-group">
       <div className="apple-buy-swatch-label">
-        {labelPrefix} — <strong>{selectedColor}</strong>
+        {labelPrefix} — <strong data-testid="selected-color-label">{selectedColor}</strong>
       </div>
       <div
         className="apple-buy-swatch-list"
@@ -204,7 +219,9 @@ export function BuyColorSwatches({
         aria-label={`${labelPrefix} selection`}
       >
         {colors.map((c, idx) => {
-          const isSelected = selectedColor.trim().toLowerCase() === c.name.trim().toLowerCase();
+          const isSelected = normalizeColorKey(selectedColor) === normalizeColorKey(c.name);
+          const colorKey = normalizeColorKey(c.name);
+          const colorVariantId = productSlug ? buildColorVariantId(productSlug, c.name) : undefined;
           return (
             <div key={c.name} className="apple-buy-swatch-target">
               <button
@@ -212,6 +229,9 @@ export function BuyColorSwatches({
                 role="radio"
                 aria-checked={isSelected}
                 tabIndex={isSelected ? 0 : -1}
+                data-color-name={c.name}
+                data-color-key={colorKey}
+                data-color-variant-id={colorVariantId}
                 className={`apple-buy-swatch-btn ${isSelected ? "is-selected" : ""} ${c.border ? "has-border" : ""}`}
                 style={{ backgroundColor: c.hex }}
                 onClick={() => onSelect(c.name)}
@@ -430,6 +450,7 @@ export interface BuySummaryCardProps {
   addToBagLabel?: string;
   whatsAppHref: string;
   notice?: string;
+  warningNotice?: string;
   isPreorder?: boolean;
 }
 
@@ -443,6 +464,7 @@ export function BuySummaryCard({
   addToBagLabel = "Add to Bag",
   whatsAppHref,
   notice,
+  warningNotice,
   isPreorder = false,
 }: BuySummaryCardProps) {
   return (
@@ -494,6 +516,12 @@ export function BuySummaryCard({
           <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: "#86868b", lineHeight: 1.35 }}>
             *Final trade-in credit confirmed upon physical inspection at Dome Pillar 2.
           </p>
+        </div>
+      )}
+
+      {warningNotice && (
+        <div role="alert" style={{ padding: "10px 14px", background: "#fff4e5", color: "#9a3412", border: "1px solid #fed7aa", borderRadius: "10px", fontSize: "0.86rem", fontWeight: 600 }}>
+          {warningNotice}
         </div>
       )}
 

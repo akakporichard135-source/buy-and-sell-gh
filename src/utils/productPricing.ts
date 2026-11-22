@@ -1,13 +1,20 @@
 import type { Product, ProductVariant } from "../types/product";
+import {
+  resolveProductSelection,
+  type VariantRejectionReason,
+} from "./variantSelection";
 
 export interface ConfiguredPriceOptions {
   storage?: string;
+  color?: string;
+  finish?: string;
   chip?: string;
   memory?: string;
   screenSize?: string;
   connectivity?: string;
   condition?: string;
   model?: string;
+  variantId?: string;
 }
 
 export interface ResolvedPriceResult {
@@ -18,6 +25,11 @@ export interface ResolvedPriceResult {
   formattedPrice: string;
   formattedPreviousPrice?: string;
   isEnquiry: boolean;
+  purchasable: boolean;
+  effectiveStock: number;
+  unavailableReason?: VariantRejectionReason;
+  errorMessage?: string;
+  colorVariantId: string;
 }
 
 export interface CardPriceDisplay {
@@ -46,158 +58,34 @@ export function formatPrice(amount: number): string {
 }
 
 /**
- * Cleanly normalize tokens for fuzzy matching
- */
-function normalizeToken(val?: string | null): string {
-  return String(val || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-/**
- * Resolve the authoritative price for a configured product.
- * Evaluates variants against selected storage, chip, memory, screen size, etc.
+ * Resolve the authoritative price, matching variant, and availability for a configured product.
+ * Delegates to the shared resolveProductSelection engine so UI display, Cart, and Checkout stay 100% consistent.
  */
 export function resolveConfiguredPrice(
   product?: Product,
   options: ConfiguredPriceOptions = {}
 ): ResolvedPriceResult {
-  const variants = product?.variants ?? [];
-  const activeVariants = variants.filter((v) => v.available !== false && v.price > 0);
-  const minVariantPrice = activeVariants.length > 0 ? Math.min(...activeVariants.map((v) => v.price)) : 0;
-  const effectivePrice = product && product.price > 0 ? product.price : minVariantPrice;
-
-  const hasBuyTag = product?.tags?.includes("purchase-action:buy");
-  const isPriceOnRequest = Boolean(product?.priceOnRequest && !hasBuyTag);
-
-  if (!product || isPriceOnRequest || effectivePrice <= 0) {
-    const isEnquiry = !product || isPriceOnRequest || effectivePrice <= 0;
-    return {
-      variant: undefined,
-      price: product?.price ?? 0,
-      previousPrice: null,
-      isSale: false,
-      formattedPrice: isEnquiry ? "Price confirmed on enquiry" : "GH₵ 0",
-      formattedPreviousPrice: undefined,
-      isEnquiry,
-    };
-  }
-
-  if (variants.length > 0) {
-    // 1. Try finding a scored best variant match
-    let bestVariant: ProductVariant | undefined;
-    let highestScore = -1;
-
-    for (const v of variants) {
-      if (v.available === false) continue;
-      let score = 0;
-
-      // Storage match (highest weight)
-      if (options.storage && v.storage) {
-        if (normalizeToken(options.storage) === normalizeToken(v.storage)) {
-          score += 10;
-        } else {
-          score -= 5;
-        }
-      }
-
-      // Chip match
-      if (options.chip && v.chip) {
-        if (normalizeToken(options.chip) === normalizeToken(v.chip)) {
-          score += 6;
-        } else {
-          score -= 4;
-        }
-      }
-
-      // Memory match
-      if (options.memory && v.memory) {
-        if (normalizeToken(options.memory) === normalizeToken(v.memory)) {
-          score += 5;
-        } else {
-          score -= 3;
-        }
-      }
-
-      // Screen size match
-      if (options.screenSize && v.screenSize) {
-        if (normalizeToken(options.screenSize) === normalizeToken(v.screenSize)) {
-          score += 5;
-        } else {
-          score -= 3;
-        }
-      }
-
-      // Connectivity match
-      if (options.connectivity && v.connectivity) {
-        if (normalizeToken(options.connectivity) === normalizeToken(v.connectivity)) {
-          score += 4;
-        } else {
-          score -= 2;
-        }
-      }
-
-      if (score > highestScore) {
-        highestScore = score;
-        bestVariant = v;
-      }
-    }
-
-    if (bestVariant && highestScore > 0) {
-      const effectivePrice = bestVariant.price;
-      const effectivePrevPrice = bestVariant.previousPrice ?? null;
-      const isSale = Boolean(
-        bestVariant.isSale ||
-          (effectivePrevPrice && effectivePrevPrice > effectivePrice)
-      );
-
-      return {
-        variant: { ...bestVariant, price: effectivePrice, previousPrice: effectivePrevPrice },
-        price: effectivePrice,
-        previousPrice: effectivePrevPrice,
-        isSale,
-        formattedPrice: formatPrice(effectivePrice),
-        formattedPreviousPrice:
-          isSale && effectivePrevPrice ? formatPrice(effectivePrevPrice) : undefined,
-        isEnquiry: false,
-      };
-    }
-
-    // Default to the first available variant if options did not match explicitly
-    const firstActive = variants.find((v) => v.available !== false) ?? variants[0];
-    if (firstActive) {
-      const effectivePrice = firstActive.price;
-      const effectivePrevPrice = firstActive.previousPrice ?? null;
-      const isSale = Boolean(
-        firstActive.isSale ||
-          (effectivePrevPrice && effectivePrevPrice > effectivePrice)
-      );
-
-      return {
-        variant: { ...firstActive, price: effectivePrice, previousPrice: effectivePrevPrice },
-        price: effectivePrice,
-        previousPrice: effectivePrevPrice,
-        isSale,
-        formattedPrice: formatPrice(effectivePrice),
-        formattedPreviousPrice:
-          isSale && effectivePrevPrice ? formatPrice(effectivePrevPrice) : undefined,
-        isEnquiry: false,
-      };
-    }
-  }
-
-  // Fallback to base product pricing
-  const basePrevious = product.previousPrice ?? product.oldPrice ?? null;
-  const isSale = Boolean(basePrevious && basePrevious > product.price);
+  const resolved = resolveProductSelection(product, options);
+  const isEnquiry = !product || resolved.reason === "enquiry_only" || resolved.price <= 0;
 
   return {
-    variant: undefined,
-    price: product.price,
-    previousPrice: basePrevious,
-    isSale,
-    formattedPrice: formatPrice(product.price),
-    formattedPreviousPrice: isSale && basePrevious ? formatPrice(basePrevious) : undefined,
-    isEnquiry: false,
+    variant: resolved.variant,
+    price: resolved.price,
+    previousPrice: resolved.previousPrice,
+    isSale: resolved.isSale,
+    formattedPrice: isEnquiry
+      ? "Price confirmed on enquiry"
+      : formatPrice(resolved.price),
+    formattedPreviousPrice:
+      resolved.isSale && resolved.previousPrice
+        ? formatPrice(resolved.previousPrice)
+        : undefined,
+    isEnquiry,
+    purchasable: resolved.purchasable,
+    effectiveStock: resolved.effectiveStock,
+    unavailableReason: resolved.reason,
+    errorMessage: resolved.errorMessage,
+    colorVariantId: resolved.colorVariantId,
   };
 }
 

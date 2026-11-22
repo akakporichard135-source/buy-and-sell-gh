@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { formatGhs } from "../../utils/format";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -14,14 +16,10 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
-import ipadPro11BlackWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m4-premium.webp";
-import ipadPro11SilverWhite from "../../assets/catalogue-products/ipad-pro-11-inch-m5-premium.webp";
-import ipadPro13BlackWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m5-premium.webp";
-import ipadPro13SilverWhite from "../../assets/catalogue-products/ipad-pro-13-inch-m4-premium.webp";
-
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
+import { resolveColorGallery } from "../../utils/productColorGallery";
 
 const IPAD_PRO_FINISHES: ColorOption[] = [
   resolveColorOption("Space Black"),
@@ -30,6 +28,7 @@ const IPAD_PRO_FINISHES: ColorOption[] = [
 
 export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const is13Initial = catalogProduct?.slug?.includes("13") ?? false;
@@ -45,7 +44,10 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
 
   useEffect(() => {
     if (entryStorage) setStorage(entryStorage);
-    if (entryColor && IPAD_PRO_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+    if (entryColor && IPAD_PRO_FINISHES.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = IPAD_PRO_FINISHES.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
   }, [entryStorage, entryColor]);
 
   useEffect(() => {
@@ -59,85 +61,66 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     setTradeIn(options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  // Sync state if catalogProduct changes
   useEffect(() => {
     if (catalogProduct && catalogProduct.slug.includes("13")) {
       setScreenSize("13-inch");
     }
   }, [catalogProduct]);
 
-  // Preload finish images
-  useEffect(() => {
-    preloadProductImages([
-      ipadPro11BlackWhite,
-      ipadPro11SilverWhite,
-      ipadPro13BlackWhite,
-      ipadPro13SilverWhite,
-      "/products/campaigns/ipad-pro-cinematic.webp",
-    ]);
-  }, []);
-
-  // Nano-texture glass is only available on 1TB and 2TB models
   useEffect(() => {
     if (storage !== "1TB" && storage !== "2TB" && glass === "Nano-texture glass") {
       setGlass("Standard glass");
     }
   }, [storage, glass]);
 
-  const currentFinishImg = screenSize === "13-inch"
-    ? (finish === "Space Black" ? ipadPro13BlackWhite : ipadPro13SilverWhite)
-    : (finish === "Space Black" ? ipadPro11BlackWhite : ipadPro11SilverWhite);
+  useEffect(() => {
+    setActiveThumb(0);
+  }, [finish, screenSize]);
 
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
+  // Resolve real live Supabase iPad Pro product without injecting synthetic variant IDs
+  const liveMatchedProduct = useMemo(() => {
+    const sizeToken = screenSize === "13-inch" ? "13" : "11";
+    if (catalogProduct) {
+      if (catalogProduct.slug === "ipad-pro") return catalogProduct;
+      if (catalogProduct.slug.includes(sizeToken) || catalogProduct.name.includes(sizeToken)) {
+        return catalogProduct;
+      }
     }
-    return [
-      { src: currentFinishImg, alt: `${finish} ${screenSize} iPad Pro on pure white` },
-      { src: "/products/campaigns/ipad-pro-cinematic.webp", alt: `iPad Pro Ultra Retina XDR display` },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, screenSize, finish, currentFinishImg]);
-
-  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
+    const proMatches = activeProducts.filter(
+      (p) =>
+        p.slug.startsWith("ipad-pro") &&
+        (p.slug.includes(sizeToken) || p.name.includes(sizeToken)) &&
+        p.price > 0 &&
+        !p.priceOnRequest
+    );
+    const inStockMatch = proMatches.find((p) => isProductOrderable(p));
+    if (inStockMatch) return inStockMatch;
+    if (proMatches[0]) return proMatches[0];
+    if (catalogProduct) return catalogProduct;
+    return activeProducts.find((p) => p.slug === "ipad-pro");
+  }, [screenSize, catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const is13 = screenSize === "13-inch";
     const isCell = connectivity === "Wi-Fi + Cellular";
     const isNano = (storage === "1TB" || storage === "2TB") && glass === "Nano-texture glass";
-
-    const storagePriceAdd: Record<string, number> = {
-      "256GB": 0,
-      "512GB": 2200,
-      "1TB": 5800,
-      "2TB": 10800,
-    };
-
-    const basePrice = (is13 ? 21500 : 16800) +
-      (storagePriceAdd[storage] || 0) +
-      (isCell ? 2400 : 0) +
-      (isNano ? 1600 : 0);
-
+    const storagePriceAdd: Record<string, number> = { "256GB": 0, "512GB": 2200, "1TB": 5800, "2TB": 10800 };
+    const basePrice = (is13 ? 21500 : 16800) + (storagePriceAdd[storage] || 0) + (isCell ? 2400 : 0) + (isNano ? 1600 : 0);
     const slug = "ipad-pro";
 
     const variantList = [
-      // 11-inch Wi-Fi
       { id: "ip-11-256-wifi", productId: slug, title: "11-inch 256GB Wi-Fi", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi", price: 16800, previousPrice: 17800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-512-wifi", productId: slug, title: "11-inch 512GB Wi-Fi", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi", price: 19000, previousPrice: 20000, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-1tb-wifi", productId: slug, title: "11-inch 1TB Wi-Fi", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi", price: 22600, previousPrice: 23600, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-2tb-wifi", productId: slug, title: "11-inch 2TB Wi-Fi", screenSize: "11-inch", storage: "2TB", connectivity: "Wi-Fi", price: 27600, previousPrice: 28600, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: true, stockStatus: "In Stock" as const },
-      // 11-inch Cellular
       { id: "ip-11-256-cell", productId: slug, title: "11-inch 256GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 19200, previousPrice: 20200, condition: "Brand New" as const, stockQuantity: 10, position: 5, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-512-cell", productId: slug, title: "11-inch 512GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 21400, previousPrice: 22400, condition: "Brand New" as const, stockQuantity: 10, position: 6, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-1tb-cell", productId: slug, title: "11-inch 1TB Wi-Fi + Cellular", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi + Cellular", price: 25000, previousPrice: 26000, condition: "Brand New" as const, stockQuantity: 10, position: 7, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-11-2tb-cell", productId: slug, title: "11-inch 2TB Wi-Fi + Cellular", screenSize: "11-inch", storage: "2TB", connectivity: "Wi-Fi + Cellular", price: 30000, previousPrice: 31000, condition: "Brand New" as const, stockQuantity: 10, position: 8, available: true, isSale: true, stockStatus: "In Stock" as const },
-      // 13-inch Wi-Fi
       { id: "ip-13-256-wifi", productId: slug, title: "13-inch 256GB Wi-Fi", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi", price: 21500, previousPrice: 22800, condition: "Brand New" as const, stockQuantity: 10, position: 9, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-13-512-wifi", productId: slug, title: "13-inch 512GB Wi-Fi", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi", price: 23700, previousPrice: 25000, condition: "Brand New" as const, stockQuantity: 10, position: 10, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-13-1tb-wifi", productId: slug, title: "13-inch 1TB Wi-Fi", screenSize: "13-inch", storage: "1TB", connectivity: "Wi-Fi", price: 27300, previousPrice: 28600, condition: "Brand New" as const, stockQuantity: 10, position: 11, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-13-2tb-wifi", productId: slug, title: "13-inch 2TB Wi-Fi", screenSize: "13-inch", storage: "2TB", connectivity: "Wi-Fi", price: 32300, previousPrice: 33600, condition: "Brand New" as const, stockQuantity: 10, position: 12, available: true, isSale: true, stockStatus: "In Stock" as const },
-      // 13-inch Cellular
       { id: "ip-13-256-cell", productId: slug, title: "13-inch 256GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 23900, previousPrice: 25200, condition: "Brand New" as const, stockQuantity: 10, position: 13, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-13-512-cell", productId: slug, title: "13-inch 512GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 26100, previousPrice: 27400, condition: "Brand New" as const, stockQuantity: 10, position: 14, available: true, isSale: true, stockStatus: "In Stock" as const },
       { id: "ip-13-1tb-cell", productId: slug, title: "13-inch 1TB Wi-Fi + Cellular", screenSize: "13-inch", storage: "1TB", connectivity: "Wi-Fi + Cellular", price: 29700, previousPrice: 31000, condition: "Brand New" as const, stockQuantity: 10, position: 15, available: true, isSale: true, stockStatus: "In Stock" as const },
@@ -159,47 +142,80 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       specs: ["11-inch or 13-inch Ultra Retina XDR Display", "Tandem OLED Technology", "Apple M4 Silicon", "Nano-texture Glass Option", "Pro Camera System with LiDAR"],
       box: ["iPad Pro", "USB-C Charge Cable (1m)", "20W USB-C Power Adapter"],
       imageTone: "dark",
-      images: thumbnails,
+      images: [],
       variants: variantList,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
       featured: true,
     };
-  }, [screenSize, storage, connectivity, glass, thumbnails]);
+  }, [screenSize, storage, connectivity, glass]);
 
-  const isExactMatch = Boolean(
-    catalogProduct &&
-      catalogProduct.slug === "ipad-pro" &&
-      catalogProduct.condition === "Brand New" &&
-      catalogProduct.variants &&
-      catalogProduct.variants.length > 0
-  );
-  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const activeProduct: Product = useMemo(() => {
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
+    return fallbackProduct;
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
+
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = IPAD_PRO_FINISHES.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        screenSize,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct, screenSize]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, "ipad-pro", screenSize);
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentFinishImg = primaryColorImage?.src || activeImage || "";
 
   const configured = resolveConfiguredPrice(activeProduct, {
     screenSize,
     storage,
     connectivity,
+    color: finish,
   });
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
 
-  const nanoTextureDelta = (storage === "1TB" || storage === "2TB") && glass === "Nano-texture glass" ? 1600 : 0;
+  // Keep price strictly synchronized with authoritative backend price when backed by Supabase
+  const nanoTextureDelta = !isLiveProduct && (storage === "1TB" || storage === "2TB") && glass === "Nano-texture glass" ? 1600 : 0;
   const finalPrice = configured.price + nanoTextureDelta;
-  const priceLabel = formatGhs(finalPrice);
+  const priceLabel = configured.isEnquiry ? configured.formattedPrice : formatGhs(finalPrice);
   const previousPriceLabel = configured.previousPrice ? formatGhs(configured.previousPrice + nanoTextureDelta) : undefined;
   const tradeInBreakdown = calculateTradeInBreakdown(finalPrice, tradeIn);
 
   const fullConfigurationTitle = `iPad Pro ${screenSize} (${storage}, ${finish}, ${connectivity}${glass === "Nano-texture glass" ? ", Nano-texture" : ""})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize} Ultra Retina XDR, Storage: ${storage}, Finish: ${finish}, Glass: ${glass}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentFinishImg ? ` Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${fullConfigurationTitle} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const effectiveVariant = configured.variant
       ? {
           ...configured.variant,
-          price: finalPrice,
+          price: isLiveProduct ? configured.variant.price : finalPrice,
           title: `iPad Pro ${screenSize} (${storage}, ${connectivity}${glass === "Nano-texture glass" ? ", Nano-texture" : ""})`,
         }
       : undefined;
@@ -222,14 +238,16 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       categoryLabel="iPad"
       categoryPath="/ipad"
       activeImageSrc={activeImage}
-      activeImageAlt={`iPad Pro ${screenSize}`}
+      activeImageAlt={`iPad Pro ${screenSize} in ${finish}`}
       priceLabel={priceLabel}
       badge="Ultra Retina XDR OLED"
       darkStage={true}
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -256,13 +274,19 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
             title="11-inch iPad Pro"
             subtitle="Ultra Retina XDR display. Incredibly thin 5.3 mm profile and ultraportable 444g weight for effortless sketching anywhere."
             selected={screenSize === "11-inch"}
-            onClick={() => setScreenSize("11-inch")}
+            onClick={() => {
+              setScreenSize("11-inch");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="13-inch iPad Pro"
             subtitle="Ultra Retina XDR display. Expansive creative canvas measuring an unbelievable 5.1 mm thin — the thinnest Apple product ever."
             selected={screenSize === "13-inch"}
-            onClick={() => setScreenSize("13-inch")}
+            onClick={() => {
+              setScreenSize("13-inch");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -276,11 +300,13 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         <BuyColorSwatches
           colors={IPAD_PRO_FINISHES}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentFinishImg}
           previewImageAlt={`iPad Pro in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -296,25 +322,37 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
             title="256GB"
             subtitle="8GB unified memory. Generous capacity for apps, games, raw photos, and creative projects."
             selected={storage === "256GB"}
-            onClick={() => setStorage("256GB")}
+            onClick={() => {
+              setStorage("256GB");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="512GB"
             subtitle="8GB unified memory. Extra room for 4K video clips, expansive sound libraries, and intensive documents."
             selected={storage === "512GB"}
-            onClick={() => setStorage("512GB")}
+            onClick={() => {
+              setStorage("512GB");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="1TB"
             subtitle="16GB unified memory. High-performance ceiling for demanding 3D rendering and 4K ProRes capture."
             selected={storage === "1TB"}
-            onClick={() => setStorage("1TB")}
+            onClick={() => {
+              setStorage("1TB");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="2TB"
             subtitle="16GB unified memory. Maximum capacity for entire film libraries, extensive photo archives, and enterprise files."
             selected={storage === "2TB"}
-            onClick={() => setStorage("2TB")}
+            onClick={() => {
+              setStorage("2TB");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -331,13 +369,19 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
               title="Standard glass"
               subtitle="Engineered for low reflectivity with industry-leading contrast and vibrant colors."
               selected={glass === "Standard glass"}
-              onClick={() => setGlass("Standard glass")}
+              onClick={() => {
+                setGlass("Standard glass");
+                setNotice("");
+              }}
             />
             <BuyOptionCard
               title="Nano-texture glass"
               subtitle="Etched at the nanometer scale to maintain image contrast while minimizing glare in demanding lighting conditions."
               selected={glass === "Nano-texture glass"}
-              onClick={() => setGlass("Nano-texture glass")}
+              onClick={() => {
+                setGlass("Nano-texture glass");
+                setNotice("");
+              }}
             />
           </div>
         </section>
@@ -354,13 +398,19 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
             title="Wi-Fi"
             subtitle="Connect to fast Wi-Fi networks at home, the office, school, or cafes."
             selected={connectivity === "Wi-Fi"}
-            onClick={() => setConnectivity("Wi-Fi")}
+            onClick={() => {
+              setConnectivity("Wi-Fi");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="Wi-Fi + Cellular"
             subtitle="Built-in 5G cellular with eSIM support lets you connect even when you are away from Wi-Fi."
             selected={connectivity === "Wi-Fi + Cellular"}
-            onClick={() => setConnectivity("Wi-Fi + Cellular")}
+            onClick={() => {
+              setConnectivity("Wi-Fi + Cellular");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -368,7 +418,7 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       {/* Step 6: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 9: Summary & Add to Bag */}
+      {/* Step 7: Summary & Add to Bag */}
       <BuySummaryCard
         title="Your iPad Pro"
         items={[
@@ -383,8 +433,9 @@ export function IpadProBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

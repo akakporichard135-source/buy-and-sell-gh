@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
-import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { formatGhs } from "../../utils/format";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { ProductPromotionalBadge } from "../promotions/ProductPromotionalBadge";
 import { whatsappUrl, productWhatsAppUrl, toAbsoluteProductImageUrl } from "../../utils/whatsapp";
 import { isProductOrderable } from "../../catalog/productCatalog";
 import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
-import { hasOwnerUploadedProductImages, isUsedProductCondition, resolveProductGallery } from "../../utils/productImages";
+import { isUsedProductCondition } from "../../utils/productImages";
 import { localCatalogueImageBySlug, missingCleanAccessoryImageSlugs } from "../../utils/catalogueProductImages";
 import { resolveColorOptions } from "../../utils/productColors";
-import { resolveProductColorImage, resolveProductColorGallery, preloadProductImages } from "../../utils/productColorImages";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { preloadProductImages } from "../../utils/productColorImages";
+import { resolveColorGallery } from "../../utils/productColorGallery";
+import { getSelectableStorageOptions, normalizeSpecToken } from "../../utils/variantSelection";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 import {
   BuyLayout,
   BuyOptionCard,
@@ -34,7 +35,6 @@ export function GenericBuyExperience({
   slug: string;
 }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
-  const { backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const effectiveProduct: Product | undefined = useMemo(() => {
@@ -56,7 +56,7 @@ export function GenericBuyExperience({
         condition: "Brand New",
         storage: product?.storage?.length ? product.storage : ["USB-C MagSafe Case"],
         colors: product?.colors?.length ? product.colors : ["White"],
-        images: [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }],
+        images: product?.images?.length ? product.images : [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }],
         available: product?.available ?? false,
         stockStatus: product?.stockStatus ?? "Out of Stock",
         stockQuantity: product?.stockQuantity ?? 0,
@@ -90,29 +90,32 @@ export function GenericBuyExperience({
     return product;
   }, [product, slug]);
 
-  const [storage, setStorage] = useState(effectiveProduct?.storage[0] ?? "");
-  const [color, setColor] = useState(effectiveProduct?.colors[0] ?? "");
+  const storageOptions = useMemo(() => getSelectableStorageOptions(effectiveProduct), [effectiveProduct]);
+  const colorOptions = useMemo(() => resolveColorOptions(effectiveProduct?.colors ?? []), [effectiveProduct?.colors]);
+
+  const [storage, setStorage] = useState(storageOptions[0] ?? "");
+  const [color, setColor] = useState(effectiveProduct?.colors?.[0] ?? "");
   const [tradeIn, setTradeIn] = useState(false);
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (entryStorage && effectiveProduct?.storage.includes(entryStorage)) setStorage(entryStorage);
-    if (entryColor && effectiveProduct?.colors.includes(entryColor)) setColor(entryColor);
-  }, [entryStorage, entryColor, effectiveProduct?.slug]);
-
-  const colorOptions = useMemo(() => resolveColorOptions(effectiveProduct?.colors ?? []), [effectiveProduct?.colors]);
+    if (entryStorage && storageOptions.some((opt) => normalizeSpecToken(opt) === normalizeSpecToken(entryStorage))) {
+      const matched = storageOptions.find((opt) => normalizeSpecToken(opt) === normalizeSpecToken(entryStorage));
+      if (matched) setStorage(matched);
+    }
+    if (entryColor && effectiveProduct?.colors?.includes(entryColor)) setColor(entryColor);
+  }, [entryStorage, entryColor, effectiveProduct?.slug, storageOptions]);
 
   useEffect(() => {
-    if (effectiveProduct) {
-      if (effectiveProduct.storage && effectiveProduct.storage.length > 0 && (!storage || !effectiveProduct.storage.includes(storage))) {
-        setStorage(effectiveProduct.storage[0]);
-      }
-      if (effectiveProduct.colors && effectiveProduct.colors.length > 0 && (!color || !effectiveProduct.colors.includes(color))) {
-        setColor(effectiveProduct.colors[0]);
-      }
+    if (!effectiveProduct) return;
+    if (storageOptions.length > 0 && (!storage || !storageOptions.some((opt) => normalizeSpecToken(opt) === normalizeSpecToken(storage)))) {
+      setStorage(storageOptions[0]);
     }
-  }, [effectiveProduct]);
+    if (effectiveProduct.colors && effectiveProduct.colors.length > 0 && (!color || !effectiveProduct.colors.includes(color))) {
+      setColor(effectiveProduct.colors[0]);
+    }
+  }, [effectiveProduct, storageOptions]);
 
   useEffect(() => {
     if (!editingItem || editingItem.product.slug !== effectiveProduct?.slug) return;
@@ -121,52 +124,56 @@ export function GenericBuyExperience({
     setTradeIn(editingItem.options?.tradeIn === "Yes");
   }, [editingItem, effectiveProduct?.slug]);
 
-  // Preload all available finish images so clicking swatches has 0 latency
+  // Reset gallery index to 0 whenever selected colour changes
   useEffect(() => {
-    if (effectiveProduct && colorOptions.length > 0) {
-      const urls = colorOptions.map((c) => resolveProductColorImage(effectiveProduct, c.name));
-      preloadProductImages(urls);
-    }
-  }, [effectiveProduct, colorOptions]);
+    setActiveThumb(0);
+  }, [color]);
 
   const name = effectiveProduct?.name ?? slug.split("-").map((s) => (s ? `${s[0].toUpperCase()}${s.slice(1)}` : s)).join(" ");
-  const rawGallery = effectiveProduct ? resolveProductGallery(effectiveProduct) : [];
   const missingCleanImage = missingCleanAccessoryImageSlugs.has(effectiveProduct?.slug ?? slug);
   const canUseCatalogueImage = (!effectiveProduct || !isUsedProductCondition(effectiveProduct.condition)) && !missingCleanImage;
   const fallbackAsset = canUseCatalogueImage ? localCatalogueImageBySlug[effectiveProduct?.slug ?? slug] : undefined;
-  const hasOwnerImages = Boolean(effectiveProduct && hasOwnerUploadedProductImages(effectiveProduct));
+  const fallbackImages = useMemo(
+    () => (fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []),
+    [fallbackAsset, name]
+  );
 
-  // Determine active finish image & angle thumbnails
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(effectiveProduct, color, slug);
+  // Preload all colour variant galleries so clicking swatches switches instantly
+  useEffect(() => {
+    if (!effectiveProduct || colorOptions.length === 0) return;
+    const published = getPublishedBuyGallerySync(effectiveProduct.slug || slug);
+    const urls = colorOptions.flatMap((c) =>
+      resolveColorGallery({
+        product: effectiveProduct,
+        slug: effectiveProduct.slug || slug,
+        selectedColor: c.name,
+        publishedGallery: published,
+        fallbackImages,
+      }).images.slice(0, 2).map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [effectiveProduct, slug, colorOptions, fallbackImages]);
 
-  // Determine active finish image & angle thumbnails
-  const matchedFinishImage = resolveProductColorImage(effectiveProduct, color, fallbackAsset);
-  const gallery = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
-    }
-    if (hasOwnerImages) {
-      if (matchedFinishImage) {
-        const matchingIdx = rawGallery.findIndex((img) => img.src === matchedFinishImage);
-        if (matchingIdx > 0) {
-          const reordered = [...rawGallery];
-          const [matched] = reordered.splice(matchingIdx, 1);
-          return [matched, ...reordered];
-        } else if (matchingIdx === -1) {
-          return [{ src: matchedFinishImage, alt: `${name}${color ? ` in ${color}` : ""}` }, ...rawGallery];
-        }
-      }
-      return rawGallery;
-    }
-    return resolveProductColorGallery(effectiveProduct, color, fallbackAsset ? [{ src: fallbackAsset, alt: name }] : []);
-  }, [isCustomPublished, publishedGalleryImages, effectiveProduct, color, hasOwnerImages, rawGallery, fallbackAsset, name, matchedFinishImage]);
+  // Strict Apple-style colour-to-gallery resolution (zero cross-colour image mixing)
+  const {
+    images: gallery,
+    mainImage: colorMainImage,
+    colorVariantId,
+  } = useBuyGallery(effectiveProduct, color, slug, undefined, fallbackImages);
 
-  const activeImage = gallery[activeThumb]?.src || matchedFinishImage || fallbackAsset;
+  const activeImage = gallery[activeThumb]?.src || colorMainImage?.src || fallbackAsset;
+  const selectedFinishImage = colorMainImage?.src || activeImage;
 
-  const configured = resolveConfiguredPrice(effectiveProduct, { storage });
-  const purchasable = effectiveProduct
-    ? isProductOrderable(effectiveProduct) && getPublicPurchaseAction(effectiveProduct) === "buy" && configured.price > 0
+  const configured = resolveConfiguredPrice(effectiveProduct, { storage, color });
+  const productCanBuy = effectiveProduct
+    ? isProductOrderable(effectiveProduct) && getPublicPurchaseAction(effectiveProduct) === "buy"
     : false;
+  const purchasable = Boolean(effectiveProduct && productCanBuy && configured.purchasable && configured.price > 0);
+  const unavailableVariantWarning =
+    productCanBuy && !configured.purchasable && configured.errorMessage
+      ? configured.errorMessage
+      : undefined;
+
   const priceLabel = configured.price > 0
     ? configured.formattedPrice
     : effectiveProduct && !effectiveProduct.priceOnRequest && effectiveProduct.price > 0
@@ -174,8 +181,6 @@ export function GenericBuyExperience({
     : "Price confirmed on enquiry";
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
-
-  const selectedFinishImage = matchedFinishImage || activeImage;
 
   const whatsAppEnquiry = effectiveProduct
     ? productWhatsAppUrl(effectiveProduct, storage || "Standard", color || "Standard", undefined, configured.price, selectedFinishImage)
@@ -187,9 +192,18 @@ export function GenericBuyExperience({
 
   const handleAddToBag = () => {
     if (effectiveProduct && purchasable) {
-      const added = addConfiguredItem(effectiveProduct, storage || "Standard", color || "Standard", configured.variant, selectedFinishImage, {
-        storage, color, tradeIn: tradeIn ? "Yes" : "No",
-      });
+      const added = addConfiguredItem(
+        effectiveProduct,
+        storage || "Standard",
+        color || "Standard",
+        configured.variant,
+        selectedFinishImage,
+        {
+          storage: storage || "Standard",
+          color: color || "Standard",
+          tradeIn: tradeIn ? "Yes" : "No",
+        }
+      );
       if (added) {
         setNotice(`${effectiveProduct.name}${storage ? ` (${storage})` : ""}${color ? ` - ${color}` : ""} added to your bag.`);
       }
@@ -220,6 +234,8 @@ export function GenericBuyExperience({
       thumbnails={gallery}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
+      activeColorKey={colorVariantId}
+      activeColorLabel={color || undefined}
       mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
@@ -245,18 +261,21 @@ export function GenericBuyExperience({
       )}
 
       {/* Storage / Capacity Option */}
-      {effectiveProduct && effectiveProduct.storage && effectiveProduct.storage.length > 0 && (
+      {effectiveProduct && storageOptions.length > 0 && (
         <section className="apple-buy-step">
           <div className="apple-buy-step-header">
             <h3 className="apple-buy-step-title">Configuration. <span>Choose capacity or specification.</span></h3>
           </div>
           <div className="apple-buy-cards-grid">
-            {effectiveProduct.storage.map((opt) => (
+            {storageOptions.map((opt) => (
               <BuyOptionCard
                 key={opt}
                 title={opt}
-                selected={storage === opt}
-                onClick={() => setStorage(opt)}
+                selected={normalizeSpecToken(storage) === normalizeSpecToken(opt)}
+                onClick={() => {
+                  setStorage(opt);
+                  setNotice("");
+                }}
               />
             ))}
           </div>
@@ -272,11 +291,13 @@ export function GenericBuyExperience({
           <BuyColorSwatches
             colors={colorOptions}
             selectedColor={color}
-            previewImageSrc={matchedFinishImage}
+            productSlug={effectiveProduct?.slug || slug}
+            previewImageSrc={selectedFinishImage}
             previewImageAlt={`${name} in ${color}`}
             onSelect={(selectedFinish) => {
               setColor(selectedFinish);
               setActiveThumb(0);
+              setNotice("");
             }}
           />
         </section>
@@ -302,6 +323,7 @@ export function GenericBuyExperience({
         onAddToBag={handleAddToBag}
         addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={unavailableVariantWarning}
         notice={notice}
       />
     </BuyLayout>

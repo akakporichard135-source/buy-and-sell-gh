@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
-import { formatGhs } from "../../utils/format";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { ProductPromotionalBadge } from "../promotions/ProductPromotionalBadge";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
@@ -16,30 +16,22 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-
-import { resolveColorOption } from "../../utils/productColors";
+import { resolveColorOption, resolveColorOptions } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { resolveColorGallery } from "../../utils/productColorGallery";
+import { getSelectableStorageOptions, normalizeSpecToken } from "../../utils/variantSelection";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 
-const IPHONE_18_COLORS: ColorOption[] = [
+const DEFAULT_IPHONE_18_COLORS: ColorOption[] = [
   resolveColorOption("Deep Burgundy"),
   resolveColorOption("Space Black"),
   resolveColorOption("Natural Titanium"),
   resolveColorOption("Light Blue"),
 ];
 
-const FINISH_IMAGE_MAP: Record<string, string> = {
-  "Deep Burgundy": "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-  "Space Black": "/products/colors/iphone-18-pro-space-black.png",
-  "Natural Titanium": "/products/campaigns/iphone-18-pro-silver.webp",
-  "Light Blue": "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
-  Burgundy: "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-  Silver: "/products/campaigns/iphone-18-pro-silver.webp",
-};
-
 export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
-  const navigate = useNavigate();
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const isMaxInitial = Boolean(
@@ -54,10 +46,37 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
   const [activeThumb, setActiveThumb] = useState(0);
   const [notice, setNotice] = useState("");
 
+  const targetSlug = model === "iPhone 18 Pro Max" ? "iphone-18-pro-max" : "iphone-18-pro";
+
+  const liveModelProduct = useMemo(() => {
+    const fromCatalog = activeProducts.find((p) => p.slug === targetSlug);
+    if (fromCatalog) return fromCatalog;
+    if (catalogProduct?.slug === targetSlug) return catalogProduct;
+    return undefined;
+  }, [activeProducts, catalogProduct, targetSlug]);
+
+  const colorOptions: ColorOption[] = useMemo(() => {
+    const sourceColors = liveModelProduct?.colors?.length ? liveModelProduct.colors : undefined;
+    return sourceColors ? resolveColorOptions(sourceColors) : DEFAULT_IPHONE_18_COLORS;
+  }, [liveModelProduct?.colors]);
+
+  const storageOptions: string[] = useMemo(() => {
+    const liveStorages = getSelectableStorageOptions(liveModelProduct);
+    if (liveStorages.length > 0) return liveStorages;
+    return model === "iPhone 18 Pro Max"
+      ? ["256GB", "512GB", "1TB", "2TB"]
+      : ["256GB", "512GB", "1TB"];
+  }, [liveModelProduct, model]);
+
   useEffect(() => {
-    if (entryStorage) setStorage(entryStorage);
-    if (entryColor && IPHONE_18_COLORS.some((option) => option.name === entryColor)) setFinish(entryColor);
-  }, [entryStorage, entryColor]);
+    if (entryStorage && storageOptions.some((s) => normalizeSpecToken(s) === normalizeSpecToken(entryStorage))) {
+      setStorage(entryStorage);
+    }
+    if (entryColor && colorOptions.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = colorOptions.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
+  }, [entryStorage, entryColor, storageOptions, colorOptions]);
 
   useEffect(() => {
     if (catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name?.includes("Max")) {
@@ -75,46 +94,29 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
     setTradeIn(editingItem.options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  const currentFinishImage = FINISH_IMAGE_MAP[finish] || FINISH_IMAGE_MAP.Silver;
-
-  // Preload iPhone 18 Pro finish images
   useEffect(() => {
-    preloadProductImages([
-      "/products/campaigns/iphone-18-pro-burgundy-finish.webp",
-      "/products/colors/iphone-18-pro-space-black.png",
-      "/products/campaigns/iphone-18-pro-silver.webp",
-      "/products/story/iphone-18-pro-supplied-blue-front-back.jpg",
-      "/products/buy/iphone-18-pro-gallery-2-silver.jpg",
-      "/products/buy/iphone-18-pro-gallery-3-blue.jpg",
-    ]);
-  }, []);
-
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
+    if (storageOptions.length > 0 && !storageOptions.some((opt) => normalizeSpecToken(opt) === normalizeSpecToken(storage))) {
+      setStorage(storageOptions[0]);
     }
-    return [
-      { src: currentFinishImage, alt: finish === "Space Black" ? `${model} color lineup including Space Black` : `${model} in ${finish}` },
-      { src: "/products/buy/iphone-18-pro-gallery-2-silver.jpg", alt: `${model} Silver / Natural Titanium dual view` },
-      { src: "/products/buy/iphone-18-pro-gallery-3-blue.jpg", alt: `${model} Light Blue dual view` },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, currentFinishImage, finish, model]);
+  }, [storageOptions, storage]);
 
-  const activeImage = thumbnails[activeThumb]?.src || currentFinishImage;
+  useEffect(() => {
+    if (colorOptions.length > 0 && !colorOptions.some((c) => c.name.toLowerCase() === finish.toLowerCase())) {
+      setFinish(colorOptions[0].name);
+    }
+  }, [colorOptions, finish]);
 
-  const storageOptions: string[] = useMemo(() => (model === "iPhone 18 Pro Max"
-    ? ["256GB", "512GB", "1TB", "2TB"]
-    : ["256GB", "512GB", "1TB"]), [model]);
+  useEffect(() => {
+    setActiveThumb(0);
+  }, [finish, model]);
 
   const fallbackProduct: Product = useMemo(() => {
     const isMax = model === "iPhone 18 Pro Max";
     const basePrice = isMax ? 22500 : 20500;
-    const resolvedId = !isMax && catalogProduct?.id ? catalogProduct.id : (isMax ? "iphone-18-pro-max" : "iphone-18-pro");
+    const resolvedId = isMax ? "iphone-18-pro-max" : "iphone-18-pro";
     return {
       id: resolvedId,
-      slug: isMax ? "iphone-18-pro-max" : "iphone-18-pro",
+      slug: resolvedId,
       name: model,
       model,
       brand: "Apple",
@@ -122,12 +124,12 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       condition: "Brand New",
       price: basePrice,
       storage: storageOptions,
-      colors: ["Deep Burgundy", "Space Black", "Natural Titanium", "Light Blue"],
+      colors: DEFAULT_IPHONE_18_COLORS.map((c) => c.name),
       description: "Flagship iPhone 18 Pro in contoured aerospace-grade titanium with advanced camera system.",
       specs: ["A19 Pro chip", "Titanium design", "Super Retina XDR", "Pro camera system"],
       box: ["iPhone with iOS 20", "USB-C Charge Cable", "Documentation"],
       imageTone: "dark",
-      images: [{ src: currentFinishImage, alt: `${model} ${finish}` }],
+      images: [{ src: "/products/campaigns/iphone-18-pro-burgundy-finish.webp", alt: `${model} ${finish}` }],
       variants: [
         { id: `${isMax ? "18pm" : "18p"}-256`, productId: resolvedId, title: `${model} 256GB`, storage: "256GB", price: isMax ? 22500 : 20500, condition: "Brand New", stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" },
         { id: `${isMax ? "18pm" : "18p"}-512`, productId: resolvedId, title: `${model} 512GB`, storage: "512GB", price: isMax ? 25500 : 23000, condition: "Brand New", stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" },
@@ -139,37 +141,59 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       stockQuantity: 10,
       featured: true,
     };
-  }, [model, storageOptions, currentFinishImage, finish, catalogProduct?.id]);
+  }, [model, storageOptions, finish]);
 
+  // Always prefer the real live Supabase product without substituting synthetic variant IDs
   const activeProduct: Product = useMemo(() => {
-    const isMax = model === "iPhone 18 Pro Max";
-    const isTargetModel = isMax
-      ? catalogProduct?.slug === "iphone-18-pro-max" || catalogProduct?.name === "iPhone 18 Pro Max"
-      : catalogProduct?.slug === "iphone-18-pro" || (catalogProduct?.name?.includes("18 Pro") && !catalogProduct?.name?.includes("Max"));
-
-    if (isTargetModel && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest) {
-      const variants = (catalogProduct.variants && catalogProduct.variants.length > 0)
-        ? catalogProduct.variants
-        : fallbackProduct.variants;
-      return {
-        ...catalogProduct,
-        id: catalogProduct.id,
-        variants,
-      };
-    }
+    if (liveModelProduct) return liveModelProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
     return fallbackProduct;
-  }, [model, catalogProduct, fallbackProduct]);
+  }, [liveModelProduct, backendStatus, catalogProduct, fallbackProduct]);
 
-  const configured = resolveConfiguredPrice(activeProduct, { storage, model });
+  // Preload all colour variant galleries so swatch transitions are instantaneous
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = colorOptions.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct, colorOptions]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, targetSlug);
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentFinishImage = primaryColorImage?.src || activeImage || "";
+
+  const configured = resolveConfiguredPrice(activeProduct, { storage, color: finish, model });
+  const isLiveProduct = Boolean(liveModelProduct || (backendStatus === "supabase" && catalogProduct));
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImage)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order ${model}. Configuration: ${storage}, Finish: ${finish}, Price: ${priceLabel}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentFinishImage ? ` Product photo: ${toAbsoluteProductImageUrl(currentFinishImage)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${model} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const added = addConfiguredItem(activeProduct, storage, finish, configured.variant, currentFinishImage, {
       model, storage, finish, tradeIn: tradeIn ? "Yes" : "No",
     });
@@ -184,13 +208,15 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       categoryLabel="iPhone"
       categoryPath="/iphone"
       activeImageSrc={activeImage}
-      activeImageAlt={`${model} ${finish}`}
+      activeImageAlt={`${model} in ${finish}`}
       priceLabel={priceLabel}
       badge="Flagship Pro"
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -228,13 +254,17 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
             onClick={() => {
               setModel("iPhone 18 Pro");
               if (storage === "2TB") setStorage("1TB");
+              setNotice("");
             }}
           />
           <BuyOptionCard
             title="iPhone 18 Pro Max"
             subtitle="6.9-inch Super Retina XDR display with expansive canvas and extended battery life."
             selected={model === "iPhone 18 Pro Max"}
-            onClick={() => setModel("iPhone 18 Pro Max")}
+            onClick={() => {
+              setModel("iPhone 18 Pro Max");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -246,13 +276,15 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
           <p className="apple-buy-step-subtitle">Refined aerospace-grade titanium with textured matte glass back.</p>
         </div>
         <BuyColorSwatches
-          colors={IPHONE_18_COLORS}
+          colors={colorOptions}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentFinishImage}
           previewImageAlt={`${model} in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -269,8 +301,11 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
               key={opt}
               title={opt}
               subtitle={opt === "256GB" ? "Popular capacity for daily pro use" : opt === "512GB" ? "Ample space for extensive 4K capture" : "Maximum capacity for demanding media workflows"}
-              selected={storage === opt}
-              onClick={() => setStorage(opt)}
+              selected={normalizeSpecToken(storage) === normalizeSpecToken(opt)}
+              onClick={() => {
+                setStorage(opt);
+                setNotice("");
+              }}
             />
           ))}
         </div>
@@ -279,7 +314,7 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
       {/* Step 4: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 7: Order Summary & Bag Action */}
+      {/* Step 5: Order Summary & Bag Action */}
       <BuySummaryCard
         title={`Your ${model}`}
         items={[
@@ -292,8 +327,9 @@ export function IphoneBuyExperience({ catalogProduct }: { catalogProduct?: Produ
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

@@ -10,8 +10,8 @@ import { supabase, isSupabaseConfigured } from "../lib/supabase";
 
 import { broadcastPublishedUpdate, subscribeToPublishedUpdates } from "../utils/imageVersioning";
 import type { Product, ProductImage } from "../types/product";
-import { resolveProductColorGallery, resolveProductColorImage } from "../utils/productColorImages";
-import { resolveAdminProductImage } from "../utils/productImages";
+import { resolveColorGallery } from "../utils/productColorGallery";
+import { buildColorVariantId, normalizeColorKey } from "../utils/variantSelection";
 import { localCatalogueImageBySlug } from "../utils/catalogueProductImages";
 
 export interface BuyGalleryItem {
@@ -20,6 +20,8 @@ export interface BuyGalleryItem {
   alt: string;
   title?: string;
   colorFinish?: string;
+  colorVariantId?: string;
+  variantIds?: string[];
   isMain?: boolean;
   position: number;
   uploadedAt?: string;
@@ -27,6 +29,7 @@ export interface BuyGalleryItem {
 
 export interface ProductBuyGallery {
   slug: string;
+  productId?: string;
   productName: string;
   updatedAt: string;
   publishedAt?: string;
@@ -34,6 +37,7 @@ export interface ProductBuyGallery {
   hasDraft?: boolean;
   items: BuyGalleryItem[];
   finishItems?: Record<string, BuyGalleryItem[]>;
+  colorVariantGalleries?: Record<string, BuyGalleryItem[]>;
 }
 
 const STORAGE_KEY_PUBLISHED = "buy_galleries_published_v1";
@@ -84,11 +88,36 @@ export function buildDefaultBuyGallery(product: Product, finish?: string): Produ
   const name = product.name;
   const defaultFinish = finish || product.defaultColor || product.colors?.[0] || "";
 
-  // 1. If product has custom uploaded images in its record
+  // Build per-colour-variant galleries ONLY from genuine colour-matched assets (never mixing sibling colours)
+  const colorVariantGalleries: Record<string, BuyGalleryItem[]> = {};
+  const finishItems: Record<string, BuyGalleryItem[]> = {};
+  if (product.colors && product.colors.length > 0) {
+    for (const c of product.colors) {
+      const resolved = resolveColorGallery({ product, slug, selectedColor: c });
+      if (resolved.hasDedicatedColorImages && resolved.images.length > 0) {
+        const cvId = buildColorVariantId(slug, c);
+        const mapped: BuyGalleryItem[] = resolved.images.map((img, idx) => ({
+          id: `${slug}-cv-${normalizeColorKey(c)}-${idx}`,
+          src: img.src,
+          alt: img.alt || `${name} in ${c}`,
+          title: idx === 0 ? `${c} Main View` : `${c} Angle ${idx + 1}`,
+          colorFinish: c,
+          colorVariantId: cvId,
+          isMain: idx === 0,
+          position: idx,
+          uploadedAt: new Date().toISOString(),
+        }));
+        colorVariantGalleries[cvId] = mapped;
+        finishItems[c] = mapped;
+      }
+    }
+  }
+
+  // 1. If product has custom uploaded images in its record, preserve them as universal gallery items
   if (product.images && product.images.length > 0) {
     const mainIdx = Math.max(0, product.primaryImageIndex ?? 0);
     const items: BuyGalleryItem[] = product.images.map((img, idx) => ({
-      id: `${slug}-img-${idx}-${Date.now()}`,
+      id: `${slug}-img-${idx}`,
       src: img.src,
       alt: img.alt || `${name} view ${idx + 1}`,
       title: idx === mainIdx ? "Primary View" : `Gallery Angle ${idx + 1}`,
@@ -99,56 +128,34 @@ export function buildDefaultBuyGallery(product: Product, finish?: string): Produ
 
     return {
       slug,
+      productId: product.id,
       productName: name,
       updatedAt: new Date().toISOString(),
       isPublished: true,
       hasDraft: false,
       items,
+      finishItems: Object.keys(finishItems).length > 0 ? finishItems : undefined,
+      colorVariantGalleries: Object.keys(colorVariantGalleries).length > 0 ? colorVariantGalleries : undefined,
     };
   }
 
-  // 2. Resolve via authentic catalogue color gallery
-  const defaultGalleryImages = resolveProductColorGallery(product, defaultFinish);
-  const items: BuyGalleryItem[] = defaultGalleryImages.map((img, idx) => ({
+  // 2. Resolve default colour gallery strictly without cross-colour pollution
+  const defaultResolved = resolveColorGallery({ product, slug, selectedColor: defaultFinish });
+  const items: BuyGalleryItem[] = defaultResolved.images.map((img, idx) => ({
     id: `${slug}-seed-${idx}`,
     src: img.src,
     alt: img.alt || `${name} view ${idx + 1}`,
     title: idx === 0 ? "Hero Presentation" : `Angle ${idx + 1}`,
     isMain: idx === 0,
     position: idx,
-    colorFinish: defaultFinish,
+    colorFinish: defaultResolved.hasDedicatedColorImages ? defaultFinish : undefined,
+    colorVariantId: defaultResolved.hasDedicatedColorImages ? buildColorVariantId(slug, defaultFinish) : undefined,
     uploadedAt: new Date().toISOString(),
   }));
 
-  // Build per-finish items if product has colors
-  const finishItems: Record<string, BuyGalleryItem[]> = {};
-  if (product.colors && product.colors.length > 0) {
-    for (const c of product.colors) {
-      const cImg = resolveProductColorImage(product, c);
-      if (cImg) {
-        finishItems[c] = [
-          {
-            id: `${slug}-finish-${c}`,
-            src: cImg,
-            alt: `${name} in ${c}`,
-            title: `${c} Finish View`,
-            colorFinish: c,
-            isMain: true,
-            position: 0,
-            uploadedAt: new Date().toISOString(),
-          },
-          ...items.filter((it, idx) => idx > 0).map((it, idx) => ({
-            ...it,
-            id: `${slug}-finish-${c}-angle-${idx}`,
-            position: idx + 1,
-          })),
-        ];
-      }
-    }
-  }
-
   return {
     slug,
+    productId: product.id,
     productName: name,
     updatedAt: new Date().toISOString(),
     isPublished: true,
@@ -165,6 +172,7 @@ export function buildDefaultBuyGallery(product: Product, finish?: string): Produ
       },
     ],
     finishItems: Object.keys(finishItems).length > 0 ? finishItems : undefined,
+    colorVariantGalleries: Object.keys(colorVariantGalleries).length > 0 ? colorVariantGalleries : undefined,
   };
 }
 
@@ -317,36 +325,64 @@ export async function publishBuyGallery(
 ): Promise<ProductBuyGallery> {
   if (!slug) throw new Error("Product slug is required");
 
-  // Re-sort items by position and ensure primary image is index 0
-  const sortedItems = gallery.items.map((item) => ({ ...item })).sort((a, b) => a.position - b.position);
-  let mainItemIndex = sortedItems.findIndex((it) => it.isMain);
-  if (mainItemIndex < 0 && sortedItems.length > 0) {
-    sortedItems[0].isMain = true;
-    mainItemIndex = 0;
+  const normalizeGalleryList = (list: BuyGalleryItem[]): BuyGalleryItem[] => {
+    const sorted = list.map((it) => ({ ...it })).sort((a, b) => a.position - b.position);
+    const mainIdx = sorted.findIndex((it) => it.isMain);
+    if (mainIdx > 0) {
+      const [mainItem] = sorted.splice(mainIdx, 1);
+      sorted.unshift(mainItem);
+    }
+    return sorted.map((it, idx) => ({
+      ...it,
+      position: idx,
+      isMain: idx === 0,
+    }));
+  };
+
+  const sortedItems = normalizeGalleryList(gallery.items);
+
+  // Normalize and PRESERVE all colour-variant galleries on publish!
+  const normalizedColorGalleries: Record<string, BuyGalleryItem[]> = {};
+  if (gallery.colorVariantGalleries) {
+    for (const [cvId, list] of Object.entries(gallery.colorVariantGalleries)) {
+      if (Array.isArray(list) && list.length > 0) {
+        normalizedColorGalleries[cvId] = normalizeGalleryList(list).map((it) => ({
+          ...it,
+          colorVariantId: it.colorVariantId || cvId,
+        }));
+      }
+    }
   }
 
-  // Put main item at index 0 for consistent storefront ordering
-  if (mainItemIndex > 0) {
-    const [mainItem] = sortedItems.splice(mainItemIndex, 1);
-    sortedItems.unshift(mainItem);
-    // Re-index positions
-    sortedItems.forEach((it, idx) => {
-      it.position = idx;
-    });
+  const normalizedFinishItems: Record<string, BuyGalleryItem[]> = {};
+  if (gallery.finishItems) {
+    for (const [fName, list] of Object.entries(gallery.finishItems)) {
+      if (Array.isArray(list) && list.length > 0) {
+        const cvId = buildColorVariantId(slug, fName);
+        const normList = normalizeGalleryList(list).map((it) => ({
+          ...it,
+          colorFinish: it.colorFinish || fName,
+          colorVariantId: it.colorVariantId || cvId,
+        }));
+        normalizedFinishItems[fName] = normList;
+        if (!normalizedColorGalleries[cvId]) {
+          normalizedColorGalleries[cvId] = normList;
+        }
+      }
+    }
   }
 
   const remoteWrite = Boolean(supabase && isSupabaseConfigured() && !isPreviewEnvironment());
   const currentPublished = remoteWrite
     ? await fetchAllPublishedBuyGalleries(true)
     : readStorage<Record<string, ProductBuyGallery>>(STORAGE_KEY_PUBLISHED, {});
-  const previousItems = currentPublished[slug]?.items;
-  const mainGalleryChanged = gallery.hasDraft && (!previousItems ||
-    JSON.stringify(previousItems) !== JSON.stringify(sortedItems));
   const published: ProductBuyGallery = {
     ...gallery,
     slug,
+    productId: gallery.productId || catalogProduct?.id,
     items: sortedItems,
-    finishItems: mainGalleryChanged ? undefined : gallery.finishItems,
+    finishItems: Object.keys(normalizedFinishItems).length > 0 ? normalizedFinishItems : undefined,
+    colorVariantGalleries: Object.keys(normalizedColorGalleries).length > 0 ? normalizedColorGalleries : undefined,
     updatedAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
     isPublished: true,
@@ -466,12 +502,17 @@ export async function discardDraftBuyGallery(slug: string): Promise<void> {
 export function useBuyGallery(
   product?: Product,
   selectedFinish?: string,
-  fallbackSlug?: string
+  fallbackSlug?: string,
+  screenSize?: string,
+  fallbackImages?: { src: string; alt: string }[]
 ): {
   gallery: ProductBuyGallery;
   images: { src: string; alt: string }[];
-  mainImage: { src: string; alt: string };
+  mainImage?: { src: string; alt: string };
   isCustomPublished: boolean;
+  hasDedicatedColorImages: boolean;
+  colorVariantId: string;
+  source: ReturnType<typeof resolveColorGallery>["source"];
 } {
   const slug = product?.slug || fallbackSlug || "";
   const [, setVersion] = useState(0);
@@ -502,52 +543,37 @@ export function useBuyGallery(
   const defaultGallery = product ? buildDefaultBuyGallery(product, selectedFinish) : null;
   const activeGallery = published || defaultGallery;
 
-  // Resolve finish-specific images without overriding custom published items
-  let resolvedItems = [...(activeGallery?.items || [])];
-  if (!published && selectedFinish && activeGallery?.finishItems?.[selectedFinish]?.length) {
-    resolvedItems = activeGallery.finishItems[selectedFinish];
-  } else if (selectedFinish && resolvedItems.length > 0) {
-    const defaultFinish = (product?.defaultColor || product?.colors?.[0] || "").toLowerCase();
-    const normSelected = selectedFinish.toLowerCase();
-    const firstItemHasDifferentFinish = Boolean(
-      resolvedItems[0]?.colorFinish &&
-      resolvedItems[0].colorFinish.toLowerCase() !== normSelected
-    );
-    const isNonDefaultFinish = Boolean(defaultFinish && normSelected !== defaultFinish);
+  // Use the unified Apple-style colour-variant gallery resolver (strictly colour-isolated!)
+  const resolvedColorGallery = resolveColorGallery({
+    product,
+    slug,
+    selectedColor: selectedFinish,
+    screenSize,
+    publishedGallery: published,
+    fallbackImages,
+  });
 
-    if (firstItemHasDifferentFinish || isNonDefaultFinish) {
-      const matchingFinishItem = resolvedItems.find(
-        (it) => it.colorFinish && it.colorFinish.toLowerCase() === normSelected
-      );
-      if (matchingFinishItem) {
-        resolvedItems = [
-          matchingFinishItem,
-          ...resolvedItems.filter((it) => it.id !== matchingFinishItem.id),
-        ];
-      }
-    }
-  }
-
-  const images = resolvedItems.map((it) => ({
+  const images = resolvedColorGallery.images.map((it) => ({
     src: it.src,
     alt: it.alt || product?.name || "Product image",
   }));
 
-  const mainImage = images[0] || {
-    src: product?.thumbnail || "/brand/buy-sell-gh-logo-scene.webp",
-    alt: product?.name || "Product",
-  };
+  const mainImage = images[0];
 
   return {
     gallery: activeGallery || {
       slug,
+      productId: product?.id,
       productName: product?.name || "",
       updatedAt: new Date().toISOString(),
       isPublished: false,
       items: [],
     },
-    images: images.length > 0 ? images : [mainImage],
+    images,
     mainImage,
     isCustomPublished: Boolean(published),
+    hasDedicatedColorImages: resolvedColorGallery.hasDedicatedColorImages,
+    colorVariantId: resolvedColorGallery.colorVariantId,
+    source: resolvedColorGallery.source,
   };
 }

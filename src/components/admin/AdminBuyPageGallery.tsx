@@ -4,8 +4,6 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Edit3,
   ExternalLink,
   Eye,
@@ -22,7 +20,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-import { useAdminAuth } from "../../admin/AdminAuth";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
 import {
   buildDefaultBuyGallery,
@@ -38,7 +35,8 @@ import {
 import type { MediaItem } from "../../cms/types";
 import type { Product } from "../../types/product";
 import { resolveColorOption } from "../../utils/productColors";
-import { resolveAdminProductImage } from "../../utils/productImages";
+import { resolveColorGallery } from "../../utils/productColorGallery";
+import { buildColorVariantId, normalizeColorKey } from "../../utils/variantSelection";
 import { SwipeableProductGallery } from "../buy/SwipeableProductGallery";
 import { AdminMediaLibrary } from "../../pages/admin/AdminMediaLibrary";
 import "../../styles/admin-buy-gallery.css";
@@ -49,12 +47,66 @@ export interface AdminBuyPageGalleryProps {
   onClose?: () => void;
 }
 
+function getDedicatedFinishItems(
+  gallery: ProductBuyGallery,
+  slug: string,
+  finishName: string
+): BuyGalleryItem[] {
+  const cvId = buildColorVariantId(slug, finishName);
+  const colorKey = normalizeColorKey(finishName);
+
+  // 1. Stable colorVariantGalleries map
+  if (gallery.colorVariantGalleries) {
+    if (gallery.colorVariantGalleries[cvId]?.length) {
+      return [...gallery.colorVariantGalleries[cvId]].sort((a, b) => a.position - b.position);
+    }
+    for (const [k, list] of Object.entries(gallery.colorVariantGalleries)) {
+      const suffix = k.includes("::") ? k.split("::").pop() : k;
+      if (suffix && normalizeColorKey(suffix) === colorKey && list?.length) {
+        return [...list].sort((a, b) => a.position - b.position);
+      }
+    }
+  }
+
+  // 2. Legacy finishItems map
+  if (gallery.finishItems) {
+    for (const [fKey, list] of Object.entries(gallery.finishItems)) {
+      if (normalizeColorKey(fKey) === colorKey && list?.length) {
+        return [...list].sort((a, b) => a.position - b.position);
+      }
+    }
+  }
+
+  // 3. Colour-tagged items inside universal gallery.items
+  const tagged = (gallery.items || []).filter((it) => {
+    if (it.colorVariantId) {
+      const suffix = it.colorVariantId.includes("::")
+        ? it.colorVariantId.split("::").pop()
+        : it.colorVariantId;
+      if (suffix && normalizeColorKey(suffix) === colorKey) return true;
+    }
+    if (it.colorFinish && normalizeColorKey(it.colorFinish) === colorKey) return true;
+    return false;
+  });
+
+  return [...tagged].sort((a, b) => a.position - b.position);
+}
+
+function normalizeList(items: BuyGalleryItem[], finishName?: string, slug?: string): BuyGalleryItem[] {
+  const cvId = finishName && slug ? buildColorVariantId(slug, finishName) : undefined;
+  return items.map((it, idx) => ({
+    ...it,
+    position: idx,
+    isMain: idx === 0,
+    ...(finishName ? { colorFinish: finishName, colorVariantId: cvId } : {}),
+  }));
+}
+
 export function AdminBuyPageGallery({
   product,
   onProductUpdated,
   onClose,
 }: AdminBuyPageGalleryProps) {
-  const { session } = useAdminAuth();
   const slug = product.slug;
 
   // Initialize draft or published or default gallery
@@ -82,6 +134,7 @@ export function AdminBuyPageGallery({
   const [mediaPickerMode, setMediaPickerMode] = useState<"add" | "replace">("add");
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
+  const [previewColor, setPreviewColor] = useState<string>("");
   const [previewIndex, setPreviewIndex] = useState(0);
 
   // Sync when product changes
@@ -93,6 +146,7 @@ export function AdminBuyPageGallery({
     } else {
       setGallery(getPublishedBuyGallerySync(slug) || buildDefaultBuyGallery(product));
     }
+    setActiveFinish("all");
     void fetchAllPublishedBuyGalleries(true)
       .then((published) => {
         if (!active) return;
@@ -109,21 +163,37 @@ export function AdminBuyPageGallery({
     return (product.colors || []).filter(Boolean);
   }, [product.colors]);
 
-  // Items for active finish or universal
+  // Photo counts per finish for at-a-glance owner readiness
+  const finishCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const fName of colorFinishes) {
+      counts[fName] = getDedicatedFinishItems(gallery, slug, fName).length;
+    }
+    return counts;
+  }, [gallery, slug, colorFinishes]);
+
+  const activeColorVariantId =
+    activeFinish !== "all" ? buildColorVariantId(slug, activeFinish) : undefined;
+
+  // Items for active finish or universal gallery
   const displayItems = useMemo(() => {
     if (activeFinish === "all") {
       return [...gallery.items].sort((a, b) => a.position - b.position);
     }
-    // Check finish-specific items
-    if (gallery.finishItems?.[activeFinish]?.length) {
-      return [...gallery.finishItems[activeFinish]].sort((a, b) => a.position - b.position);
-    }
-    // Filter items mapped to this finish or universal items
-    const filtered = gallery.items.filter(
-      (it) => !it.colorFinish || it.colorFinish.toLowerCase() === activeFinish.toLowerCase()
-    );
-    return filtered.length > 0 ? filtered : gallery.items;
-  }, [gallery, activeFinish]);
+    return getDedicatedFinishItems(gallery, slug, activeFinish);
+  }, [gallery, slug, activeFinish]);
+
+  // Preview modal gallery resolved with the exact same storefront engine!
+  const previewResolved = useMemo(() => {
+    const selectedPreviewFinish =
+      previewColor || (activeFinish !== "all" ? activeFinish : colorFinishes[0] || "");
+    return resolveColorGallery({
+      product,
+      slug,
+      selectedColor: selectedPreviewFinish || undefined,
+      publishedGallery: gallery,
+    });
+  }, [product, slug, previewColor, activeFinish, colorFinishes, gallery]);
 
   // Clear messages after a delay
   useEffect(() => {
@@ -141,6 +211,58 @@ export function AdminBuyPageGallery({
     if (product.category === "AirPods") return `/shop/buy-airpods/${slug}`;
     return `/shop/buy-accessory/${slug}`;
   }, [product.category, slug]);
+
+  // Unified mutator: writes to universal items OR the active colour variant map
+  const applyListMutation = (
+    updater: (currentList: BuyGalleryItem[]) => BuyGalleryItem[]
+  ) => {
+    setGallery((prev) => {
+      if (activeFinish === "all") {
+        const sorted = [...prev.items].sort((a, b) => a.position - b.position);
+        const nextItems = normalizeList(updater(sorted));
+        return {
+          ...prev,
+          productId: prev.productId || product.id,
+          items: nextItems,
+          hasDraft: true,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      const cvId = buildColorVariantId(slug, activeFinish);
+      const currentForFinish = getDedicatedFinishItems(prev, slug, activeFinish);
+      const nextForFinish = normalizeList(updater(currentForFinish), activeFinish, slug);
+
+      const nextCvMap = { ...(prev.colorVariantGalleries || {}) };
+      const nextFinishMap = { ...(prev.finishItems || {}) };
+
+      if (nextForFinish.length > 0) {
+        nextCvMap[cvId] = nextForFinish;
+        nextFinishMap[activeFinish] = nextForFinish;
+      } else {
+        delete nextCvMap[cvId];
+        delete nextFinishMap[activeFinish];
+      }
+
+      // Remove stale finish-tagged duplicates from universal items if emptied
+      const colorKey = normalizeColorKey(activeFinish);
+      const cleanedUniversal = prev.items.filter((it) => {
+        if (it.colorFinish && normalizeColorKey(it.colorFinish) === colorKey) return false;
+        if (it.colorVariantId && it.colorVariantId === cvId) return false;
+        return true;
+      });
+
+      return {
+        ...prev,
+        productId: prev.productId || product.id,
+        items: cleanedUniversal,
+        colorVariantGalleries: Object.keys(nextCvMap).length > 0 ? nextCvMap : undefined,
+        finishItems: Object.keys(nextFinishMap).length > 0 ? nextFinishMap : undefined,
+        hasDraft: true,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  };
 
   // --------------------------------------------------------------------------
   // ACTIONS: Save Draft & Publish
@@ -167,7 +289,7 @@ export function AdminBuyPageGallery({
         if (onProductUpdated) onProductUpdated(updatedProd);
       });
       setGallery(pub);
-      setStatusMessage("Gallery published live! Changes are instantly active on buyandsellgh.com.");
+      setStatusMessage("Gallery published live! Colour galleries are instantly active on buyandsellgh.com.");
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Failed to publish gallery.");
     } finally {
@@ -191,138 +313,102 @@ export function AdminBuyPageGallery({
   // ACTIONS: Reorder, Set Main, Delete
   // --------------------------------------------------------------------------
   const handleSetMain = (item: BuyGalleryItem) => {
-    const updated = gallery.items.map((it) => ({
-      ...it,
-      isMain: it.id === item.id,
-    }));
-
-    // Move main item to position 0
-    const mainItem = updated.find((it) => it.id === item.id);
-    const otherItems = updated.filter((it) => it.id !== item.id);
-    const reordered = mainItem ? [mainItem, ...otherItems] : updated;
-
-    reordered.forEach((it, idx) => {
-      it.position = idx;
+    applyListMutation((list) => {
+      const target = list.find((it) => it.id === item.id);
+      const others = list.filter((it) => it.id !== item.id);
+      return target ? [target, ...others] : list;
     });
-
-    const nextGallery: ProductBuyGallery = {
-      ...gallery,
-      items: reordered,
-      hasDraft: true,
-      updatedAt: new Date().toISOString(),
-    };
-
-    setGallery(nextGallery);
-    setStatusMessage(`Set "${item.title || item.alt || "Image"}" as the Main Buy Page image.`);
+    setStatusMessage(
+      `Set "${item.title || item.alt || "Image"}" as the Main ${
+        activeFinish === "all" ? "Buy Page" : activeFinish
+      } image.`
+    );
   };
 
   const handleMove = (index: number, direction: -1 | 1) => {
-    const items = [...gallery.items].sort((a, b) => a.position - b.position);
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-
-    const temp = items[index];
-    items[index] = items[targetIndex];
-    items[targetIndex] = temp;
-
-    items.forEach((it, idx) => {
-      it.position = idx;
-      if (idx === 0) it.isMain = true;
-      else it.isMain = false;
-    });
-
-    setGallery({
-      ...gallery,
-      items,
-      hasDraft: true,
-      updatedAt: new Date().toISOString(),
+    applyListMutation((list) => {
+      const items = [...list];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= items.length) return items;
+      const temp = items[index];
+      items[index] = items[targetIndex];
+      items[targetIndex] = temp;
+      return items;
     });
   };
 
   const handleConfirmDelete = () => {
     if (!itemToDelete) return;
-    const items = gallery.items
-      .filter((it) => it.id !== itemToDelete.id)
-      .map((it, idx) => ({
-        ...it,
-        position: idx,
-        isMain: idx === 0,
-      }));
-
-    setGallery({
-      ...gallery,
-      items,
-      hasDraft: true,
-      updatedAt: new Date().toISOString(),
-    });
-
+    applyListMutation((list) => list.filter((it) => it.id !== itemToDelete.id));
     setStatusMessage("Image removed from gallery draft.");
     setItemToDelete(null);
   };
 
   // --------------------------------------------------------------------------
-  // ACTIONS: File Upload & Media Library
+  // ACTIONS: File Upload (supports single or multi-file per colour!) & Media Library
   // --------------------------------------------------------------------------
   const handleFileUpload = async (files: FileList | null, replaceTarget?: BuyGalleryItem) => {
     if (!files || files.length === 0) return;
-    const file = files[0];
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-    if (!allowed.includes(file.type)) {
-      setErrorMessage("Please select a JPG, PNG, WebP, or AVIF image file.");
-      return;
+    const fileList = replaceTarget ? [files[0]] : Array.from(files);
+
+    for (const f of fileList) {
+      if (!allowed.includes(f.type)) {
+        setErrorMessage("Please select JPG, PNG, WebP, or AVIF image files only.");
+        return;
+      }
     }
 
     try {
       setUploading(true);
       setErrorMessage(null);
-      setUploadProgress(20);
-
-      // Upload to Supabase storage
-      const uploaded = await uploadProductImage(file, slug, (progress) => {
-        setUploadProgress(progress);
-      });
+      setUploadProgress(15);
 
       if (replaceTarget) {
-        // In-place replace
-        const items = gallery.items.map((it) => {
-          if (it.id === replaceTarget.id) {
-            return {
-              ...it,
-              src: uploaded.src,
-              uploadedAt: new Date().toISOString(),
-            };
-          }
-          return it;
+        const uploaded = await uploadProductImage(fileList[0], slug, (progress) => {
+          setUploadProgress(progress);
         });
-
-        setGallery({
-          ...gallery,
-          items,
-          hasDraft: true,
-          updatedAt: new Date().toISOString(),
-        });
+        applyListMutation((list) =>
+          list.map((it) =>
+            it.id === replaceTarget.id
+              ? { ...it, src: uploaded.src, uploadedAt: new Date().toISOString() }
+              : it
+          )
+        );
         setStatusMessage("Image successfully replaced.");
         setItemToReplace(null);
       } else {
-        // Add new
-        const newItem: BuyGalleryItem = {
-          id: `${slug}-custom-${Date.now()}`,
-          src: uploaded.src,
-          alt: uploaded.alt || `${product.name} view`,
-          title: `Gallery Photo ${gallery.items.length + 1}`,
-          position: gallery.items.length,
-          isMain: gallery.items.length === 0,
-          colorFinish: activeFinish !== "all" ? activeFinish : undefined,
-          uploadedAt: new Date().toISOString(),
-        };
+        const uploadedItems: BuyGalleryItem[] = [];
+        for (let i = 0; i < fileList.length; i += 1) {
+          const f = fileList[i];
+          const uploaded = await uploadProductImage(f, slug, (progress) => {
+            const overall = Math.round(((i + progress / 100) / fileList.length) * 100);
+            setUploadProgress(overall);
+          });
+          uploadedItems.push({
+            id: `${slug}-${activeFinish !== "all" ? normalizeColorKey(activeFinish) : "custom"}-${Date.now()}-${i}`,
+            src: uploaded.src,
+            alt:
+              uploaded.alt ||
+              `${product.name}${activeFinish !== "all" ? ` in ${activeFinish}` : ""} view ${displayItems.length + i + 1}`,
+            title:
+              activeFinish !== "all"
+                ? `${activeFinish} — Photo ${displayItems.length + i + 1}`
+                : `Gallery Photo ${displayItems.length + i + 1}`,
+            position: displayItems.length + i,
+            isMain: displayItems.length === 0 && i === 0,
+            colorFinish: activeFinish !== "all" ? activeFinish : undefined,
+            colorVariantId: activeColorVariantId,
+            uploadedAt: new Date().toISOString(),
+          });
+        }
 
-        setGallery({
-          ...gallery,
-          items: [...gallery.items, newItem],
-          hasDraft: true,
-          updatedAt: new Date().toISOString(),
-        });
-        setStatusMessage("New image added to gallery draft.");
+        applyListMutation((list) => [...list, ...uploadedItems]);
+        setStatusMessage(
+          `Added ${uploadedItems.length} ${uploadedItems.length === 1 ? "image" : "images"} to ${
+            activeFinish !== "all" ? `${activeFinish} colour gallery` : "gallery draft"
+          }.`
+        );
       }
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : "Upload failed.");
@@ -334,46 +420,42 @@ export function AdminBuyPageGallery({
 
   const handleMediaSelect = (item: MediaItem) => {
     if (mediaPickerMode === "replace" && itemToReplace) {
-      const items = gallery.items.map((it) => {
-        if (it.id === itemToReplace.id) {
-          return {
-            ...it,
-            src: item.url,
-            alt: item.alt || it.alt,
-            title: item.title || it.title,
-            uploadedAt: new Date().toISOString(),
-          };
-        }
-        return it;
-      });
-
-      setGallery({
-        ...gallery,
-        items,
-        hasDraft: true,
-        updatedAt: new Date().toISOString(),
-      });
+      applyListMutation((list) =>
+        list.map((it) =>
+          it.id === itemToReplace.id
+            ? {
+                ...it,
+                src: item.url,
+                alt: item.alt || it.alt,
+                title: item.title || it.title,
+                uploadedAt: new Date().toISOString(),
+              }
+            : it
+        )
+      );
       setStatusMessage("Replaced image with Media Library asset.");
       setItemToReplace(null);
     } else {
       const newItem: BuyGalleryItem = {
         id: `${slug}-media-${item.id || Date.now()}`,
         src: item.url,
-        alt: item.alt || `${product.name} view`,
-        title: item.title || `Gallery Photo ${gallery.items.length + 1}`,
-        position: gallery.items.length,
-        isMain: gallery.items.length === 0,
+        alt: item.alt || `${product.name}${activeFinish !== "all" ? ` in ${activeFinish}` : ""} view`,
+        title:
+          item.title ||
+          (activeFinish !== "all"
+            ? `${activeFinish} — Photo ${displayItems.length + 1}`
+            : `Gallery Photo ${displayItems.length + 1}`),
+        position: displayItems.length,
+        isMain: displayItems.length === 0,
         colorFinish: activeFinish !== "all" ? activeFinish : undefined,
+        colorVariantId: activeColorVariantId,
         uploadedAt: new Date().toISOString(),
       };
 
-      setGallery({
-        ...gallery,
-        items: [...gallery.items, newItem],
-        hasDraft: true,
-        updatedAt: new Date().toISOString(),
-      });
-      setStatusMessage("Added image from Media Library.");
+      applyListMutation((list) => [...list, newItem]);
+      setStatusMessage(
+        `Added image from Media Library${activeFinish !== "all" ? ` to ${activeFinish}` : ""}.`
+      );
     }
 
     setShowMediaPicker(false);
@@ -381,13 +463,67 @@ export function AdminBuyPageGallery({
 
   const handleSaveItemEdit = () => {
     if (!itemToEdit) return;
-    const items = gallery.items.map((it) => (it.id === itemToEdit.id ? itemToEdit : it));
-    setGallery({
-      ...gallery,
-      items,
-      hasDraft: true,
-      updatedAt: new Date().toISOString(),
-    });
+    const targetFinish = itemToEdit.colorFinish || undefined;
+    const targetCvId = targetFinish ? buildColorVariantId(slug, targetFinish) : undefined;
+    const updatedItem: BuyGalleryItem = {
+      ...itemToEdit,
+      colorFinish: targetFinish,
+      colorVariantId: targetCvId,
+    };
+
+    // If colour assignment changed, move item cleanly between universal & target colour map
+    const currentFinishScope = activeFinish === "all" ? undefined : activeFinish;
+    if (
+      (targetFinish || "").toLowerCase() !== (currentFinishScope || "").toLowerCase()
+    ) {
+      setGallery((prev) => {
+        const nextCvMap = { ...(prev.colorVariantGalleries || {}) };
+        const nextFinishMap = { ...(prev.finishItems || {}) };
+        let nextUniversal = [...prev.items];
+
+        // Remove from current scope
+        if (currentFinishScope) {
+          const oldCvId = buildColorVariantId(slug, currentFinishScope);
+          const remaining = getDedicatedFinishItems(prev, slug, currentFinishScope).filter(
+            (it) => it.id !== updatedItem.id
+          );
+          if (remaining.length > 0) {
+            nextCvMap[oldCvId] = normalizeList(remaining, currentFinishScope, slug);
+            nextFinishMap[currentFinishScope] = nextCvMap[oldCvId];
+          } else {
+            delete nextCvMap[oldCvId];
+            delete nextFinishMap[currentFinishScope];
+          }
+        } else {
+          nextUniversal = normalizeList(nextUniversal.filter((it) => it.id !== updatedItem.id));
+        }
+
+        // Insert into new scope
+        if (targetFinish && targetCvId) {
+          const existingTarget = getDedicatedFinishItems(prev, slug, targetFinish).filter(
+            (it) => it.id !== updatedItem.id
+          );
+          const merged = normalizeList([...existingTarget, updatedItem], targetFinish, slug);
+          nextCvMap[targetCvId] = merged;
+          nextFinishMap[targetFinish] = merged;
+        } else {
+          nextUniversal = normalizeList([...nextUniversal, updatedItem]);
+        }
+
+        return {
+          ...prev,
+          productId: prev.productId || product.id,
+          items: nextUniversal,
+          colorVariantGalleries: Object.keys(nextCvMap).length > 0 ? nextCvMap : undefined,
+          finishItems: Object.keys(nextFinishMap).length > 0 ? nextFinishMap : undefined,
+          hasDraft: true,
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    } else {
+      applyListMutation((list) => list.map((it) => (it.id === updatedItem.id ? updatedItem : it)));
+    }
+
     setItemToEdit(null);
     setStatusMessage("Image details updated.");
   };
@@ -412,7 +548,7 @@ export function AdminBuyPageGallery({
             ) : null}
           </div>
           <p className="text-xs text-slate-500">
-            Manage the scrollable product gallery displayed to customers when configuring and purchasing {product.name}.
+            Manage colour-specific and universal product galleries for {product.name}. Selecting a colour pill assigns uploaded photos exclusively to that colour variant.
           </p>
         </div>
 
@@ -431,6 +567,7 @@ export function AdminBuyPageGallery({
           <button
             type="button"
             onClick={() => {
+              setPreviewColor(activeFinish !== "all" ? activeFinish : colorFinishes[0] || "");
               setPreviewIndex(0);
               setShowPreviewModal(true);
             }}
@@ -503,7 +640,7 @@ export function AdminBuyPageGallery({
       {colorFinishes.length > 0 && (
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-            Filter by Color Finish:
+            Manage Gallery by Colour Variant:
           </span>
           <div className="buy-gallery-finish-bar">
             <button
@@ -511,15 +648,17 @@ export function AdminBuyPageGallery({
               onClick={() => setActiveFinish("all")}
               className={`buy-gallery-finish-pill ${activeFinish === "all" ? "is-active" : ""}`}
             >
-              <span>Universal Gallery (All {colorFinishes.length} Finishes)</span>
+              <span>Universal Gallery ({gallery.items.length})</span>
             </button>
             {colorFinishes.map((fName) => {
               const opt = resolveColorOption(fName);
               const isAct = activeFinish.toLowerCase() === fName.toLowerCase();
+              const count = finishCounts[fName] ?? 0;
               return (
                 <button
                   key={fName}
                   type="button"
+                  data-testid={`admin-finish-pill-${normalizeColorKey(fName)}`}
                   onClick={() => setActiveFinish(fName)}
                   className={`buy-gallery-finish-pill ${isAct ? "is-active" : ""}`}
                 >
@@ -528,10 +667,35 @@ export function AdminBuyPageGallery({
                     style={{ backgroundColor: opt.hex }}
                   />
                   <span>{fName}</span>
+                  <span
+                    className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      count > 0
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {count}
+                  </span>
                 </button>
               );
             })}
           </div>
+          {activeFinish !== "all" && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600 flex flex-wrap items-center justify-between gap-2">
+              <span>
+                Editing dedicated gallery for <strong>{activeFinish}</strong>{" "}
+                <code className="rounded bg-white px-1.5 py-0.5 text-[10px] text-slate-500 border border-slate-200">
+                  {activeColorVariantId}
+                </code>
+                . Customers selecting <strong>{activeFinish}</strong> will see ONLY the photos below.
+              </span>
+              {displayItems.length === 0 && (
+                <span className="font-semibold text-amber-700">
+                  No dedicated photos uploaded yet — upload 1 or more angles below.
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -539,10 +703,12 @@ export function AdminBuyPageGallery({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-slate-700">
-            Active Gallery Images ({displayItems.length} photos)
+            {activeFinish === "all"
+              ? `Universal Gallery Images (${displayItems.length} photos)`
+              : `${activeFinish} Gallery Images (${displayItems.length} photos)`}
           </span>
           <span className="text-[11px] text-slate-400">
-            Image #1 serves as the primary storefront and thumbnail image.
+            Image #1 serves as the primary hero and cart thumbnail for this {activeFinish === "all" ? "product" : "colour"}.
           </span>
         </div>
 
@@ -664,21 +830,29 @@ export function AdminBuyPageGallery({
             </div>
             <div className="space-y-1">
               <span className="text-xs font-bold text-slate-800 block">
-                {uploading ? `Uploading (${uploadProgress}%)...` : "Add Gallery Image"}
+                {uploading
+                  ? `Uploading (${uploadProgress}%)...`
+                  : activeFinish !== "all"
+                  ? `Add ${activeFinish} Photos`
+                  : "Add Gallery Image"}
               </span>
               <span className="text-[11px] text-slate-400 block">
-                JPG, PNG, WebP up to 10MB
+                Select 1 or multiple angles (JPG, PNG, WebP)
               </span>
             </div>
 
             <div className="flex flex-col gap-2 w-full max-w-[180px] pt-1">
               <label className="admin-btn admin-btn-primary admin-btn-sm text-xs cursor-pointer text-center">
-                <span>Upload File</span>
+                <span>Upload File(s)</span>
                 <input
                   type="file"
+                  multiple
                   accept="image/jpeg,image/png,image/webp,image/avif"
                   disabled={uploading}
-                  onChange={(e) => void handleFileUpload(e.target.files)}
+                  onChange={(e) => {
+                    void handleFileUpload(e.target.files);
+                    e.target.value = "";
+                  }}
                   className="hidden"
                 />
               </label>
@@ -871,7 +1045,7 @@ export function AdminBuyPageGallery({
 
               {colorFinishes.length > 0 && (
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Color Finish Mapping</label>
+                  <label className="block font-bold text-slate-700 mb-1">Colour Variant Assignment</label>
                   <select
                     value={itemToEdit.colorFinish || ""}
                     onChange={(e) =>
@@ -879,10 +1053,10 @@ export function AdminBuyPageGallery({
                     }
                     className="w-full p-2.5 rounded-lg border border-slate-200 bg-white"
                   >
-                    <option value="">Universal / Visible for All Finishes</option>
+                    <option value="">Universal / Fallback for Unassigned Colours</option>
                     {colorFinishes.map((fName) => (
                       <option key={fName} value={fName}>
-                        {fName} Only
+                        {fName} Only ({buildColorVariantId(slug, fName)})
                       </option>
                     ))}
                   </select>
@@ -911,7 +1085,7 @@ export function AdminBuyPageGallery({
       )}
 
       {/* ---------------------------------------------------------------------- */}
-      {/* MODAL 4: Desktop & Mobile Interactive Preview                          */}
+      {/* MODAL 4: Desktop & Mobile Interactive Preview (with Live Colour Switcher) */}
       {/* ---------------------------------------------------------------------- */}
       {showPreviewModal && (
         <div className="buy-gallery-modal-overlay" onClick={() => setShowPreviewModal(false)}>
@@ -962,6 +1136,35 @@ export function AdminBuyPageGallery({
               </div>
             </div>
 
+            {colorFinishes.length > 0 && (
+              <div className="px-5 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mr-1">
+                  Test Colour Switching:
+                </span>
+                {colorFinishes.map((fName) => {
+                  const opt = resolveColorOption(fName);
+                  const isAct = (previewColor || colorFinishes[0]).toLowerCase() === fName.toLowerCase();
+                  return (
+                    <button
+                      key={`preview-${fName}`}
+                      type="button"
+                      onClick={() => {
+                        setPreviewColor(fName);
+                        setPreviewIndex(0);
+                      }}
+                      className={`buy-gallery-finish-pill ${isAct ? "is-active" : ""}`}
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full border border-black/20 inline-block"
+                        style={{ backgroundColor: opt.hex }}
+                      />
+                      <span>{fName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             <div className="buy-gallery-modal-body bg-slate-100">
               <div
                 className={
@@ -971,10 +1174,12 @@ export function AdminBuyPageGallery({
                 }
               >
                 <SwipeableProductGallery
-                  images={displayItems.map((it) => ({ src: it.src, alt: it.alt }))}
+                  images={previewResolved.images.map((it) => ({ src: it.src, alt: it.alt }))}
                   activeIndex={previewIndex}
                   onSelectIndex={setPreviewIndex}
                   productName={product.name}
+                  activeColorKey={previewResolved.colorVariantId}
+                  activeColorLabel={previewColor || colorFinishes[0] || undefined}
                 />
               </div>
             </div>

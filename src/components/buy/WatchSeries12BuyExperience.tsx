@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { resolveConfiguredPrice, calculateTradeInBreakdown } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -13,11 +15,10 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
-import { localCatalogueImageBySlug } from "../../utils/catalogueProductImages";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
+import { resolveColorGallery } from "../../utils/productColorGallery";
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 
 const WATCH_12_FINISHES: ColorOption[] = [
   resolveColorOption("Jet Black"),
@@ -26,14 +27,6 @@ const WATCH_12_FINISHES: ColorOption[] = [
   resolveColorOption("Natural Titanium"),
   resolveColorOption("Slate"),
 ];
-
-const WATCH_12_FINISH_IMAGE_MAP: Record<string, string> = {
-  "Jet Black": "/products/campaigns/watch-series-12-hero.webp",
-  Silver: "/products/campaigns/watch-series-12-product.webp",
-  "Rose Gold": "/products/campaigns/watch-series-12-angle.webp",
-  "Natural Titanium": "/products/buy/watch-series-12-angle-white.png",
-  Slate: "/products/campaigns/watch-series-12-cinematic.webp",
-};
 
 const BAND_STYLES = [
   { name: "Sport Band", desc: "Durable fluoroelastomer with pin-and-tuck closure, sweat and water resistant." },
@@ -51,6 +44,7 @@ const BAND_COLORS: ColorOption[] = [
 
 export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { color: entryColor } = useBuyEntrySelection();
 
   const [finish, setFinish] = useState("Jet Black");
@@ -64,7 +58,10 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    if (entryColor && WATCH_12_FINISHES.some((option) => option.name === entryColor)) setFinish(entryColor);
+    if (entryColor && WATCH_12_FINISHES.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = WATCH_12_FINISHES.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
   }, [entryColor]);
 
   useEffect(() => {
@@ -79,33 +76,14 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
     setTradeIn(options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  const currentFinishImg = WATCH_12_FINISH_IMAGE_MAP[finish] || WATCH_12_FINISH_IMAGE_MAP["Jet Black"];
-
-  // Preload all finish assets
   useEffect(() => {
-    preloadProductImages([
-      "/products/campaigns/watch-series-12-hero.webp",
-      "/products/buy/watch-series-12-angle-white.png",
-      "/products/campaigns/watch-series-12-display.webp",
-      localCatalogueImageBySlug["apple-watch-series-11"],
-      localCatalogueImageBySlug["apple-watch-series-10"],
-    ]);
-  }, []);
+    setActiveThumb(0);
+  }, [finish]);
 
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
-    }
-    return [
-      { src: currentFinishImg, alt: `Apple Watch Series 12 in ${finish}` },
-      { src: "/products/buy/watch-series-12-angle-white.png", alt: "Apple Watch Series 12 contoured profile on white" },
-      { src: "/products/campaigns/watch-series-12-display.webp", alt: "Apple Watch Series 12 wide OLED display" },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
-
-  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
+  const liveMatchedProduct = useMemo(() => {
+    if (catalogProduct) return catalogProduct;
+    return activeProducts.find((p) => p.slug === "apple-watch-series-12");
+  }, [catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const is46 = caseSize === "46mm";
@@ -127,7 +105,7 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       specs: ["Wide-Angle OLED Display", "S10 SiP", "Sleep Apnea Notifications", "50m Water Resistance"],
       box: ["Apple Watch Series 12", "Band", "Apple Watch Magnetic Fast Charger to USB-C Cable (1m)"],
       imageTone: "light",
-      images: thumbnails,
+      images: [{ src: "/products/campaigns/watch-series-12-hero.webp", alt: "Apple Watch Series 12" }],
       variants: [
         { id: "aws12-42-gps", productId: slug, title: "42mm GPS", screenSize: "42mm", connectivity: "GPS", price: 7800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
         { id: "aws12-46-gps", productId: slug, title: "46mm GPS", screenSize: "46mm", connectivity: "GPS", price: 8400, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
@@ -139,15 +117,47 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       stockQuantity: 10,
       featured: true,
     };
-  }, [caseSize, connectivity, thumbnails]);
+  }, [caseSize, connectivity]);
 
-  const isExactMatch = Boolean(catalogProduct && (catalogProduct.slug === "apple-watch-series-12" || catalogProduct.name?.includes("12")));
-  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const activeProduct: Product = useMemo(() => {
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
+    return fallbackProduct;
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
+
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = WATCH_12_FINISHES.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, "apple-watch-series-12");
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentFinishImg = primaryColorImage?.src || activeImage || "";
 
   const configured = resolveConfiguredPrice(activeProduct, {
     screenSize: caseSize,
     connectivity,
+    color: finish,
   });
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
@@ -155,10 +165,15 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
   const fullConfigurationTitle = `Apple Watch Series 12 (${caseSize}, ${finish})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Details: Connectivity: ${connectivity}, Band: ${bandStyle} (${bandColor}, ${bandDimension}), Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentFinishImg ? ` Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${fullConfigurationTitle} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const added = addConfiguredItem(
       activeProduct,
       `${caseSize} / ${connectivity}`,
@@ -178,13 +193,15 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       categoryLabel="Watch"
       categoryPath="/watch"
       activeImageSrc={activeImage}
-      activeImageAlt="Apple Watch Series 12"
+      activeImageAlt={`Apple Watch Series 12 in ${finish}`}
       priceLabel={priceLabel}
       badge="Series 12"
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -209,11 +226,13 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
         <BuyColorSwatches
           colors={WATCH_12_FINISHES}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentFinishImg}
           previewImageAlt={`Apple Watch Series 12 in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -229,13 +248,19 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
             title="42mm"
             subtitle="Compact, balanced profile for wrists 130–200mm."
             selected={caseSize === "42mm"}
-            onClick={() => setCaseSize("42mm")}
+            onClick={() => {
+              setCaseSize("42mm");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="46mm"
             subtitle="Expansive display area for wrists 140–210mm."
             selected={caseSize === "46mm"}
-            onClick={() => setCaseSize("46mm")}
+            onClick={() => {
+              setCaseSize("46mm");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -251,13 +276,19 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
             title="GPS"
             subtitle="Connects via Bluetooth and Wi-Fi to your iPhone for calls, messages and notifications."
             selected={connectivity === "GPS"}
-            onClick={() => setConnectivity("GPS")}
+            onClick={() => {
+              setConnectivity("GPS");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="GPS + Cellular"
             subtitle="Stay connected, stream music and take calls even when your phone is left behind."
             selected={connectivity === "GPS + Cellular"}
-            onClick={() => setConnectivity("GPS + Cellular")}
+            onClick={() => {
+              setConnectivity("GPS + Cellular");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -290,6 +321,7 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
         <BuyColorSwatches
           colors={BAND_COLORS}
           selectedColor={bandColor}
+          labelPrefix="Band Color"
           onSelect={setBandColor}
         />
         <div className="apple-buy-cards-grid" style={{ marginTop: "12px" }}>
@@ -311,7 +343,7 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
       {/* Step 6: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 9: Order Summary & Bag Action */}
+      {/* Step 7: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your Apple Watch"
         items={[
@@ -325,8 +357,9 @@ export function WatchSeries12BuyExperience({ catalogProduct }: { catalogProduct?
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

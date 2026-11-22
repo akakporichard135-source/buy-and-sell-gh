@@ -272,17 +272,23 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
           }
         }
 
-        // 2. Verify variant_id in product_variants table
+        // 2. Verify variant_id in product_variants table (and confirm storage alignment)
         if (resolvedVariantId) {
           const { data: exactVariant } = await client
             .from("product_variants")
-            .select("id")
+            .select("id, storage, available, stock_quantity")
             .eq("id", resolvedVariantId)
             .eq("product_id", resolvedProductId)
             .maybeSingle();
 
-          if (!exactVariant) {
-            // Check if matching storage variant exists in product_variants
+          const storageMismatch = Boolean(
+            exactVariant?.storage &&
+              item.selectedStorage &&
+              exactVariant.storage.trim().toLowerCase() !== item.selectedStorage.trim().toLowerCase()
+          );
+
+          if (!exactVariant || exactVariant.available === false || (exactVariant.stock_quantity ?? 0) <= 0 || storageMismatch) {
+            // Check if a matching available storage variant exists in product_variants; otherwise fall back safely to null (parent product record)
             if (item.selectedStorage) {
               const { data: storageVariant } = await client
                 .from("product_variants")
@@ -290,6 +296,7 @@ export const submitOrderToSupabase = async (input: OrderSubmissionInput) => {
                 .eq("product_id", resolvedProductId)
                 .eq("storage", item.selectedStorage)
                 .eq("available", true)
+                .gt("stock_quantity", 0)
                 .order("position", { ascending: true })
                 .limit(1)
                 .maybeSingle();

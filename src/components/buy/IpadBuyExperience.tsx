@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { calculateTradeInBreakdown, resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -13,13 +15,10 @@ import {
   type ColorOption,
 } from "./BuyPrimitives";
 import type { Product } from "../../types/product";
-import { useBuyGallery } from "../../cms/buyGalleryRepository";
-import ipadAirBlueWhite from "../../assets/catalogue-products/ipad-air-11-inch-m3-premium.webp";
-import ipadAirPurpleWhite from "../../assets/catalogue-products/ipad-air-13-inch-m3-premium.webp";
-import ipadKeyboardWhite from "../../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
-
+import { getPublishedBuyGallerySync, useBuyGallery } from "../../cms/buyGalleryRepository";
 import { resolveColorOption } from "../../utils/productColors";
 import { preloadProductImages } from "../../utils/productColorImages";
+import { resolveColorGallery } from "../../utils/productColorGallery";
 
 const IPAD_AIR_COLORS: ColorOption[] = [
   resolveColorOption("Blue"),
@@ -28,15 +27,9 @@ const IPAD_AIR_COLORS: ColorOption[] = [
   resolveColorOption("Space Gray"),
 ];
 
-const IPAD_FINISH_IMAGE_MAP: Record<string, string> = {
-  Blue: "/products/campaigns/ipad-air-blue.webp",
-  "Space Gray": "/products/campaigns/ipad-air-space-gray.webp",
-  Starlight: "/products/campaigns/ipad-air-editorial-pure-white.png",
-  Purple: ipadAirPurpleWhite,
-};
-
 export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { storage: entryStorage, color: entryColor } = useBuyEntrySelection();
 
   const [screenSize, setScreenSize] = useState<"11-inch" | "13-inch">("11-inch");
@@ -49,7 +42,10 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
 
   useEffect(() => {
     if (entryStorage) setStorage(entryStorage);
-    if (entryColor && IPAD_AIR_COLORS.some((option) => option.name === entryColor)) setFinish(entryColor);
+    if (entryColor && IPAD_AIR_COLORS.some((option) => option.name.toLowerCase() === entryColor.toLowerCase())) {
+      const matched = IPAD_AIR_COLORS.find((option) => option.name.toLowerCase() === entryColor.toLowerCase());
+      if (matched) setFinish(matched.name);
+    }
   }, [entryStorage, entryColor]);
 
   useEffect(() => {
@@ -62,65 +58,35 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
     setTradeIn(options?.tradeIn === "Yes");
   }, [editingItem]);
 
-  // Preload all iPad Air finishes
   useEffect(() => {
-    preloadProductImages([
-      "/products/campaigns/ipad-air-blue.webp",
-      "/products/campaigns/ipad-air-space-gray.webp",
-      "/products/campaigns/ipad-air-editorial-pure-white.png",
-      ipadAirPurpleWhite,
-      ipadAirBlueWhite,
-    ]);
-  }, []);
+    setActiveThumb(0);
+  }, [finish]);
 
-  const currentFinishImg = IPAD_FINISH_IMAGE_MAP[finish] || ipadAirBlueWhite;
-
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct, finish);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
-    }
-    return [
-      { src: currentFinishImg, alt: `iPad Air in ${finish}` },
-      { src: ipadAirBlueWhite, alt: "Blue 11-inch iPad Air Liquid Retina display" },
-      { src: ipadAirPurpleWhite, alt: "Purple 13-inch iPad Air expansive canvas" },
-      { src: "/products/campaigns/ipad-air-colors.webp", alt: "iPad Air anodized aluminum color finishes" },
-      { src: ipadKeyboardWhite, alt: "Black iPad Magic Keyboard on white" },
-    ];
-  }, [isCustomPublished, publishedGalleryImages, currentFinishImg, finish]);
-
-  const activeImage = thumbnails[activeThumb]?.src || currentFinishImg;
+  const liveMatchedProduct = useMemo(() => {
+    if (catalogProduct && catalogProduct.slug.startsWith("ipad-air")) return catalogProduct;
+    return activeProducts.find((p) => p.slug === "ipad-air") ?? catalogProduct;
+  }, [catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const is13 = screenSize === "13-inch";
     const isCell = connectivity === "Wi-Fi + Cellular";
-    const storagePriceAdd: Record<string, number> = {
-      "128GB": 0,
-      "256GB": 1800,
-      "512GB": 3600,
-      "1TB": 6800,
-    };
+    const storagePriceAdd: Record<string, number> = { "128GB": 0, "256GB": 1800, "512GB": 3600, "1TB": 6800 };
     const basePrice = (is13 ? 13800 : 9800) + (storagePriceAdd[storage] || 0) + (isCell ? 2000 : 0);
     const slug = "ipad-air";
 
     const variantList = [
-      // 11-inch Wi-Fi
       { id: "ia-11-128-wifi", productId: slug, title: "11-inch 128GB Wi-Fi", screenSize: "11-inch", storage: "128GB", connectivity: "Wi-Fi", price: 9800, condition: "Brand New" as const, stockQuantity: 10, position: 1, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-256-wifi", productId: slug, title: "11-inch 256GB Wi-Fi", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi", price: 11600, condition: "Brand New" as const, stockQuantity: 10, position: 2, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-512-wifi", productId: slug, title: "11-inch 512GB Wi-Fi", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi", price: 13400, condition: "Brand New" as const, stockQuantity: 10, position: 3, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-1tb-wifi", productId: slug, title: "11-inch 1TB Wi-Fi", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi", price: 16600, condition: "Brand New" as const, stockQuantity: 10, position: 4, available: true, isSale: false, stockStatus: "In Stock" as const },
-      // 11-inch Cellular
       { id: "ia-11-128-cell", productId: slug, title: "11-inch 128GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "128GB", connectivity: "Wi-Fi + Cellular", price: 11800, condition: "Brand New" as const, stockQuantity: 10, position: 5, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-256-cell", productId: slug, title: "11-inch 256GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 13600, condition: "Brand New" as const, stockQuantity: 10, position: 6, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-512-cell", productId: slug, title: "11-inch 512GB Wi-Fi + Cellular", screenSize: "11-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 15400, condition: "Brand New" as const, stockQuantity: 10, position: 7, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-11-1tb-cell", productId: slug, title: "11-inch 1TB Wi-Fi + Cellular", screenSize: "11-inch", storage: "1TB", connectivity: "Wi-Fi + Cellular", price: 18600, condition: "Brand New" as const, stockQuantity: 10, position: 8, available: true, isSale: false, stockStatus: "In Stock" as const },
-      // 13-inch Wi-Fi
       { id: "ia-13-128-wifi", productId: slug, title: "13-inch 128GB Wi-Fi", screenSize: "13-inch", storage: "128GB", connectivity: "Wi-Fi", price: 13800, condition: "Brand New" as const, stockQuantity: 10, position: 9, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-13-256-wifi", productId: slug, title: "13-inch 256GB Wi-Fi", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi", price: 15600, condition: "Brand New" as const, stockQuantity: 10, position: 10, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-13-512-wifi", productId: slug, title: "13-inch 512GB Wi-Fi", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi", price: 17400, condition: "Brand New" as const, stockQuantity: 10, position: 11, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-13-1tb-wifi", productId: slug, title: "13-inch 1TB Wi-Fi", screenSize: "13-inch", storage: "1TB", connectivity: "Wi-Fi", price: 20600, condition: "Brand New" as const, stockQuantity: 10, position: 12, available: true, isSale: false, stockStatus: "In Stock" as const },
-      // 13-inch Cellular
       { id: "ia-13-128-cell", productId: slug, title: "13-inch 128GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "128GB", connectivity: "Wi-Fi + Cellular", price: 15800, condition: "Brand New" as const, stockQuantity: 10, position: 13, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-13-256-cell", productId: slug, title: "13-inch 256GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "256GB", connectivity: "Wi-Fi + Cellular", price: 17600, condition: "Brand New" as const, stockQuantity: 10, position: 14, available: true, isSale: false, stockStatus: "In Stock" as const },
       { id: "ia-13-512-cell", productId: slug, title: "13-inch 512GB Wi-Fi + Cellular", screenSize: "13-inch", storage: "512GB", connectivity: "Wi-Fi + Cellular", price: 19400, condition: "Brand New" as const, stockQuantity: 10, position: 15, available: true, isSale: false, stockStatus: "In Stock" as const },
@@ -142,29 +108,57 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       specs: ["11-inch or 13-inch Liquid Retina Display", "Apple Silicon M-Series", "Apple Pencil Pro Support", "12MP Center Stage Camera", "Touch ID"],
       box: ["iPad Air", "USB-C Charge Cable (1m)", "20W USB-C Power Adapter"],
       imageTone: "light",
-      images: thumbnails,
+      images: [{ src: "/products/campaigns/ipad-air-blue.webp", alt: "iPad Air in Blue" }],
       variants: variantList,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
       featured: true,
     };
-  }, [screenSize, storage, connectivity, thumbnails]);
+  }, [screenSize, storage, connectivity]);
 
-  const isExactMatch = Boolean(
-    catalogProduct &&
-      catalogProduct.slug === "ipad-air" &&
-      catalogProduct.condition === "Brand New" &&
-      catalogProduct.variants &&
-      catalogProduct.variants.length > 0
-  );
-  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  // Never substitute fake synthetic variant IDs when live Supabase product exists
+  const activeProduct: Product = useMemo(() => {
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
+    return fallbackProduct;
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
+
+  // Preload all colour variant galleries
+  useEffect(() => {
+    const published = getPublishedBuyGallerySync(activeProduct.slug);
+    const urls = IPAD_AIR_COLORS.flatMap((c) =>
+      resolveColorGallery({
+        product: activeProduct,
+        slug: activeProduct.slug,
+        selectedColor: c.name,
+        publishedGallery: published,
+      }).images.map((img) => img.src)
+    );
+    preloadProductImages(urls);
+  }, [activeProduct]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, finish, "ipad-air");
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src;
+  const currentFinishImg = primaryColorImage?.src || activeImage || "";
 
   const configured = resolveConfiguredPrice(activeProduct, {
     screenSize,
     storage,
     connectivity,
+    color: finish,
   });
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
   const tradeInBreakdown = calculateTradeInBreakdown(configured.price, tradeIn);
@@ -172,10 +166,15 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
   const fullConfigurationTitle = `iPad Air ${screenSize} (${storage}, ${finish}, ${connectivity})`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}. Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}. Details: Screen: ${screenSize}, Storage: ${storage}, Finish: ${finish}, Connectivity: ${connectivity}, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}${tradeIn ? ", Trade-in: Yes" : ""}.${currentFinishImg ? ` Product photo: ${toAbsoluteProductImageUrl(currentFinishImg)}` : ""} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${fullConfigurationTitle} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const added = addConfiguredItem(
       activeProduct,
       storage,
@@ -197,13 +196,15 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       categoryLabel="iPad"
       categoryPath="/ipad"
       activeImageSrc={activeImage}
-      activeImageAlt="iPad Air"
+      activeImageAlt={`iPad Air in ${finish}`}
       priceLabel={priceLabel}
       badge="Liquid Retina"
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel={finish}
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
@@ -230,13 +231,19 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
             title="11-inch iPad Air"
             subtitle="11-inch Liquid Retina display. Lightweight, ultraportable design perfect for reading and everyday travel."
             selected={screenSize === "11-inch"}
-            onClick={() => setScreenSize("11-inch")}
+            onClick={() => {
+              setScreenSize("11-inch");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="13-inch iPad Air"
             subtitle="13-inch Liquid Retina display. 30% more screen area for multitasking with Stage Manager and creative apps."
             selected={screenSize === "13-inch"}
-            onClick={() => setScreenSize("13-inch")}
+            onClick={() => {
+              setScreenSize("13-inch");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -250,11 +257,13 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
         <BuyColorSwatches
           colors={IPAD_AIR_COLORS}
           selectedColor={finish}
+          productSlug={activeProduct.slug}
           previewImageSrc={currentFinishImg}
           previewImageAlt={`iPad Air in ${finish}`}
           onSelect={(c) => {
             setFinish(c);
             setActiveThumb(0);
+            setNotice("");
           }}
         />
       </section>
@@ -280,7 +289,10 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
                   : "Pro capacity for large 4K video files and illustration files"
               }
               selected={storage === cap}
-              onClick={() => setStorage(cap)}
+              onClick={() => {
+                setStorage(cap);
+                setNotice("");
+              }}
             />
           ))}
         </div>
@@ -297,13 +309,19 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
             title="Wi-Fi"
             subtitle="Ultra-fast Wi-Fi 6E connectivity for home, office and school networks."
             selected={connectivity === "Wi-Fi"}
-            onClick={() => setConnectivity("Wi-Fi")}
+            onClick={() => {
+              setConnectivity("Wi-Fi");
+              setNotice("");
+            }}
           />
           <BuyOptionCard
             title="Wi-Fi + Cellular"
             subtitle="Connect to 5G cellular data networks when Wi-Fi is unavailable on the go."
             selected={connectivity === "Wi-Fi + Cellular"}
-            onClick={() => setConnectivity("Wi-Fi + Cellular")}
+            onClick={() => {
+              setConnectivity("Wi-Fi + Cellular");
+              setNotice("");
+            }}
           />
         </div>
       </section>
@@ -311,7 +329,7 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
       {/* Step 5: Trade-in */}
       <BuyTradeInStep tradeInSelected={tradeIn} onSelect={setTradeIn} />
 
-      {/* Step 8: Order Summary & Bag Action */}
+      {/* Step 6: Order Summary & Bag Action */}
       <BuySummaryCard
         title="Your iPad Air"
         items={[
@@ -325,8 +343,9 @@ export function IpadBuyExperience({ catalogProduct }: { catalogProduct?: Product
         previousPriceLabel={previousPriceLabel}
         tradeInBreakdown={tradeInBreakdown}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

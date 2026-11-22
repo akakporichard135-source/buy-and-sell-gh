@@ -4,6 +4,7 @@ import { getPublicPurchaseAction } from "../catalog/productPurchaseAction";
 import type { CartItem, Product, ProductVariant } from "../types/product";
 import type { CartPromotionResult, PromotionCampaign } from "../types/promotion";
 import { addCartItem, cartItemKey, cartSubtotal, cartTotalItems, normalizeCartItems, removeCartItem, replaceCartItem, updateCartQuantity, isSoldOut, getItemEffectivePrice } from "./cartOperations";
+import { resolveProductSelection } from "../utils/variantSelection";
 import { evaluateCartPromotions, freeGiftToCartItem } from "../promotions/promotionEngine";
 import { fetchPromotions, subscribeToPromotions } from "../promotions/supabasePromotionsRepository";
 
@@ -94,7 +95,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(id);
   }, [toast]);
 
-  const resolveSelection = (product: Product, storage: string, variant?: ProductVariant) => {
+  const resolveSelection = (
+    product: Product,
+    storage: string,
+    color?: string,
+    variant?: ProductVariant,
+    options?: Record<string, string>,
+  ) => {
     if (loading || (import.meta.env.PROD && backendStatus !== "supabase")) {
       setToast("Please wait for current product availability to load.");
       return null;
@@ -105,7 +112,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setToast("This product is not available in the current catalogue.");
         return null;
       }
-      return { product, variant };
+      const fallbackResolution = resolveProductSelection(product, {
+        storage,
+        color,
+        finish: options?.finish,
+        chip: options?.chip,
+        memory: options?.memory,
+        screenSize: options?.screenSize ?? options?.caseSize,
+        connectivity: options?.connectivity,
+        variantId: variant?.id,
+      });
+      if (!fallbackResolution.purchasable) {
+        setToast(fallbackResolution.errorMessage || `${product.name} is currently unavailable.`);
+        return null;
+      }
+      return {
+        product,
+        variant: fallbackResolution.variant,
+        effectiveStock: fallbackResolution.effectiveStock,
+        resolvedStorage: fallbackResolution.resolvedStorage,
+      };
     }
     if (liveProduct.archived || liveProduct.available === false || isSoldOut(liveProduct)) {
       setToast(`${liveProduct.name} is currently out of stock.`);
@@ -115,28 +141,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast(`${liveProduct.name} is not configured for direct purchase yet.`);
       return null;
     }
-    // A configured variant must still exist under the canonical product ID.
-    const liveVariant = variant
-      ? liveProduct.variants?.find((candidate) => candidate.id === variant.id)
-      : undefined;
-    if (variant && !liveVariant && backendStatus === "supabase") {
-      setToast("This product configuration is no longer available.");
-      return null;
-    }
-    if (backendStatus === "supabase" && (liveProduct.variants?.length ?? 0) > 0 && !liveVariant) {
-      setToast("Select an available priced variant before adding this product.");
-      return null;
-    }
-    if (liveVariant && (
-      liveVariant.available === false || liveVariant.stockQuantity <= 0 ||
-      !Number.isFinite(liveVariant.price) || liveVariant.price <= 0 ||
-      (liveVariant.storage && storage && liveVariant.storage.toLowerCase() !== storage.toLowerCase())
-    )) {
-      setToast("The selected variant is unavailable or does not match the chosen storage.");
+
+    const resolution = resolveProductSelection(liveProduct, {
+      storage,
+      color,
+      finish: options?.finish,
+      chip: options?.chip,
+      memory: options?.memory,
+      screenSize: options?.screenSize ?? options?.caseSize,
+      connectivity: options?.connectivity,
+      variantId: variant?.id,
+    });
+
+    if (!resolution.purchasable) {
+      setToast(
+        resolution.errorMessage ||
+          "The selected configuration is currently unavailable."
+      );
       return null;
     }
 
-    return { product: liveProduct, variant: liveVariant ?? variant };
+    // Preserve a readable title if the caller supplied a richer display title for the SAME live variant ID
+    const resolvedVariant =
+      resolution.variant && variant?.id === resolution.variant.id && variant.title
+        ? { ...resolution.variant, title: variant.title }
+        : resolution.variant;
+
+    return {
+      product: liveProduct,
+      variant: resolvedVariant,
+      effectiveStock: resolution.effectiveStock,
+      resolvedStorage: resolution.resolvedStorage,
+    };
   };
 
   // Reconcile cart items with authoritative database product IDs when catalog loads
@@ -167,22 +203,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = (
     product: Product,
-    storage = product.storage[0],
-    color = product.colors[0],
+    storage = product.storage[0] ?? "Standard",
+    color = product.colors[0] ?? "Standard",
     quantity = 1,
     variant?: ProductVariant,
     colorImageSrc?: string,
     options?: Record<string, string>,
   ) => {
-    const selection = resolveSelection(product, storage, variant);
+    const selection = resolveSelection(product, storage, color, variant, options);
     if (!selection) return false;
-    const { product: currentProduct, variant: currentVariant } = selection;
-    const effectiveStock = currentProduct.stockQuantity > 0 && (currentVariant?.stockQuantity ?? 0) > 0
-      ? Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity)
-      : (currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
+    const { product: currentProduct, variant: currentVariant, effectiveStock, resolvedStorage } = selection;
+    const finalStorage = storage || resolvedStorage;
     const existingQuantity = items
-      .filter((item) => item.product.id === currentProduct.id && item.storage === storage && item.color === color &&
-        (!currentVariant?.id || item.variantId === currentVariant.id))
+      .filter((item) => item.product.id === currentProduct.id && item.storage === finalStorage && item.color === color &&
+        (item.variantId ?? "") === (currentVariant?.id ?? ""))
       .reduce((sum, item) => sum + item.quantity, 0);
     const productQuantity = items
       .filter((item) => item.product.id === currentProduct.id)
@@ -192,7 +226,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast(`Only ${effectiveStock} ${currentProduct.name} available right now.`);
       return false;
     }
-    setItems((current) => addCartItem(current, currentProduct, storage, color, quantity, currentVariant, colorImageSrc, options));
+    setItems((current) => addCartItem(current, currentProduct, finalStorage, color, quantity, currentVariant, colorImageSrc, options));
     setToast(`${currentProduct.name} added to cart.`);
     return true;
   };
@@ -211,13 +245,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setToast("This item is no longer in your bag. Review your bag before adding it again.");
       return false;
     }
-    const selection = resolveSelection(product, storage, variant);
+    const selection = resolveSelection(product, storage, color, variant, options);
     if (!selection) return false;
-    const { product: currentProduct, variant: currentVariant } = selection;
-    const effectiveStock = Math.min(currentProduct.stockQuantity, currentVariant?.stockQuantity ?? currentProduct.stockQuantity);
+    const { product: currentProduct, variant: currentVariant, effectiveStock, resolvedStorage } = selection;
+    const finalStorage = storage || resolvedStorage;
     const existingQuantity = items
       .filter((item) => cartItemKey(item) !== targetKey && item.product.id === currentProduct.id &&
-        item.storage === storage && item.color === color && (!currentVariant?.id || item.variantId === currentVariant.id))
+        item.storage === finalStorage && item.color === color && (item.variantId ?? "") === (currentVariant?.id ?? ""))
       .reduce((sum, item) => sum + item.quantity, 0);
     const productQuantity = items
       .filter((item) => cartItemKey(item) !== targetKey && item.product.id === currentProduct.id)
@@ -228,7 +262,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
     setItems((current) => replaceCartItem(
-      current, targetKey, currentProduct, storage, color, quantity, currentVariant, colorImageSrc, options,
+      current, targetKey, currentProduct, finalStorage, color, quantity, currentVariant, colorImageSrc, options,
     ));
     setToast(`${currentProduct.name} updated in your bag.`);
     return true;

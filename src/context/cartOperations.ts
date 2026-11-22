@@ -1,5 +1,6 @@
 import type { CartItem, Product, ProductVariant } from "../types/product";
 import { isProductOrderable } from "../catalog/productCatalog";
+import { resolveProductSelection } from "../utils/variantSelection";
 
 export const isSoldOut = (product: Product) => !isProductOrderable(product);
 
@@ -57,8 +58,15 @@ export const addCartItem = (
 
   const matchedVariant =
     variant ??
-    product.variants?.find((v) => v.storage === storage && v.available !== false) ??
-    product.variants?.[0];
+    resolveProductSelection(product, {
+      storage,
+      color,
+      finish: options?.finish,
+      chip: options?.chip,
+      memory: options?.memory,
+      screenSize: options?.screenSize ?? options?.caseSize,
+      connectivity: options?.connectivity,
+    }).variant;
 
   const variantId = matchedVariant?.id;
   const variantTitle = matchedVariant?.title;
@@ -73,7 +81,7 @@ export const addCartItem = (
       item.product.id === product.id &&
       item.storage === storage &&
       item.color === color &&
-      (!variantId || item.variantId === variantId)
+      (item.variantId ?? "") === (variantId ?? "")
   );
 
   if (existing) {

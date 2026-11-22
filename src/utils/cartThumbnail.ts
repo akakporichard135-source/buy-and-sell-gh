@@ -64,7 +64,6 @@ function isMultiDeviceImage(url: string | undefined): boolean {
     lower.includes("front-back") ||
     lower.includes("front_back") ||
     lower.includes("pair") ||
-    lower.includes("duo") ||
     lower.includes("lineup") ||
     lower.includes("four-finishes") ||
     lower.includes("colors-white")
@@ -83,23 +82,17 @@ export function resolveCartItemThumbnail(item: CartItem): string {
   const colorNorm = (item.color || "").trim().toLowerCase();
   const isIphone = slug.startsWith("iphone") || item.product?.category?.toLowerCase() === "phones";
 
-  // 1. If it's an iPhone, check the approved single-rear map for the selected finish
+  // 1. Prioritize the exact selected colour image passed from the active colour gallery
+  if (item.colorImageSrc && !isMultiDeviceImage(item.colorImageSrc)) {
+    return item.colorImageSrc;
+  }
+
+  // 2. For explicitly mapped flagship iPhone models ONLY (never cross-substituting another iPhone model's photo!)
   if (isIphone) {
     const modelMap = IPHONE_SINGLE_REAR_MAP[slug];
     if (modelMap && colorNorm && modelMap[colorNorm]) {
       return modelMap[colorNorm];
     }
-    // Check fallback for any known iPhone finish
-    for (const map of Object.values(IPHONE_SINGLE_REAR_MAP)) {
-      if (colorNorm && map[colorNorm]) {
-        return map[colorNorm];
-      }
-    }
-  }
-
-  // 2. If a colorImageSrc is provided and is NOT a multi-device front-and-back image, use it
-  if (item.colorImageSrc && !isMultiDeviceImage(item.colorImageSrc)) {
-    return item.colorImageSrc;
   }
 
   // 3. If owner uploaded custom photos for this specific item and not multi-device, use primary

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SEO } from "../SEO";
 import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useProductCatalog } from "../../catalog/ProductCatalogContext";
+import { isProductOrderable } from "../../catalog/productCatalog";
 import { resolveConfiguredPrice } from "../../utils/productPricing";
 import { toAbsoluteProductImageUrl, whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -23,8 +25,15 @@ const AIRPODS_EDITIONS = [
   },
 ];
 
+const AIRPODS_FALLBACK_IMAGES = [
+  { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
+  { src: "/products/campaigns/airpods-5-earbuds.webp", alt: "AirPods 5 acoustic vents, microphone mesh, and transducer ports" },
+  { src: "/products/campaigns/airpods-5-front.webp", alt: "AirPods 5 front-facing case with status LED and USB-C port" },
+];
+
 export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Product }) {
   const { addConfiguredItem, editingItem, customer } = useBuyJourney();
+  const { activeProducts, backendStatus } = useProductCatalog();
   const { storage: entryStorage } = useBuyEntrySelection();
 
   const [edition, setEdition] = useState("AirPods 5");
@@ -40,20 +49,10 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
     setEdition(editingItem.options?.edition || editingItem.storage);
   }, [editingItem]);
 
-  const { images: publishedGalleryImages, isCustomPublished } = useBuyGallery(catalogProduct);
-
-  const thumbnails = useMemo(() => {
-    if (isCustomPublished && publishedGalleryImages.length > 0) {
-      return publishedGalleryImages;
-    }
-    return [
-      { src: "/products/campaigns/airpods-5-product.webp", alt: "AirPods 5 in open charging case showcasing precision acoustic stems" },
-      { src: "/products/campaigns/airpods-5-earbuds.webp", alt: "AirPods 5 acoustic vents, microphone mesh, and transducer ports" },
-      { src: "/products/campaigns/airpods-5-front.webp", alt: "AirPods 5 front-facing case with status LED and USB-C port" },
-    ];
-  }, [isCustomPublished, publishedGalleryImages]);
-
-  const activeImage = thumbnails[activeThumb]?.src || "/products/campaigns/airpods-5-product.webp";
+  const liveMatchedProduct = useMemo(() => {
+    if (catalogProduct) return catalogProduct;
+    return activeProducts.find((p) => p.slug === "airpods-5" || p.slug === "airpods-4");
+  }, [catalogProduct, activeProducts]);
 
   const fallbackProduct: Product = useMemo(() => {
     const isAnc = edition === "AirPods 5 with Active Noise Cancellation";
@@ -104,44 +103,62 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
       specs: ["H2 Silicon", "Personalized Spatial Audio with Dynamic Head Tracking", "Voice Isolation", "USB-C Charging Case", "Up to 30 Hours Listening Time"],
       box: ["AirPods 5", "Charging Case (USB-C)", "Documentation"],
       imageTone: "light",
-      images: thumbnails,
+      images: AIRPODS_FALLBACK_IMAGES,
       variants: variantList,
       available: true,
       stockStatus: "In Stock" as const,
       stockQuantity: 10,
       featured: true,
     };
-  }, [edition, thumbnails]);
+  }, [edition]);
 
-  const isExactMatch = Boolean(
-    catalogProduct &&
-      (catalogProduct.slug === "airpods-5" || catalogProduct.slug.includes("airpods-5")) &&
-      catalogProduct.condition === "Brand New" &&
-      catalogProduct.variants &&
-      catalogProduct.variants.length > 0
-  );
-  const activeProduct = isExactMatch && catalogProduct && catalogProduct.price > 0 && !catalogProduct.priceOnRequest ? catalogProduct : fallbackProduct;
+  const isLiveProduct = Boolean(liveMatchedProduct || (backendStatus === "supabase" && catalogProduct));
+  const activeProduct: Product = useMemo(() => {
+    if (liveMatchedProduct) return liveMatchedProduct;
+    if (backendStatus === "supabase" && catalogProduct) return catalogProduct;
+    return fallbackProduct;
+  }, [liveMatchedProduct, backendStatus, catalogProduct, fallbackProduct]);
+
+  const {
+    images: thumbnails,
+    mainImage: primaryColorImage,
+    colorVariantId,
+  } = useBuyGallery(activeProduct, "White", activeProduct.slug, undefined, AIRPODS_FALLBACK_IMAGES);
+
+  const activeImage = thumbnails[activeThumb]?.src || primaryColorImage?.src || "/products/campaigns/airpods-5-product.webp";
+  const primaryImageSrc = primaryColorImage?.src || activeImage;
 
   const configured = resolveConfiguredPrice(activeProduct, {
     storage: edition,
     model: edition,
+    color: "White",
   });
+  const purchasable = Boolean(
+    configured.purchasable &&
+      configured.price > 0 &&
+      (!isLiveProduct || isProductOrderable(activeProduct))
+  );
   const priceLabel = configured.formattedPrice;
   const previousPriceLabel = configured.formattedPreviousPrice;
 
   const fullConfigurationTitle = `${edition} (White)`;
 
   const whatsAppEnquiry = whatsappUrl(
-    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Product photo: ${toAbsoluteProductImageUrl("/products/campaigns/airpods-5-product.webp")} Please confirm availability.`
+    `Hello Buy & Sell GH, I would like to order/enquire about ${fullConfigurationTitle}. Price: ${priceLabel}, Finish: White, Fulfillment: ${customer.fulfilmentType === "pickup" ? "In-Store Pickup (Dome)" : "Doorstep Delivery"}. Product photo: ${toAbsoluteProductImageUrl(primaryImageSrc)} Please confirm availability.`
   );
 
   const handleAddToBag = () => {
+    if (!purchasable) {
+      setNotice(`Connecting to WhatsApp to confirm ${edition} availability...`);
+      window.open(whatsAppEnquiry, "_blank", "noopener,noreferrer");
+      return;
+    }
     const added = addConfiguredItem(
       activeProduct,
       edition,
       "White",
       configured.variant,
-      "/products/campaigns/airpods-5-product.webp",
+      primaryImageSrc,
       { edition, finish: "White" },
     );
     if (added) {
@@ -151,27 +168,29 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
 
   return (
     <BuyLayout
-      name="AirPods 5"
+      name={activeProduct.name || "AirPods 5"}
       categoryLabel="AirPods"
       categoryPath="/airpods"
       activeImageSrc={activeImage}
-      activeImageAlt="AirPods 5 in pure white"
+      activeImageAlt={`${activeProduct.name || "AirPods 5"} in White`}
       priceLabel={priceLabel}
       badge="Wireless Audio"
       thumbnails={thumbnails}
       activeThumbnailIndex={activeThumb}
       onSelectThumbnail={setActiveThumb}
-      mobileActionLabel="Add to Bag"
+      activeColorKey={colorVariantId}
+      activeColorLabel="White"
+      mobileActionLabel={purchasable ? "Add to Bag" : "Enquire"}
       onMobileAction={handleAddToBag}
     >
       <SEO
-        title="Buy AirPods 5 | Buy & Sell GH"
-        description="Buy original AirPods 5 in Accra, Ghana. Clean open-ear design, USB-C case, spatial audio, and trusted pickup or delivery with Buy & Sell GH."
+        title={`Buy ${activeProduct.name || "AirPods 5"} | Buy & Sell GH`}
+        description="Buy original AirPods in Accra, Ghana. Clean open-ear design, USB-C case, spatial audio, and trusted pickup or delivery with Buy & Sell GH."
       />
 
       <div className="apple-buy-intro">
-        <p className="apple-buy-intro-eyebrow">AirPods 5</p>
-        <h2 className="apple-buy-intro-title">Buy AirPods 5</h2>
+        <p className="apple-buy-intro-eyebrow">{activeProduct.name || "AirPods 5"}</p>
+        <h2 className="apple-buy-intro-title">Buy {activeProduct.name || "AirPods 5"}</h2>
         <p className="apple-buy-intro-lede">
           Acoustic clarity redefined. Contoured fit for all-day comfort, rich bass, and seamless connection across all your Apple devices.
         </p>
@@ -190,7 +209,10 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
               title={ed.name}
               subtitle={ed.desc}
               selected={edition === ed.name}
-              onClick={() => setEdition(ed.name)}
+              onClick={() => {
+                setEdition(ed.name);
+                setNotice("");
+              }}
             />
           ))}
         </div>
@@ -212,9 +234,9 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         </div>
       </section>
 
-      {/* Step 5: Order Summary & Bag Action */}
+      {/* Step 3: Order Summary & Bag Action */}
       <BuySummaryCard
-        title="Your AirPods 5"
+        title={`Your ${activeProduct.name || "AirPods 5"}`}
         items={[
           { label: "Edition", value: edition },
           { label: "Finish", value: "White" },
@@ -223,8 +245,9 @@ export function AirpodsBuyExperience({ catalogProduct }: { catalogProduct?: Prod
         priceLabel={priceLabel}
         previousPriceLabel={previousPriceLabel}
         onAddToBag={handleAddToBag}
-        addToBagLabel="Add to Bag"
+        addToBagLabel={purchasable ? "Add to Bag" : "Enquire on Availability"}
         whatsAppHref={whatsAppEnquiry}
+        warningNotice={!purchasable ? configured.errorMessage : undefined}
         notice={notice}
       />
     </BuyLayout>

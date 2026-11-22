@@ -6,7 +6,7 @@
 
 import type { Product } from "../types/product";
 import { localCatalogueImageBySlug } from "./catalogueProductImages";
-import { hasOwnerUploadedProductImages } from "./productImages";
+import { resolveColorGallery } from "./productColorGallery";
 
 // Cache for preloaded image URLs so they are only fetched once per session
 const PRELOADED_CACHE = new Set<string>();
@@ -346,68 +346,20 @@ export function resolveProductColorImage(
 
 /**
  * Universal Gallery Resolver
- * Returns the matching primary image along with authentic complementary angle thumbnails
+ * Strictly returns ONLY images belonging to the selected colour (or clean neutral fallback when
+ * colour-specific photography has not yet been uploaded) — never polluting thumbnails with wrong colours.
  */
 export function resolveProductColorGallery(
   product?: Product,
   color?: string,
   fallbackGallery: { src: string; alt: string }[] = []
 ): { src: string; alt: string }[] {
-  const primaryImg = resolveProductColorImage(product, color);
-  const name = product?.name || "Product";
-  const colorLabel = color ? ` in ${color}` : "";
-
-  if (!primaryImg) {
-    return fallbackGallery;
-  }
-
-  const gallery: { src: string; alt: string }[] = [
-    { src: primaryImg, alt: `${name}${colorLabel}` },
-  ];
-
-  const slug = product?.slug || "";
-
-  // Add authentic secondary angles for key flagship models
-  if (slug.includes("iphone-18-pro")) {
-    if (primaryImg !== "/products/buy/iphone-18-pro-gallery-2-silver.jpg") {
-      gallery.push({ src: "/products/buy/iphone-18-pro-gallery-2-silver.jpg", alt: `${name} Silver / Natural Titanium dual view` });
-    }
-    if (primaryImg !== "/products/buy/iphone-18-pro-gallery-3-blue.jpg") {
-      gallery.push({ src: "/products/buy/iphone-18-pro-gallery-3-blue.jpg", alt: `${name} Light Blue dual view` });
-    }
-  } else if (slug.includes("macbook-air")) {
-    const showcase = "/products/buy/macbook-air-buy-showcase.jpg";
-    if (primaryImg !== showcase) {
-      gallery.push({ src: showcase, alt: `${name} Midnight front view` });
-    }
-    gallery.push({ src: "/products/campaigns/macbook-air-lineup.webp", alt: `${name} profile and ports` });
-  } else if (slug.includes("macbook-pro")) {
-    const altCutout = "/products/campaigns/macbook-pro-cutout.webp";
-    if (primaryImg !== altCutout) {
-      gallery.push({ src: altCutout, alt: `${name} Liquid Retina XDR display` });
-    }
-  } else if (slug.includes("ipad-pro")) {
-    const cinematic = "/products/campaigns/ipad-pro-cinematic.webp";
-    if (primaryImg !== cinematic) {
-      gallery.push({ src: cinematic, alt: `${name} Ultra Retina XDR tandem OLED` });
-    }
-  } else if (slug.includes("ipad-air")) {
-    gallery.push({ src: "/products/campaigns/ipad-air-colors.webp", alt: `${name} anodized aluminum finishes` });
-  } else if (slug.includes("ultra")) {
-    const orange = "/products/campaigns/watch-ultra-4-orange.webp";
-    if (primaryImg !== orange) {
-      gallery.push({ src: orange, alt: `${name} Titanium case and Alpine Loop` });
-    }
-  } else if (slug.includes("watch")) {
-    gallery.push({ src: "/products/buy/watch-series-12-angle-white.png", alt: `${name} contoured case profile` });
-  }
-
-  // If user provided a fallbackGallery with extra photos, append non-duplicates
-  for (const item of fallbackGallery) {
-    if (!gallery.some((g) => g.src === item.src)) {
-      gallery.push(item);
-    }
-  }
-
-  return gallery;
+  const resolved = resolveColorGallery({
+    product,
+    selectedColor: color,
+    fallbackImages: fallbackGallery,
+  });
+  return resolved.images.length > 0
+    ? resolved.images.map((img) => ({ src: img.src, alt: img.alt }))
+    : fallbackGallery;
 }

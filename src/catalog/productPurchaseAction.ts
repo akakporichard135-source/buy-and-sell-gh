@@ -1,5 +1,6 @@
 import type { Product } from "../types/product";
 import { isProductPurchasable, isProductOrderable } from "./productCatalog";
+import { isParentProductInStock, isVariantPurchasable } from "../utils/variantSelection";
 
 export type ProductPurchaseAction = "buy" | "view-pricing" | "enquire";
 const actionTag = "purchase-action:";
@@ -24,13 +25,6 @@ export function withProductPurchaseAction(tags: string[] = [], action: ProductPu
 export function getBuyConfigurationError(product: Product): string | null {
   const variants = product.variants ?? [];
   const activeVariants = variants.filter((v) => v.available !== false);
-  const totalVariantStock = activeVariants.reduce(
-    (sum, v) => sum + (typeof v.stockQuantity === "number" ? v.stockQuantity : 0),
-    0
-  );
-  const effectiveStock = (typeof product.stockQuantity === "number" && product.stockQuantity > 0)
-    ? product.stockQuantity
-    : (activeVariants.length > 0 ? totalVariantStock : (product.stockQuantity ?? 0));
 
   const activePriced = activeVariants.filter((v) => v.price > 0);
   const minVariantPrice = activePriced.length > 0 ? Math.min(...activePriced.map((v) => v.price)) : Infinity;
@@ -39,13 +33,16 @@ export function getBuyConfigurationError(product: Product): string | null {
   if (product.priceOnRequest || !Number.isFinite(effectivePrice) || effectivePrice <= 0) {
     return "Buy requires a confirmed price and Contact for Price must be off.";
   }
-  if (effectiveStock <= 0) {
+
+  // Strictly honour authoritative parent stock status and quantity (matches Supabase order RPC)
+  if (product.stockStatus === "Out of Stock" || product.stockStatus === "Sold") {
+    return "Stock Status must be In Stock or Low Stock to use Buy.";
+  }
+  const parentStock = typeof product.stockQuantity === "number" ? product.stockQuantity : 0;
+  if (parentStock <= 0) {
     return "Stock Quantity must be greater than 0 to use Buy.";
   }
-  const isVariantInStock = activeVariants.some(
-    (v) => (v.stockStatus === "In Stock" || v.stockStatus === "Low Stock") && (v.stockQuantity ?? 0) > 0
-  );
-  if (!isVariantInStock && product.stockStatus !== "In Stock" && product.stockStatus !== "Low Stock") {
+  if (!isParentProductInStock(product)) {
     return "Stock Status must be In Stock or Low Stock to use Buy.";
   }
   if (!isProductOrderable(product)) {
@@ -61,10 +58,7 @@ export function getBuyConfigurationError(product: Product): string | null {
     if (unpricedVariant) {
       return `Variant ${unpricedVariant.title || unpricedVariant.storage || unpricedVariant.id} needs a price greater than 0.`;
     }
-    const hasPricedStockedVariant = activeVariants.some(
-      (variant) => variant.price > 0 && variant.stockQuantity > 0 &&
-        (variant.stockStatus === "In Stock" || variant.stockStatus === "Low Stock")
-    );
+    const hasPricedStockedVariant = activeVariants.some(isVariantPurchasable);
     if (!hasPricedStockedVariant) {
       const pricedVariant = activeVariants.find((variant) => variant.price > 0);
       if (pricedVariant) {
