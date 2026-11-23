@@ -30,8 +30,6 @@ import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
-import macMiniImage from "../../assets/homepage/homepage-mac-mini-white.webp";
-import { newMacLaunches } from "../../data/newMacLaunches";
 import type {
   CategoryAccessoryOverride,
   CategoryDepartmentConfig,
@@ -50,11 +48,20 @@ import { formatGhs } from "../../utils/format";
 import type { Product, ProductImage } from "../../types/product";
 import { ProductFamilyStripEditor } from "../../components/admin/ProductFamilyStripEditor";
 import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
+import {
+  StoreDifferenceBentoAdminEditor,
+  StoreHelpCardsAdminEditor,
+  StoreHeroRibbonAdminEditor,
+  StoreLatestCardsAdminEditor,
+  StoreMixedShelfAdminEditor,
+  StoreQuickLinksAdminEditor,
+  type MainStoreSubTabKey,
+} from "../../components/admin/StoreVisualShelfEditors";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
 export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
 type StorefrontSection = "featured" | "listings" | "accessories";
-type MainStoreSection = "sections" | "latest" | "categories" | "moreToLove" | "families" | "accessories";
+type MainStoreSection = MainStoreSubTabKey;
 
 export function AdminStorefrontManager() {
   const {
@@ -102,7 +109,7 @@ export function AdminStorefrontManager() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Media picker modal state: target could be a featured card index, an accessory slug, a product id, or main store item
+  // Media picker modal state: target could be a featured card index, an accessory slug, a product id, main store item, or generic callback
   const [mediaPickerTarget, setMediaPickerTarget] = useState<
     | { type: "card"; cardIndex: number }
     | { type: "accessory"; slug: string }
@@ -112,6 +119,7 @@ export function AdminStorefrontManager() {
     | { type: "main-store-more"; index: number }
     | { type: "main-store-family"; index: number }
     | { type: "main-store-accessory"; index: number }
+    | { type: "custom-callback"; onSelect: (item: MediaItem) => void }
     | null
   >(null);
 
@@ -378,36 +386,6 @@ export function AdminStorefrontManager() {
     }
   };
 
-  const resolveMainStorePromoPreview = (card: MainStorePromoCard): { src: string; isCustom: boolean } => {
-    if (card.image && card.image.trim() !== "") {
-      return { src: card.image, isCustom: true };
-    }
-    if (card.id === "mac-mini") {
-      return { src: macMiniImage, isCustom: false };
-    }
-    if (card.id === "mac-studio") {
-      return { src: newMacLaunches["mac-studio"].image, isCustom: false };
-    }
-    const prod = products.find((p) => p.slug === card.id);
-    if (prod) {
-      const catImg = resolveCatalogueProductImage(prod);
-      if (catImg?.src) return { src: catImg.src, isCustom: false };
-    }
-    return { src: card.image || "", isCustom: false };
-  };
-
-  const resolveMainStoreAccessoryPreview = (item: MainStoreAccessoryItem): { src: string; isCustom: boolean; displayName: string } => {
-    const prod = products.find((p) => p.slug === item.id);
-    if (item.image && item.image.trim() !== "") {
-      return { src: item.image, isCustom: true, displayName: item.name || prod?.name || item.id };
-    }
-    if (prod) {
-      const catImg = resolveCatalogueProductImage(prod);
-      if (catImg?.src) return { src: catImg.src, isCustom: false, displayName: item.name || prod.name };
-    }
-    return { src: item.image || "", isCustom: false, displayName: item.name || item.id };
-  };
-
   // ---------------- MEDIA PICKER SELECTION ----------------
   const handleMediaPickerSelect = (item: MediaItem) => {
     if (!mediaPickerTarget) return;
@@ -457,6 +435,8 @@ export function AdminStorefrontManager() {
         image: item.url,
         alt: item.alt || item.title,
       });
+    } else if (mediaPickerTarget.type === "custom-callback") {
+      mediaPickerTarget.onSelect(item);
     }
 
     setMediaPickerTarget(null);
@@ -569,103 +549,43 @@ export function AdminStorefrontManager() {
         {selectedDeptKey === "main-store" ? (
           <div className="w-full overflow-x-auto scrollbar-none pb-1">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
-              <button
-                type="button"
-                data-testid="main-store-tab-sections"
-                onClick={() => setActiveMainStoreSection("sections")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "sections"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Layers size={14} className={activeMainStoreSection === "sections" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>Store Page Sections (Builder)</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "sections" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.sections || defaultMainStoreConfig.sections || []).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                data-testid="main-store-tab-latest"
-                onClick={() => setActiveMainStoreSection("latest")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "latest"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Sparkles size={14} className={activeMainStoreSection === "latest" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>The Latest (What&apos;s New)</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "latest" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMainStoreSection("categories")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "categories"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Grid size={14} className={activeMainStoreSection === "categories" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>Shop by Category</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "categories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMainStoreSection("moreToLove")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "moreToLove"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Sparkles size={14} className={activeMainStoreSection === "moreToLove" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>More to Love</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "moreToLove" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMainStoreSection("families")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "families"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Layers size={14} className={activeMainStoreSection === "families" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>Product Family Strip</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "families" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMainStoreSection("accessories")}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  activeMainStoreSection === "accessories"
-                    ? "bg-slate-900 text-white shadow"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <Package size={14} className={activeMainStoreSection === "accessories" ? "text-[#d4af37]" : "text-slate-400"} />
-                <span>Featured Accessories</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${activeMainStoreSection === "accessories" ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
-                  {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length}
-                </span>
-              </button>
+              {(
+                [
+                  { key: "sections", label: "Sections Builder", count: (mainStoreConfig.sections || defaultMainStoreConfig.sections || []).length },
+                  { key: "heroRibbon", label: "Hero & Ribbon", count: (mainStoreConfig.promoRibbonSlides || defaultMainStoreConfig.promoRibbonSlides || []).length },
+                  { key: "families", label: "Family Strip", count: (mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length },
+                  { key: "latest", label: "The Latest", count: (mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length },
+                  { key: "moreToLove", label: "Featured Picks", count: (mainStoreConfig.featuredProductItems || defaultMainStoreConfig.featuredProductItems || []).length },
+                  { key: "accessories", label: "Accessories", count: (mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length },
+                  { key: "difference", label: "Difference Bento", count: (mainStoreConfig.differenceItems || defaultMainStoreConfig.differenceItems || []).length },
+                  { key: "audio", label: "Audio & Sound", count: (mainStoreConfig.audioItems || defaultMainStoreConfig.audioItems || []).length },
+                  { key: "colorful", label: "Power & Style", count: (mainStoreConfig.colorfulItems || defaultMainStoreConfig.colorfulItems || []).length },
+                  { key: "help", label: "Ways to Save & Support", count: (mainStoreConfig.helpCards || defaultMainStoreConfig.helpCards || []).length },
+                  { key: "quickLinks", label: "Quick Links", count: (mainStoreConfig.quickLinks || defaultMainStoreConfig.quickLinks || []).length },
+                  { key: "categories", label: "Category Cards", count: (mainStoreConfig.categoryCards || defaultMainStoreConfig.categoryCards).length },
+                ] as { key: MainStoreSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeMainStoreSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`main-store-tab-${tab.key}`}
+                    onClick={() => setActiveMainStoreSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -754,171 +674,135 @@ export function AdminStorefrontManager() {
             />
           )}
 
-          {/* 1. The Latest (8 cards) */}
-          {activeMainStoreSection === "latest" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    The Latest — What&apos;s New Carousel ({(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).length} Cards)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Featured showcase carousel cards on the main Store landing page. Each image can be custom-uploaded, chosen from the Media Library, or fall back to verified product images.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {(mainStoreConfig.latestCards || defaultMainStoreConfig.latestCards).map((card, idx) => {
-                  const preview = resolveMainStorePromoPreview(card);
-                  const isUploading = uploadingTarget === `ms-latest-${idx}`;
-
-                  return (
-                    <div
-                      key={card.id || idx}
-                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
-                    >
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
-                          Card #{idx + 1} • {card.name}
-                        </span>
-                        {preview.isCustom ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
-                            Custom Image
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
-                            Product Default
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Live Preview Box */}
-                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
-                        {preview.src ? (
-                          <img
-                            src={preview.src}
-                            alt={card.alt || card.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-slate-400">No Image Assigned</span>
-                        )}
-                      </div>
-
-                      {/* Image Management Actions */}
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center gap-2">
-                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
-                            <Upload size={13} />
-                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
-                              disabled={uploadingTarget !== null}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void handleMainStoreFileUpload("latest", idx, file, card.name);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={() => setMediaPickerTarget({ type: "main-store-latest", index: idx })}
-                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
-                          >
-                            <ImageIcon size={13} />
-                            <span>Media Library</span>
-                          </button>
-                        </div>
-
-                        {preview.isCustom && (
-                          <button
-                            type="button"
-                            onClick={() => updateMainStoreLatest(idx, { image: defaultMainStoreConfig.latestCards[idx]?.image || "", alt: defaultMainStoreConfig.latestCards[idx]?.alt || "" })}
-                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Reset to Default Image</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Metadata Inputs */}
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Image URL
-                          </label>
-                          <input
-                            type="text"
-                            value={card.image}
-                            placeholder={preview.src}
-                            onChange={(e) => updateMainStoreLatest(idx, { image: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full font-mono"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Alt Text
-                          </label>
-                          <input
-                            type="text"
-                            value={card.alt}
-                            placeholder={card.name}
-                            onChange={(e) => updateMainStoreLatest(idx, { alt: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Eyebrow
-                            </label>
-                            <input
-                              type="text"
-                              value={card.eyebrow}
-                              onChange={(e) => updateMainStoreLatest(idx, { eyebrow: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Name
-                            </label>
-                            <input
-                              type="text"
-                              value={card.name}
-                              onChange={(e) => updateMainStoreLatest(idx, { name: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Statement / Subtitle
-                          </label>
-                          <input
-                            type="text"
-                            value={card.statement}
-                            onChange={(e) => updateMainStoreLatest(idx, { statement: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {/* 1a. Hero & Promo Ribbon */}
+          {activeMainStoreSection === "heroRibbon" && (
+            <StoreHeroRibbonAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+            />
           )}
 
-          {/* 2. Shop by Category (6 cards) */}
+          {/* 1. The Latest (Vibrant Studio Cards) */}
+          {activeMainStoreSection === "latest" && (
+            <StoreLatestCardsAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+            />
+          )}
+
+          {/* 2. Featured Picks (Mixed Editorial + Live Product Cards) */}
+          {activeMainStoreSection === "moreToLove" && (
+            <StoreMixedShelfAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+              title="Featured Picks — Editorial & Flagship Product Shelf"
+              description="Manage the Crimson Red & Lavender editorial feature cards and the live white product cards shown in Shelf 2."
+              editorialKey="featuredEditorialCards"
+              productsKey="featuredProductItems"
+            />
+          )}
+
+          {/* 3. Accessories (Mixed Editorial + Live Accessory Cards) */}
+          {activeMainStoreSection === "accessories" && (
+            <StoreMixedShelfAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+              title="Accessories — Editorial Collages & Live Accessory Cards"
+              description="Manage the Split Emerald/Sky opener, Gift Cards & Mint trailing cards, and the live white accessory cards."
+              editorialKey="accessoriesEditorialCards"
+              productsKey="accessories"
+            />
+          )}
+
+          {/* 4. The Buy & Sell GH Difference (Asymmetric Bento Shelf) */}
+          {activeMainStoreSection === "difference" && (
+            <StoreDifferenceBentoAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+            />
+          )}
+
+          {/* 5. Audio & Sound Showcase */}
+          {activeMainStoreSection === "audio" && (
+            <StoreMixedShelfAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+              title="Audio & Sound — Forest Green & Pre-Order Editorial + AirPods"
+              description="Manage the Forest Green AirPods opener, Deep Navy Pre-Order feature card, and live AirPods cards."
+              editorialKey="audioEditorialCards"
+              productsKey="audioItems"
+            />
+          )}
+
+          {/* 6. Power, Protection & Style */}
+          {activeMainStoreSection === "colorful" && (
+            <StoreMixedShelfAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+              title="Power, Protection & Style — Workspace & Charging Shelf"
+              description="Manage the Warm Peach editorial opener and live chargers, braided cables, keyboards, and Apple Pencil cards."
+              editorialKey="colorfulEditorialCards"
+              productsKey="colorfulItems"
+            />
+          )}
+
+          {/* 7. Ways to Save & Support (Help Cards) */}
+          {activeMainStoreSection === "help" && (
+            <StoreHelpCardsAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+              products={activeProducts}
+              uploadMedia={uploadMedia}
+              onOpenMediaPicker={(onSelect) =>
+                setMediaPickerTarget({ type: "custom-callback", onSelect })
+              }
+            />
+          )}
+
+          {/* 8. Quick Links Strip */}
+          {activeMainStoreSection === "quickLinks" && (
+            <StoreQuickLinksAdminEditor
+              config={mainStoreConfig}
+              setConfig={setMainStoreConfig}
+            />
+          )}
+
+          {/* 9. Shop by Category (Optional Legacy Shelf) */}
           {activeMainStoreSection === "categories" && (
             <div className="space-y-5">
               <div className="flex items-center justify-between">
@@ -1083,171 +967,7 @@ export function AdminStorefrontManager() {
             </div>
           )}
 
-          {/* 3. More to Love (7 cards) */}
-          {activeMainStoreSection === "moreToLove" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    More to Love Carousel ({(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).length} Cards)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Second featured product rail on the main Store page highlighting new launches and flagship Apple products.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {(mainStoreConfig.moreToLoveCards || defaultMainStoreConfig.moreToLoveCards).map((card, idx) => {
-                  const preview = resolveMainStorePromoPreview(card);
-                  const isUploading = uploadingTarget === `ms-more-${idx}`;
-
-                  return (
-                    <div
-                      key={card.id || idx}
-                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
-                    >
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
-                          Card #{idx + 1} • {card.name}
-                        </span>
-                        {preview.isCustom ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
-                            Custom Image
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
-                            Product Default
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Live Preview Box */}
-                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
-                        {preview.src ? (
-                          <img
-                            src={preview.src}
-                            alt={card.alt || card.name}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-slate-400">No Image Assigned</span>
-                        )}
-                      </div>
-
-                      {/* Image Management Actions */}
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center gap-2">
-                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
-                            <Upload size={13} />
-                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
-                              disabled={uploadingTarget !== null}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void handleMainStoreFileUpload("more", idx, file, card.name);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={() => setMediaPickerTarget({ type: "main-store-more", index: idx })}
-                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
-                          >
-                            <ImageIcon size={13} />
-                            <span>Media Library</span>
-                          </button>
-                        </div>
-
-                        {preview.isCustom && (
-                          <button
-                            type="button"
-                            onClick={() => updateMainStoreMore(idx, { image: defaultMainStoreConfig.moreToLoveCards[idx]?.image || "", alt: defaultMainStoreConfig.moreToLoveCards[idx]?.alt || "" })}
-                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Reset to Default Image</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Metadata Inputs */}
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Image URL
-                          </label>
-                          <input
-                            type="text"
-                            value={card.image}
-                            placeholder={preview.src}
-                            onChange={(e) => updateMainStoreMore(idx, { image: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full font-mono"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Alt Text
-                          </label>
-                          <input
-                            type="text"
-                            value={card.alt}
-                            placeholder={card.name}
-                            onChange={(e) => updateMainStoreMore(idx, { alt: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Eyebrow
-                            </label>
-                            <input
-                              type="text"
-                              value={card.eyebrow}
-                              onChange={(e) => updateMainStoreMore(idx, { eyebrow: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Name
-                            </label>
-                            <input
-                              type="text"
-                              value={card.name}
-                              onChange={(e) => updateMainStoreMore(idx, { name: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Statement / Subtitle
-                          </label>
-                          <input
-                            type="text"
-                            value={card.statement}
-                            onChange={(e) => updateMainStoreMore(idx, { statement: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 4. Product Family Strip (6 items) */}
+          {/* 10. Product Family Strip (8 items) */}
           {activeMainStoreSection === "families" && (
             <div className="space-y-5" data-testid="main-store-families-manager">
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
@@ -1259,10 +979,10 @@ export function AdminStorefrontManager() {
                       </span>
                     </div>
                     <h3 className="text-base font-bold text-slate-900">
-                      Product Family Strip Images (6 Categories)
+                      Product Family Strip Images ({(mainStoreConfig.productFamilies || defaultMainStoreConfig.productFamilies).length} Categories)
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Replace category images for iPhone, Mac, iPad, Apple Watch, AirPods, and Accessories. Names and Store navigation links are preserved.
+                      Replace category images for Mac, iPhone, iPad, Apple Watch, AirPods, Accessories, Gift Cards, and Others.
                     </p>
                   </div>
 
@@ -1343,171 +1063,6 @@ export function AdminStorefrontManager() {
                     });
                   }}
                 />
-              </div>
-            </div>
-          )}
-
-          {/* 5. Featured Accessories (8 cards) */}
-          {activeMainStoreSection === "accessories" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    Featured Accessories Carousel ({(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).length} Cards)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Essential accessories showcased on the main Store page. Promotional card images can be customized without altering product catalog images.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {(mainStoreConfig.accessories || defaultMainStoreConfig.accessories).map((acc, idx) => {
-                  const preview = resolveMainStoreAccessoryPreview(acc);
-                  const isUploading = uploadingTarget === `ms-accessory-${idx}`;
-
-                  return (
-                    <div
-                      key={acc.id || idx}
-                      className="admin-card p-4 space-y-3 border border-slate-200 flex flex-col justify-between rounded-2xl bg-white shadow-sm"
-                    >
-                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[0.65rem] font-bold text-slate-700 uppercase">
-                          Accessory #{idx + 1} • {preview.displayName}
-                        </span>
-                        {preview.isCustom ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[0.65rem] font-bold">
-                            Custom Image
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[0.65rem] font-medium">
-                            Catalog Image
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Live Preview Box */}
-                      <div className="aspect-[16/10] bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center border border-slate-200 relative p-2">
-                        {preview.src ? (
-                          <img
-                            src={preview.src}
-                            alt={acc.alt || preview.displayName}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        ) : (
-                          <span className="text-xs text-slate-400">No Image Assigned</span>
-                        )}
-                      </div>
-
-                      {/* Image Management Actions */}
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center gap-2">
-                          <label className="flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem] cursor-pointer">
-                            <Upload size={13} />
-                            <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/avif"
-                              disabled={uploadingTarget !== null}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void handleMainStoreFileUpload("accessory", idx, file, preview.displayName);
-                              }}
-                              className="hidden"
-                            />
-                          </label>
-
-                          <button
-                            type="button"
-                            onClick={() => setMediaPickerTarget({ type: "main-store-accessory", index: idx })}
-                            className="flex-1 py-1.5 px-2 rounded-lg bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-amber-900 font-bold flex items-center justify-center gap-1.5 transition text-[0.7rem]"
-                          >
-                            <ImageIcon size={13} />
-                            <span>Media Library</span>
-                          </button>
-                        </div>
-
-                        {preview.isCustom && (
-                          <button
-                            type="button"
-                            onClick={() => updateMainStoreAccessory(idx, { image: "", alt: defaultMainStoreConfig.accessories[idx]?.alt || "" })}
-                            className="w-full py-1 text-[0.68rem] text-rose-600 hover:text-rose-800 font-semibold flex items-center justify-center gap-1"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Reset to Default Image</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Metadata Inputs */}
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Image URL
-                          </label>
-                          <input
-                            type="text"
-                            value={acc.image || ""}
-                            placeholder={preview.src}
-                            onChange={(e) => updateMainStoreAccessory(idx, { image: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full font-mono"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Alt Text
-                          </label>
-                          <input
-                            type="text"
-                            value={acc.alt || ""}
-                            placeholder={preview.displayName}
-                            onChange={(e) => updateMainStoreAccessory(idx, { alt: e.target.value })}
-                            className="admin-input text-xs py-1 px-2 w-full"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Eyebrow
-                            </label>
-                            <input
-                              type="text"
-                              value={acc.eyebrow || ""}
-                              onChange={(e) => updateMainStoreAccessory(idx, { eyebrow: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                              Display Name
-                            </label>
-                            <input
-                              type="text"
-                              value={acc.name || ""}
-                              placeholder={preview.displayName}
-                              onChange={(e) => updateMainStoreAccessory(idx, { name: e.target.value })}
-                              className="admin-input text-xs py-1 px-2 w-full"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-[0.65rem] font-bold text-slate-400 block mb-0.5 uppercase tracking-wide">
-                            Catalog Slug
-                          </label>
-                          <input
-                            type="text"
-                            disabled
-                            value={acc.id}
-                            className="admin-input text-xs py-1 px-2 w-full font-mono bg-slate-50 text-slate-500 cursor-not-allowed"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}
@@ -2106,6 +1661,8 @@ export function AdminStorefrontManager() {
                     ? "Select Image for Main Store 'More to Love' Card"
                     : mediaPickerTarget.type === "main-store-family"
                     ? "Select Image for Main Store Product Family Strip"
+                    : mediaPickerTarget.type === "custom-callback"
+                    ? "Select Image for Store Shelf Card"
                     : "Select Image for Main Store Accessory Card"}
                 </h3>
               </div>

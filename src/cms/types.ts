@@ -542,24 +542,113 @@ export interface PageContentRegistry {
 }
 
 export interface MainStoreFamilyItem {
-  id: string; // e.g. "iphone", "mac", "ipad", "watch", "airpods", "accessories"
+  id: string; // e.g. "mac", "iphone", "ipad", "watch", "airpods", "accessories"
   name: string;
   image: string;
   alt: string;
   path: string;
 }
 
+export interface MainStorePromoRibbonSlide {
+  id: string;
+  text: string;
+  linkLabel?: string;
+  linkTo?: string;
+  visible?: boolean;
+}
+
+export interface MainStoreHeroConfig {
+  titleLead: string;
+  tagline: string;
+  emblemImage: string;
+  emblemAlt: string;
+  supportLabel: string;
+  supportUrl: string;
+  showroomLabel: string;
+  showroomUrl: string;
+}
+
 export interface MainStorePromoCard {
-  id: string; // e.g. "macbook-pro-14-m5", "mac-mini", etc.
+  id: string; // product slug or custom id
+  productSlug?: string;
   eyebrow: string;
   name: string;
   statement: string;
+  badge?: string;
   image: string; // custom image URL or empty for catalog product default
   alt: string;
   theme?: "light" | "dark";
+  backgroundColor?: string;
   learnMorePath: string;
   actionPath: string;
   actionLabel?: string;
+}
+
+export interface MainStoreEditorialTile {
+  id: string;
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  image: string;
+  alt: string;
+  backgroundColor?: string;
+  theme?: "light" | "dark";
+  destination: string;
+  actionLabel?: string;
+  /** 0-based index among product tiles where this editorial card appears (0 = opener, 99 = trailing) */
+  position?: number;
+}
+
+export interface MainStoreDifferenceMiniCard {
+  id: string;
+  icon: "trade" | "installment" | "shield" | "delivery" | "repair" | "support" | "gift" | "tag";
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  backgroundColor: string;
+  theme: "light" | "dark";
+  destination: string;
+  actionLabel?: string;
+}
+
+export interface MainStoreDifferenceBentoItem {
+  id: string;
+  kind: "tall" | "stack";
+  // Tall card fields
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+  image?: string;
+  alt?: string;
+  backgroundColor?: string;
+  theme?: "light" | "dark";
+  destination?: string;
+  actionLabel?: string;
+  isExternal?: boolean;
+  // Stacked pair fields
+  topCard?: MainStoreDifferenceMiniCard;
+  bottomCard?: MainStoreDifferenceMiniCard;
+}
+
+export interface MainStoreHelpCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  alt: string;
+  imagePosition?: string;
+  theme: "light" | "dark";
+  backgroundColor?: string;
+  actionLabel: string;
+  actionPath: string;
+  isExternal?: boolean;
+}
+
+export interface MainStoreQuickLink {
+  id: string;
+  label: string;
+  to: string;
 }
 
 export interface MainStoreCategoryCard {
@@ -593,14 +682,18 @@ export type StorePageSectionType =
   | (string & {});
 
 export type StoreBuiltInSectionKey =
+  | "promo-ribbon"
   | "store-intro"
   | "family-strip"
   | "latest-carousel"
-  | "category-cards"
-  | "help-cards"
   | "more-to-love"
   | "accessories-carousel"
-  | "difference-cards";
+  | "difference-cards"
+  | "audio-showcase"
+  | "colorful-accessories"
+  | "help-cards"
+  | "category-cards"
+  | "quick-links";
 
 export type StoreSectionLayoutStyle =
   | "standard"
@@ -636,11 +729,25 @@ export interface StorePageSection {
 
 export interface MainStoreConfig {
   sections?: StorePageSection[];
+  sectionOrderVersion?: number;
+  storeDesignVersion?: number;
+  promoRibbonSlides?: MainStorePromoRibbonSlide[];
+  heroConfig?: MainStoreHeroConfig;
   productFamilies: MainStoreFamilyItem[];
   latestCards: MainStorePromoCard[];
+  featuredEditorialCards?: MainStoreEditorialTile[];
+  featuredProductItems?: MainStoreAccessoryItem[];
   categoryCards: MainStoreCategoryCard[];
   moreToLoveCards: MainStorePromoCard[];
+  accessoriesEditorialCards?: MainStoreEditorialTile[];
   accessories: MainStoreAccessoryItem[];
+  differenceItems?: MainStoreDifferenceBentoItem[];
+  audioEditorialCards?: MainStoreEditorialTile[];
+  audioItems?: MainStoreAccessoryItem[];
+  colorfulEditorialCards?: MainStoreEditorialTile[];
+  colorfulItems?: MainStoreAccessoryItem[];
+  helpCards?: MainStoreHelpCard[];
+  quickLinks?: MainStoreQuickLink[];
   hasDraft?: boolean;
   updatedAt?: string;
 }

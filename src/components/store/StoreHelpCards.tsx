@@ -1,100 +1,32 @@
-import { ArrowRight, Banknote, CreditCard, Gift, MessageCircle, RefreshCw, Wrench } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { StorePageSection } from "../../cms/types";
-import { intentWhatsAppUrl } from "../../utils/whatsapp";
+import { useCms } from "../../cms/CmsContext";
+import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
+import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { StoreCarousel } from "./StoreCarousel";
+import { resolveBuiltInSectionBgStyle } from "./storeSectionStyle";
 
-interface HelpCardItem {
-  id: string;
-  category: string;
-  badge: string;
-  title: string;
-  description: string;
-  actionLabel: string;
-  actionPath: string;
-  isExternal?: boolean;
-  icon: typeof MessageCircle;
-  motif: string;
-}
+export function StoreHelpCards({
+  section,
+  configOverride,
+}: {
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
+  const { mainStore } = useCms();
+  const activeConfig = configOverride || mainStore;
+  const helpCards = activeConfig?.helpCards?.length
+    ? activeConfig.helpCards
+    : defaultMainStoreConfig.helpCards || [];
 
-const helpCards: HelpCardItem[] = [
-  {
-    id: "chat",
-    category: "PERSONAL SHOPPING",
-    badge: "Accra Specialist Online",
-    title: "Chat with a specialist.",
-    description: "Compare device models, confirm battery health on UK Used stock, and reserve immediately on WhatsApp.",
-    actionLabel: "Chat on WhatsApp",
-    actionPath: intentWhatsAppUrl("general"),
-    isExternal: true,
-    icon: MessageCircle,
-    motif: "Direct Chat",
-  },
-  {
-    id: "repairs",
-    category: "CERTIFIED SERVICE",
-    badge: "Official Diagnostics",
-    title: "Professional device repair.",
-    description: "Expert screen replacements, genuine battery upgrades, and board-level repairs with fast turnaround.",
-    actionLabel: "Explore repairs",
-    actionPath: "/repairs",
-    icon: Wrench,
-    motif: "Precision Bench",
-  },
-  {
-    id: "installment",
-    category: "FLEXIBLE PAYMENT",
-    badge: "Manageable Plans",
-    title: "Own your device today.",
-    description: "Spread the cost comfortably across manageable installment plans with straightforward, transparent requirements.",
-    actionLabel: "View installment plans",
-    actionPath: "/installment",
-    icon: CreditCard,
-    motif: "Easy Financing",
-  },
-  {
-    id: "upgrade-trade-in",
-    category: "TRADE IN OR UPGRADE",
-    badge: "Instant Valuation",
-    title: "Upgrade & Save.",
-    description: "Receive fair trade-in value toward your next iPhone or MacBook upgrade with fast in-person inspection.",
-    actionLabel: "Get a trade-in estimate",
-    actionPath: "/sell-or-trade",
-    icon: RefreshCw,
-    motif: "Fair Exchange",
-  },
-  {
-    id: "sell-device",
-    category: "INSTANT BUYOUT",
-    badge: "Immediate Payout",
-    title: "Sell your device.",
-    description: "Turn your used Apple device into instant cash in Accra with quick diagnostic verification.",
-    actionLabel: "Sell your device",
-    actionPath: "/sell-or-trade",
-    icon: Banknote,
-    motif: "Instant Cash",
-  },
-  {
-    id: "refer-friend",
-    category: "CUSTOMER REWARDS",
-    badge: "Store Credit",
-    title: "Refer a Friend.",
-    description: "Earn store credit and exclusive discounts when your friends and family purchase their Apple devices with us.",
-    actionLabel: "Explore referral rewards",
-    actionPath: "/refer-a-friend",
-    icon: Gift,
-    motif: "Earn Together",
-  },
-];
+  if (helpCards.length === 0) return null;
 
-export function StoreHelpCards({ section }: { section?: StorePageSection }) {
-  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== "" ? section.eyebrow : "HELP IS HERE";
-  const title = section?.heading?.trim() || "Whenever you need it.";
-  const subtitle =
-    section?.subtitle !== undefined
-      ? section.subtitle
-      : "Support, flexible financing, repairs, trade-in, and customer rewards tailored for Ghana.";
-  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
+  const eyebrow =
+    section?.eyebrow !== undefined && section.eyebrow !== ""
+      ? section.eyebrow
+      : "Ways to save & support.";
+  const title = section?.heading?.trim() || "Expert services built for Ghana.";
+  const bgStyle = resolveBuiltInSectionBgStyle(section?.backgroundColor);
 
   return (
     <section
@@ -103,56 +35,74 @@ export function StoreHelpCards({ section }: { section?: StorePageSection }) {
       style={bgStyle}
       data-section-id={section?.id || "section-help-cards"}
     >
-      <div className="store-container">
-        <StoreCarousel
-          eyebrow={eyebrow}
-          title={title}
-          subtitle={subtitle}
-          controlsAriaLabel="Store help services carousel navigation"
-          trackClassName="store-help-track"
-        >
-          {helpCards.map((card) => {
-            const Icon = card.icon;
+      <StoreCarousel
+        variant="apple"
+        titleId="store-help-title"
+        eyebrow={eyebrow}
+        title={title}
+        controlsAriaLabel="Store help and savings carousel navigation"
+        trackClassName="store-help-track"
+      >
+        {helpCards.map((card) => {
+          const isExternal = Boolean(card.isExternal || /^https?:\/\//i.test(card.actionPath || ""));
+          const cardStyle = card.backgroundColor ? { backgroundColor: card.backgroundColor } : undefined;
+
+          const cardContent = (
+            <>
+              <div className="store-help-card-copy-block">
+                <p className="store-help-card-eyebrow">{card.eyebrow}</p>
+                <h3 className="store-help-card-title">{card.title}</h3>
+                {card.subtitle && <p className="store-help-card-copy">{card.subtitle}</p>}
+              </div>
+
+              <div className="store-help-card-media">
+                {card.image && (
+                  <img
+                    src={card.image}
+                    alt={card.alt || card.title}
+                    loading="eager"
+                    decoding="sync"
+                    style={card.imagePosition ? { objectPosition: card.imagePosition } : undefined}
+                    className="store-help-card-img"
+                  />
+                )}
+              </div>
+
+              <span className="store-help-circle-cta" aria-hidden="true">
+                <ArrowUpRight size={17} strokeWidth={2.2} />
+              </span>
+            </>
+          );
+
+          if (isExternal) {
             return (
-              <article key={card.id} className="store-help-card">
-                <div className="store-help-card-header">
-                  <span className="store-help-card-eyebrow">{card.category}</span>
-                  <span className="store-help-card-badge">{card.badge}</span>
-                </div>
-
-                <div className="store-help-card-body">
-                  <h3 className="store-help-card-title">{card.title}</h3>
-                  <p className="store-help-card-copy">{card.description}</p>
-                </div>
-
-                <div className="store-help-visual-stage" aria-hidden="true">
-                  <div className="store-help-visual-icon-wrap">
-                    <Icon size={24} strokeWidth={1.8} />
-                  </div>
-                  <span className="store-help-visual-motif">{card.motif}</span>
-                </div>
-
-                <div className="store-help-card-action">
-                  {card.isExternal ? (
-                    <a
-                      href={card.actionPath}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="store-help-action-link"
-                    >
-                      {card.actionLabel} <ArrowRight size={15} aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <Link to={card.actionPath} className="store-help-action-link">
-                      {card.actionLabel} <ArrowRight size={15} aria-hidden="true" />
-                    </Link>
-                  )}
-                </div>
-              </article>
+              <a
+                key={card.id}
+                href={card.actionPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`store-help-editorial-card store-help-editorial-${card.theme}`}
+                style={cardStyle}
+                aria-label={`${card.title} — ${card.actionLabel}`}
+              >
+                {cardContent}
+              </a>
             );
-          })}
-        </StoreCarousel>
-      </div>
+          }
+
+          return (
+            <Link
+              key={card.id}
+              to={card.actionPath || "/contact"}
+              className={`store-help-editorial-card store-help-editorial-${card.theme}`}
+              style={cardStyle}
+              aria-label={`${card.title} — ${card.actionLabel}`}
+            >
+              {cardContent}
+            </Link>
+          );
+        })}
+      </StoreCarousel>
     </section>
   );
 }

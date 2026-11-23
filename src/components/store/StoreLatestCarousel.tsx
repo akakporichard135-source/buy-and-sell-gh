@@ -1,196 +1,65 @@
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import type { MainStoreConfig, MainStorePromoCard, StorePageSection } from "../../cms/types";
-import { productBuyPath, productStoryPath, type ProductFamilyKey } from "../../catalog/productExperience";
+import {
+  getProductFamily,
+  productBuyPath,
+  productStoryPath,
+} from "../../catalog/productExperience";
 import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
 import { whatsappUrl } from "../../utils/whatsapp";
-import { newMacLaunches } from "../../data/newMacLaunches";
 import type { Product } from "../../types/product";
 import { resolveCatalogueProductImage } from "../../utils/productImages";
-import macMiniImage from "../../assets/homepage/homepage-mac-mini-white.webp";
+import { getCardPriceDisplay } from "../../utils/productPricing";
 import { StoreCarousel } from "./StoreCarousel";
+import {
+  buildMixedShelfEntries,
+  StoreEditorialPromoTile,
+  StoreWhiteProductTile,
+} from "./StoreEditorialAndProductTiles";
+import { resolveBuiltInSectionBgStyle } from "./storeSectionStyle";
 
-interface FeaturedProduct {
-  id: string;
-  theme: "dark" | "light";
-  eyebrow: string;
-  name: string;
-  statement: string;
-  image: string;
-  alt: string;
-  learnMorePath: string;
-  actionPath: string;
-  actionLabel: string;
+function normalizeSlugToken(slug: string): string {
+  return slug.replace(/-inch-/g, "-").trim().toLowerCase();
 }
 
-function resolveCardImage(card: MainStorePromoCard, products: Product[]): { src: string; alt: string } {
-  // If the admin has configured an image in CMS, use it directly
-  if (card.image && card.image.trim() !== "") {
-    return {
-      src: card.image,
-      alt: card.alt || card.name,
-    };
+function resolveCatalogProductForCard(
+  card: MainStorePromoCard,
+  products: Product[]
+): Product | undefined {
+  if (!products.length) return undefined;
+
+  const lookupKeys = [card.productSlug, card.id].filter((s): s is string => Boolean(s?.trim()));
+  for (const key of lookupKeys) {
+    const exact = products.find((item) => item.slug === key || item.id === key);
+    if (exact) return exact;
+
+    const normKey = normalizeSlugToken(key);
+    const normExact = products.find((item) => normalizeSlugToken(item.slug) === normKey);
+    if (normExact) return normExact;
   }
 
-  // Fallback defaults for special hardware
-  if (card.id === "mac-mini") {
-    return {
-      src: macMiniImage,
-      alt: card.alt || "Silver Mac mini desktop",
-    };
+  const buyMatch = card.actionPath?.match(/\/shop\/buy-[^/]+\/([^/?#]+)/i);
+  if (buyMatch?.[1]) {
+    const targetSlug = buyMatch[1].trim().toLowerCase();
+    const byAction = products.find(
+      (item) =>
+        item.slug.toLowerCase() === targetSlug ||
+        normalizeSlugToken(item.slug) === normalizeSlugToken(targetSlug)
+    );
+    if (byAction) return byAction;
   }
 
-  if (card.id === "mac-studio") {
-    return {
-      src: newMacLaunches["mac-studio"].image,
-      alt: newMacLaunches["mac-studio"].imageAlt || card.alt || "Mac Studio desktop powerhouse",
-    };
-  }
-
-  // Look up catalog product image
-  const product = products.find((item) => item.slug === card.id);
-  if (product) {
-    const catalogImg = resolveCatalogueProductImage(product);
-    if (catalogImg?.src) {
-      return {
-        src: catalogImg.src,
-        alt: catalogImg.alt || card.alt || product.name,
-      };
-    }
-  }
-
-  return {
-    src: card.image || "",
-    alt: card.alt || card.name,
-  };
+  return undefined;
 }
 
-function featuredRail({
-  products,
-  type,
-  cards,
-  section,
-}: {
-  products: Product[];
-  type: "latest" | "more";
-  cards: MainStorePromoCard[];
-  section?: StorePageSection;
-}) {
-  const items: FeaturedProduct[] = cards.map((card) => {
-    const product = products.find((item) => item.slug === card.id);
-    const resolvedMedia = resolveCardImage(card, products);
-    const eyebrow = card.eyebrow || (product ? product.subcategory || product.category : "");
-    const name = card.name || (product ? product.name : card.id);
-    const statement = card.statement || "";
-    const theme = card.theme || "light";
-    const action = product ? getPublicPurchaseAction(product) : undefined;
-    const actionLabel = action
-      ? action === "buy"
-        ? "Buy"
-        : action === "enquire"
-        ? "Enquire on WhatsApp"
-        : "View Pricing"
-      : card.actionLabel || "View Pricing";
-
-    let learnMorePath = card.learnMorePath;
-    let actionPath = card.actionPath;
-
-    if (!learnMorePath && product) {
-      learnMorePath = productStoryPath(product.category as ProductFamilyKey, product.slug);
-    }
-    if (!actionPath && product) {
-      actionPath =
-        action === "enquire"
-          ? whatsappUrl(
-              `Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`
-            )
-          : productBuyPath(product.category as ProductFamilyKey, product.slug);
-    }
-
-    return {
-      id: card.id,
-      theme,
-      eyebrow,
-      name,
-      statement,
-      image: resolvedMedia.src,
-      alt: resolvedMedia.alt,
-      learnMorePath: learnMorePath || "#",
-      actionPath: actionPath || "#",
-      actionLabel,
-    };
-  });
-
-  const eyebrow = section?.eyebrow !== undefined && section.eyebrow !== ""
-    ? section.eyebrow
-    : type === "latest" ? "THE LATEST" : "MORE TO LOVE";
-  const title = section?.heading?.trim()
-    ? section.heading
-    : type === "latest" ? "Take a look at what's new." : "Find your new favorites.";
-  const subtitle = section?.subtitle?.trim() || undefined;
-  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
-  const headerRight =
-    section?.buttonLabel && section?.buttonDestination ? (
-      <Link to={section.buttonDestination} className="store-section-header-link">
-        {section.buttonLabel}
-      </Link>
-    ) : undefined;
-
-  return (
-    <section
-      className={`store-section store-latest-section store-feature-section-${type}`}
-      aria-label={title}
-      style={bgStyle}
-      data-section-id={section?.id || (type === "latest" ? "section-latest-carousel" : "section-more-to-love")}
-    >
-      <div className="store-container">
-        <StoreCarousel
-          eyebrow={eyebrow}
-          title={title}
-          subtitle={subtitle}
-          controlsAriaLabel={type === "latest" ? "The latest products carousel navigation" : "More to love carousel navigation"}
-          trackClassName="store-latest-track"
-          headerRight={headerRight}
-        >
-          {items.map((product) => (
-            <article key={product.id} className={`store-latest-card store-latest-card-${product.theme}`}>
-              <div className="store-latest-card-header">
-                <p className="store-latest-card-eyebrow">{product.eyebrow}</p>
-                <h3 className="store-latest-card-name">{product.name}</h3>
-                <p className="store-latest-card-statement">{product.statement}</p>
-              </div>
-              <Link to={product.learnMorePath} className="store-latest-card-media" aria-label={`Learn more about ${product.name}`}>
-                {product.image ? (
-                  <img key={product.image} src={product.image} alt={product.alt} loading="lazy" decoding="async" className="store-latest-card-img" />
-                ) : (
-                  <span className="store-feature-image-pending">Image coming soon</span>
-                )}
-              </Link>
-              <div className="store-latest-card-actions">
-                <Link to={product.learnMorePath} className="btn-store-secondary" aria-label={`Learn more about ${product.name}`}>Learn more</Link>
-                {product.actionPath.startsWith("http") ? (
-                  <a
-                    href={product.actionPath}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-store-primary"
-                    aria-label={`${product.actionLabel} for ${product.name}`}
-                  >
-                    {product.actionLabel}
-                  </a>
-                ) : (
-                  <Link to={product.actionPath} className="btn-store-primary" aria-label={`${product.actionLabel} for ${product.name}`}>{product.actionLabel}</Link>
-                )}
-              </div>
-            </article>
-          ))}
-        </StoreCarousel>
-      </div>
-    </section>
-  );
-}
-
+/**
+ * SHELF 1 — THE LATEST
+ * Vibrant 400×500 full-bleed pastel & jewel-tone studio cards matching the uploaded screenshots,
+ * with live Supabase GH₵ pricing, stock-aware Buy/View Pricing CTA, and bottom-right > circle.
+ */
 export function StoreLatestCarousel({
   products,
   section,
@@ -202,10 +71,182 @@ export function StoreLatestCarousel({
 }) {
   const { mainStore } = useCms();
   const activeConfig = configOverride || mainStore;
-  const cards = activeConfig?.latestCards?.length ? activeConfig.latestCards : defaultMainStoreConfig.latestCards;
-  return featuredRail({ products, type: "latest", cards, section });
+  const cards = activeConfig?.latestCards?.length
+    ? activeConfig.latestCards
+    : defaultMainStoreConfig.latestCards;
+
+  const eyebrow =
+    section?.eyebrow !== undefined && section.eyebrow !== ""
+      ? section.eyebrow
+      : "The latest.";
+  const title = section?.heading?.trim() || "Wonderful and colorful choices.";
+  const bgStyle = resolveBuiltInSectionBgStyle(section?.backgroundColor);
+  const headerRight =
+    section?.buttonLabel && section?.buttonDestination ? (
+      <Link to={section.buttonDestination} className="store-section-header-link">
+        {section.buttonLabel} <ChevronRight size={14} aria-hidden="true" />
+      </Link>
+    ) : undefined;
+
+  return (
+    <section
+      className="store-section store-latest-section"
+      aria-labelledby="store-latest-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-latest-carousel"}
+    >
+      <StoreCarousel
+        variant="apple"
+        titleId="store-latest-title"
+        eyebrow={eyebrow}
+        title={title}
+        controlsAriaLabel="The latest products carousel navigation"
+        trackClassName="store-latest-track"
+        headerRight={headerRight}
+      >
+        {cards.map((card, index) => {
+          const product = resolveCatalogProductForCard(card, products);
+          const catalogImg = product ? resolveCatalogueProductImage(product) : null;
+          const imageSrc = card.image?.trim() || catalogImg?.src || "";
+          const imageAlt = card.alt || catalogImg?.alt || card.name;
+          const theme = card.theme || "light";
+
+          const action = product ? getPublicPurchaseAction(product) : undefined;
+          const isPreOrderDestination = Boolean(card.actionPath?.startsWith("/pre-order"));
+
+          let actionLabel = card.actionLabel || "Buy";
+          let actionPath = card.actionPath;
+          if (action === "buy" && product) {
+            actionLabel = "Buy";
+            if (!actionPath || isPreOrderDestination) {
+              actionPath = productBuyPath(getProductFamily(product), product.slug);
+            }
+          } else if (action === "enquire") {
+            actionLabel = "Enquire";
+            actionPath = whatsappUrl(
+              `Hello Buy & Sell GH, I would like to enquire about ${product?.name || card.name}. Please confirm availability and pricing.`
+            );
+          } else if (isPreOrderDestination) {
+            actionLabel = card.actionLabel || "Pre-order";
+          } else if (product) {
+            actionLabel = "View Pricing";
+            actionPath = actionPath || productBuyPath(getProductFamily(product), product.slug);
+          }
+
+          const learnMorePath =
+            card.learnMorePath ||
+            (product ? productStoryPath(getProductFamily(product), product.slug) : actionPath || "/store");
+
+          let priceText = "";
+          let previousPriceText: string | undefined;
+          if (product) {
+            const pd = getCardPriceDisplay(product);
+            priceText = pd.isEnquiry
+              ? isPreOrderDestination
+                ? "Pre-order · Price on enquiry"
+                : "Price on enquiry"
+              : pd.current;
+            previousPriceText = pd.previous;
+          } else if (isPreOrderDestination) {
+            priceText = "Pre-order · Price on enquiry";
+          }
+
+          const isExternalAction = Boolean(actionPath && /^https?:\/\//i.test(actionPath));
+          const cardStyle = card.backgroundColor ? { backgroundColor: card.backgroundColor } : undefined;
+
+          return (
+            <article
+              key={card.id}
+              className={`store-vibrant-card is-${theme}`}
+              style={cardStyle}
+              data-product-slug={product?.slug || card.id}
+            >
+              {imageSrc && (
+                <img
+                  src={imageSrc}
+                  alt={imageAlt}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority={index < 3 ? "high" : "auto"}
+                  className="store-vibrant-card-bg"
+                />
+              )}
+
+              <Link
+                to={learnMorePath}
+                className="store-vibrant-card-overlay-link"
+                aria-label={`Explore ${card.name}`}
+              />
+
+              <div className="store-vibrant-card-copy">
+                {card.eyebrow && <p className="store-vibrant-card-eyebrow">{card.eyebrow}</p>}
+                <h3 className="store-vibrant-card-title">{card.name}</h3>
+                {card.statement && <p className="store-vibrant-card-statement">{card.statement}</p>}
+                {priceText && (
+                  <p className="store-vibrant-card-price">
+                    <span>From {priceText.replace(/^From\s+/i, "")}</span>
+                    {previousPriceText && (
+                      <span className="store-vibrant-card-price-old">{previousPriceText}</span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <div className="store-vibrant-card-footer">
+                {isExternalAction ? (
+                  <a
+                    href={actionPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="store-vibrant-buy-pill"
+                    aria-label={`${actionLabel} ${card.name}`}
+                  >
+                    {actionLabel}
+                  </a>
+                ) : (
+                  <Link
+                    to={actionPath || learnMorePath}
+                    className="store-vibrant-buy-pill"
+                    aria-label={`${actionLabel} ${card.name}`}
+                  >
+                    {actionLabel}
+                  </Link>
+                )}
+
+                {isExternalAction ? (
+                  <a
+                    href={actionPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="store-tile-circle-cta is-inline"
+                    aria-label={`Go to ${card.name}`}
+                  >
+                    <ChevronRight size={18} strokeWidth={2.3} aria-hidden="true" />
+                  </a>
+                ) : (
+                  <Link
+                    to={actionPath || learnMorePath}
+                    className="store-tile-circle-cta is-inline"
+                    aria-label={`Go to ${card.name}`}
+                  >
+                    <ChevronRight size={18} strokeWidth={2.3} aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </StoreCarousel>
+    </section>
+  );
 }
 
+/**
+ * SHELF 2 — FEATURED PICKS (formerly "More to love")
+ * Mixed-width shelf matching Screenshot Shelf 2:
+ * Leading Crimson Red 400×500 editorial card + 313×500 white flagship product tiles
+ * + Lavender 400×500 editorial card + Watch/Mac white product tiles.
+ */
 export function StoreMoreToLoveCarousel({
   products,
   section,
@@ -217,7 +258,58 @@ export function StoreMoreToLoveCarousel({
 }) {
   const { mainStore } = useCms();
   const activeConfig = configOverride || mainStore;
-  const cards = activeConfig?.moreToLoveCards?.length ? activeConfig.moreToLoveCards : defaultMainStoreConfig.moreToLoveCards;
-  return featuredRail({ products, type: "more", cards, section });
-}
+  const editorials =
+    activeConfig?.featuredEditorialCards !== undefined
+      ? activeConfig.featuredEditorialCards
+      : defaultMainStoreConfig.featuredEditorialCards || [];
+  const productItems = activeConfig?.featuredProductItems?.length
+    ? activeConfig.featuredProductItems
+    : defaultMainStoreConfig.featuredProductItems || [];
 
+  const entries = buildMixedShelfEntries(editorials, productItems, products);
+  if (entries.length === 0) return null;
+
+  const eyebrow =
+    section?.eyebrow !== undefined && section.eyebrow !== ""
+      ? section.eyebrow
+      : "Featured picks.";
+  const title = section?.heading?.trim() || "Make your next upgrade unforgettable.";
+  const bgStyle = resolveBuiltInSectionBgStyle(section?.backgroundColor);
+  const headerRight =
+    section?.buttonLabel && section?.buttonDestination ? (
+      <Link to={section.buttonDestination} className="store-section-header-link">
+        {section.buttonLabel} <ChevronRight size={14} aria-hidden="true" />
+      </Link>
+    ) : undefined;
+
+  return (
+    <section
+      className="store-section store-featured-picks-section"
+      aria-labelledby="store-featured-title"
+      style={bgStyle}
+      data-section-id={section?.id || "section-more-to-love"}
+    >
+      <StoreCarousel
+        variant="apple"
+        titleId="store-featured-title"
+        eyebrow={eyebrow}
+        title={title}
+        controlsAriaLabel="Featured picks carousel navigation"
+        trackClassName="store-mixed-track"
+        headerRight={headerRight}
+      >
+        {entries.map((entry) =>
+          entry.kind === "editorial" ? (
+            <StoreEditorialPromoTile key={`ed-${entry.tile.id}`} tile={entry.tile} />
+          ) : (
+            <StoreWhiteProductTile
+              key={`prod-${entry.product.id}`}
+              item={entry.item}
+              product={entry.product}
+            />
+          )
+        )}
+      </StoreCarousel>
+    </section>
+  );
+}

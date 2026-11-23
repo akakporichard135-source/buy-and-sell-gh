@@ -1,93 +1,108 @@
-import { ChevronRight, MapPin, MessageCircle } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { StorePageSection } from "../../cms/types";
+import { useCms } from "../../cms/CmsContext";
+import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
+import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { intentWhatsAppUrl } from "../../utils/whatsapp";
+import { resolveBuiltInSectionBgStyle } from "./storeSectionStyle";
 
-export function StoreHeroIntro({ section }: { section?: StorePageSection }) {
-  const heading = section?.heading?.trim() || "Store. The best way to buy the products you love.";
-  const hasDefaultStorePrefix = /^Store\.\s*(.*)$/i.exec(heading);
-  const bgStyle = section?.backgroundColor ? { backgroundColor: section.backgroundColor } : undefined;
-  const alignStyle = section?.textAlignment ? ({ textAlign: section.textAlignment } as const) : undefined;
-  const bannerImg = section?.desktopImage || section?.mobileImage || "";
+export function StoreHeroIntro({
+  section,
+  configOverride,
+}: {
+  section?: StorePageSection;
+  configOverride?: MainStoreConfig;
+}) {
+  const { mainStore } = useCms();
+  const activeConfig = configOverride || mainStore;
+  const hero = {
+    ...(defaultMainStoreConfig.heroConfig!),
+    ...(activeConfig?.heroConfig || {}),
+  };
+
+  const titleLead = hero.titleLead?.trim() || section?.heading?.trim() || "Store";
+  const tagline = hero.tagline?.trim() || section?.subtitle?.trim() || "Original Apple & curated tech across Ghana.";
+  const emblemSrc =
+    hero.emblemImage?.trim() ||
+    section?.desktopImage?.trim() ||
+    "/products/store-redesign/hero-store-emblem.webp";
+  const emblemAlt = hero.emblemAlt || section?.imageAlt || "Buy & Sell GH Store emblem";
+
+  const supportLabel = hero.supportLabel?.trim() || section?.buttonLabel?.trim() || "Chat on WhatsApp";
+  const supportUrl = hero.supportUrl?.trim() || intentWhatsAppUrl("general");
+  const isSupportExternal = /^https?:\/\//i.test(supportUrl);
+
+  const showroomLabel =
+    hero.showroomLabel?.trim() || section?.secondaryButtonLabel?.trim() || "Visit Dome Pillar 2";
+  const showroomUrl = hero.showroomUrl?.trim() || section?.secondaryButtonDestination?.trim() || "/contact";
+  const isShowroomExternal = /^https?:\/\//i.test(showroomUrl);
+
+  const bgStyle = resolveBuiltInSectionBgStyle(section?.backgroundColor);
 
   return (
     <section
-      className="store-intro-section"
+      className="store-intro-section store-intro-editorial"
       aria-labelledby="store-intro-title"
       style={bgStyle}
       data-section-id={section?.id || "section-store-intro"}
     >
-      <div className="store-intro-container">
-        <div className="store-intro-main" style={alignStyle}>
-          {section?.eyebrow && section.eyebrow !== "STORE" && (
-            <p className="store-section-eyebrow">{section.eyebrow}</p>
-          )}
-          <h1 id="store-intro-title" className="store-intro-title">
-            {hasDefaultStorePrefix ? (
-              <>
-                <span className="store-intro-gold">Store.</span> {hasDefaultStorePrefix[1]}
-              </>
-            ) : (
-              heading
-            )}
+      <div className="store-intro-container store-intro-editorial-grid">
+        <div className="store-intro-left">
+          <h1 id="store-intro-title" className="store-intro-wordmark">
+            {titleLead}
           </h1>
-          {section?.subtitle && section.subtitle !== "Need shopping help? Chat with us" && (
-            <p className="store-section-subtitle" style={{ marginTop: "10px" }}>
-              {section.subtitle}
-            </p>
-          )}
-          {section?.description && section.description !== "Visit Buy & Sell GH at Dome Pillar 2, Accra" && (
-            <p className="store-section-subtitle" style={{ marginTop: "6px" }}>
-              {section.description}
-            </p>
-          )}
-          {bannerImg && (
-            <div style={{ marginTop: "20px", borderRadius: "16px", overflow: "hidden", maxWidth: "680px" }}>
-              <picture>
-                {section?.mobileImage && <source media="(max-width: 768px)" srcSet={section.mobileImage} />}
-                <img
-                  src={section?.desktopImage || section?.mobileImage}
-                  alt={section?.imageAlt || heading}
-                  style={{ width: "100%", height: "auto", maxHeight: "320px", objectFit: "cover", display: "block" }}
-                />
-              </picture>
-            </div>
+        </div>
+
+        <div className="store-intro-center" aria-hidden={!emblemSrc}>
+          {emblemSrc && (
+            <img
+              src={emblemSrc}
+              alt={emblemAlt}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="store-intro-emblem-img"
+            />
           )}
         </div>
 
-        <div className="store-intro-help" aria-label="Store contact and shopping support">
-          <div className="store-help-item">
-            <div className="store-help-icon-wrap" aria-hidden="true">
-              <MessageCircle size={22} className="store-help-icon" />
-            </div>
-            <div className="store-help-copy">
-              <p className="store-help-label">Need shopping help?</p>
-              {section?.buttonDestination && section.buttonDestination !== "/contact" ? (
-                <Link className="store-help-link" to={section.buttonDestination}>
-                  {section.buttonLabel || "Chat with us"} <ChevronRight size={14} aria-hidden="true" />
-                </Link>
-              ) : (
-                <a
-                  className="store-help-link"
-                  href={intentWhatsAppUrl("general")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Chat with Buy & Sell GH specialist on WhatsApp"
-                >
-                  {section?.buttonLabel || "Chat with us"} <ChevronRight size={14} aria-hidden="true" />
-                </a>
-              )}
-            </div>
-          </div>
+        <div className="store-intro-right" aria-label="Store mission and direct support links">
+          <p className="store-intro-tagline">{tagline}</p>
 
-          <div className="store-help-item">
-            <div className="store-help-icon-wrap" aria-hidden="true">
-              <MapPin size={22} className="store-help-icon" />
-            </div>
-            <div className="store-help-copy">
-              <p className="store-help-label">Visit Buy &amp; Sell GH</p>
-              <span className="store-help-location">Dome Pillar 2, Accra</span>
-            </div>
+          <div className="store-intro-links">
+            {isSupportExternal ? (
+              <a
+                href={supportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="store-intro-action-link"
+              >
+                <span>{supportLabel}</span>
+                <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
+              </a>
+            ) : (
+              <Link to={supportUrl} className="store-intro-action-link">
+                <span>{supportLabel}</span>
+                <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
+              </Link>
+            )}
+
+            {isShowroomExternal ? (
+              <a
+                href={showroomUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="store-intro-action-link"
+              >
+                <span>{showroomLabel}</span>
+                <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
+              </a>
+            ) : (
+              <Link to={showroomUrl} className="store-intro-action-link">
+                <span>{showroomLabel}</span>
+                <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
+              </Link>
+            )}
           </div>
         </div>
       </div>

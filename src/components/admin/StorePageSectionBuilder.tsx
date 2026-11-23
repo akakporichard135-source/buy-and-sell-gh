@@ -40,6 +40,7 @@ import { getCardPriceDisplay } from "../../utils/productPricing";
 import { AdminMediaLibrary } from "../../pages/admin/AdminMediaLibrary";
 import { StorePageRenderer } from "../store/StorePageRenderer";
 import { ProductFamilyStripEditor } from "./ProductFamilyStripEditor";
+import type { MainStoreSubTabKey } from "./StoreVisualShelfEditors";
 import "../../styles/store.css";
 
 export interface SectionTypeOption {
@@ -174,7 +175,7 @@ interface StorePageSectionBuilderProps {
   uploadMedia: (file: File, category: MediaItem["category"], title?: string) => Promise<MediaItem>;
   products: Product[];
   activeProducts: Product[];
-  onSwitchSubTab?: (tab: "latest" | "categories" | "moreToLove" | "families" | "accessories") => void;
+  onSwitchSubTab?: (tab: MainStoreSubTabKey) => void;
 }
 
 export function StorePageSectionBuilder({
@@ -1049,8 +1050,17 @@ export function StorePageSectionBuilder({
                 {editingSection.builtInKey && onSwitchSubTab && (
                   <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs text-slate-600">
-                      This is a built-in Store section. You can customize its heading, subtitle, alignment, and visibility here, or edit its individual cards.
+                      This is a built-in Store section. Customize its heading, visibility, and order here, or jump directly to edit its cards &amp; imagery.
                     </span>
+                    {(editingSection.builtInKey === "promo-ribbon" || editingSection.builtInKey === "store-intro") && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("heroRibbon")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Hero &amp; Promo Ribbon →
+                      </button>
+                    )}
                     {editingSection.builtInKey === "latest-carousel" && (
                       <button
                         type="button"
@@ -1060,22 +1070,13 @@ export function StorePageSectionBuilder({
                         Edit &ldquo;The Latest&rdquo; Cards →
                       </button>
                     )}
-                    {editingSection.builtInKey === "category-cards" && (
-                      <button
-                        type="button"
-                        onClick={() => onSwitchSubTab("categories")}
-                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
-                      >
-                        Edit Category Cards →
-                      </button>
-                    )}
                     {editingSection.builtInKey === "more-to-love" && (
                       <button
                         type="button"
                         onClick={() => onSwitchSubTab("moreToLove")}
                         className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
                       >
-                        Edit &ldquo;More to Love&rdquo; Cards →
+                        Edit &ldquo;Featured Picks&rdquo; Cards →
                       </button>
                     )}
                     {editingSection.builtInKey === "accessories-carousel" && (
@@ -1084,7 +1085,61 @@ export function StorePageSectionBuilder({
                         onClick={() => onSwitchSubTab("accessories")}
                         className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
                       >
-                        Edit Featured Accessories →
+                        Edit Accessories Shelf →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "difference-cards" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("difference")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Difference Bento →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "audio-showcase" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("audio")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Audio &amp; Sound Shelf →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "colorful-accessories" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("colorful")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Power &amp; Style Shelf →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "help-cards" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("help")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Ways to Save &amp; Support →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "quick-links" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("quickLinks")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Quick Links →
+                      </button>
+                    )}
+                    {editingSection.builtInKey === "category-cards" && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchSubTab("categories")}
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold"
+                      >
+                        Edit Category Cards →
                       </button>
                     )}
                   </div>

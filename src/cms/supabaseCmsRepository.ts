@@ -2110,46 +2110,222 @@ const normalizeStorePageSection = (section: Partial<StorePageSection>, idx: numb
   };
 };
 
+const BROKEN_MAC_MINI_LEGACY_PATH = "/assets/homepage/homepage-mac-mini-white.webp";
+const SAFE_MAC_MINI_PUBLIC_PATH = "/products/store-redesign/latest-mac-mini-rose.webp";
+const CURRENT_STORE_DESIGN_VERSION = 3;
+
+function sanitizeStoreImageUrl(url?: string): string {
+  if (!url) return "";
+  return url.trim() === BROKEN_MAC_MINI_LEGACY_PATH ? SAFE_MAC_MINI_PUBLIC_PATH : url;
+}
+
 const mergeMainStoreWithDefaults = (source?: Partial<MainStoreConfig> | null): MainStoreConfig => {
   if (!source) return defaultMainStoreConfig;
 
-  const sections =
+  const isLegacyPreV3 = (source.storeDesignVersion ?? 0) < CURRENT_STORE_DESIGN_VERSION;
+
+  // Upgrade pre-v3 legacy Store rows cleanly to the screenshot-accurate v3 Store rebuild
+  // (replacing obsolete pre-rebuild image URLs & old 8-section defaults) while preserving
+  // any custom Admin-created sections (!sec.builtInKey). Once saved at v3, every Admin edit
+  // across sections, cards, images, themes, and order persists 100% verbatim.
+  if (isLegacyPreV3) {
+    const preservedCustomSections = (source.sections || [])
+      .filter((sec) => !sec.builtInKey)
+      .map((sec, idx) =>
+        normalizeStorePageSection(
+          {
+            ...sec,
+            desktopImage: sanitizeStoreImageUrl(sec.desktopImage),
+            mobileImage: sanitizeStoreImageUrl(sec.mobileImage),
+            order: defaultStorePageSections.length + idx,
+          },
+          defaultStorePageSections.length + idx
+        )
+      );
+
+    return {
+      ...defaultMainStoreConfig,
+      sections: [...defaultStorePageSections, ...preservedCustomSections],
+      sectionOrderVersion: CURRENT_STORE_DESIGN_VERSION,
+      storeDesignVersion: CURRENT_STORE_DESIGN_VERSION,
+      hasDraft: Boolean(source.hasDraft),
+      updatedAt: source.updatedAt,
+    };
+  }
+
+  // v3+ config: preserve exact Admin customizations, order, additions, deletions, and visibility
+  const rawSections =
     Array.isArray(source.sections) && source.sections.length > 0
-      ? source.sections.map((sec, idx) => normalizeStorePageSection(sec, idx))
+      ? source.sections.map((sec, idx) => {
+          const normalized = normalizeStorePageSection(sec, idx);
+          return {
+            ...normalized,
+            desktopImage: sanitizeStoreImageUrl(normalized.desktopImage),
+            mobileImage: sanitizeStoreImageUrl(normalized.mobileImage),
+          };
+        })
       : defaultStorePageSections.map((sec, idx) => normalizeStorePageSection(sec, idx));
 
-  const productFamilies = defaultMainStoreConfig.productFamilies.map((def) => {
-    const s = (source.productFamilies || []).find((item) => item.id === def.id);
-    return s ? { ...def, ...s } : def;
-  });
+  // Ensure any newly introduced built-in sections exist if absent
+  const existingKeys = new Set(rawSections.map((s) => s.builtInKey).filter(Boolean));
+  const missingBuiltIns = defaultStorePageSections
+    .filter((def) => def.builtInKey && !existingKeys.has(def.builtInKey))
+    .map((def, idx) => ({ ...def, order: rawSections.length + idx }));
+  const sections = [...rawSections, ...missingBuiltIns];
 
-  const latestCards = defaultMainStoreConfig.latestCards.map((def) => {
-    const s = (source.latestCards || []).find((item) => item.id === def.id);
-    return s ? { ...def, ...s } : def;
-  });
+  const productFamilies =
+    Array.isArray(source.productFamilies) && source.productFamilies.length > 0
+      ? source.productFamilies.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.productFamilies;
 
-  const categoryCards = defaultMainStoreConfig.categoryCards.map((def) => {
-    const s = (source.categoryCards || []).find((item) => item.id === def.id);
-    return s ? { ...def, ...s } : def;
-  });
+  const latestCards =
+    Array.isArray(source.latestCards) && source.latestCards.length > 0
+      ? source.latestCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.latestCards;
 
-  const moreToLoveCards = defaultMainStoreConfig.moreToLoveCards.map((def) => {
-    const s = (source.moreToLoveCards || []).find((item) => item.id === def.id);
-    return s ? { ...def, ...s } : def;
-  });
+  const featuredEditorialCards =
+    Array.isArray(source.featuredEditorialCards)
+      ? source.featuredEditorialCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.featuredEditorialCards;
 
-  const accessories = defaultMainStoreConfig.accessories.map((def) => {
-    const s = (source.accessories || []).find((item) => item.id === def.id);
-    return s ? { ...def, ...s } : def;
-  });
+  const featuredProductItems =
+    Array.isArray(source.featuredProductItems) && source.featuredProductItems.length > 0
+      ? source.featuredProductItems.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.featuredProductItems;
+
+  const categoryCards =
+    Array.isArray(source.categoryCards) && source.categoryCards.length > 0
+      ? source.categoryCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.categoryCards;
+
+  const moreToLoveCards =
+    Array.isArray(source.moreToLoveCards) && source.moreToLoveCards.length > 0
+      ? source.moreToLoveCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.moreToLoveCards;
+
+  const accessoriesEditorialCards =
+    Array.isArray(source.accessoriesEditorialCards)
+      ? source.accessoriesEditorialCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.accessoriesEditorialCards;
+
+  const accessories =
+    Array.isArray(source.accessories) && source.accessories.length > 0
+      ? source.accessories.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.accessories;
+
+  const differenceItems =
+    Array.isArray(source.differenceItems) && source.differenceItems.length > 0
+      ? source.differenceItems.map((item) => ({
+          ...item,
+          image: item.image ? sanitizeStoreImageUrl(item.image) : item.image,
+        }))
+      : defaultMainStoreConfig.differenceItems;
+
+  const audioEditorialCards =
+    Array.isArray(source.audioEditorialCards)
+      ? source.audioEditorialCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.audioEditorialCards;
+
+  const audioItems =
+    Array.isArray(source.audioItems) && source.audioItems.length > 0
+      ? source.audioItems.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.audioItems;
+
+  const colorfulEditorialCards =
+    Array.isArray(source.colorfulEditorialCards)
+      ? source.colorfulEditorialCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.colorfulEditorialCards;
+
+  const colorfulItems =
+    Array.isArray(source.colorfulItems) && source.colorfulItems.length > 0
+      ? source.colorfulItems.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.colorfulItems;
+
+  const helpCards =
+    Array.isArray(source.helpCards) && source.helpCards.length > 0
+      ? source.helpCards.map((item) => ({
+          ...item,
+          image: sanitizeStoreImageUrl(item.image),
+        }))
+      : defaultMainStoreConfig.helpCards;
+
+  const promoRibbonSlides =
+    Array.isArray(source.promoRibbonSlides) && source.promoRibbonSlides.length > 0
+      ? source.promoRibbonSlides
+      : defaultMainStoreConfig.promoRibbonSlides;
+
+  const heroConfig = source.heroConfig
+    ? {
+        ...(defaultMainStoreConfig.heroConfig!),
+        ...source.heroConfig,
+        emblemImage: sanitizeStoreImageUrl(
+          source.heroConfig.emblemImage ?? defaultMainStoreConfig.heroConfig?.emblemImage
+        ),
+      }
+    : defaultMainStoreConfig.heroConfig;
+
+  const quickLinks =
+    Array.isArray(source.quickLinks) && source.quickLinks.length > 0
+      ? source.quickLinks
+      : defaultMainStoreConfig.quickLinks;
 
   return {
     sections,
+    sectionOrderVersion: source.sectionOrderVersion ?? CURRENT_STORE_DESIGN_VERSION,
+    storeDesignVersion: CURRENT_STORE_DESIGN_VERSION,
+    promoRibbonSlides,
+    heroConfig,
     productFamilies,
     latestCards,
+    featuredEditorialCards,
+    featuredProductItems,
     categoryCards,
     moreToLoveCards,
+    accessoriesEditorialCards,
     accessories,
+    differenceItems,
+    audioEditorialCards,
+    audioItems,
+    colorfulEditorialCards,
+    colorfulItems,
+    helpCards,
+    quickLinks,
     hasDraft: Boolean(source.hasDraft),
     updatedAt: source.updatedAt,
   };
@@ -2258,6 +2434,8 @@ export const saveMainStoreDraft = async (
   await assertAdminAal2();
   const normalized = mergeMainStoreWithDefaults({
     ...config,
+    sectionOrderVersion: CURRENT_STORE_DESIGN_VERSION,
+    storeDesignVersion: CURRENT_STORE_DESIGN_VERSION,
     hasDraft: true,
     updatedAt: new Date().toISOString(),
   });
@@ -2309,6 +2487,8 @@ export const saveMainStoreContent = async (
   await assertAdminAal2();
   const normalized = mergeMainStoreWithDefaults({
     ...config,
+    sectionOrderVersion: CURRENT_STORE_DESIGN_VERSION,
+    storeDesignVersion: CURRENT_STORE_DESIGN_VERSION,
     hasDraft: false,
     updatedAt: new Date().toISOString(),
   });
@@ -2491,57 +2671,78 @@ async function cascadeMediaUrlUpdate(
       await saveStorefrontContent(updatedStorefront);
     }
 
-    // 2b. Main Store page content cascade
+    // 2b. Main Store page content cascade (all built-in & v3 editorial slots)
     const currentMainStore = await fetchMainStoreContent();
     let mainStoreChanged = false;
+    const replaceImageField = <T extends { image?: string; alt?: string }>(items?: T[]): T[] | undefined =>
+      items?.map((item) => {
+        if (item.image === oldItem.url) {
+          mainStoreChanged = true;
+          return {
+            ...item,
+            image: newItem.url,
+            alt: updates.alt !== undefined ? updates.alt.trim() : item.alt,
+          };
+        }
+        return item;
+      });
 
-    const nextFamilies = currentMainStore.productFamilies.map((f) => {
-      if (f.image === oldItem.url) {
-        mainStoreChanged = true;
-        return { ...f, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : f.alt };
-      }
-      return f;
-    });
+    const nextHeroConfig = currentMainStore.heroConfig
+      ? currentMainStore.heroConfig.emblemImage === oldItem.url
+        ? ((mainStoreChanged = true),
+          {
+            ...currentMainStore.heroConfig,
+            emblemImage: newItem.url,
+            emblemAlt:
+              updates.alt !== undefined ? updates.alt.trim() : currentMainStore.heroConfig.emblemAlt,
+          })
+        : currentMainStore.heroConfig
+      : undefined;
 
-    const nextLatest = currentMainStore.latestCards.map((c) => {
-      if (c.image === oldItem.url) {
+    const nextFamilies = replaceImageField(currentMainStore.productFamilies) || currentMainStore.productFamilies;
+    const nextLatest = replaceImageField(currentMainStore.latestCards) || currentMainStore.latestCards;
+    const nextFeaturedEd = replaceImageField(currentMainStore.featuredEditorialCards);
+    const nextFeaturedProducts = replaceImageField(currentMainStore.featuredProductItems);
+    const nextCategories = replaceImageField(currentMainStore.categoryCards) || currentMainStore.categoryCards;
+    const nextMore = replaceImageField(currentMainStore.moreToLoveCards) || currentMainStore.moreToLoveCards;
+    const nextAccEd = replaceImageField(currentMainStore.accessoriesEditorialCards);
+    const nextAccessories = replaceImageField(currentMainStore.accessories) || currentMainStore.accessories;
+    const nextDiffItems = replaceImageField(currentMainStore.differenceItems);
+    const nextAudioEd = replaceImageField(currentMainStore.audioEditorialCards);
+    const nextAudioItems = replaceImageField(currentMainStore.audioItems);
+    const nextColorEd = replaceImageField(currentMainStore.colorfulEditorialCards);
+    const nextColorItems = replaceImageField(currentMainStore.colorfulItems);
+    const nextHelpCards = replaceImageField(currentMainStore.helpCards);
+    const nextSections = currentMainStore.sections?.map((sec) => {
+      let changed = false;
+      const desktopImage = sec.desktopImage === oldItem.url ? ((changed = true), newItem.url) : sec.desktopImage;
+      const mobileImage = sec.mobileImage === oldItem.url ? ((changed = true), newItem.url) : sec.mobileImage;
+      if (changed) {
         mainStoreChanged = true;
-        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
+        return { ...sec, desktopImage, mobileImage };
       }
-      return c;
-    });
-
-    const nextCategories = currentMainStore.categoryCards.map((c) => {
-      if (c.image === oldItem.url) {
-        mainStoreChanged = true;
-        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
-      }
-      return c;
-    });
-
-    const nextMore = currentMainStore.moreToLoveCards.map((c) => {
-      if (c.image === oldItem.url) {
-        mainStoreChanged = true;
-        return { ...c, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : c.alt };
-      }
-      return c;
-    });
-
-    const nextAccessories = currentMainStore.accessories.map((a) => {
-      if (a.image === oldItem.url) {
-        mainStoreChanged = true;
-        return { ...a, image: newItem.url, alt: updates.alt !== undefined ? updates.alt.trim() : a.alt };
-      }
-      return a;
+      return sec;
     });
 
     if (mainStoreChanged) {
       await saveMainStoreContent({
+        ...currentMainStore,
+        heroConfig: nextHeroConfig,
+        sections: nextSections,
         productFamilies: nextFamilies,
         latestCards: nextLatest,
+        featuredEditorialCards: nextFeaturedEd,
+        featuredProductItems: nextFeaturedProducts,
         categoryCards: nextCategories,
         moreToLoveCards: nextMore,
+        accessoriesEditorialCards: nextAccEd,
         accessories: nextAccessories,
+        differenceItems: nextDiffItems,
+        audioEditorialCards: nextAudioEd,
+        audioItems: nextAudioItems,
+        colorfulEditorialCards: nextColorEd,
+        colorfulItems: nextColorItems,
+        helpCards: nextHelpCards,
       });
     }
 

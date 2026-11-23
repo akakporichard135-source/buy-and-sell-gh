@@ -1,9 +1,9 @@
+import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultStorePageSections } from "../../cms/defaultCmsData";
 import type { MainStoreConfig, StorePageSection } from "../../cms/types";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
-import { isProductPurchasable } from "../../catalog/productCatalog";
 import { getPublicPurchaseAction } from "../../catalog/productPurchaseAction";
 import { whatsappUrl } from "../../utils/whatsapp";
 import {
@@ -15,13 +15,17 @@ import type { Product } from "../../types/product";
 import { resolveCatalogueProductImage, resolveProductImage } from "../../utils/productImages";
 import { getCardPriceDisplay } from "../../utils/productPricing";
 import { StoreAccessoriesCarousel } from "./StoreAccessoriesCarousel";
+import { StoreAudioShowcase } from "./StoreAudioShowcase";
 import { StoreCarousel } from "./StoreCarousel";
 import { StoreCategoryCards } from "./StoreCategoryCards";
+import { StoreColorfulAccessories } from "./StoreColorfulAccessories";
 import { StoreDifferenceCards } from "./StoreDifferenceCards";
 import { StoreHelpCards } from "./StoreHelpCards";
 import { StoreHeroIntro } from "./StoreHeroIntro";
 import { StoreLatestCarousel, StoreMoreToLoveCarousel } from "./StoreLatestCarousel";
 import { StoreProductFamilyStrip } from "./StoreProductFamilyStrip";
+import { StorePromoRibbon } from "./StorePromoRibbon";
+import { StoreQuickLinks } from "./StoreQuickLinks";
 
 interface StorePageRendererProps {
   config?: MainStoreConfig;
@@ -64,41 +68,58 @@ export function StorePageRenderer({ config, products }: StorePageRendererProps) 
       ? activeConfig.sections
       : defaultStorePageSections;
 
-  const visibleSections = rawSections.filter((section) => section.visible !== false);
+  const visibleSections = [...rawSections]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((section) => section.visible !== false);
 
-  // Merge passed Apple catalogue products with full catalog so any admin-selected product resolves canonically
+  const hasQuickLinksSection = rawSections.some((sec) => sec.builtInKey === "quick-links");
   const productPool = allCatalogProducts.length > 0 ? allCatalogProducts : products;
 
   return (
     <>
       {visibleSections.map((section) => {
-        if (section.builtInKey === "store-intro") {
-          return <StoreHeroIntro key={section.id} section={section} />;
-        }
-        if (section.builtInKey === "family-strip") {
-          return <StoreProductFamilyStrip key={section.id} section={section} configOverride={activeConfig} />;
-        }
-        if (section.builtInKey === "latest-carousel") {
+        if (section.builtInKey === "promo-ribbon") {
           return (
-            <StoreLatestCarousel
+            <StorePromoRibbon
               key={section.id}
-              products={products}
               section={section}
               configOverride={activeConfig}
             />
           );
         }
-        if (section.builtInKey === "category-cards") {
-          return <StoreCategoryCards key={section.id} section={section} configOverride={activeConfig} />;
+        if (section.builtInKey === "store-intro") {
+          return (
+            <StoreHeroIntro
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
         }
-        if (section.builtInKey === "help-cards") {
-          return <StoreHelpCards key={section.id} section={section} />;
+        if (section.builtInKey === "family-strip") {
+          return (
+            <StoreProductFamilyStrip
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
+        }
+        if (section.builtInKey === "latest-carousel") {
+          return (
+            <StoreLatestCarousel
+              key={section.id}
+              products={productPool}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
         }
         if (section.builtInKey === "more-to-love") {
           return (
             <StoreMoreToLoveCarousel
               key={section.id}
-              products={products}
+              products={productPool}
               section={section}
               configOverride={activeConfig}
             />
@@ -108,14 +129,68 @@ export function StorePageRenderer({ config, products }: StorePageRendererProps) 
           return (
             <StoreAccessoriesCarousel
               key={section.id}
-              products={products}
+              products={productPool}
               section={section}
               configOverride={activeConfig}
             />
           );
         }
         if (section.builtInKey === "difference-cards") {
-          return <StoreDifferenceCards key={section.id} section={section} />;
+          return (
+            <StoreDifferenceCards
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
+        }
+        if (section.builtInKey === "audio-showcase") {
+          return (
+            <StoreAudioShowcase
+              key={section.id}
+              products={productPool}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
+        }
+        if (section.builtInKey === "colorful-accessories") {
+          return (
+            <StoreColorfulAccessories
+              key={section.id}
+              products={productPool}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
+        }
+        if (section.builtInKey === "help-cards") {
+          return (
+            <StoreHelpCards
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
+        }
+        if (section.builtInKey === "category-cards") {
+          return (
+            <StoreCategoryCards
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+              products={productPool}
+            />
+          );
+        }
+        if (section.builtInKey === "quick-links") {
+          return (
+            <StoreQuickLinks
+              key={section.id}
+              section={section}
+              configOverride={activeConfig}
+            />
+          );
         }
 
         return (
@@ -126,6 +201,8 @@ export function StorePageRenderer({ config, products }: StorePageRendererProps) 
           />
         );
       })}
+
+      {!hasQuickLinksSection && <StoreQuickLinks configOverride={activeConfig} />}
     </>
   );
 }
@@ -171,17 +248,19 @@ function StoreCustomSection({
         aria-label={section.heading}
       >
         <StoreCarousel
+          variant="apple"
           eyebrow={section.eyebrow || undefined}
           title={section.heading}
           subtitle={section.subtitle || section.description || undefined}
           headerRight={
             section.buttonLabel && section.buttonDestination ? (
               <Link to={section.buttonDestination} className="store-section-header-link">
-                {section.buttonLabel} →
+                {section.buttonLabel} <ChevronRight size={14} aria-hidden="true" />
               </Link>
             ) : undefined
           }
           controlsAriaLabel={`${section.heading} carousel navigation`}
+          trackClassName="store-latest-track"
         >
           {selectedProducts.map((product) => (
             <StoreCustomProductCard key={product.id} product={product} isDark={isDark} />
@@ -294,31 +373,36 @@ function StoreCustomProductCard({
   const learnMorePath = productStoryPath(family, product.slug);
   const resolvedImage =
     resolveCatalogueProductImage(product) || resolveProductImage(product);
-  const isPurchasable = isProductPurchasable(product);
   const priceDisplay = getCardPriceDisplay(product);
   const action = getPublicPurchaseAction(product);
-  const ctaLabel = action === "buy" ? "Buy" : action === "enquire" ? "Enquire on WhatsApp" : "View Pricing";
+  const ctaLabel =
+    action === "buy" ? "Buy" : action === "enquire" ? "Enquire" : "View Pricing";
 
   return (
     <article
       className={`store-latest-card store-custom-product-card ${
-        isDark ? "theme-dark" : "theme-light"
+        isDark ? "store-latest-card-dark" : "store-latest-card-light"
       }`}
       data-product-id={product.id}
       data-product-slug={product.slug}
     >
-      <div className="store-latest-card-content">
+      <div className="store-latest-card-header">
         <p className="store-latest-card-eyebrow">
           {product.condition && product.condition !== "To Confirm"
             ? product.condition.toUpperCase()
             : product.category.toUpperCase()}
         </p>
-        <h3 className="store-latest-card-title">
-          <Link to={buyPath} className="store-latest-card-link">
+        <h3 className="store-latest-card-name">
+          <Link to={buyPath} className="store-latest-card-title-link">
             {product.name}
           </Link>
         </h3>
-        <p className="store-latest-card-statement">{priceDisplay.current}</p>
+        <p className={`store-latest-card-price ${priceDisplay.isEnquiry ? "is-muted" : ""}`}>
+          <span>{priceDisplay.current}</span>
+          {priceDisplay.previous && (
+            <span className="store-latest-card-price-old">{priceDisplay.previous}</span>
+          )}
+        </p>
       </div>
 
       <Link
@@ -338,12 +422,25 @@ function StoreCustomProductCard({
       </Link>
 
       <div className="store-latest-card-actions">
-        <Link to={learnMorePath} className="store-card-btn-secondary">
-          Learn More
+        {action === "enquire" ? (
+          <a
+            href={whatsappUrl(
+              `Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-store-primary"
+          >
+            {ctaLabel}
+          </a>
+        ) : (
+          <Link to={buyPath} className="btn-store-primary">
+            {ctaLabel}
+          </Link>
+        )}
+        <Link to={learnMorePath} className="btn-store-text-link">
+          Learn more <ChevronRight size={14} aria-hidden="true" />
         </Link>
-        {action === "enquire"
-          ? <a href={whatsappUrl(`Hello Buy & Sell GH, I would like to enquire about ${product.name}. Please confirm availability and pricing.`)} target="_blank" rel="noopener noreferrer" className="store-card-btn-primary">{ctaLabel}</a>
-          : <Link to={buyPath} className="store-card-btn-primary">{ctaLabel}</Link>}
       </div>
     </article>
   );
