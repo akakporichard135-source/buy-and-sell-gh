@@ -751,3 +751,220 @@ export interface MainStoreConfig {
   hasDraft?: boolean;
   updatedAt?: string;
 }
+
+/* ============================================================================
+   MAC PAGE REDESIGN CMS SCHEMA (Apple.com/mac-faithful, 100% Admin-manageable)
+   ============================================================================ */
+
+export type MacBuiltInSectionKey =
+  | "promo-ribbon"
+  | "hero-chapter-nav"
+  | "explore-lineup"
+  | "why-shop-mac"
+  | "help-me-choose"
+  | "switch-to-mac"
+  | "mac-essentials"
+  | "ecosystem-accordion"
+  | "all-mac-catalog"
+  | "mac-directory-footer";
+
+export type MacPageSectionType =
+  | MacBuiltInSectionKey
+  | "promotional-banner"
+  | "featured-mac-products"
+  | "image-text"
+  | "product-carousel"
+  | (string & {});
+
+export interface MacPageSection {
+  id: string;
+  type: MacPageSectionType;
+  builtInKey?: MacBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  mobileImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right";
+  productIds?: string[];
+  buttonLabel?: string;
+  buttonDestination?: string;
+  secondaryButtonLabel?: string;
+  secondaryButtonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacChapterNavItem {
+  id: string;
+  label: string;
+  badge?: string;
+  image: string;
+  alt: string;
+  to: string;
+  /** Optional lineup tab filter to activate when clicked */
+  filterTab?: string;
+  /** Optional on-page anchor id (e.g. "explore-lineup", "help-me-choose", "all-mac-listings") */
+  scrollTarget?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacColorSwatch {
+  label: string;
+  hex: string;
+}
+
+export interface MacLineupTab {
+  id: string;
+  label: string;
+}
+
+export interface MacLineupCard {
+  id: string;
+  category: string; // "laptops" | "desktops" | "accessories"
+  productSlug?: string;
+  badge?: string;
+  title: string;
+  chipLine?: string;
+  description: string;
+  image: string;
+  alt: string;
+  swatches?: MacColorSwatch[];
+  priceNote?: string;
+  fallbackPriceText?: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  buyLabel?: string;
+  buyTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacBenefitCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  modalDetails?: string;
+  image: string;
+  alt: string;
+  actionStyle: "modal" | "link";
+  actionLabel: string;
+  actionTo: string;
+  isExternal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacHelpMeChooseConfig {
+  sectionHeading: string;
+  cardHeading: string;
+  subtitle?: string;
+  ctaLabel: string;
+  secondaryLabel?: string;
+  secondaryTo?: string;
+  image: string;
+  alt: string;
+  interactiveModalEnabled: boolean;
+}
+
+export interface MacPromoSplitCard {
+  id: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+  secondaryLinkLabel?: string;
+  secondaryLinkTo?: string;
+  isExternal?: boolean;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacEcosystemItem {
+  id: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface MacDirectoryLink {
+  id: string;
+  label: string;
+  to: string;
+  isSecondary?: boolean;
+}
+
+export interface MacDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: MacDirectoryLink[];
+}
+
+export interface MacPageConfig {
+  macDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  promoRibbon: {
+    enabled: boolean;
+    text: string;
+    linkLabel: string;
+    linkTo: string;
+  };
+  hero: {
+    heading: string;
+    showGoldPeriod?: boolean;
+  };
+  sections: MacPageSection[];
+  chapterNavItems: MacChapterNavItem[];
+  lineupSection: {
+    heading: string;
+    tabs: MacLineupTab[];
+    cards: MacLineupCard[];
+  };
+  whyShopSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    cards: MacBenefitCard[];
+  };
+  helpMeChoose: MacHelpMeChooseConfig;
+  switchToMacSection: {
+    heading: string;
+    cards: MacPromoSplitCard[];
+  };
+  macEssentialsSection: {
+    heading: string;
+    cards: MacPromoSplitCard[];
+  };
+  ecosystemSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    items: MacEcosystemItem[];
+  };
+  allCatalogSection: {
+    heading: string;
+    subtitle: string;
+  };
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: MacDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}

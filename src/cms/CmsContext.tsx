@@ -13,11 +13,14 @@ import {
   deleteMediaItemPermanently,
   discardHomepageDraft,
   discardHomepageLegacyDraft,
+  discardMacPageDraft,
   discardMainStoreDraft,
   fetchFaqs,
   fetchHomepageContent,
   fetchHomepageDraft,
   fetchHomepageLegacyDraft,
+  fetchMacPageContent,
+  fetchMacPageDraft,
   fetchMainStoreContent,
   fetchMainStoreDraft,
   fetchMediaLibrary,
@@ -28,6 +31,8 @@ import {
   getInitialHomepageContent,
   getInitialHomepageDraft,
   getInitialHomepageLegacyDraft,
+  getInitialMacPageContent,
+  getInitialMacPageDraft,
   getInitialMainStoreContent,
   getInitialMainStoreDraft,
   getInitialMediaLibrary,
@@ -40,6 +45,8 @@ import {
   saveHomepageContent,
   saveHomepageDraft,
   saveHomepageLegacyDraft,
+  saveMacPageContent,
+  saveMacPageDraft,
   saveMainStoreContent,
   saveMainStoreDraft,
   savePageContent,
@@ -54,6 +61,7 @@ import type {
   CategoryDepartmentConfig,
   FaqItem,
   HomepageContent,
+  MacPageConfig,
   MainStoreConfig,
   MediaItem,
   PageContentRegistry,
@@ -67,6 +75,8 @@ interface CmsContextValue {
   homepageLegacyDraft: HomepageContent | null;
   mainStore: MainStoreConfig;
   mainStoreDraft: MainStoreConfig | null;
+  macPage: MacPageConfig;
+  macPageDraft: MacPageConfig | null;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -83,6 +93,9 @@ interface CmsContextValue {
   updateMainStore: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   saveMainStoreDraftConfig: (config: MainStoreConfig) => Promise<MainStoreConfig>;
   discardMainStoreDraftConfig: () => Promise<void>;
+  updateMacPage: (config: MacPageConfig) => Promise<MacPageConfig>;
+  saveMacPageDraftConfig: (config: MacPageConfig) => Promise<MacPageConfig>;
+  discardMacPageDraftConfig: () => Promise<void>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -169,6 +182,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [homepageLegacyDraft, setHomepageLegacyDraft] = useState<HomepageContent | null>(() => getInitialHomepageLegacyDraft());
   const [mainStore, setMainStore] = useState<MainStoreConfig>(() => getInitialMainStoreContent());
   const [mainStoreDraft, setMainStoreDraft] = useState<MainStoreConfig | null>(() => getInitialMainStoreDraft());
+  const [macPage, setMacPage] = useState<MacPageConfig>(() => getInitialMacPageContent());
+  const [macPageDraft, setMacPageDraft] = useState<MacPageConfig | null>(() => getInitialMacPageDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
@@ -218,13 +233,17 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       withTimeoutFallback(fetchMainStoreContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMainStoreContent(), (v) =>
         startTransition(() => setMainStore(v))
       ),
-    ]).then(([sRes, fRes, pRes, dRes, msRes]) => {
+      withTimeoutFallback(fetchMacPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMacPageContent(), (v) =>
+        startTransition(() => setMacPage(v))
+      ),
+    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes]) => {
       startTransition(() => {
         if (sRes.status === "fulfilled") setSettings(sRes.value);
         if (fRes.status === "fulfilled") setFaqs(fRes.value);
         if (pRes.status === "fulfilled") setPages(pRes.value);
         if (dRes.status === "fulfilled") setDepartments(dRes.value);
         if (msRes.status === "fulfilled") setMainStore(msRes.value);
+        if (macRes.status === "fulfilled") setMacPage(macRes.value);
       });
     });
 
@@ -235,12 +254,14 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
           fetchHomepageLegacyDraft(),
           fetchMediaLibrary(),
           fetchMainStoreDraft(),
-        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes]) => {
+          fetchMacPageDraft(),
+        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes]) => {
           startTransition(() => {
             if (hDraftRes.status === "fulfilled") setHomepageDraft(hDraftRes.value);
             if (hLegacyDraftRes.status === "fulfilled") setHomepageLegacyDraft(hLegacyDraftRes.value);
             if (mRes.status === "fulfilled") setMedia(mRes.value);
             if (msDraftRes.status === "fulfilled") setMainStoreDraft(msDraftRes.value);
+            if (macDraftRes.status === "fulfilled") setMacPageDraft(macDraftRes.value);
           });
         })
       : Promise.resolve();
@@ -387,6 +408,24 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     setMainStoreDraft(null);
   };
 
+  const handleUpdateMacPage = async (newConfig: MacPageConfig) => {
+    const updated = await saveMacPageContent(newConfig);
+    setMacPage(updated);
+    setMacPageDraft(null);
+    return updated;
+  };
+
+  const handleSaveMacPageDraft = async (newConfig: MacPageConfig) => {
+    const draft = await saveMacPageDraft(newConfig);
+    setMacPageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardMacPageDraft = async () => {
+    await discardMacPageDraft();
+    setMacPageDraft(null);
+  };
+
   return (
     <CmsContext.Provider
       value={{
@@ -396,6 +435,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         homepageLegacyDraft,
         mainStore,
         mainStoreDraft,
+        macPage,
+        macPageDraft,
         media,
         faqs,
         pages,
@@ -412,6 +453,9 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateMainStore: handleUpdateMainStore,
         saveMainStoreDraftConfig: handleSaveMainStoreDraft,
         discardMainStoreDraftConfig: handleDiscardMainStoreDraft,
+        updateMacPage: handleUpdateMacPage,
+        saveMacPageDraftConfig: handleSaveMacPageDraft,
+        discardMacPageDraftConfig: handleDiscardMacPageDraft,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,

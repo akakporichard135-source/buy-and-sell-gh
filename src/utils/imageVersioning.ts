@@ -11,7 +11,7 @@ const SYNC_CHANNEL_NAME = "buyandsell_cms_published_sync";
 const PUBLISHED_TIMESTAMP_KEY = "buyandsell_published_v_timestamp";
 
 export interface PublishedSyncMessage {
-  type: "homepage" | "learn-more" | "product" | "storefront" | "main-store" | "media";
+  type: "homepage" | "learn-more" | "product" | "storefront" | "main-store" | "mac-page" | "media";
   id?: string;
   timestamp: number;
 }

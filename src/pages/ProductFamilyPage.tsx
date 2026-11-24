@@ -24,9 +24,17 @@ import {
 } from "../utils/productPresentation";
 
 import { useCms } from "../cms/CmsContext";
+import { MacPageRenderer } from "../components/store/mac/MacPageRenderer";
+import { defaultMacPageConfig } from "../cms/macPageDefaults";
 
-export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
-  const { departments } = useCms();
+export function ProductFamilyPage({
+  family,
+  catalogMode = false,
+}: {
+  family: ProductFamilyKey;
+  catalogMode?: boolean;
+}) {
+  const { departments, macPage } = useCms();
   const config: CategoryDepartmentConfig = useMemo(() => {
     return departments[family] || CATEGORY_DEPARTMENTS[family] || CATEGORY_DEPARTMENTS.iphone;
   }, [departments, family]);
@@ -48,6 +56,19 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
       });
   }, [activeProducts, family]);
 
+  if (family === "mac" && !catalogMode) {
+    const activeMacConfig = macPage || defaultMacPageConfig;
+    return (
+      <>
+        <SEO
+          title={activeMacConfig.seoTitle || config.seoTitle}
+          description={activeMacConfig.seoDescription || config.seoDescription}
+        />
+        <MacPageRenderer />
+      </>
+    );
+  }
+
   return (
     <div className={`store-category-page store-cat-${family}`}>
       <SEO
@@ -67,23 +88,25 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
       />
 
       {/* 3. Primary Shopping Carousel: Large Horizontal Store Cards */}
-      <section className="store-cat-carousel-section" aria-labelledby="featured-carousel-title">
-        <div className="store-cat-carousel-container">
-          <StoreCarousel
-            eyebrow="FEATURED MODELS"
-            title={`Explore the ${config.label} lineup.`}
-            subtitle={family === "accessories"
-              ? "Explore original chargers, cables, and everyday Apple companions."
-              : "Browse the latest releases, signature features, and flagship hardware."}
-            controlsAriaLabel={`${config.label} featured carousel navigation`}
-            trackClassName="store-cat-featured-track"
-          >
-            {config.featuredCards.map((card) => (
-              <StoreCategoryCard key={card.id} card={card} />
-            ))}
-          </StoreCarousel>
-        </div>
-      </section>
+      {!catalogMode && (
+        <section className="store-cat-carousel-section" aria-labelledby="featured-carousel-title">
+          <div className="store-cat-carousel-container">
+            <StoreCarousel
+              eyebrow="FEATURED MODELS"
+              title={`Explore the ${config.label} lineup.`}
+              subtitle={family === "accessories"
+                ? "Explore original chargers, cables, and everyday Apple companions."
+                : "Browse the latest releases, signature features, and flagship hardware."}
+              controlsAriaLabel={`${config.label} featured carousel navigation`}
+              trackClassName="store-cat-featured-track"
+            >
+              {config.featuredCards.map((card) => (
+                <StoreCategoryCard key={card.id} card={card} />
+              ))}
+            </StoreCarousel>
+          </div>
+        </section>
+      )}
 
       {/* 4. Available Catalogue Inventory Section */}
       <StoreCategoryCatalogGrid
@@ -95,7 +118,7 @@ export function ProductFamilyPage({ family }: { family: ProductFamilyKey }) {
       />
 
       {/* 5. Category-Relevant Accessories Rail */}
-      <StoreCategoryAccessoriesRail family={family} />
+      {!catalogMode && <StoreCategoryAccessoriesRail family={family} />}
 
       {/* 6. Buy & Sell GH Trust & Assurance Bar */}
       <StoreCategoryTrustBar />
