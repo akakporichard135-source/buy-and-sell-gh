@@ -27,6 +27,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
+import { defaultMacPageConfig } from "../../cms/macPageDefaults";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -34,6 +35,7 @@ import type {
   CategoryAccessoryOverride,
   CategoryDepartmentConfig,
   CategoryFeaturedCardData,
+  MacPageConfig,
   MainStoreAccessoryItem,
   MainStoreCategoryCard,
   MainStoreConfig,
@@ -48,6 +50,7 @@ import { formatGhs } from "../../utils/format";
 import type { Product, ProductImage } from "../../types/product";
 import { ProductFamilyStripEditor } from "../../components/admin/ProductFamilyStripEditor";
 import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
+import { MacPageAdminEditor, type MacAdminSubTab } from "../../components/admin/MacPageAdminEditor";
 import {
   StoreDifferenceBentoAdminEditor,
   StoreHelpCardsAdminEditor,
@@ -60,7 +63,7 @@ import {
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
 export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
-type StorefrontSection = "featured" | "listings" | "accessories";
+type StorefrontSection = "featured" | "listings" | "accessories" | `mac:${MacAdminSubTab}`;
 type MainStoreSection = MainStoreSubTabKey;
 
 export function AdminStorefrontManager() {
@@ -68,10 +71,15 @@ export function AdminStorefrontManager() {
     departments: cmsDepartments,
     mainStore: cmsMainStore,
     mainStoreDraft,
+    macPage: cmsMacPage,
+    macPageDraft,
     updateStorefront,
     updateMainStore,
     saveMainStoreDraftConfig,
     discardMainStoreDraftConfig,
+    updateMacPage,
+    saveMacPageDraftConfig,
+    discardMacPageDraftConfig,
     uploadMedia,
   } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
@@ -83,11 +91,20 @@ export function AdminStorefrontManager() {
   const [mainStoreConfig, setMainStoreConfigRaw] = useState<MainStoreConfig>(
     mainStoreDraft || cmsMainStore || defaultMainStoreConfig
   );
+  const [macPageConfig, setMacPageConfigRaw] = useState<MacPageConfig>(
+    macPageDraft || cmsMacPage || defaultMacPageConfig
+  );
   const hasLocalMainStoreEdits = useRef(false);
+  const hasLocalMacEdits = useRef(false);
 
   const setMainStoreConfig: React.Dispatch<React.SetStateAction<MainStoreConfig>> = (updater) => {
     hasLocalMainStoreEdits.current = true;
     setMainStoreConfigRaw(updater);
+  };
+
+  const setMacPageConfig: React.Dispatch<React.SetStateAction<MacPageConfig>> = (updater) => {
+    hasLocalMacEdits.current = true;
+    setMacPageConfigRaw(updater);
   };
 
   useEffect(() => {
@@ -98,6 +115,15 @@ export function AdminStorefrontManager() {
       setMainStoreConfigRaw(cmsMainStore);
     }
   }, [cmsMainStore, mainStoreDraft]);
+
+  useEffect(() => {
+    if (hasLocalMacEdits.current) return;
+    if (macPageDraft) {
+      setMacPageConfigRaw(macPageDraft);
+    } else if (cmsMacPage) {
+      setMacPageConfigRaw(cmsMacPage);
+    }
+  }, [cmsMacPage, macPageDraft]);
 
   useEffect(() => {
     if (cmsDepartments) {
@@ -158,7 +184,9 @@ export function AdminStorefrontManager() {
       await Promise.all([
         updateStorefront(departments),
         updateMainStore(mainStoreConfig),
+        updateMacPage(macPageConfig),
       ]);
+      hasLocalMacEdits.current = false;
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
@@ -524,7 +552,15 @@ export function AdminStorefrontManager() {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setSelectedDeptKey(key)}
+                  data-testid={`storefront-dept-tab-${key}`}
+                  onClick={() => {
+                    setSelectedDeptKey(key);
+                    if (key === "mac") {
+                      setActiveSection("mac:sections");
+                    } else if (activeSection.startsWith("mac:")) {
+                      setActiveSection("featured");
+                    }
+                  }}
                   className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
                     isSelected
                       ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
@@ -533,6 +569,11 @@ export function AdminStorefrontManager() {
                 >
                   <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
                   <span>{dept?.label || key.toUpperCase()}</span>
+                  {key === "mac" && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
+                      CMS v2
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -572,6 +613,45 @@ export function AdminStorefrontManager() {
                     type="button"
                     data-testid={`main-store-tab-${tab.key}`}
                     onClick={() => setActiveMainStoreSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "mac" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "mac:sections", label: "Sections Builder", count: (macPageConfig.sections || []).length },
+                  { key: "mac:heroNav", label: "Hero & Chapter Nav", count: (macPageConfig.chapterNavItems || []).length },
+                  { key: "mac:lineup", label: "Explore Lineup", count: (macPageConfig.lineupSection?.cards || []).length },
+                  { key: "mac:whyShop", label: "Why Buy & Sell GH", count: (macPageConfig.whyShopSection?.cards || []).length },
+                  { key: "mac:showcases", label: "Help / Switch / Essentials", count: 5 },
+                  { key: "mac:ecosystem", label: "Unlock Apple World", count: (macPageConfig.ecosystemSection?.items || []).length },
+                  { key: "mac:directory", label: "Mac Directory Footer", count: (macPageConfig.directoryFooter?.columns || []).length },
+                  { key: "listings", label: "All Mac Listings Grid", count: categoryProducts.length },
+                  { key: "accessories", label: "Mac Accessories Rail", count: categoryAccessories.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`mac-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
                     className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive
                         ? "bg-slate-900 text-white shadow"
@@ -1069,8 +1149,39 @@ export function AdminStorefrontManager() {
         </div>
       )}
 
+      {/* ===================== MAC PAGE REDESIGN CMS v2 EDITORS ===================== */}
+      {selectedDeptKey === "mac" && activeSection.startsWith("mac:") && (
+        <MacPageAdminEditor
+          activeSubTab={activeSection.replace("mac:", "") as MacAdminSubTab}
+          config={macPageConfig}
+          setConfig={setMacPageConfig}
+          hasDraft={Boolean(macPageDraft)}
+          onSaveDraft={async (cfg) => {
+            const saved = await saveMacPageDraftConfig(cfg);
+            setMacPageConfigRaw(saved);
+            return saved;
+          }}
+          onPublishLive={async (cfg) => {
+            const published = await updateMacPage(cfg);
+            hasLocalMacEdits.current = false;
+            setMacPageConfigRaw(published);
+            return published;
+          }}
+          onDiscardDraft={async () => {
+            await discardMacPageDraftConfig();
+            hasLocalMacEdits.current = false;
+            setMacPageConfigRaw(cmsMacPage || defaultMacPageConfig);
+          }}
+          uploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+          products={activeProducts}
+        />
+      )}
+
       {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS (DEPARTMENTS) ===================== */}
-      {selectedDeptKey !== "main-store" && activeSection === "featured" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && activeSection === "featured" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>

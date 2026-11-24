@@ -19,11 +19,14 @@ export function getCategoryRelevantAccessories(family: ProductFamilyKey): Produc
   return accessoryProducts.filter((product) => {
     const slug = product.slug;
     if (family === "mac") {
+      if (slug.includes("ipad") || slug.includes("folio")) return false;
       return (
         slug.includes("magic-mouse") ||
         slug.includes("magic-keyboard") ||
         slug.includes("70w") ||
+        slug.includes("96w") ||
         slug.includes("140w") ||
+        slug.includes("35w") ||
         slug.includes("240w") ||
         slug.includes("trackpad") ||
         slug.includes("magsafe-3")
