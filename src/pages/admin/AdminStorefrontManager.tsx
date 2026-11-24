@@ -28,6 +28,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { defaultMacPageConfig } from "../../cms/macPageDefaults";
+import { defaultIpadPageConfig } from "../../cms/ipadPageDefaults";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -35,6 +36,7 @@ import type {
   CategoryAccessoryOverride,
   CategoryDepartmentConfig,
   CategoryFeaturedCardData,
+  IpadPageConfig,
   MacPageConfig,
   MainStoreAccessoryItem,
   MainStoreCategoryCard,
@@ -51,6 +53,7 @@ import type { Product, ProductImage } from "../../types/product";
 import { ProductFamilyStripEditor } from "../../components/admin/ProductFamilyStripEditor";
 import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
 import { MacPageAdminEditor, type MacAdminSubTab } from "../../components/admin/MacPageAdminEditor";
+import { IpadPageAdminEditor, type IpadAdminSubTab } from "../../components/admin/IpadPageAdminEditor";
 import {
   StoreDifferenceBentoAdminEditor,
   StoreHelpCardsAdminEditor,
@@ -63,7 +66,12 @@ import {
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
 export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
-type StorefrontSection = "featured" | "listings" | "accessories" | `mac:${MacAdminSubTab}`;
+type StorefrontSection =
+  | "featured"
+  | "listings"
+  | "accessories"
+  | `mac:${MacAdminSubTab}`
+  | `ipad:${IpadAdminSubTab}`;
 type MainStoreSection = MainStoreSubTabKey;
 
 export function AdminStorefrontManager() {
@@ -73,6 +81,8 @@ export function AdminStorefrontManager() {
     mainStoreDraft,
     macPage: cmsMacPage,
     macPageDraft,
+    ipadPage: cmsIpadPage,
+    ipadPageDraft,
     updateStorefront,
     updateMainStore,
     saveMainStoreDraftConfig,
@@ -80,6 +90,9 @@ export function AdminStorefrontManager() {
     updateMacPage,
     saveMacPageDraftConfig,
     discardMacPageDraftConfig,
+    updateIpadPage,
+    saveIpadPageDraftConfig,
+    discardIpadPageDraftConfig,
     uploadMedia,
   } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
@@ -94,8 +107,12 @@ export function AdminStorefrontManager() {
   const [macPageConfig, setMacPageConfigRaw] = useState<MacPageConfig>(
     macPageDraft || cmsMacPage || defaultMacPageConfig
   );
+  const [ipadPageConfig, setIpadPageConfigRaw] = useState<IpadPageConfig>(
+    ipadPageDraft || cmsIpadPage || defaultIpadPageConfig
+  );
   const hasLocalMainStoreEdits = useRef(false);
   const hasLocalMacEdits = useRef(false);
+  const hasLocalIpadEdits = useRef(false);
 
   const setMainStoreConfig: React.Dispatch<React.SetStateAction<MainStoreConfig>> = (updater) => {
     hasLocalMainStoreEdits.current = true;
@@ -105,6 +122,11 @@ export function AdminStorefrontManager() {
   const setMacPageConfig: React.Dispatch<React.SetStateAction<MacPageConfig>> = (updater) => {
     hasLocalMacEdits.current = true;
     setMacPageConfigRaw(updater);
+  };
+
+  const setIpadPageConfig: React.Dispatch<React.SetStateAction<IpadPageConfig>> = (updater) => {
+    hasLocalIpadEdits.current = true;
+    setIpadPageConfigRaw(updater);
   };
 
   useEffect(() => {
@@ -124,6 +146,15 @@ export function AdminStorefrontManager() {
       setMacPageConfigRaw(cmsMacPage);
     }
   }, [cmsMacPage, macPageDraft]);
+
+  useEffect(() => {
+    if (hasLocalIpadEdits.current) return;
+    if (ipadPageDraft) {
+      setIpadPageConfigRaw(ipadPageDraft);
+    } else if (cmsIpadPage) {
+      setIpadPageConfigRaw(cmsIpadPage);
+    }
+  }, [cmsIpadPage, ipadPageDraft]);
 
   useEffect(() => {
     if (cmsDepartments) {
@@ -185,8 +216,10 @@ export function AdminStorefrontManager() {
         updateStorefront(departments),
         updateMainStore(mainStoreConfig),
         updateMacPage(macPageConfig),
+        updateIpadPage(ipadPageConfig),
       ]);
       hasLocalMacEdits.current = false;
+      hasLocalIpadEdits.current = false;
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
@@ -557,7 +590,9 @@ export function AdminStorefrontManager() {
                     setSelectedDeptKey(key);
                     if (key === "mac") {
                       setActiveSection("mac:sections");
-                    } else if (activeSection.startsWith("mac:")) {
+                    } else if (key === "ipad") {
+                      setActiveSection("ipad:sections");
+                    } else if (activeSection.startsWith("mac:") || activeSection.startsWith("ipad:")) {
                       setActiveSection("featured");
                     }
                   }}
@@ -569,9 +604,9 @@ export function AdminStorefrontManager() {
                 >
                   <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
                   <span>{dept?.label || key.toUpperCase()}</span>
-                  {key === "mac" && (
+                  {(key === "mac" || key === "ipad") && (
                     <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
-                      CMS v2
+                      CMS
                     </span>
                   )}
                 </button>
@@ -651,6 +686,44 @@ export function AdminStorefrontManager() {
                     key={tab.key}
                     type="button"
                     data-testid={`mac-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "ipad" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "ipad:sections", label: "Sections Builder", count: (ipadPageConfig.sections || []).length },
+                  { key: "ipad:hero-nav", label: "Hero & Chapter Nav", count: (ipadPageConfig.chapterNavItems || []).length },
+                  { key: "ipad:lineup", label: "Explore Lineup", count: (ipadPageConfig.lineupSection?.cards || []).length },
+                  { key: "ipad:why-shop", label: "Why Buy & Sell GH", count: (ipadPageConfig.whyShopSection?.cards || []).length },
+                  { key: "ipad:essentials-eco", label: "Essentials & Ecosystem", count: 5 },
+                  { key: "ipad:directory", label: "iPad Directory Footer", count: (ipadPageConfig.directoryFooter?.columns || []).length },
+                  { key: "listings", label: "All iPad Listings Grid", count: categoryProducts.length },
+                  { key: "accessories", label: "iPad Accessories Rail", count: categoryAccessories.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`ipad-admin-tab-${tab.key.replace(":", "-")}`}
                     onClick={() => setActiveSection(tab.key)}
                     className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive
@@ -1180,8 +1253,37 @@ export function AdminStorefrontManager() {
         />
       )}
 
+      {/* ===================== IPAD PAGE REDESIGN CMS EDITORS ===================== */}
+      {selectedDeptKey === "ipad" && activeSection.startsWith("ipad:") && (
+        <IpadPageAdminEditor
+          activeSubTab={activeSection.replace("ipad:", "") as IpadAdminSubTab}
+          config={ipadPageConfig}
+          onChange={setIpadPageConfig}
+          hasDraft={Boolean(ipadPageDraft)}
+          allProducts={activeProducts}
+          onSaveDraft={async () => {
+            const saved = await saveIpadPageDraftConfig(ipadPageConfig);
+            setIpadPageConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateIpadPage(ipadPageConfig);
+            hasLocalIpadEdits.current = false;
+            setIpadPageConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardIpadPageDraftConfig();
+            hasLocalIpadEdits.current = false;
+            setIpadPageConfigRaw(cmsIpadPage || defaultIpadPageConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
+
       {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS (DEPARTMENTS) ===================== */}
-      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && activeSection === "featured" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && selectedDeptKey !== "ipad" && activeSection === "featured" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>

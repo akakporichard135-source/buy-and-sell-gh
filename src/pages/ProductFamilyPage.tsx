@@ -26,6 +26,8 @@ import {
 import { useCms } from "../cms/CmsContext";
 import { MacPageRenderer } from "../components/store/mac/MacPageRenderer";
 import { defaultMacPageConfig } from "../cms/macPageDefaults";
+import { IpadPageRenderer } from "../components/store/ipad/IpadPageRenderer";
+import { defaultIpadPageConfig } from "../cms/ipadPageDefaults";
 
 export function ProductFamilyPage({
   family,
@@ -34,7 +36,7 @@ export function ProductFamilyPage({
   family: ProductFamilyKey;
   catalogMode?: boolean;
 }) {
-  const { departments, macPage } = useCms();
+  const { departments, macPage, ipadPage } = useCms();
   const config: CategoryDepartmentConfig = useMemo(() => {
     return departments[family] || CATEGORY_DEPARTMENTS[family] || CATEGORY_DEPARTMENTS.iphone;
   }, [departments, family]);
@@ -65,6 +67,19 @@ export function ProductFamilyPage({
           description={activeMacConfig.seoDescription || config.seoDescription}
         />
         <MacPageRenderer />
+      </>
+    );
+  }
+
+  if (family === "ipad" && !catalogMode) {
+    const activeIpadConfig = ipadPage || defaultIpadPageConfig;
+    return (
+      <>
+        <SEO
+          title={activeIpadConfig.seoTitle || config.seoTitle}
+          description={activeIpadConfig.seoDescription || config.seoDescription}
+        />
+        <IpadPageRenderer />
       </>
     );
   }

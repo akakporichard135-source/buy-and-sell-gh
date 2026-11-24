@@ -15,6 +15,7 @@ import catalogueClearIphoneCasePremium from "../assets/catalogue-products/apple-
 import cataloguePencilUsbCPremium from "../assets/catalogue-products/apple-pencil-usb-c-premium.webp";
 import cataloguePencilProPremium from "../assets/catalogue-products/apple-pencil-pro-premium.webp";
 import catalogueMagicKeyboardIpadPremium from "../assets/catalogue-products/apple-magic-keyboard-ipad-premium.webp";
+import catalogueMagicKeyboardFolioPremium from "../assets/catalogue-products/apple-magic-keyboard-folio-premium.webp";
 import catalogueMagicMousePremium from "../assets/catalogue-products/apple-magic-mouse-premium.webp";
 import catalogueMagicKeyboardPremium from "../assets/catalogue-products/apple-magic-keyboard-premium.webp";
 import catalogueMagicKeyboardTouchIdPremium from "../assets/catalogue-products/apple-magic-keyboard-touch-id-premium.webp";
@@ -139,6 +140,8 @@ export const localCatalogueImageBySlug: Record<string, string> = {
   "apple-pencil-usb-c": cataloguePencilUsbCPremium,
   "apple-pencil-pro": cataloguePencilProPremium,
   "apple-magic-keyboard-ipad": catalogueMagicKeyboardIpadPremium,
+  "magic-keyboard-for-ipad": catalogueMagicKeyboardIpadPremium,
+  "apple-magic-keyboard-folio": catalogueMagicKeyboardFolioPremium,
   "apple-magic-mouse": catalogueMagicMousePremium,
   "magic-mouse": catalogueMagicMousePremium,
   "apple-magic-keyboard": catalogueMagicKeyboardPremium,
@@ -177,8 +180,10 @@ export const localCatalogueImageBySlug: Record<string, string> = {
   "ipad-10th-generation": catalogueIpad10thGenerationPremium,
   "ipad-a16": catalogueIpad11thGenerationPremium,
   "ipad-mini-6": catalogueIpadMini6Premium,
+  "ipad-mini-6th-generation": catalogueIpadMini6Premium,
   "ipad-mini-a17-pro": catalogueIpadMini7Premium,
   "ipad-air-5": catalogueIpadAir5Premium,
+  "ipad-air-5th-generation": catalogueIpadAir5Premium,
   "ipad-air-11-inch-m2": catalogueIpadAir11M2Premium,
   "ipad-air-13-inch-m2": catalogueIpadAir13M2Premium,
   "ipad-air-11-inch-m3": catalogueIpadAir11M3Premium,

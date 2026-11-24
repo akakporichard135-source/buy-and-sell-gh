@@ -30,6 +30,11 @@ import {
   defaultMacPageConfig,
   defaultMacPageSections,
 } from "./macPageDefaults";
+import {
+  CURRENT_IPAD_DESIGN_VERSION,
+  defaultIpadPageConfig,
+  defaultIpadPageSections,
+} from "./ipadPageDefaults";
 import type {
   CategoryDepartmentConfig,
   FaqItem,
@@ -39,6 +44,8 @@ import type {
   HomepageLayoutMode,
   HomepagePromoPanel,
   HomepageSection,
+  IpadPageConfig,
+  IpadPageSection,
   MacPageConfig,
   MacPageSection,
   MainStoreConfig,
@@ -63,6 +70,9 @@ const CMS_STORAGE_KEY_MAIN_STORE_LOCAL_PUB = "buyandsell_cms_main_store_local_pu
 const CMS_STORAGE_KEY_MAC_PAGE = "buyandsell_cms_mac_page_v2";
 const CMS_STORAGE_KEY_MAC_PAGE_DRAFT = "buyandsell_cms_mac_page_draft_v2";
 const CMS_STORAGE_KEY_MAC_PAGE_LOCAL_PUB = "buyandsell_cms_mac_page_local_pub_v2";
+const CMS_STORAGE_KEY_IPAD_PAGE = "buyandsell_cms_ipad_page_v1";
+const CMS_STORAGE_KEY_IPAD_PAGE_DRAFT = "buyandsell_cms_ipad_page_draft_v1";
+const CMS_STORAGE_KEY_IPAD_PAGE_LOCAL_PUB = "buyandsell_cms_ipad_page_local_pub_v1";
 
 // Cache listeners for reactive UI across tabs and components
 type CmsListener = () => void;
@@ -2862,6 +2872,318 @@ export const saveMacPageContent = async (config: MacPageConfig): Promise<MacPage
   return normalized;
 };
 
+/* ============================================================================
+   IPAD PAGE REDESIGN CMS PERSISTENCE (storefront_content key = 'ipad_page')
+   ============================================================================ */
+
+export const mergeIpadPageWithDefaults = (
+  incoming?: Partial<IpadPageConfig> | null
+): IpadPageConfig => {
+  if (!incoming || typeof incoming !== "object") {
+    return defaultIpadPageConfig;
+  }
+
+  const incomingVersion = Number(incoming.ipadDesignVersion ?? 0);
+  if (incomingVersion < CURRENT_IPAD_DESIGN_VERSION) {
+    return {
+      ...defaultIpadPageConfig,
+      ipadDesignVersion: CURRENT_IPAD_DESIGN_VERSION,
+      hasDraft: Boolean(incoming.hasDraft),
+      updatedAt: incoming.updatedAt,
+    };
+  }
+
+  const rawSections: IpadPageSection[] =
+    Array.isArray(incoming.sections) && incoming.sections.length > 0
+      ? incoming.sections.map((sec, idx) => ({
+          ...sec,
+          visible: sec.visible !== false,
+          order: typeof sec.order === "number" ? sec.order : idx,
+        }))
+      : defaultIpadPageSections;
+
+  const existingBuiltIns = new Set(rawSections.map((s) => s.builtInKey).filter(Boolean));
+  const missingBuiltIns = defaultIpadPageSections
+    .filter((def) => def.builtInKey && !existingBuiltIns.has(def.builtInKey))
+    .map((def, idx) => ({ ...def, order: rawSections.length + idx }));
+
+  const sections = [...rawSections, ...missingBuiltIns].sort((a, b) => a.order - b.order);
+
+  return {
+    ipadDesignVersion: CURRENT_IPAD_DESIGN_VERSION,
+    seoTitle: incoming.seoTitle || defaultIpadPageConfig.seoTitle,
+    seoDescription: incoming.seoDescription || defaultIpadPageConfig.seoDescription,
+    promoRibbon: {
+      ...defaultIpadPageConfig.promoRibbon,
+      ...(incoming.promoRibbon || {}),
+    },
+    hero: {
+      ...defaultIpadPageConfig.hero,
+      ...(incoming.hero || {}),
+    },
+    sections,
+    chapterNavItems:
+      Array.isArray(incoming.chapterNavItems) && incoming.chapterNavItems.length > 0
+        ? incoming.chapterNavItems
+        : defaultIpadPageConfig.chapterNavItems,
+    lineupSection: {
+      heading: incoming.lineupSection?.heading || defaultIpadPageConfig.lineupSection.heading,
+      compareLabel:
+        incoming.lineupSection?.compareLabel !== undefined
+          ? incoming.lineupSection.compareLabel
+          : defaultIpadPageConfig.lineupSection.compareLabel,
+      shopAllLabel:
+        incoming.lineupSection?.shopAllLabel || defaultIpadPageConfig.lineupSection.shopAllLabel,
+      shopAllTo: incoming.lineupSection?.shopAllTo || defaultIpadPageConfig.lineupSection.shopAllTo,
+      cards:
+        Array.isArray(incoming.lineupSection?.cards) && incoming.lineupSection.cards.length > 0
+          ? incoming.lineupSection.cards
+          : defaultIpadPageConfig.lineupSection.cards,
+    },
+    whyShopSection: {
+      heading: incoming.whyShopSection?.heading || defaultIpadPageConfig.whyShopSection.heading,
+      actionLabel:
+        incoming.whyShopSection?.actionLabel || defaultIpadPageConfig.whyShopSection.actionLabel,
+      actionTo: incoming.whyShopSection?.actionTo || defaultIpadPageConfig.whyShopSection.actionTo,
+      cards:
+        Array.isArray(incoming.whyShopSection?.cards) && incoming.whyShopSection.cards.length > 0
+          ? incoming.whyShopSection.cards
+          : defaultIpadPageConfig.whyShopSection.cards,
+    },
+    essentialsSection: {
+      heading:
+        incoming.essentialsSection?.heading || defaultIpadPageConfig.essentialsSection.heading,
+      cards:
+        Array.isArray(incoming.essentialsSection?.cards) &&
+        incoming.essentialsSection.cards.length > 0
+          ? incoming.essentialsSection.cards
+          : defaultIpadPageConfig.essentialsSection.cards,
+    },
+    ecosystemSection: {
+      heading:
+        incoming.ecosystemSection?.heading || defaultIpadPageConfig.ecosystemSection.heading,
+      actionLabel:
+        incoming.ecosystemSection?.actionLabel ||
+        defaultIpadPageConfig.ecosystemSection.actionLabel,
+      actionTo:
+        incoming.ecosystemSection?.actionTo || defaultIpadPageConfig.ecosystemSection.actionTo,
+      items:
+        Array.isArray(incoming.ecosystemSection?.items) &&
+        incoming.ecosystemSection.items.length > 0
+          ? incoming.ecosystemSection.items
+          : defaultIpadPageConfig.ecosystemSection.items,
+    },
+    directoryFooter: {
+      heading: incoming.directoryFooter?.heading || defaultIpadPageConfig.directoryFooter.heading,
+      tagline: incoming.directoryFooter?.tagline || defaultIpadPageConfig.directoryFooter.tagline,
+      columns:
+        Array.isArray(incoming.directoryFooter?.columns) &&
+        incoming.directoryFooter.columns.length > 0
+          ? incoming.directoryFooter.columns
+          : defaultIpadPageConfig.directoryFooter.columns,
+      footnotes:
+        Array.isArray(incoming.directoryFooter?.footnotes) &&
+        incoming.directoryFooter.footnotes.length > 0
+          ? incoming.directoryFooter.footnotes
+          : defaultIpadPageConfig.directoryFooter.footnotes,
+    },
+    hasDraft: Boolean(incoming.hasDraft),
+    updatedAt: incoming.updatedAt,
+  };
+};
+
+export const getInitialIpadPageContent = (): IpadPageConfig => {
+  try {
+    if (
+      typeof window !== "undefined" &&
+      (isLocalAdminActive() || localStorage.getItem("admin_preview_active") === "1")
+    ) {
+      const localPubRaw = localStorage.getItem(CMS_STORAGE_KEY_IPAD_PAGE_LOCAL_PUB);
+      if (localPubRaw && localPubRaw.startsWith("{")) {
+        return mergeIpadPageWithDefaults(JSON.parse(localPubRaw) as Partial<IpadPageConfig>);
+      }
+    }
+  } catch {
+    // ignore
+  }
+  const local = readLocal<IpadPageConfig>(CMS_STORAGE_KEY_IPAD_PAGE, defaultIpadPageConfig);
+  return mergeIpadPageWithDefaults(local);
+};
+
+export const getInitialIpadPageDraft = (): IpadPageConfig | null => {
+  try {
+    const raw = localStorage.getItem(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT);
+    if (!raw) return null;
+    return mergeIpadPageWithDefaults(JSON.parse(raw) as Partial<IpadPageConfig>);
+  } catch {
+    return null;
+  }
+};
+
+export const fetchIpadPageContent = async (): Promise<IpadPageConfig> => {
+  const mergedLocal = getInitialIpadPageContent();
+  try {
+    if (
+      typeof window !== "undefined" &&
+      Boolean(localStorage.getItem(CMS_STORAGE_KEY_IPAD_PAGE_LOCAL_PUB)) &&
+      (isLocalAdminActive() || localStorage.getItem("admin_preview_active") === "1")
+    ) {
+      return mergedLocal;
+    }
+  } catch {
+    // ignore
+  }
+  if (!supabase) return mergedLocal;
+
+  try {
+    const { data, error } = await supabase
+      .from("storefront_content")
+      .select("config")
+      .eq("key", "ipad_page")
+      .maybeSingle();
+
+    if (!error && data?.config) {
+      const merged = mergeIpadPageWithDefaults(data.config as Partial<IpadPageConfig>);
+      writeLocal(CMS_STORAGE_KEY_IPAD_PAGE, merged);
+      return merged;
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+
+  return mergedLocal;
+};
+
+export const fetchIpadPageDraft = async (): Promise<IpadPageConfig | null> => {
+  const localDraft = getInitialIpadPageDraft();
+  if (isLocalAdminActive() || !supabase) {
+    return localDraft;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("storefront_content")
+      .select("config")
+      .eq("key", "ipad_page_draft")
+      .maybeSingle();
+
+    if (!error && data?.config) {
+      const merged = mergeIpadPageWithDefaults({
+        ...(data.config as Partial<IpadPageConfig>),
+        hasDraft: true,
+      });
+      writeLocal(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT, merged);
+      return merged;
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+
+  return localDraft;
+};
+
+export const saveIpadPageDraft = async (config: IpadPageConfig): Promise<IpadPageConfig> => {
+  await assertAdminAal2();
+  const normalized = mergeIpadPageWithDefaults({
+    ...config,
+    ipadDesignVersion: CURRENT_IPAD_DESIGN_VERSION,
+    hasDraft: true,
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (isLocalAdminActive()) {
+    writeLocal(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT, normalized);
+    notifyListeners();
+    return normalized;
+  }
+
+  const client = getSupabaseOrThrow();
+  const { error } = await client.from("storefront_content").upsert({
+    key: "ipad_page_draft",
+    config: normalized,
+    updated_at: normalized.updatedAt,
+  });
+
+  if (error) {
+    throw new Error(
+      `Failed to save iPad Page draft to Supabase (${error.message}, code: ${error.code || "ERR"}).`
+    );
+  }
+
+  writeLocal(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT, normalized);
+  notifyListeners();
+  return normalized;
+};
+
+export const discardIpadPageDraft = async (): Promise<void> => {
+  await assertAdminAal2();
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT);
+  } catch {
+    // ignore
+  }
+  if (!isLocalAdminActive() && supabase) {
+    try {
+      await supabase.from("storefront_content").delete().eq("key", "ipad_page_draft");
+    } catch {
+      // ignore
+    }
+  }
+  notifyListeners();
+};
+
+export const saveIpadPageContent = async (config: IpadPageConfig): Promise<IpadPageConfig> => {
+  await assertAdminAal2();
+  const normalized = mergeIpadPageWithDefaults({
+    ...config,
+    ipadDesignVersion: CURRENT_IPAD_DESIGN_VERSION,
+    hasDraft: false,
+    updatedAt: new Date().toISOString(),
+  });
+
+  if (isLocalAdminActive()) {
+    writeLocal(CMS_STORAGE_KEY_IPAD_PAGE, normalized);
+    writeLocal(CMS_STORAGE_KEY_IPAD_PAGE_LOCAL_PUB, normalized);
+    try {
+      localStorage.removeItem(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT);
+    } catch {
+      // ignore
+    }
+    broadcastPublishedUpdate("ipad-page");
+    notifyListeners();
+    return normalized;
+  }
+
+  const client = getSupabaseOrThrow();
+  const { error } = await client.from("storefront_content").upsert({
+    key: "ipad_page",
+    config: normalized,
+    updated_at: normalized.updatedAt,
+  });
+
+  if (error) {
+    throw new Error(
+      `Failed to publish iPad Page configuration to Supabase (${error.message}, code: ${error.code || "ERR"}).`
+    );
+  }
+
+  try {
+    await client.from("storefront_content").delete().eq("key", "ipad_page_draft");
+  } catch {
+    // ignore
+  }
+
+  writeLocal(CMS_STORAGE_KEY_IPAD_PAGE, normalized);
+  try {
+    localStorage.removeItem(CMS_STORAGE_KEY_IPAD_PAGE_DRAFT);
+  } catch {
+    // ignore
+  }
+  broadcastPublishedUpdate("ipad-page");
+  notifyListeners();
+  return normalized;
+};
+
 // Cascades replaced media URLs to homepage content and storefront departments
 async function cascadeMediaUrlUpdate(
   oldItem: MediaItem,
@@ -3126,6 +3448,54 @@ async function cascadeMediaUrlUpdate(
           switchToMacSection: { ...currentMacPage.switchToMacSection, cards: nextSwitchCards },
           macEssentialsSection: { ...currentMacPage.macEssentialsSection, cards: nextEssentialCards },
           ecosystemSection: { ...currentMacPage.ecosystemSection, items: nextEcoItems },
+        });
+      }
+    } catch {
+      // Non-blocking cascade
+    }
+
+    // 2d. iPad Page content cascade
+    try {
+      const currentIpadPage = await fetchIpadPageContent();
+      let ipadPageChanged = false;
+      const replaceIpadImg = <T extends { image?: string; alt?: string }>(items: T[]): T[] =>
+        items.map((item) => {
+          if (item.image === oldItem.url) {
+            ipadPageChanged = true;
+            return {
+              ...item,
+              image: newItem.url,
+              alt: updates.alt !== undefined ? updates.alt.trim() : item.alt,
+            };
+          }
+          return item;
+        });
+
+      const nextChapterNav = replaceIpadImg(currentIpadPage.chapterNavItems);
+      const nextLineupCards = replaceIpadImg(currentIpadPage.lineupSection.cards);
+      const nextWhyCards = replaceIpadImg(currentIpadPage.whyShopSection.cards);
+      const nextEssentialCards = replaceIpadImg(currentIpadPage.essentialsSection.cards);
+      const nextEcoItems = replaceIpadImg(currentIpadPage.ecosystemSection.items);
+      const nextIpadSections = currentIpadPage.sections.map((sec) => {
+        let changed = false;
+        const desktopImage = sec.desktopImage === oldItem.url ? ((changed = true), newItem.url) : sec.desktopImage;
+        const mobileImage = sec.mobileImage === oldItem.url ? ((changed = true), newItem.url) : sec.mobileImage;
+        if (changed) {
+          ipadPageChanged = true;
+          return { ...sec, desktopImage, mobileImage };
+        }
+        return sec;
+      });
+
+      if (ipadPageChanged) {
+        await saveIpadPageContent({
+          ...currentIpadPage,
+          sections: nextIpadSections,
+          chapterNavItems: nextChapterNav,
+          lineupSection: { ...currentIpadPage.lineupSection, cards: nextLineupCards },
+          whyShopSection: { ...currentIpadPage.whyShopSection, cards: nextWhyCards },
+          essentialsSection: { ...currentIpadPage.essentialsSection, cards: nextEssentialCards },
+          ecosystemSection: { ...currentIpadPage.ecosystemSection, items: nextEcoItems },
         });
       }
     } catch {

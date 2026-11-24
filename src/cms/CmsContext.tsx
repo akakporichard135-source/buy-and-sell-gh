@@ -13,12 +13,15 @@ import {
   deleteMediaItemPermanently,
   discardHomepageDraft,
   discardHomepageLegacyDraft,
+  discardIpadPageDraft,
   discardMacPageDraft,
   discardMainStoreDraft,
   fetchFaqs,
   fetchHomepageContent,
   fetchHomepageDraft,
   fetchHomepageLegacyDraft,
+  fetchIpadPageContent,
+  fetchIpadPageDraft,
   fetchMacPageContent,
   fetchMacPageDraft,
   fetchMainStoreContent,
@@ -31,6 +34,8 @@ import {
   getInitialHomepageContent,
   getInitialHomepageDraft,
   getInitialHomepageLegacyDraft,
+  getInitialIpadPageContent,
+  getInitialIpadPageDraft,
   getInitialMacPageContent,
   getInitialMacPageDraft,
   getInitialMainStoreContent,
@@ -45,6 +50,8 @@ import {
   saveHomepageContent,
   saveHomepageDraft,
   saveHomepageLegacyDraft,
+  saveIpadPageContent,
+  saveIpadPageDraft,
   saveMacPageContent,
   saveMacPageDraft,
   saveMainStoreContent,
@@ -61,6 +68,7 @@ import type {
   CategoryDepartmentConfig,
   FaqItem,
   HomepageContent,
+  IpadPageConfig,
   MacPageConfig,
   MainStoreConfig,
   MediaItem,
@@ -77,6 +85,8 @@ interface CmsContextValue {
   mainStoreDraft: MainStoreConfig | null;
   macPage: MacPageConfig;
   macPageDraft: MacPageConfig | null;
+  ipadPage: IpadPageConfig;
+  ipadPageDraft: IpadPageConfig | null;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -96,6 +106,9 @@ interface CmsContextValue {
   updateMacPage: (config: MacPageConfig) => Promise<MacPageConfig>;
   saveMacPageDraftConfig: (config: MacPageConfig) => Promise<MacPageConfig>;
   discardMacPageDraftConfig: () => Promise<void>;
+  updateIpadPage: (config: IpadPageConfig) => Promise<IpadPageConfig>;
+  saveIpadPageDraftConfig: (config: IpadPageConfig) => Promise<IpadPageConfig>;
+  discardIpadPageDraftConfig: () => Promise<void>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -184,6 +197,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [mainStoreDraft, setMainStoreDraft] = useState<MainStoreConfig | null>(() => getInitialMainStoreDraft());
   const [macPage, setMacPage] = useState<MacPageConfig>(() => getInitialMacPageContent());
   const [macPageDraft, setMacPageDraft] = useState<MacPageConfig | null>(() => getInitialMacPageDraft());
+  const [ipadPage, setIpadPage] = useState<IpadPageConfig>(() => getInitialIpadPageContent());
+  const [ipadPageDraft, setIpadPageDraft] = useState<IpadPageConfig | null>(() => getInitialIpadPageDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
@@ -236,7 +251,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       withTimeoutFallback(fetchMacPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialMacPageContent(), (v) =>
         startTransition(() => setMacPage(v))
       ),
-    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes]) => {
+      withTimeoutFallback(fetchIpadPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialIpadPageContent(), (v) =>
+        startTransition(() => setIpadPage(v))
+      ),
+    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes, ipadRes]) => {
       startTransition(() => {
         if (sRes.status === "fulfilled") setSettings(sRes.value);
         if (fRes.status === "fulfilled") setFaqs(fRes.value);
@@ -244,6 +262,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         if (dRes.status === "fulfilled") setDepartments(dRes.value);
         if (msRes.status === "fulfilled") setMainStore(msRes.value);
         if (macRes.status === "fulfilled") setMacPage(macRes.value);
+        if (ipadRes.status === "fulfilled") setIpadPage(ipadRes.value);
       });
     });
 
@@ -255,13 +274,15 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
           fetchMediaLibrary(),
           fetchMainStoreDraft(),
           fetchMacPageDraft(),
-        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes]) => {
+          fetchIpadPageDraft(),
+        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes, ipadDraftRes]) => {
           startTransition(() => {
             if (hDraftRes.status === "fulfilled") setHomepageDraft(hDraftRes.value);
             if (hLegacyDraftRes.status === "fulfilled") setHomepageLegacyDraft(hLegacyDraftRes.value);
             if (mRes.status === "fulfilled") setMedia(mRes.value);
             if (msDraftRes.status === "fulfilled") setMainStoreDraft(msDraftRes.value);
             if (macDraftRes.status === "fulfilled") setMacPageDraft(macDraftRes.value);
+            if (ipadDraftRes.status === "fulfilled") setIpadPageDraft(ipadDraftRes.value);
           });
         })
       : Promise.resolve();
@@ -426,6 +447,24 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     setMacPageDraft(null);
   };
 
+  const handleUpdateIpadPage = async (newConfig: IpadPageConfig) => {
+    const updated = await saveIpadPageContent(newConfig);
+    setIpadPage(updated);
+    setIpadPageDraft(null);
+    return updated;
+  };
+
+  const handleSaveIpadPageDraft = async (newConfig: IpadPageConfig) => {
+    const draft = await saveIpadPageDraft(newConfig);
+    setIpadPageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardIpadPageDraft = async () => {
+    await discardIpadPageDraft();
+    setIpadPageDraft(null);
+  };
+
   return (
     <CmsContext.Provider
       value={{
@@ -437,6 +476,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         mainStoreDraft,
         macPage,
         macPageDraft,
+        ipadPage,
+        ipadPageDraft,
         media,
         faqs,
         pages,
@@ -456,6 +497,9 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateMacPage: handleUpdateMacPage,
         saveMacPageDraftConfig: handleSaveMacPageDraft,
         discardMacPageDraftConfig: handleDiscardMacPageDraft,
+        updateIpadPage: handleUpdateIpadPage,
+        saveIpadPageDraftConfig: handleSaveIpadPageDraft,
+        discardIpadPageDraftConfig: handleDiscardIpadPageDraft,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,
