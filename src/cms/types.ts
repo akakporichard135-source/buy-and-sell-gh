@@ -968,3 +968,201 @@ export interface MacPageConfig {
   hasDraft?: boolean;
   updatedAt?: string;
 }
+
+/* ============================================================================
+   IPAD PAGE REDESIGN CMS SCHEMA (Apple.com/ipad-faithful, 100% Admin-manageable)
+   ============================================================================ */
+
+export type IpadBuiltInSectionKey =
+  | "promo-ribbon"
+  | "hero-chapter-nav"
+  | "explore-lineup"
+  | "why-shop-ipad"
+  | "ipad-essentials"
+  | "significant-others"
+  | "ipad-directory-footer";
+
+export type IpadPageSectionType =
+  | IpadBuiltInSectionKey
+  | "promotional-banner"
+  | "featured-ipad-products"
+  | "image-text"
+  | "product-carousel"
+  | (string & {});
+
+export interface IpadPageSection {
+  id: string;
+  type: IpadPageSectionType;
+  builtInKey?: IpadBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  mobileImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right";
+  productIds?: string[];
+  buttonLabel?: string;
+  buttonDestination?: string;
+  secondaryButtonLabel?: string;
+  secondaryButtonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadChapterNavItem {
+  id: string;
+  label: string;
+  badge?: string;
+  image: string;
+  alt: string;
+  to: string;
+  /** Optional on-page anchor id (e.g. "explore-lineup") or action ("compare-modal") */
+  scrollTarget?: string;
+  openCompareModal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadColorSwatch {
+  label: string;
+  hex: string;
+}
+
+export interface IpadLineupCard {
+  id: string;
+  productSlug?: string;
+  /** Apple-accurate tinted showcase tile surface: dark (iPad Pro), sky (iPad Air), light (iPad / iPad mini) */
+  tileTone: "dark" | "sky" | "light";
+  badge?: string;
+  title: string;
+  chipLine?: string;
+  displaySpec?: string;
+  pencilSupport?: string;
+  keyboardSupport?: string;
+  description: string;
+  image: string;
+  alt: string;
+  swatches?: IpadColorSwatch[];
+  priceNote?: string;
+  fallbackPriceText?: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  buyLabel?: string;
+  buyTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadBenefitCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  modalDetails?: string;
+  image: string;
+  alt: string;
+  actionStyle: "modal" | "link";
+  actionLabel: string;
+  actionTo: string;
+  isExternal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadEssentialCard {
+  id: string;
+  /** Apple iPad essentials alternates text-top (Apple Pencil) and image-top (Keyboards for iPad) */
+  layout: "text-top" | "image-top";
+  productSlug?: string;
+  title: string;
+  description: string;
+  fallbackPriceText?: string;
+  buyLabel: string;
+  buyTo: string;
+  secondaryLinkLabel?: string;
+  secondaryLinkTo?: string;
+  isExternal?: boolean;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadEcosystemItem {
+  id: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IpadDirectoryLink {
+  id: string;
+  label: string;
+  to: string;
+  isSecondary?: boolean;
+  openCompareModal?: boolean;
+}
+
+export interface IpadDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: IpadDirectoryLink[];
+}
+
+export interface IpadPageConfig {
+  ipadDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  promoRibbon: {
+    enabled: boolean;
+    text: string;
+    linkLabel: string;
+    linkTo: string;
+  };
+  hero: {
+    heading: string;
+    showGoldPeriod?: boolean;
+  };
+  sections: IpadPageSection[];
+  chapterNavItems: IpadChapterNavItem[];
+  lineupSection: {
+    heading: string;
+    compareLabel: string;
+    shopAllLabel: string;
+    shopAllTo: string;
+    cards: IpadLineupCard[];
+  };
+  whyShopSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    cards: IpadBenefitCard[];
+  };
+  essentialsSection: {
+    heading: string;
+    cards: IpadEssentialCard[];
+  };
+  ecosystemSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    items: IpadEcosystemItem[];
+  };
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: IpadDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}
