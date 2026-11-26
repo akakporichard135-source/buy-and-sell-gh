@@ -28,6 +28,14 @@ import { MacPageRenderer } from "../components/store/mac/MacPageRenderer";
 import { defaultMacPageConfig } from "../cms/macPageDefaults";
 import { IpadPageRenderer } from "../components/store/ipad/IpadPageRenderer";
 import { defaultIpadPageConfig } from "../cms/ipadPageDefaults";
+import { IphonePageRenderer } from "../components/store/iphone/IphonePageRenderer";
+import { defaultIphonePageConfig } from "../cms/iphonePageDefaults";
+import { WatchPageRenderer } from "../components/store/watch/WatchPageRenderer";
+import { defaultWatchPageConfig } from "../cms/watchPageDefaults";
+import { AirpodsPageRenderer } from "../components/store/airpods/AirpodsPageRenderer";
+import { defaultAirpodsPageConfig } from "../cms/airpodsPageDefaults";
+import { AccessoriesPageRenderer } from "../components/store/accessories/AccessoriesPageRenderer";
+import { defaultAccessoriesPageConfig } from "../cms/accessoriesPageDefaults";
 
 export function ProductFamilyPage({
   family,
@@ -36,7 +44,7 @@ export function ProductFamilyPage({
   family: ProductFamilyKey;
   catalogMode?: boolean;
 }) {
-  const { departments, macPage, ipadPage } = useCms();
+  const { departments, macPage, ipadPage, iphonePage, watchPage, airpodsPage, accessoriesPage } = useCms();
   const config: CategoryDepartmentConfig = useMemo(() => {
     return departments[family] || CATEGORY_DEPARTMENTS[family] || CATEGORY_DEPARTMENTS.iphone;
   }, [departments, family]);
@@ -80,6 +88,58 @@ export function ProductFamilyPage({
           description={activeIpadConfig.seoDescription || config.seoDescription}
         />
         <IpadPageRenderer />
+      </>
+    );
+  }
+
+  if (family === "iphone" && !catalogMode) {
+    const activeIphoneConfig = iphonePage || defaultIphonePageConfig;
+    return (
+      <>
+        <SEO
+          title={activeIphoneConfig.seoTitle || config.seoTitle}
+          description={activeIphoneConfig.seoDescription || config.seoDescription}
+        />
+        <IphonePageRenderer />
+      </>
+    );
+  }
+
+  if (family === "watch" && !catalogMode) {
+    const activeWatchConfig = watchPage || defaultWatchPageConfig;
+    return (
+      <>
+        <SEO
+          title={activeWatchConfig.seoTitle || config.seoTitle}
+          description={activeWatchConfig.seoDescription || config.seoDescription}
+        />
+        <WatchPageRenderer />
+      </>
+    );
+  }
+
+  if (family === "airpods" && !catalogMode) {
+    const activeAirpodsConfig = airpodsPage || defaultAirpodsPageConfig;
+    return (
+      <>
+        <SEO
+          title={activeAirpodsConfig.seoTitle || config.seoTitle}
+          description={activeAirpodsConfig.seoDescription || config.seoDescription}
+        />
+        <AirpodsPageRenderer />
+      </>
+    );
+  }
+
+  if (family === "accessories" && !catalogMode) {
+    const activeAccConfig = accessoriesPage || defaultAccessoriesPageConfig;
+    return (
+      <>
+        <SEO
+          title={activeAccConfig.seoTitle || config.seoTitle}
+          description={activeAccConfig.seoDescription || config.seoDescription}
+        />
+        <AccessoriesPageRenderer />
       </>
     );
   }

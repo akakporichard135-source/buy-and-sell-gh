@@ -1166,3 +1166,720 @@ export interface IpadPageConfig {
   hasDraft?: boolean;
   updatedAt?: string;
 }
+
+/* ============================================================================
+   IPHONE PAGE REDESIGN CMS SCHEMA (Apple.com/iphone-faithful, 100% Admin-manageable)
+   ============================================================================ */
+
+export type IphoneBuiltInSectionKey =
+  | "promo-ribbon"
+  | "hero-chapter-nav"
+  | "featured-hero-gallery"
+  | "explore-lineup"
+  | "why-shop-iphone"
+  | "iphone-essentials"
+  | "significant-others"
+  | "iphone-directory-footer";
+
+export type IphonePageSectionType =
+  | IphoneBuiltInSectionKey
+  | "promotional-banner"
+  | "featured-iphone-products"
+  | "image-text"
+  | "product-carousel"
+  | (string & {});
+
+export interface IphonePageSection {
+  id: string;
+  type: IphonePageSectionType;
+  builtInKey?: IphoneBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  mobileImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right";
+  productIds?: string[];
+  buttonLabel?: string;
+  buttonDestination?: string;
+  secondaryButtonLabel?: string;
+  secondaryButtonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneChapterNavItem {
+  id: string;
+  label: string;
+  badge?: string;
+  image: string;
+  alt: string;
+  to: string;
+  scrollTarget?: string;
+  openCompareModal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneHeroSlide {
+  id: string;
+  tabLabel: string;
+  theme: "light" | "dark";
+  productSlug?: string;
+  eyebrow?: string;
+  title: string;
+  subtitle: string;
+  fallbackPriceText?: string;
+  image: string;
+  alt: string;
+  buyLabel: string;
+  buyTo: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneColorSwatch {
+  label: string;
+  hex: string;
+}
+
+export interface IphoneLineupCard {
+  id: string;
+  productSlug?: string;
+  tileTone: "pearl" | "burgundy" | "sky" | "lavender" | "sand" | "light";
+  badge?: string;
+  title: string;
+  chipLine?: string;
+  displaySpec?: string;
+  cameraSpec?: string;
+  batterySpec?: string;
+  description: string;
+  image: string;
+  alt: string;
+  swatches?: IphoneColorSwatch[];
+  priceNote?: string;
+  fallbackPriceText?: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  buyLabel?: string;
+  buyTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneBenefitCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  modalDetails?: string;
+  image: string;
+  alt: string;
+  actionStyle: "modal" | "link";
+  actionLabel: string;
+  actionTo: string;
+  isExternal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneEssentialCard {
+  id: string;
+  productSlug?: string;
+  title: string;
+  description: string;
+  fallbackPriceText?: string;
+  buyLabel: string;
+  buyTo: string;
+  secondaryLinkLabel?: string;
+  secondaryLinkTo?: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneEcosystemItem {
+  id: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface IphoneDirectoryLink {
+  id: string;
+  label: string;
+  to: string;
+  isSecondary?: boolean;
+  openCompareModal?: boolean;
+}
+
+export interface IphoneDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: IphoneDirectoryLink[];
+}
+
+export interface IphonePageConfig {
+  iphoneDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  promoRibbon: {
+    enabled: boolean;
+    text: string;
+    linkLabel: string;
+    linkTo: string;
+  };
+  hero: {
+    heading: string;
+    showGoldPeriod?: boolean;
+  };
+  sections: IphonePageSection[];
+  chapterNavItems: IphoneChapterNavItem[];
+  heroGallery: {
+    autoplayMs?: number;
+    slides: IphoneHeroSlide[];
+  };
+  lineupSection: {
+    heading: string;
+    compareLabel: string;
+    shopAllLabel: string;
+    shopAllTo: string;
+    cards: IphoneLineupCard[];
+  };
+  whyShopSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    cards: IphoneBenefitCard[];
+  };
+  essentialsSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    cards: IphoneEssentialCard[];
+  };
+  ecosystemSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    items: IphoneEcosystemItem[];
+  };
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: IphoneDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}
+
+/* ============================================================================
+   APPLE WATCH PAGE REDESIGN CMS SCHEMA (Apple.com/watch-faithful + Gold Brand)
+   ============================================================================ */
+
+export type WatchBuiltInSectionKey =
+  | "promo-ribbon"
+  | "hero-chapter-nav"
+  | "explore-lineup"
+  | "why-shop-watch"
+  | "watch-essentials"
+  | "made-for-each-other"
+  | "watch-directory-footer";
+
+export type WatchPageSectionType =
+  | WatchBuiltInSectionKey
+  | "promotional-banner"
+  | "featured-watch-products"
+  | "image-text"
+  | "product-carousel"
+  | (string & {});
+
+export interface WatchPageSection {
+  id: string;
+  type: WatchPageSectionType;
+  builtInKey?: WatchBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  mobileImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  textAlignment?: "left" | "center" | "right";
+  productIds?: string[];
+  buttonLabel?: string;
+  buttonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface WatchChapterNavItem {
+  id: string;
+  label: string;
+  badge?: string;
+  image: string;
+  alt: string;
+  to: string;
+  openCompareModal?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface WatchColorSwatch {
+  label: string;
+  hex: string;
+}
+
+export interface WatchLineupCard {
+  id: string;
+  productSlug?: string;
+  tileTone: "cream" | "obsidian" | "sky";
+  badge?: string;
+  title: string;
+  caseSizes?: string;
+  chipSpec?: string;
+  healthSpec?: string;
+  batterySpec?: string;
+  description: string;
+  image: string;
+  alt: string;
+  swatches?: WatchColorSwatch[];
+  priceNote?: string;
+  fallbackPriceText?: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  buyLabel?: string;
+  buyTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface WatchBenefitCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  modalDetails?: string;
+  image: string;
+  alt: string;
+  actionStyle: "modal" | "link";
+  actionLabel: string;
+  actionTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface WatchEssentialsBanner {
+  sectionHeading: string;
+  sectionActionLabel: string;
+  sectionActionTo: string;
+  title: string;
+  description: string;
+  priceNote?: string;
+  ctaLabel: string;
+  ctaTo: string;
+  secondaryLabel?: string;
+  secondaryTo?: string;
+  image: string;
+  alt: string;
+}
+
+export interface WatchEcosystemItem {
+  id: string;
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface WatchDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: Array<{
+    id: string;
+    label: string;
+    to: string;
+    isSecondary?: boolean;
+    openCompareModal?: boolean;
+  }>;
+}
+
+export interface WatchPageConfig {
+  watchDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  promoRibbon: {
+    enabled: boolean;
+    text: string;
+    linkLabel: string;
+    linkTo: string;
+  };
+  hero: {
+    heading: string;
+    showGoldPeriod?: boolean;
+  };
+  sections: WatchPageSection[];
+  chapterNavItems: WatchChapterNavItem[];
+  lineupSection: {
+    heading: string;
+    compareLabel: string;
+    shopAllLabel: string;
+    shopAllTo: string;
+    cards: WatchLineupCard[];
+  };
+  whyShopSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    cards: WatchBenefitCard[];
+  };
+  essentialsBanner: WatchEssentialsBanner;
+  ecosystemSection: {
+    heading: string;
+    actionLabel: string;
+    actionTo: string;
+    items: WatchEcosystemItem[];
+  };
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: WatchDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}
+
+/* ============================================================================
+   AIRPODS PAGE REDESIGN CMS SCHEMA (Apple.com/airpods-faithful + Gold Brand)
+   ============================================================================ */
+
+export type AirpodsBuiltInSectionKey =
+  | "chapter-nav"
+  | "promo-ribbon"
+  | "hero-showcases"
+  | "compare-models"
+  | "get-to-know"
+  | "assurance-banner"
+  | "value-strip"
+  | "airpods-directory-footer";
+
+export type AirpodsPageSectionType =
+  | AirpodsBuiltInSectionKey
+  | "promotional-banner"
+  | "image-text"
+  | (string & {});
+
+export interface AirpodsPageSection {
+  id: string;
+  type: AirpodsPageSectionType;
+  builtInKey?: AirpodsBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  buttonLabel?: string;
+  buttonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AirpodsChapterNavItem {
+  id: string;
+  label: string;
+  badge?: string;
+  image: string;
+  alt: string;
+  to: string;
+  scrollTarget?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AirpodsHeroShowcaseCard {
+  id: string;
+  /** "backlit-dark" (AirPods 4 ANC), "studio-light" (AirPods Pro 3), "wordmark-light" (AirPods Max 2) */
+  variant: "backlit-dark" | "studio-light" | "wordmark-light";
+  productSlug?: string;
+  title: string;
+  wordmarkText?: string;
+  subtitle: string;
+  fallbackPriceText?: string;
+  image: string;
+  alt: string;
+  buyLabel: string;
+  buyTo: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  showMotionToggle?: boolean;
+  visible: boolean;
+  order: number;
+}
+
+export interface AirpodsCompareModel {
+  id: string;
+  productSlug?: string;
+  badge?: string;
+  title: string;
+  subtitle: string;
+  fallbackPriceText?: string;
+  image: string;
+  alt: string;
+  buyLabel: string;
+  buyTo: string;
+  learnMoreLabel: string;
+  learnMoreTo: string;
+  ancSpec: string;
+  adaptiveSpec: string;
+  workoutSpec: string;
+  hearingSpec: string;
+  siriSpec: string;
+  controlsSpec: string;
+  batteryHours: string;
+  batteryCaption: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AirpodsFeatureCard {
+  id: string;
+  eyebrow: string;
+  headline: string;
+  subNote?: string;
+  expandedCopy: string;
+  theme: "light" | "dark";
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AirpodsAssuranceBanner {
+  eyebrow: string;
+  heading: string;
+  description: string;
+  ctaLabel: string;
+  ctaTo: string;
+  secondaryLabel?: string;
+  secondaryTo?: string;
+  image: string;
+  alt: string;
+}
+
+export interface AirpodsValueStripItem {
+  id: string;
+  icon: "delivery" | "installments" | "support" | "verified";
+  title: string;
+  description: string;
+  linkLabel: string;
+  linkTo: string;
+}
+
+export interface AirpodsDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: Array<{ id: string; label: string; to: string; isSecondary?: boolean }>;
+}
+
+export interface AirpodsPageConfig {
+  airpodsDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  sections: AirpodsPageSection[];
+  chapterNavItems: AirpodsChapterNavItem[];
+  promoRibbon: {
+    enabled: boolean;
+    text: string;
+    linkLabel: string;
+    linkTo: string;
+  };
+  heroShowcases: AirpodsHeroShowcaseCard[];
+  compareSection: {
+    heading: string;
+    shopAllLabel: string;
+    shopAllTo: string;
+    models: AirpodsCompareModel[];
+  };
+  featureCarouselSection: {
+    heading: string;
+    cards: AirpodsFeatureCard[];
+  };
+  assuranceBanner: AirpodsAssuranceBanner;
+  valueStrip: AirpodsValueStripItem[];
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: AirpodsDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}
+
+/* ============================================================================
+   ACCESSORIES PAGE REDESIGN CMS SCHEMA (Apple.com/shop/accessories/all + Gold)
+   ============================================================================ */
+
+export type AccessoriesBuiltInSectionKey =
+  | "header-category-strip"
+  | "whats-new-carousel"
+  | "top-picks-bento"
+  | "why-buy-accessories"
+  | "accessories-directory-footer";
+
+export type AccessoriesPageSectionType =
+  | AccessoriesBuiltInSectionKey
+  | "promotional-banner"
+  | "image-text"
+  | (string & {});
+
+export interface AccessoriesPageSection {
+  id: string;
+  type: AccessoriesPageSectionType;
+  builtInKey?: AccessoriesBuiltInSectionKey;
+  eyebrow?: string;
+  heading: string;
+  subtitle?: string;
+  description?: string;
+  desktopImage?: string;
+  imageAlt?: string;
+  backgroundColor?: string;
+  buttonLabel?: string;
+  buttonDestination?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AccessoriesCategoryNavItem {
+  id: string;
+  label: string;
+  image: string;
+  alt: string;
+  /** Optional bento tab id to focus & scroll to, otherwise navigates to `to` */
+  bentoTabId?: string;
+  to: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AccessoriesHeroSlide {
+  id: string;
+  theme: "dark-split" | "light-split";
+  badge?: string;
+  title: string;
+  description: string;
+  ctaLabel: string;
+  ctaTo: string;
+  image: string;
+  alt: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AccessoriesBentoItem {
+  id: string;
+  /** "product" (1x1 card), "wide" (2x1 tinted highlight), "editorial" (2x2 tall hero tile) */
+  span: "product" | "wide" | "editorial";
+  productSlug?: string;
+  eyebrow?: string;
+  badge?: string;
+  title: string;
+  subtitle?: string;
+  fallbackPriceText?: string;
+  tintColor?: string;
+  textTheme?: "light" | "dark";
+  swatches?: Array<{ label: string; hex: string }>;
+  image: string;
+  alt: string;
+  to: string;
+  ctaLabel?: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AccessoriesBentoTab {
+  id: string;
+  label: string;
+  shopAllLabel: string;
+  shopAllTo: string;
+  items: AccessoriesBentoItem[];
+}
+
+export interface AccessoriesWhyCard {
+  id: string;
+  icon: "delivery" | "verified" | "bundle" | "guidance";
+  title: string;
+  description: string;
+  modalHeadline: string;
+  modalDetails: string;
+  actionLabel: string;
+  actionTo: string;
+  visible: boolean;
+  order: number;
+}
+
+export interface AccessoriesDirectoryColumn {
+  id: string;
+  heading: string;
+  primaryStyle?: boolean;
+  links: Array<{ id: string; label: string; to: string; isSecondary?: boolean }>;
+}
+
+export interface AccessoriesPageConfig {
+  accessoriesDesignVersion?: number;
+  seoTitle: string;
+  seoDescription: string;
+  hero: {
+    heading: string;
+    showGoldPeriod?: boolean;
+    specialistLabel: string;
+    specialistTo: string;
+    showroomLabel: string;
+    showroomTo: string;
+  };
+  sections: AccessoriesPageSection[];
+  categoryNavItems: AccessoriesCategoryNavItem[];
+  whatsNewSection: {
+    heading: string;
+    slides: AccessoriesHeroSlide[];
+  };
+  topPicksSection: {
+    heading: string;
+    tabs: AccessoriesBentoTab[];
+  };
+  whyBuySection: {
+    heading: string;
+    cards: AccessoriesWhyCard[];
+  };
+  directoryFooter: {
+    heading: string;
+    tagline: string;
+    columns: AccessoriesDirectoryColumn[];
+    footnotes: string[];
+  };
+  hasDraft?: boolean;
+  updatedAt?: string;
+}

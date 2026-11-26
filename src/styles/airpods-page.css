@@ -1,0 +1,949 @@
+/* ============================================================================
+   BUY & SELL GH — AIRPODS PAGE REDESIGN (Apple.com/airpods + Gold Brand)
+   ============================================================================ */
+
+.airpods-page {
+  --ap-bg: #ffffff;
+  --ap-surface: #f5f5f7;
+  --ap-ink: #1d1d1f;
+  --ap-muted: #6e6e73;
+  --ap-border: rgba(29, 29, 31, 0.12);
+  --ap-gold: #d8a72d;
+  --ap-gold-hover: #c59520;
+  --ap-gold-ink: #111111;
+  --ap-gold-text: #9a6f08;
+  --ap-badge: #bf4800;
+  --ap-container: 1200px;
+  --ap-gutter: clamp(16px, 3.6vw, 44px);
+  background: var(--ap-surface);
+  color: var(--ap-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+.airpods-page * {
+  box-sizing: border-box;
+}
+
+.airpods-container {
+  width: 100%;
+  max-width: calc(var(--ap-container) + var(--ap-gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--ap-gutter);
+}
+
+.airpods-btn-gold-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: var(--ap-gold);
+  color: var(--ap-gold-ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.airpods-btn-gold-pill:hover {
+  background: var(--ap-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(216, 167, 45, 0.28);
+}
+
+.airpods-btn-outline-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.airpods-btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.airpods-btn-outline-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(29, 29, 31, 0.24);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ap-ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.airpods-btn-outline-dark:hover {
+  border-color: var(--ap-ink);
+  background: #ffffff;
+}
+
+.airpods-link-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ap-gold-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.airpods-link-gold:hover {
+  color: #7c5804;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 1. Top Chapter Nav Strip (above promo ribbon — exact Apple AirPods order!) */
+.airpods-chapter-section {
+  background: var(--ap-bg);
+  padding: 14px 0 12px;
+  border-bottom: 1px solid rgba(29, 29, 31, 0.06);
+}
+
+.airpods-chapter-shell {
+  position: relative;
+}
+
+.airpods-chapter-track {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 28px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 12px;
+}
+
+.airpods-chapter-track::-webkit-scrollbar {
+  display: none;
+}
+
+.airpods-chapter-item {
+  flex: 0 0 auto;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--ap-ink);
+  background: transparent;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.airpods-chapter-item:hover {
+  transform: translateY(-2px);
+}
+
+.airpods-chapter-thumb {
+  width: 52px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.airpods-chapter-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.airpods-chapter-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.airpods-chapter-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ap-badge);
+  margin-top: -4px;
+}
+
+/* 2. Promo Ribbon */
+.airpods-promo-ribbon {
+  background: var(--ap-surface);
+  padding: 12px var(--ap-gutter);
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.48;
+}
+
+.airpods-promo-ribbon a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--ap-gold-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.airpods-promo-ribbon a:hover {
+  text-decoration: underline;
+}
+
+/* 3. Stacked Full-Width Hero Showcase Cards */
+.airpods-hero-stack {
+  background: var(--ap-surface);
+  padding: 10px 0 36px;
+}
+
+.airpods-hero-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.airpods-hero-tile {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 610px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.airpods-hero-tile.variant-backlit-dark {
+  background: #0d1222;
+  color: #ffffff;
+}
+
+.airpods-hero-tile.variant-studio-light,
+.airpods-hero-tile.variant-wordmark-light {
+  background: #ffffff;
+  color: var(--ap-ink);
+  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.04);
+}
+
+.airpods-hero-bg-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 26%;
+  transition: transform 8s ease;
+}
+
+.airpods-hero-tile.is-ambient-playing .airpods-hero-bg-photo {
+  transform: scale(1.045);
+}
+
+.airpods-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 12, 24, 0.08) 0%, rgba(8, 12, 24, 0.18) 48%, rgba(8, 12, 24, 0.85) 100%);
+  pointer-events: none;
+}
+
+.airpods-hero-motion-btn {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  z-index: 4;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(20, 20, 26, 0.45);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.airpods-hero-studio-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px 10px;
+  min-height: 420px;
+}
+
+.airpods-hero-studio-stage img {
+  position: relative;
+  z-index: 2;
+  max-width: min(560px, 84%);
+  max-height: 400px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.airpods-hero-tile.variant-wordmark-light .airpods-hero-studio-stage img {
+  filter: brightness(1.04) contrast(1.06);
+}
+
+.airpods-hero-wordmark {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(54px, 9.6vw, 136px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: #1d1d1f;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+.airpods-hero-footer {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 44px 36px;
+}
+
+.airpods-hero-title {
+  margin: 0;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.airpods-hero-sub {
+  margin: 6px 0 6px;
+  font-size: clamp(15.5px, 1.5vw, 19px);
+  line-height: 1.38;
+  max-width: 540px;
+  opacity: 0.9;
+}
+
+.airpods-hero-price {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.airpods-hero-tile.variant-backlit-dark .airpods-hero-price {
+  color: var(--ap-gold);
+}
+
+.airpods-hero-ctas {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+/* 4. Inline 4-Column Compare AirPods Models Matrix */
+.airpods-compare-section {
+  background: var(--ap-surface);
+  padding: 72px 0 84px;
+}
+
+.airpods-centered-heading {
+  margin: 0 0 48px;
+  text-align: center;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.airpods-compare-desktop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 28px;
+  row-gap: 0;
+}
+
+.airpods-compare-header-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--ap-border);
+}
+
+.airpods-compare-img-wrap {
+  height: 168px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.airpods-compare-img-wrap img {
+  max-width: 158px;
+  max-height: 158px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.airpods-compare-badge {
+  min-height: 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ap-badge);
+  margin-bottom: 4px;
+}
+
+.airpods-compare-model-name {
+  margin: 0 0 8px;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.airpods-compare-model-sub {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ap-muted);
+  min-height: 58px;
+}
+
+.airpods-compare-price {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.airpods-compare-ctas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.airpods-compare-spec-cell {
+  padding: 24px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ap-ink);
+  border-bottom: 1px solid rgba(29, 29, 31, 0.06);
+}
+
+.airpods-spec-icon {
+  color: var(--ap-ink);
+  opacity: 0.84;
+}
+
+.airpods-spec-dash {
+  font-size: 22px;
+  color: var(--ap-muted);
+}
+
+.airpods-spec-hours {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ap-ink);
+}
+
+.airpods-compare-mobile-pairs {
+  display: none;
+}
+
+.airpods-compare-footer-link {
+  margin-top: 38px;
+  text-align: center;
+}
+
+/* 5. Get to Know AirPods Carousel (5 Cards with In-Card + -> X Overlay Reveal!) */
+.airpods-features-section {
+  background: var(--ap-bg);
+  padding: 84px 0 80px;
+}
+
+.airpods-carousel-bleed {
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding: 6px var(--ap-gutter) 18px;
+}
+
+.airpods-carousel-bleed::-webkit-scrollbar {
+  display: none;
+}
+
+.airpods-carousel-track {
+  display: flex;
+  gap: 22px;
+  width: max-content;
+  margin-inline: auto;
+  min-width: min(100%, var(--ap-container));
+}
+
+.airpods-feature-card {
+  position: relative;
+  flex: 0 0 362px;
+  width: 362px;
+  height: 560px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 28px 28px;
+}
+
+.airpods-feature-card.theme-light {
+  background: var(--ap-surface);
+  color: var(--ap-ink);
+}
+
+.airpods-feature-card.theme-dark {
+  background: #14151a;
+  color: #ffffff;
+}
+
+.airpods-feature-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.airpods-feature-card.theme-light .airpods-feature-bg {
+  top: auto;
+  height: 62%;
+  object-fit: contain;
+  object-position: center bottom;
+  padding: 16px 20px 20px;
+  mix-blend-mode: multiply;
+}
+
+.airpods-feature-card.theme-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 15, 22, 0.72) 0%, rgba(14, 15, 22, 0.16) 48%, rgba(14, 15, 22, 0.55) 100%);
+  z-index: 1;
+}
+
+.airpods-feature-top {
+  position: relative;
+  z-index: 2;
+}
+
+.airpods-feature-eyebrow {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  opacity: 0.78;
+}
+
+.airpods-feature-headline {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.airpods-feature-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 32px 28px 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(245, 245, 247, 0.96);
+  color: var(--ap-ink);
+  backdrop-filter: blur(10px);
+  animation: apOverlayFade 0.22s ease;
+}
+
+.airpods-feature-card.theme-dark .airpods-feature-overlay {
+  background: rgba(20, 21, 26, 0.95);
+  color: #ffffff;
+}
+
+@keyframes apOverlayFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.airpods-feature-toggle {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 4;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0;
+  background: #1d1d1f;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.24s ease, background-color 0.18s ease;
+}
+
+.airpods-feature-toggle:hover {
+  background: var(--ap-gold);
+  color: var(--ap-gold-ink);
+}
+
+.airpods-feature-toggle.is-open {
+  transform: rotate(45deg);
+  background: var(--ap-gold);
+  color: var(--ap-gold-ink);
+}
+
+.airpods-carousel-nav-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.airpods-circle-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(29, 29, 31, 0.08);
+  color: var(--ap-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.airpods-circle-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* 6. Buy & Sell GH Authentic Audio Split Banner */
+.airpods-assurance-section {
+  background: var(--ap-bg);
+  padding: 20px 0 84px;
+}
+
+.airpods-assurance-card {
+  background: var(--ap-surface);
+  border-radius: 28px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
+  align-items: center;
+}
+
+.airpods-assurance-copy {
+  padding: 52px 48px;
+}
+
+.airpods-assurance-eyebrow {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ap-gold-text);
+}
+
+.airpods-assurance-title {
+  margin: 0 0 14px;
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.airpods-assurance-desc {
+  margin: 0 0 24px;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--ap-muted);
+}
+
+.airpods-assurance-media {
+  height: 100%;
+  min-height: 360px;
+}
+
+.airpods-assurance-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 7. Bottom 4-Column Value Strip */
+.airpods-valuestrip-section {
+  background: var(--ap-surface);
+  padding: 64px 0 56px;
+  border-top: 1px solid rgba(29, 29, 31, 0.06);
+}
+
+.airpods-valuestrip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.airpods-value-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.airpods-value-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(216, 167, 45, 0.14);
+  color: var(--ap-gold-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.airpods-value-title {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.airpods-value-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ap-muted);
+}
+
+/* 8. Directory Footer */
+.airpods-directory-section {
+  background: var(--ap-surface);
+  padding: 40px 0 48px;
+  border-top: 1px solid var(--ap-border);
+}
+
+.airpods-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--ap-border);
+}
+
+.airpods-directory-col-title {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ap-muted);
+}
+
+.airpods-directory-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.airpods-directory-link {
+  color: var(--ap-ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.airpods-directory-link.is-primary {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.airpods-directory-link:hover {
+  color: var(--ap-gold-text);
+  text-decoration: underline;
+}
+
+.airpods-footnotes {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.airpods-footnotes p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ap-muted);
+}
+
+/* Tablet (<= 1024px) */
+@media (max-width: 1024px) {
+  .airpods-hero-tile {
+    min-height: 520px;
+  }
+
+  .airpods-hero-footer {
+    padding: 24px 28px 28px;
+  }
+
+  .airpods-assurance-card {
+    grid-template-columns: 1fr;
+  }
+
+  .airpods-valuestrip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile (<= 734px) */
+@media (max-width: 734px) {
+  .airpods-chapter-track {
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .airpods-hero-tile {
+    min-height: 490px;
+    border-radius: 22px;
+  }
+
+  .airpods-hero-studio-stage {
+    min-height: 280px;
+    padding: 24px 16px 8px;
+  }
+
+  .airpods-hero-wordmark {
+    font-size: 46px;
+  }
+
+  .airpods-hero-footer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 20px 28px;
+    gap: 16px;
+  }
+
+  .airpods-hero-ctas {
+    justify-content: center;
+  }
+
+  /* Apple-accurate 2x2 sub-grids for Compare AirPods models on mobile! */
+  .airpods-compare-desktop-grid {
+    display: none;
+  }
+
+  .airpods-compare-mobile-pairs {
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .airpods-compare-mobile-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  .airpods-compare-img-wrap {
+    height: 120px;
+  }
+
+  .airpods-compare-img-wrap img {
+    max-width: 112px;
+    max-height: 112px;
+  }
+
+  .airpods-compare-model-name {
+    font-size: 17px;
+  }
+
+  .airpods-compare-model-sub {
+    font-size: 12.5px;
+    min-height: 66px;
+  }
+
+  .airpods-spec-hours {
+    font-size: 30px;
+  }
+
+  .airpods-feature-card {
+    flex: 0 0 282px;
+    width: 282px;
+    height: 470px;
+    padding: 24px 22px;
+  }
+
+  .airpods-feature-headline {
+    font-size: 21px;
+  }
+
+  .airpods-assurance-copy {
+    padding: 32px 22px 24px;
+    text-align: center;
+  }
+
+  .airpods-valuestrip-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .airpods-directory-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

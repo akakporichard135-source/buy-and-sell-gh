@@ -11,7 +11,19 @@ const SYNC_CHANNEL_NAME = "buyandsell_cms_published_sync";
 const PUBLISHED_TIMESTAMP_KEY = "buyandsell_published_v_timestamp";
 
 export interface PublishedSyncMessage {
-  type: "homepage" | "learn-more" | "product" | "storefront" | "main-store" | "mac-page" | "ipad-page" | "media";
+  type:
+    | "homepage"
+    | "learn-more"
+    | "product"
+    | "storefront"
+    | "main-store"
+    | "mac-page"
+    | "ipad-page"
+    | "iphone-page"
+    | "watch-page"
+    | "airpods-page"
+    | "accessories-page"
+    | "media";
   id?: string;
   timestamp: number;
 }
