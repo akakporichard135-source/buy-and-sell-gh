@@ -35,6 +35,27 @@ import {
   defaultIpadPageConfig,
   defaultIpadPageSections,
 } from "./ipadPageDefaults";
+import {
+  CURRENT_IPHONE_DESIGN_VERSION,
+  defaultIphonePageConfig,
+  defaultIphonePageSections,
+} from "./iphonePageDefaults";
+import {
+  CURRENT_WATCH_DESIGN_VERSION,
+  defaultWatchPageConfig,
+  defaultWatchPageSections,
+} from "./watchPageDefaults";
+import {
+  CURRENT_AIRPODS_DESIGN_VERSION,
+  defaultAirpodsPageConfig,
+  defaultAirpodsPageSections,
+} from "./airpodsPageDefaults";
+import {
+  CURRENT_ACCESSORIES_DESIGN_VERSION,
+  defaultAccessoriesPageConfig,
+  defaultAccessoriesPageSections,
+} from "./accessoriesPageDefaults";
+import { createCategoryPageCmsStore } from "./categoryPageCmsFactory";
 import type {
   CategoryDepartmentConfig,
   FaqItem,
@@ -46,6 +67,14 @@ import type {
   HomepageSection,
   IpadPageConfig,
   IpadPageSection,
+  IphonePageConfig,
+  IphonePageSection,
+  WatchPageConfig,
+  WatchPageSection,
+  AirpodsPageConfig,
+  AirpodsPageSection,
+  AccessoriesPageConfig,
+  AccessoriesPageSection,
   MacPageConfig,
   MacPageSection,
   MainStoreConfig,
@@ -3183,6 +3212,355 @@ export const saveIpadPageContent = async (config: IpadPageConfig): Promise<IpadP
   notifyListeners();
   return normalized;
 };
+
+// ============================================================================
+// IPHONE PAGE CMS REPOSITORY
+// ============================================================================
+const mergeIphonePageWithDefaults = (incoming?: Partial<IphonePageConfig> | null): IphonePageConfig => {
+  if (!incoming || (incoming.iphoneDesignVersion || 0) < CURRENT_IPHONE_DESIGN_VERSION) {
+    return { ...defaultIphonePageConfig, updatedAt: incoming?.updatedAt };
+  }
+  const sections: IphonePageSection[] =
+    Array.isArray(incoming.sections) && incoming.sections.length > 0
+      ? incoming.sections
+      : defaultIphonePageSections;
+  return {
+    ...defaultIphonePageConfig,
+    ...incoming,
+    iphoneDesignVersion: CURRENT_IPHONE_DESIGN_VERSION,
+    promoRibbon: { ...defaultIphonePageConfig.promoRibbon, ...(incoming.promoRibbon || {}) },
+    hero: { ...defaultIphonePageConfig.hero, ...(incoming.hero || {}) },
+    sections,
+    chapterNavItems:
+      Array.isArray(incoming.chapterNavItems) && incoming.chapterNavItems.length > 0
+        ? incoming.chapterNavItems
+        : defaultIphonePageConfig.chapterNavItems,
+    heroGallery: {
+      ...defaultIphonePageConfig.heroGallery,
+      ...(incoming.heroGallery || {}),
+      slides:
+        Array.isArray(incoming.heroGallery?.slides) && incoming.heroGallery.slides.length > 0
+          ? incoming.heroGallery.slides
+          : defaultIphonePageConfig.heroGallery.slides,
+    },
+    lineupSection: {
+      ...defaultIphonePageConfig.lineupSection,
+      ...(incoming.lineupSection || {}),
+      cards:
+        Array.isArray(incoming.lineupSection?.cards) && incoming.lineupSection.cards.length > 0
+          ? incoming.lineupSection.cards
+          : defaultIphonePageConfig.lineupSection.cards,
+    },
+    whyShopSection: {
+      ...defaultIphonePageConfig.whyShopSection,
+      ...(incoming.whyShopSection || {}),
+      cards:
+        Array.isArray(incoming.whyShopSection?.cards) && incoming.whyShopSection.cards.length > 0
+          ? incoming.whyShopSection.cards
+          : defaultIphonePageConfig.whyShopSection.cards,
+    },
+    essentialsSection: {
+      ...defaultIphonePageConfig.essentialsSection,
+      ...(incoming.essentialsSection || {}),
+      cards:
+        Array.isArray(incoming.essentialsSection?.cards) && incoming.essentialsSection.cards.length > 0
+          ? incoming.essentialsSection.cards
+          : defaultIphonePageConfig.essentialsSection.cards,
+    },
+    ecosystemSection: {
+      ...defaultIphonePageConfig.ecosystemSection,
+      ...(incoming.ecosystemSection || {}),
+      items:
+        Array.isArray(incoming.ecosystemSection?.items) && incoming.ecosystemSection.items.length > 0
+          ? incoming.ecosystemSection.items
+          : defaultIphonePageConfig.ecosystemSection.items,
+    },
+    directoryFooter: {
+      ...defaultIphonePageConfig.directoryFooter,
+      ...(incoming.directoryFooter || {}),
+      columns:
+        Array.isArray(incoming.directoryFooter?.columns) && incoming.directoryFooter.columns.length > 0
+          ? incoming.directoryFooter.columns
+          : defaultIphonePageConfig.directoryFooter.columns,
+      footnotes:
+        Array.isArray(incoming.directoryFooter?.footnotes) && incoming.directoryFooter.footnotes.length > 0
+          ? incoming.directoryFooter.footnotes
+          : defaultIphonePageConfig.directoryFooter.footnotes,
+    },
+  };
+};
+
+const iphonePageStore = createCategoryPageCmsStore<IphonePageConfig>({
+  label: "iPhone Page",
+  supabaseKey: "iphone_page",
+  supabaseDraftKey: "iphone_page_draft",
+  storageKey: "buyandsell_cms_iphone_page_v1",
+  storageDraftKey: "buyandsell_cms_iphone_page_draft_v1",
+  storageLocalPubKey: "buyandsell_cms_iphone_page_local_pub_v1",
+  broadcastType: "iphone-page",
+  defaultConfig: defaultIphonePageConfig,
+  mergeWithDefaults: mergeIphonePageWithDefaults,
+  notifyListeners,
+});
+
+export const getInitialIphonePageContent = iphonePageStore.getInitial;
+export const getInitialIphonePageDraft = iphonePageStore.getInitialDraft;
+export const fetchIphonePageContent = iphonePageStore.fetchContent;
+export const fetchIphonePageDraft = iphonePageStore.fetchDraft;
+export const saveIphonePageDraft = iphonePageStore.saveDraft;
+export const discardIphonePageDraft = iphonePageStore.discardDraft;
+export const saveIphonePageContent = iphonePageStore.saveContent;
+
+// ============================================================================
+// APPLE WATCH PAGE CMS REPOSITORY
+// ============================================================================
+const mergeWatchPageWithDefaults = (incoming?: Partial<WatchPageConfig> | null): WatchPageConfig => {
+  if (!incoming || (incoming.watchDesignVersion || 0) < CURRENT_WATCH_DESIGN_VERSION) {
+    return { ...defaultWatchPageConfig, updatedAt: incoming?.updatedAt };
+  }
+  const sections: WatchPageSection[] =
+    Array.isArray(incoming.sections) && incoming.sections.length > 0
+      ? incoming.sections
+      : defaultWatchPageSections;
+  return {
+    ...defaultWatchPageConfig,
+    ...incoming,
+    watchDesignVersion: CURRENT_WATCH_DESIGN_VERSION,
+    promoRibbon: { ...defaultWatchPageConfig.promoRibbon, ...(incoming.promoRibbon || {}) },
+    hero: { ...defaultWatchPageConfig.hero, ...(incoming.hero || {}) },
+    sections,
+    chapterNavItems:
+      Array.isArray(incoming.chapterNavItems) && incoming.chapterNavItems.length > 0
+        ? incoming.chapterNavItems
+        : defaultWatchPageConfig.chapterNavItems,
+    lineupSection: {
+      ...defaultWatchPageConfig.lineupSection,
+      ...(incoming.lineupSection || {}),
+      cards:
+        Array.isArray(incoming.lineupSection?.cards) && incoming.lineupSection.cards.length > 0
+          ? incoming.lineupSection.cards
+          : defaultWatchPageConfig.lineupSection.cards,
+    },
+    whyShopSection: {
+      ...defaultWatchPageConfig.whyShopSection,
+      ...(incoming.whyShopSection || {}),
+      cards:
+        Array.isArray(incoming.whyShopSection?.cards) && incoming.whyShopSection.cards.length > 0
+          ? incoming.whyShopSection.cards
+          : defaultWatchPageConfig.whyShopSection.cards,
+    },
+    essentialsBanner: {
+      ...defaultWatchPageConfig.essentialsBanner,
+      ...(incoming.essentialsBanner || {}),
+    },
+    ecosystemSection: {
+      ...defaultWatchPageConfig.ecosystemSection,
+      ...(incoming.ecosystemSection || {}),
+      items:
+        Array.isArray(incoming.ecosystemSection?.items) && incoming.ecosystemSection.items.length > 0
+          ? incoming.ecosystemSection.items
+          : defaultWatchPageConfig.ecosystemSection.items,
+    },
+    directoryFooter: {
+      ...defaultWatchPageConfig.directoryFooter,
+      ...(incoming.directoryFooter || {}),
+      columns:
+        Array.isArray(incoming.directoryFooter?.columns) && incoming.directoryFooter.columns.length > 0
+          ? incoming.directoryFooter.columns
+          : defaultWatchPageConfig.directoryFooter.columns,
+      footnotes:
+        Array.isArray(incoming.directoryFooter?.footnotes) && incoming.directoryFooter.footnotes.length > 0
+          ? incoming.directoryFooter.footnotes
+          : defaultWatchPageConfig.directoryFooter.footnotes,
+    },
+  };
+};
+
+const watchPageStore = createCategoryPageCmsStore<WatchPageConfig>({
+  label: "Apple Watch Page",
+  supabaseKey: "watch_page",
+  supabaseDraftKey: "watch_page_draft",
+  storageKey: "buyandsell_cms_watch_page_v1",
+  storageDraftKey: "buyandsell_cms_watch_page_draft_v1",
+  storageLocalPubKey: "buyandsell_cms_watch_page_local_pub_v1",
+  broadcastType: "watch-page",
+  defaultConfig: defaultWatchPageConfig,
+  mergeWithDefaults: mergeWatchPageWithDefaults,
+  notifyListeners,
+});
+
+export const getInitialWatchPageContent = watchPageStore.getInitial;
+export const getInitialWatchPageDraft = watchPageStore.getInitialDraft;
+export const fetchWatchPageContent = watchPageStore.fetchContent;
+export const fetchWatchPageDraft = watchPageStore.fetchDraft;
+export const saveWatchPageDraft = watchPageStore.saveDraft;
+export const discardWatchPageDraft = watchPageStore.discardDraft;
+export const saveWatchPageContent = watchPageStore.saveContent;
+
+// ============================================================================
+// AIRPODS PAGE CMS REPOSITORY
+// ============================================================================
+const mergeAirpodsPageWithDefaults = (incoming?: Partial<AirpodsPageConfig> | null): AirpodsPageConfig => {
+  if (!incoming || (incoming.airpodsDesignVersion || 0) < CURRENT_AIRPODS_DESIGN_VERSION) {
+    return { ...defaultAirpodsPageConfig, updatedAt: incoming?.updatedAt };
+  }
+  const sections: AirpodsPageSection[] =
+    Array.isArray(incoming.sections) && incoming.sections.length > 0
+      ? incoming.sections
+      : defaultAirpodsPageSections;
+  return {
+    ...defaultAirpodsPageConfig,
+    ...incoming,
+    airpodsDesignVersion: CURRENT_AIRPODS_DESIGN_VERSION,
+    sections,
+    chapterNavItems:
+      Array.isArray(incoming.chapterNavItems) && incoming.chapterNavItems.length > 0
+        ? incoming.chapterNavItems
+        : defaultAirpodsPageConfig.chapterNavItems,
+    promoRibbon: { ...defaultAirpodsPageConfig.promoRibbon, ...(incoming.promoRibbon || {}) },
+    heroShowcases:
+      Array.isArray(incoming.heroShowcases) && incoming.heroShowcases.length > 0
+        ? incoming.heroShowcases
+        : defaultAirpodsPageConfig.heroShowcases,
+    compareSection: {
+      ...defaultAirpodsPageConfig.compareSection,
+      ...(incoming.compareSection || {}),
+      models:
+        Array.isArray(incoming.compareSection?.models) && incoming.compareSection.models.length > 0
+          ? incoming.compareSection.models
+          : defaultAirpodsPageConfig.compareSection.models,
+    },
+    featureCarouselSection: {
+      ...defaultAirpodsPageConfig.featureCarouselSection,
+      ...(incoming.featureCarouselSection || {}),
+      cards:
+        Array.isArray(incoming.featureCarouselSection?.cards) && incoming.featureCarouselSection.cards.length > 0
+          ? incoming.featureCarouselSection.cards
+          : defaultAirpodsPageConfig.featureCarouselSection.cards,
+    },
+    assuranceBanner: { ...defaultAirpodsPageConfig.assuranceBanner, ...(incoming.assuranceBanner || {}) },
+    valueStrip:
+      Array.isArray(incoming.valueStrip) && incoming.valueStrip.length > 0
+        ? incoming.valueStrip
+        : defaultAirpodsPageConfig.valueStrip,
+    directoryFooter: {
+      ...defaultAirpodsPageConfig.directoryFooter,
+      ...(incoming.directoryFooter || {}),
+      columns:
+        Array.isArray(incoming.directoryFooter?.columns) && incoming.directoryFooter.columns.length > 0
+          ? incoming.directoryFooter.columns
+          : defaultAirpodsPageConfig.directoryFooter.columns,
+      footnotes:
+        Array.isArray(incoming.directoryFooter?.footnotes) && incoming.directoryFooter.footnotes.length > 0
+          ? incoming.directoryFooter.footnotes
+          : defaultAirpodsPageConfig.directoryFooter.footnotes,
+    },
+  };
+};
+
+const airpodsPageStore = createCategoryPageCmsStore<AirpodsPageConfig>({
+  label: "AirPods Page",
+  supabaseKey: "airpods_page",
+  supabaseDraftKey: "airpods_page_draft",
+  storageKey: "buyandsell_cms_airpods_page_v1",
+  storageDraftKey: "buyandsell_cms_airpods_page_draft_v1",
+  storageLocalPubKey: "buyandsell_cms_airpods_page_local_pub_v1",
+  broadcastType: "airpods-page",
+  defaultConfig: defaultAirpodsPageConfig,
+  mergeWithDefaults: mergeAirpodsPageWithDefaults,
+  notifyListeners,
+});
+
+export const getInitialAirpodsPageContent = airpodsPageStore.getInitial;
+export const getInitialAirpodsPageDraft = airpodsPageStore.getInitialDraft;
+export const fetchAirpodsPageContent = airpodsPageStore.fetchContent;
+export const fetchAirpodsPageDraft = airpodsPageStore.fetchDraft;
+export const saveAirpodsPageDraft = airpodsPageStore.saveDraft;
+export const discardAirpodsPageDraft = airpodsPageStore.discardDraft;
+export const saveAirpodsPageContent = airpodsPageStore.saveContent;
+
+// ============================================================================
+// ACCESSORIES PAGE CMS REPOSITORY
+// ============================================================================
+const mergeAccessoriesPageWithDefaults = (
+  incoming?: Partial<AccessoriesPageConfig> | null
+): AccessoriesPageConfig => {
+  if (!incoming || (incoming.accessoriesDesignVersion || 0) < CURRENT_ACCESSORIES_DESIGN_VERSION) {
+    return { ...defaultAccessoriesPageConfig, updatedAt: incoming?.updatedAt };
+  }
+  const sections: AccessoriesPageSection[] =
+    Array.isArray(incoming.sections) && incoming.sections.length > 0
+      ? incoming.sections
+      : defaultAccessoriesPageSections;
+  return {
+    ...defaultAccessoriesPageConfig,
+    ...incoming,
+    accessoriesDesignVersion: CURRENT_ACCESSORIES_DESIGN_VERSION,
+    hero: { ...defaultAccessoriesPageConfig.hero, ...(incoming.hero || {}) },
+    sections,
+    categoryNavItems:
+      Array.isArray(incoming.categoryNavItems) && incoming.categoryNavItems.length > 0
+        ? incoming.categoryNavItems
+        : defaultAccessoriesPageConfig.categoryNavItems,
+    whatsNewSection: {
+      ...defaultAccessoriesPageConfig.whatsNewSection,
+      ...(incoming.whatsNewSection || {}),
+      slides:
+        Array.isArray(incoming.whatsNewSection?.slides) && incoming.whatsNewSection.slides.length > 0
+          ? incoming.whatsNewSection.slides
+          : defaultAccessoriesPageConfig.whatsNewSection.slides,
+    },
+    topPicksSection: {
+      ...defaultAccessoriesPageConfig.topPicksSection,
+      ...(incoming.topPicksSection || {}),
+      tabs:
+        Array.isArray(incoming.topPicksSection?.tabs) && incoming.topPicksSection.tabs.length > 0
+          ? incoming.topPicksSection.tabs
+          : defaultAccessoriesPageConfig.topPicksSection.tabs,
+    },
+    whyBuySection: {
+      ...defaultAccessoriesPageConfig.whyBuySection,
+      ...(incoming.whyBuySection || {}),
+      cards:
+        Array.isArray(incoming.whyBuySection?.cards) && incoming.whyBuySection.cards.length > 0
+          ? incoming.whyBuySection.cards
+          : defaultAccessoriesPageConfig.whyBuySection.cards,
+    },
+    directoryFooter: {
+      ...defaultAccessoriesPageConfig.directoryFooter,
+      ...(incoming.directoryFooter || {}),
+      columns:
+        Array.isArray(incoming.directoryFooter?.columns) && incoming.directoryFooter.columns.length > 0
+          ? incoming.directoryFooter.columns
+          : defaultAccessoriesPageConfig.directoryFooter.columns,
+      footnotes:
+        Array.isArray(incoming.directoryFooter?.footnotes) && incoming.directoryFooter.footnotes.length > 0
+          ? incoming.directoryFooter.footnotes
+          : defaultAccessoriesPageConfig.directoryFooter.footnotes,
+    },
+  };
+};
+
+const accessoriesPageStore = createCategoryPageCmsStore<AccessoriesPageConfig>({
+  label: "Accessories Page",
+  supabaseKey: "accessories_page",
+  supabaseDraftKey: "accessories_page_draft",
+  storageKey: "buyandsell_cms_accessories_page_v1",
+  storageDraftKey: "buyandsell_cms_accessories_page_draft_v1",
+  storageLocalPubKey: "buyandsell_cms_accessories_page_local_pub_v1",
+  broadcastType: "accessories-page",
+  defaultConfig: defaultAccessoriesPageConfig,
+  mergeWithDefaults: mergeAccessoriesPageWithDefaults,
+  notifyListeners,
+});
+
+export const getInitialAccessoriesPageContent = accessoriesPageStore.getInitial;
+export const getInitialAccessoriesPageDraft = accessoriesPageStore.getInitialDraft;
+export const fetchAccessoriesPageContent = accessoriesPageStore.fetchContent;
+export const fetchAccessoriesPageDraft = accessoriesPageStore.fetchDraft;
+export const saveAccessoriesPageDraft = accessoriesPageStore.saveDraft;
+export const discardAccessoriesPageDraft = accessoriesPageStore.discardDraft;
+export const saveAccessoriesPageContent = accessoriesPageStore.saveContent;
 
 // Cascades replaced media URLs to homepage content and storefront departments
 async function cascadeMediaUrlUpdate(

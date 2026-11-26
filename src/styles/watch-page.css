@@ -1,0 +1,968 @@
+/* ============================================================================
+   BUY & SELL GH — APPLE WATCH PAGE REDESIGN (Apple.com/watch + Gold Brand)
+   ============================================================================ */
+
+.watch-page {
+  --wt-bg: #ffffff;
+  --wt-surface: #f5f5f7;
+  --wt-ink: #1d1d1f;
+  --wt-muted: #6e6e73;
+  --wt-border: rgba(29, 29, 31, 0.1);
+  --wt-gold: #d8a72d;
+  --wt-gold-hover: #c59520;
+  --wt-gold-ink: #111111;
+  --wt-gold-text: #9a6f08;
+  --wt-badge: #bf4800;
+  --wt-container: 1200px;
+  --wt-gutter: clamp(18px, 4vw, 48px);
+  background: var(--wt-bg);
+  color: var(--wt-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+.watch-page * {
+  box-sizing: border-box;
+}
+
+.watch-container {
+  width: 100%;
+  max-width: calc(var(--wt-container) + var(--wt-gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--wt-gutter);
+}
+
+.watch-btn-gold-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: var(--wt-gold);
+  color: var(--wt-gold-ink);
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.watch-btn-gold-pill:hover {
+  background: var(--wt-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(216, 167, 45, 0.28);
+}
+
+.watch-btn-gold-pill svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.watch-link-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--wt-gold-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.watch-link-gold:hover {
+  color: #7c5804;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.watch-gold-bag-icon {
+  color: var(--wt-gold);
+  flex-shrink: 0;
+}
+
+/* 1. Promo Ribbon */
+.watch-promo-ribbon {
+  background: var(--wt-surface);
+  border-bottom: 1px solid rgba(29, 29, 31, 0.06);
+  padding: 12px var(--wt-gutter);
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.48;
+}
+
+.watch-promo-ribbon a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--wt-gold-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.watch-promo-ribbon a:hover {
+  text-decoration: underline;
+}
+
+/* 2. Hero & Chapter Nav */
+.watch-hero-section {
+  background: var(--wt-bg);
+  padding: 40px 0 30px;
+}
+
+.watch-hero-title {
+  margin: 0 0 28px;
+  font-size: clamp(42px, 5vw, 64px);
+  line-height: 1.04;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.watch-hero-gold-dot {
+  color: var(--wt-gold);
+}
+
+.watch-chapter-shell {
+  position: relative;
+}
+
+.watch-chapter-track {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 6px 4px 10px;
+  scroll-behavior: smooth;
+}
+
+.watch-chapter-track::-webkit-scrollbar {
+  display: none;
+}
+
+.watch-chapter-item {
+  flex: 0 0 auto;
+  min-width: 92px;
+  max-width: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--wt-ink);
+  background: transparent;
+  border: 0;
+  padding: 4px 2px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.watch-chapter-item:hover {
+  transform: translateY(-2px);
+}
+
+.watch-chapter-thumb {
+  width: 60px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.watch-chapter-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.watch-chapter-label {
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.watch-chapter-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--wt-badge);
+  margin-top: -4px;
+}
+
+.watch-chapter-paddle {
+  position: absolute;
+  top: 26px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(29, 29, 31, 0.12);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--wt-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+}
+
+.watch-chapter-paddle.prev { left: 0; }
+.watch-chapter-paddle.next { right: 0; }
+
+/* Section Head */
+.watch-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 34px;
+  flex-wrap: wrap;
+}
+
+.watch-section-heading {
+  margin: 0;
+  font-size: clamp(32px, 3.8vw, 50px);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  max-width: 700px;
+}
+
+.watch-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+/* 3. Explore the Lineup (3-Column Desktop Grid -> Horizontal Carousel Mobile) */
+.watch-lineup-section {
+  background: var(--wt-surface);
+  padding: 76px 0 48px;
+}
+
+.watch-lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.watch-lineup-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.watch-lineup-tile {
+  width: 100%;
+  height: 368px;
+  border-radius: 26px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  transition: transform 0.28s ease;
+}
+
+.watch-lineup-card:hover .watch-lineup-tile {
+  transform: translateY(-3px);
+}
+
+/* Apple-accurate 3 tinted tiles: Series 12 warm cream, Ultra 4 obsidian, SE 3 cool sky */
+.watch-lineup-tile.tone-cream {
+  background: linear-gradient(180deg, #f8f1dc 0%, #fcfaf3 100%);
+}
+
+.watch-lineup-tile.tone-obsidian {
+  background: #000000;
+  padding: 14px;
+}
+
+.watch-lineup-tile.tone-sky {
+  background: linear-gradient(180deg, #d7e9f9 0%, #eef6fd 100%);
+}
+
+.watch-lineup-tile img {
+  max-width: 88%;
+  max-height: 88%;
+  object-fit: contain;
+  transition: transform 0.35s ease;
+}
+
+.watch-lineup-tile.tone-cream img,
+.watch-lineup-tile.tone-sky img {
+  mix-blend-mode: multiply;
+}
+
+.watch-lineup-tile.tone-obsidian img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.watch-lineup-card:hover .watch-lineup-tile img {
+  transform: scale(1.03);
+}
+
+.watch-swatches {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  min-height: 16px;
+}
+
+.watch-swatch-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.watch-lineup-badge {
+  margin-top: 12px;
+  min-height: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--wt-badge);
+}
+
+.watch-lineup-title {
+  margin: 4px 0 6px;
+  font-size: 27px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.watch-lineup-desc {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.46;
+  color: var(--wt-ink);
+  max-width: 310px;
+  min-height: 44px;
+}
+
+.watch-lineup-price {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.watch-lineup-note {
+  margin: 4px 0 18px;
+  font-size: 12.5px;
+  color: var(--wt-muted);
+  min-height: 18px;
+}
+
+.watch-lineup-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: auto;
+}
+
+/* 4. Why Buy & Sell GH Carousel */
+.watch-why-section {
+  background: var(--wt-surface);
+  padding: 64px 0 84px;
+}
+
+.watch-carousel-bleed {
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding: 6px var(--wt-gutter) 18px;
+}
+
+.watch-carousel-bleed::-webkit-scrollbar {
+  display: none;
+}
+
+.watch-carousel-track {
+  display: flex;
+  gap: 22px;
+  width: max-content;
+  margin-inline: auto;
+  min-width: min(100%, var(--wt-container));
+}
+
+.watch-why-card {
+  position: relative;
+  flex: 0 0 364px;
+  width: 364px;
+  min-height: 438px;
+  background: #ffffff;
+  border-radius: 26px;
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.watch-why-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.watch-why-eyebrow {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wt-muted);
+}
+
+.watch-why-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.watch-why-desc {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.48;
+  color: var(--wt-muted);
+}
+
+.watch-why-media {
+  margin-top: 20px;
+  height: 185px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 26px;
+}
+
+.watch-why-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+.watch-why-trigger {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--wt-ink);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.watch-why-trigger:hover {
+  background: var(--wt-gold);
+  color: var(--wt-gold-ink);
+  transform: scale(1.06);
+}
+
+.watch-carousel-nav-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.watch-circle-arrow {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(29, 29, 31, 0.08);
+  color: var(--wt-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.watch-circle-arrow:hover:not(:disabled) {
+  background: rgba(29, 29, 31, 0.16);
+}
+
+.watch-circle-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* 5. Apple Watch Essentials (1-Up Wide Split Banner with 5 Vertical Bands!) */
+.watch-essentials-section {
+  background: var(--wt-bg);
+  padding: 84px 0 42px;
+}
+
+.watch-essentials-banner {
+  background: var(--wt-surface);
+  border-radius: 28px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(300px, 460px) minmax(0, 1fr);
+  min-height: 410px;
+  align-items: stretch;
+}
+
+.watch-essentials-copy {
+  padding: 48px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.watch-essentials-title {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.watch-essentials-desc {
+  margin: 0 0 14px;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--wt-muted);
+}
+
+.watch-essentials-price {
+  margin: 0 0 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wt-ink);
+}
+
+.watch-essentials-ctas {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.watch-essentials-media {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.watch-essentials-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.watch-essentials-banner:hover .watch-essentials-media img {
+  transform: scale(1.025);
+}
+
+/* 6. Made for Each Other Accordion */
+.watch-eco-section {
+  background: var(--wt-bg);
+  padding: 64px 0 88px;
+}
+
+.watch-eco-card {
+  background: var(--wt-surface);
+  border-radius: 28px;
+  padding: 44px;
+  display: grid;
+  grid-template-columns: minmax(290px, 420px) minmax(0, 1fr);
+  gap: 44px;
+  align-items: center;
+}
+
+.watch-eco-item {
+  border-bottom: 1px solid var(--wt-border);
+}
+
+.watch-eco-item:last-child {
+  border-bottom: 0;
+}
+
+.watch-eco-trigger {
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--wt-ink);
+  cursor: pointer;
+}
+
+.watch-eco-chevron {
+  transition: transform 0.22s ease;
+  color: var(--wt-muted);
+  flex-shrink: 0;
+}
+
+.watch-eco-item.is-open .watch-eco-chevron {
+  transform: rotate(180deg);
+  color: var(--wt-gold-text);
+}
+
+.watch-eco-panel {
+  padding: 0 0 22px;
+}
+
+.watch-eco-desc {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.56;
+  color: var(--wt-muted);
+}
+
+.watch-eco-inline-media {
+  display: none;
+  margin-top: 16px;
+}
+
+.watch-eco-inline-img {
+  width: 100%;
+  max-height: 270px;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+.watch-eco-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+}
+
+.watch-eco-stage img {
+  width: 100%;
+  max-height: 410px;
+  object-fit: cover;
+  border-radius: 22px;
+}
+
+/* 7. Directory Footer */
+.watch-directory-section {
+  background: var(--wt-surface);
+  padding: 68px 0 48px;
+  border-top: 1px solid rgba(29, 29, 31, 0.06);
+}
+
+.watch-directory-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 34px;
+  flex-wrap: wrap;
+}
+
+.watch-directory-title {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.watch-directory-tagline {
+  font-size: 14px;
+  color: var(--wt-muted);
+}
+
+.watch-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--wt-border);
+}
+
+.watch-directory-col-title {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--wt-muted);
+}
+
+.watch-directory-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.watch-directory-link {
+  display: inline-block;
+  color: var(--wt-ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.watch-directory-link.is-primary {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.watch-directory-link:hover {
+  color: var(--wt-gold-text);
+  text-decoration: underline;
+}
+
+.watch-footnotes {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.watch-footnotes p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--wt-muted);
+}
+
+/* Modals */
+.watch-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(17, 17, 17, 0.52);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.watch-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 36px 34px 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+}
+
+.watch-compare-dialog {
+  max-width: 980px;
+}
+
+.watch-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--wt-surface);
+  color: var(--wt-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.watch-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.watch-compare-col {
+  background: var(--wt-surface);
+  border-radius: 22px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.watch-compare-col img {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+
+.watch-compare-specs {
+  width: 100%;
+  margin: 14px 0 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--wt-border);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--wt-muted);
+}
+
+/* Tablet (<= 1024px) */
+@media (max-width: 1024px) {
+  .watch-lineup-grid {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 20px;
+    padding-bottom: 8px;
+  }
+
+  .watch-lineup-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .watch-lineup-card {
+    flex: 0 0 320px;
+    width: 320px;
+  }
+
+  .watch-essentials-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .watch-essentials-media {
+    min-height: 280px;
+  }
+
+  .watch-eco-card {
+    grid-template-columns: 1fr;
+    padding: 32px;
+    gap: 24px;
+  }
+}
+
+/* Mobile (<= 734px) */
+@media (max-width: 734px) {
+  .watch-hero-section {
+    padding: 28px 0 20px;
+  }
+
+  .watch-chapter-track {
+    justify-content: flex-start;
+  }
+
+  .watch-lineup-section {
+    padding: 52px 0 36px;
+  }
+
+  .watch-lineup-card {
+    flex: 0 0 282px;
+    width: 282px;
+  }
+
+  .watch-lineup-tile {
+    height: 296px;
+    border-radius: 22px;
+  }
+
+  .watch-why-section {
+    padding: 44px 0 56px;
+  }
+
+  .watch-why-card {
+    flex: 0 0 286px;
+    width: 286px;
+    min-height: 394px;
+    padding: 22px;
+  }
+
+  .watch-essentials-section {
+    padding: 56px 0 28px;
+  }
+
+  .watch-essentials-copy {
+    padding: 30px 22px 24px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .watch-essentials-ctas {
+    justify-content: center;
+  }
+
+  .watch-essentials-media {
+    min-height: 240px;
+  }
+
+  .watch-eco-section {
+    padding: 44px 0 60px;
+  }
+
+  .watch-eco-card {
+    padding: 22px 20px;
+    border-radius: 22px;
+  }
+
+  .watch-eco-trigger {
+    font-size: 19px;
+    padding: 16px 0;
+  }
+
+  .watch-eco-stage {
+    display: none;
+  }
+
+  .watch-eco-inline-media {
+    display: block;
+  }
+
+  .watch-directory-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

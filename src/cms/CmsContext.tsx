@@ -14,6 +14,10 @@ import {
   discardHomepageDraft,
   discardHomepageLegacyDraft,
   discardIpadPageDraft,
+  discardIphonePageDraft,
+  discardWatchPageDraft,
+  discardAirpodsPageDraft,
+  discardAccessoriesPageDraft,
   discardMacPageDraft,
   discardMainStoreDraft,
   fetchFaqs,
@@ -22,6 +26,14 @@ import {
   fetchHomepageLegacyDraft,
   fetchIpadPageContent,
   fetchIpadPageDraft,
+  fetchIphonePageContent,
+  fetchIphonePageDraft,
+  fetchWatchPageContent,
+  fetchWatchPageDraft,
+  fetchAirpodsPageContent,
+  fetchAirpodsPageDraft,
+  fetchAccessoriesPageContent,
+  fetchAccessoriesPageDraft,
   fetchMacPageContent,
   fetchMacPageDraft,
   fetchMainStoreContent,
@@ -36,6 +48,14 @@ import {
   getInitialHomepageLegacyDraft,
   getInitialIpadPageContent,
   getInitialIpadPageDraft,
+  getInitialIphonePageContent,
+  getInitialIphonePageDraft,
+  getInitialWatchPageContent,
+  getInitialWatchPageDraft,
+  getInitialAirpodsPageContent,
+  getInitialAirpodsPageDraft,
+  getInitialAccessoriesPageContent,
+  getInitialAccessoriesPageDraft,
   getInitialMacPageContent,
   getInitialMacPageDraft,
   getInitialMainStoreContent,
@@ -52,6 +72,14 @@ import {
   saveHomepageLegacyDraft,
   saveIpadPageContent,
   saveIpadPageDraft,
+  saveIphonePageContent,
+  saveIphonePageDraft,
+  saveWatchPageContent,
+  saveWatchPageDraft,
+  saveAirpodsPageContent,
+  saveAirpodsPageDraft,
+  saveAccessoriesPageContent,
+  saveAccessoriesPageDraft,
   saveMacPageContent,
   saveMacPageDraft,
   saveMainStoreContent,
@@ -69,6 +97,10 @@ import type {
   FaqItem,
   HomepageContent,
   IpadPageConfig,
+  IphonePageConfig,
+  WatchPageConfig,
+  AirpodsPageConfig,
+  AccessoriesPageConfig,
   MacPageConfig,
   MainStoreConfig,
   MediaItem,
@@ -87,6 +119,14 @@ interface CmsContextValue {
   macPageDraft: MacPageConfig | null;
   ipadPage: IpadPageConfig;
   ipadPageDraft: IpadPageConfig | null;
+  iphonePage: IphonePageConfig;
+  iphonePageDraft: IphonePageConfig | null;
+  watchPage: WatchPageConfig;
+  watchPageDraft: WatchPageConfig | null;
+  airpodsPage: AirpodsPageConfig;
+  airpodsPageDraft: AirpodsPageConfig | null;
+  accessoriesPage: AccessoriesPageConfig;
+  accessoriesPageDraft: AccessoriesPageConfig | null;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -109,6 +149,18 @@ interface CmsContextValue {
   updateIpadPage: (config: IpadPageConfig) => Promise<IpadPageConfig>;
   saveIpadPageDraftConfig: (config: IpadPageConfig) => Promise<IpadPageConfig>;
   discardIpadPageDraftConfig: () => Promise<void>;
+  updateIphonePage: (config: IphonePageConfig) => Promise<IphonePageConfig>;
+  saveIphonePageDraftConfig: (config: IphonePageConfig) => Promise<IphonePageConfig>;
+  discardIphonePageDraftConfig: () => Promise<void>;
+  updateWatchPage: (config: WatchPageConfig) => Promise<WatchPageConfig>;
+  saveWatchPageDraftConfig: (config: WatchPageConfig) => Promise<WatchPageConfig>;
+  discardWatchPageDraftConfig: () => Promise<void>;
+  updateAirpodsPage: (config: AirpodsPageConfig) => Promise<AirpodsPageConfig>;
+  saveAirpodsPageDraftConfig: (config: AirpodsPageConfig) => Promise<AirpodsPageConfig>;
+  discardAirpodsPageDraftConfig: () => Promise<void>;
+  updateAccessoriesPage: (config: AccessoriesPageConfig) => Promise<AccessoriesPageConfig>;
+  saveAccessoriesPageDraftConfig: (config: AccessoriesPageConfig) => Promise<AccessoriesPageConfig>;
+  discardAccessoriesPageDraftConfig: () => Promise<void>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -199,6 +251,14 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [macPageDraft, setMacPageDraft] = useState<MacPageConfig | null>(() => getInitialMacPageDraft());
   const [ipadPage, setIpadPage] = useState<IpadPageConfig>(() => getInitialIpadPageContent());
   const [ipadPageDraft, setIpadPageDraft] = useState<IpadPageConfig | null>(() => getInitialIpadPageDraft());
+  const [iphonePage, setIphonePage] = useState<IphonePageConfig>(() => getInitialIphonePageContent());
+  const [iphonePageDraft, setIphonePageDraft] = useState<IphonePageConfig | null>(() => getInitialIphonePageDraft());
+  const [watchPage, setWatchPage] = useState<WatchPageConfig>(() => getInitialWatchPageContent());
+  const [watchPageDraft, setWatchPageDraft] = useState<WatchPageConfig | null>(() => getInitialWatchPageDraft());
+  const [airpodsPage, setAirpodsPage] = useState<AirpodsPageConfig>(() => getInitialAirpodsPageContent());
+  const [airpodsPageDraft, setAirpodsPageDraft] = useState<AirpodsPageConfig | null>(() => getInitialAirpodsPageDraft());
+  const [accessoriesPage, setAccessoriesPage] = useState<AccessoriesPageConfig>(() => getInitialAccessoriesPageContent());
+  const [accessoriesPageDraft, setAccessoriesPageDraft] = useState<AccessoriesPageConfig | null>(() => getInitialAccessoriesPageDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
@@ -254,7 +314,19 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       withTimeoutFallback(fetchIpadPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialIpadPageContent(), (v) =>
         startTransition(() => setIpadPage(v))
       ),
-    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes, ipadRes]) => {
+      withTimeoutFallback(fetchIphonePageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialIphonePageContent(), (v) =>
+        startTransition(() => setIphonePage(v))
+      ),
+      withTimeoutFallback(fetchWatchPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialWatchPageContent(), (v) =>
+        startTransition(() => setWatchPage(v))
+      ),
+      withTimeoutFallback(fetchAirpodsPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialAirpodsPageContent(), (v) =>
+        startTransition(() => setAirpodsPage(v))
+      ),
+      withTimeoutFallback(fetchAccessoriesPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialAccessoriesPageContent(), (v) =>
+        startTransition(() => setAccessoriesPage(v))
+      ),
+    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes, ipadRes, iphoneRes, watchRes, airpodsRes, accRes]) => {
       startTransition(() => {
         if (sRes.status === "fulfilled") setSettings(sRes.value);
         if (fRes.status === "fulfilled") setFaqs(fRes.value);
@@ -263,6 +335,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         if (msRes.status === "fulfilled") setMainStore(msRes.value);
         if (macRes.status === "fulfilled") setMacPage(macRes.value);
         if (ipadRes.status === "fulfilled") setIpadPage(ipadRes.value);
+        if (iphoneRes.status === "fulfilled") setIphonePage(iphoneRes.value);
+        if (watchRes.status === "fulfilled") setWatchPage(watchRes.value);
+        if (airpodsRes.status === "fulfilled") setAirpodsPage(airpodsRes.value);
+        if (accRes.status === "fulfilled") setAccessoriesPage(accRes.value);
       });
     });
 
@@ -275,7 +351,11 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
           fetchMainStoreDraft(),
           fetchMacPageDraft(),
           fetchIpadPageDraft(),
-        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes, ipadDraftRes]) => {
+          fetchIphonePageDraft(),
+          fetchWatchPageDraft(),
+          fetchAirpodsPageDraft(),
+          fetchAccessoriesPageDraft(),
+        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes, ipadDraftRes, iphoneDraftRes, watchDraftRes, airpodsDraftRes, accDraftRes]) => {
           startTransition(() => {
             if (hDraftRes.status === "fulfilled") setHomepageDraft(hDraftRes.value);
             if (hLegacyDraftRes.status === "fulfilled") setHomepageLegacyDraft(hLegacyDraftRes.value);
@@ -283,6 +363,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
             if (msDraftRes.status === "fulfilled") setMainStoreDraft(msDraftRes.value);
             if (macDraftRes.status === "fulfilled") setMacPageDraft(macDraftRes.value);
             if (ipadDraftRes.status === "fulfilled") setIpadPageDraft(ipadDraftRes.value);
+            if (iphoneDraftRes.status === "fulfilled") setIphonePageDraft(iphoneDraftRes.value);
+            if (watchDraftRes.status === "fulfilled") setWatchPageDraft(watchDraftRes.value);
+            if (airpodsDraftRes.status === "fulfilled") setAirpodsPageDraft(airpodsDraftRes.value);
+            if (accDraftRes.status === "fulfilled") setAccessoriesPageDraft(accDraftRes.value);
           });
         })
       : Promise.resolve();
@@ -465,6 +549,78 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     setIpadPageDraft(null);
   };
 
+  const handleUpdateIphonePage = async (newConfig: IphonePageConfig) => {
+    const updated = await saveIphonePageContent(newConfig);
+    setIphonePage(updated);
+    setIphonePageDraft(null);
+    return updated;
+  };
+
+  const handleSaveIphonePageDraft = async (newConfig: IphonePageConfig) => {
+    const draft = await saveIphonePageDraft(newConfig);
+    setIphonePageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardIphonePageDraft = async () => {
+    await discardIphonePageDraft();
+    setIphonePageDraft(null);
+  };
+
+  const handleUpdateWatchPage = async (newConfig: WatchPageConfig) => {
+    const updated = await saveWatchPageContent(newConfig);
+    setWatchPage(updated);
+    setWatchPageDraft(null);
+    return updated;
+  };
+
+  const handleSaveWatchPageDraft = async (newConfig: WatchPageConfig) => {
+    const draft = await saveWatchPageDraft(newConfig);
+    setWatchPageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardWatchPageDraft = async () => {
+    await discardWatchPageDraft();
+    setWatchPageDraft(null);
+  };
+
+  const handleUpdateAirpodsPage = async (newConfig: AirpodsPageConfig) => {
+    const updated = await saveAirpodsPageContent(newConfig);
+    setAirpodsPage(updated);
+    setAirpodsPageDraft(null);
+    return updated;
+  };
+
+  const handleSaveAirpodsPageDraft = async (newConfig: AirpodsPageConfig) => {
+    const draft = await saveAirpodsPageDraft(newConfig);
+    setAirpodsPageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardAirpodsPageDraft = async () => {
+    await discardAirpodsPageDraft();
+    setAirpodsPageDraft(null);
+  };
+
+  const handleUpdateAccessoriesPage = async (newConfig: AccessoriesPageConfig) => {
+    const updated = await saveAccessoriesPageContent(newConfig);
+    setAccessoriesPage(updated);
+    setAccessoriesPageDraft(null);
+    return updated;
+  };
+
+  const handleSaveAccessoriesPageDraft = async (newConfig: AccessoriesPageConfig) => {
+    const draft = await saveAccessoriesPageDraft(newConfig);
+    setAccessoriesPageDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardAccessoriesPageDraft = async () => {
+    await discardAccessoriesPageDraft();
+    setAccessoriesPageDraft(null);
+  };
+
   return (
     <CmsContext.Provider
       value={{
@@ -478,6 +634,14 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         macPageDraft,
         ipadPage,
         ipadPageDraft,
+        iphonePage,
+        iphonePageDraft,
+        watchPage,
+        watchPageDraft,
+        airpodsPage,
+        airpodsPageDraft,
+        accessoriesPage,
+        accessoriesPageDraft,
         media,
         faqs,
         pages,
@@ -500,6 +664,18 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateIpadPage: handleUpdateIpadPage,
         saveIpadPageDraftConfig: handleSaveIpadPageDraft,
         discardIpadPageDraftConfig: handleDiscardIpadPageDraft,
+        updateIphonePage: handleUpdateIphonePage,
+        saveIphonePageDraftConfig: handleSaveIphonePageDraft,
+        discardIphonePageDraftConfig: handleDiscardIphonePageDraft,
+        updateWatchPage: handleUpdateWatchPage,
+        saveWatchPageDraftConfig: handleSaveWatchPageDraft,
+        discardWatchPageDraftConfig: handleDiscardWatchPageDraft,
+        updateAirpodsPage: handleUpdateAirpodsPage,
+        saveAirpodsPageDraftConfig: handleSaveAirpodsPageDraft,
+        discardAirpodsPageDraftConfig: handleDiscardAirpodsPageDraft,
+        updateAccessoriesPage: handleUpdateAccessoriesPage,
+        saveAccessoriesPageDraftConfig: handleSaveAccessoriesPageDraft,
+        discardAccessoriesPageDraftConfig: handleDiscardAccessoriesPageDraft,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,

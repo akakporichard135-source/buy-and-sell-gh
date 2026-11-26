@@ -29,6 +29,10 @@ import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { defaultMacPageConfig } from "../../cms/macPageDefaults";
 import { defaultIpadPageConfig } from "../../cms/ipadPageDefaults";
+import { defaultIphonePageConfig } from "../../cms/iphonePageDefaults";
+import { defaultWatchPageConfig } from "../../cms/watchPageDefaults";
+import { defaultAirpodsPageConfig } from "../../cms/airpodsPageDefaults";
+import { defaultAccessoriesPageConfig } from "../../cms/accessoriesPageDefaults";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -37,6 +41,10 @@ import type {
   CategoryDepartmentConfig,
   CategoryFeaturedCardData,
   IpadPageConfig,
+  IphonePageConfig,
+  WatchPageConfig,
+  AirpodsPageConfig,
+  AccessoriesPageConfig,
   MacPageConfig,
   MainStoreAccessoryItem,
   MainStoreCategoryCard,
@@ -54,6 +62,10 @@ import { ProductFamilyStripEditor } from "../../components/admin/ProductFamilySt
 import { StorePageSectionBuilder } from "../../components/admin/StorePageSectionBuilder";
 import { MacPageAdminEditor, type MacAdminSubTab } from "../../components/admin/MacPageAdminEditor";
 import { IpadPageAdminEditor, type IpadAdminSubTab } from "../../components/admin/IpadPageAdminEditor";
+import { IphonePageAdminEditor, type IphoneAdminSubTab } from "../../components/admin/IphonePageAdminEditor";
+import { WatchPageAdminEditor, type WatchAdminSubTab } from "../../components/admin/WatchPageAdminEditor";
+import { AirpodsPageAdminEditor, type AirpodsAdminSubTab } from "../../components/admin/AirpodsPageAdminEditor";
+import { AccessoriesPageAdminEditor, type AccessoriesAdminSubTab } from "../../components/admin/AccessoriesPageAdminEditor";
 import {
   StoreDifferenceBentoAdminEditor,
   StoreHelpCardsAdminEditor,
@@ -71,7 +83,11 @@ type StorefrontSection =
   | "listings"
   | "accessories"
   | `mac:${MacAdminSubTab}`
-  | `ipad:${IpadAdminSubTab}`;
+  | `ipad:${IpadAdminSubTab}`
+  | `iphone:${IphoneAdminSubTab}`
+  | `watch:${WatchAdminSubTab}`
+  | `airpods:${AirpodsAdminSubTab}`
+  | `accessories:${AccessoriesAdminSubTab}`;
 type MainStoreSection = MainStoreSubTabKey;
 
 export function AdminStorefrontManager() {
@@ -83,6 +99,14 @@ export function AdminStorefrontManager() {
     macPageDraft,
     ipadPage: cmsIpadPage,
     ipadPageDraft,
+    iphonePage: cmsIphonePage,
+    iphonePageDraft,
+    watchPage: cmsWatchPage,
+    watchPageDraft,
+    airpodsPage: cmsAirpodsPage,
+    airpodsPageDraft,
+    accessoriesPage: cmsAccessoriesPage,
+    accessoriesPageDraft,
     updateStorefront,
     updateMainStore,
     saveMainStoreDraftConfig,
@@ -93,6 +117,18 @@ export function AdminStorefrontManager() {
     updateIpadPage,
     saveIpadPageDraftConfig,
     discardIpadPageDraftConfig,
+    updateIphonePage,
+    saveIphonePageDraftConfig,
+    discardIphonePageDraftConfig,
+    updateWatchPage,
+    saveWatchPageDraftConfig,
+    discardWatchPageDraftConfig,
+    updateAirpodsPage,
+    saveAirpodsPageDraftConfig,
+    discardAirpodsPageDraftConfig,
+    updateAccessoriesPage,
+    saveAccessoriesPageDraftConfig,
+    discardAccessoriesPageDraftConfig,
     uploadMedia,
   } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
@@ -110,9 +146,25 @@ export function AdminStorefrontManager() {
   const [ipadPageConfig, setIpadPageConfigRaw] = useState<IpadPageConfig>(
     ipadPageDraft || cmsIpadPage || defaultIpadPageConfig
   );
+  const [iphonePageConfig, setIphonePageConfigRaw] = useState<IphonePageConfig>(
+    iphonePageDraft || cmsIphonePage || defaultIphonePageConfig
+  );
+  const [watchPageConfig, setWatchPageConfigRaw] = useState<WatchPageConfig>(
+    watchPageDraft || cmsWatchPage || defaultWatchPageConfig
+  );
+  const [airpodsPageConfig, setAirpodsPageConfigRaw] = useState<AirpodsPageConfig>(
+    airpodsPageDraft || cmsAirpodsPage || defaultAirpodsPageConfig
+  );
+  const [accessoriesPageConfig, setAccessoriesPageConfigRaw] = useState<AccessoriesPageConfig>(
+    accessoriesPageDraft || cmsAccessoriesPage || defaultAccessoriesPageConfig
+  );
   const hasLocalMainStoreEdits = useRef(false);
   const hasLocalMacEdits = useRef(false);
   const hasLocalIpadEdits = useRef(false);
+  const hasLocalIphoneEdits = useRef(false);
+  const hasLocalWatchEdits = useRef(false);
+  const hasLocalAirpodsEdits = useRef(false);
+  const hasLocalAccessoriesEdits = useRef(false);
 
   const setMainStoreConfig: React.Dispatch<React.SetStateAction<MainStoreConfig>> = (updater) => {
     hasLocalMainStoreEdits.current = true;
@@ -127,6 +179,26 @@ export function AdminStorefrontManager() {
   const setIpadPageConfig: React.Dispatch<React.SetStateAction<IpadPageConfig>> = (updater) => {
     hasLocalIpadEdits.current = true;
     setIpadPageConfigRaw(updater);
+  };
+
+  const setIphonePageConfig: React.Dispatch<React.SetStateAction<IphonePageConfig>> = (updater) => {
+    hasLocalIphoneEdits.current = true;
+    setIphonePageConfigRaw(updater);
+  };
+
+  const setWatchPageConfig: React.Dispatch<React.SetStateAction<WatchPageConfig>> = (updater) => {
+    hasLocalWatchEdits.current = true;
+    setWatchPageConfigRaw(updater);
+  };
+
+  const setAirpodsPageConfig: React.Dispatch<React.SetStateAction<AirpodsPageConfig>> = (updater) => {
+    hasLocalAirpodsEdits.current = true;
+    setAirpodsPageConfigRaw(updater);
+  };
+
+  const setAccessoriesPageConfig: React.Dispatch<React.SetStateAction<AccessoriesPageConfig>> = (updater) => {
+    hasLocalAccessoriesEdits.current = true;
+    setAccessoriesPageConfigRaw(updater);
   };
 
   useEffect(() => {
@@ -155,6 +227,42 @@ export function AdminStorefrontManager() {
       setIpadPageConfigRaw(cmsIpadPage);
     }
   }, [cmsIpadPage, ipadPageDraft]);
+
+  useEffect(() => {
+    if (hasLocalIphoneEdits.current) return;
+    if (iphonePageDraft) {
+      setIphonePageConfigRaw(iphonePageDraft);
+    } else if (cmsIphonePage) {
+      setIphonePageConfigRaw(cmsIphonePage);
+    }
+  }, [cmsIphonePage, iphonePageDraft]);
+
+  useEffect(() => {
+    if (hasLocalWatchEdits.current) return;
+    if (watchPageDraft) {
+      setWatchPageConfigRaw(watchPageDraft);
+    } else if (cmsWatchPage) {
+      setWatchPageConfigRaw(cmsWatchPage);
+    }
+  }, [cmsWatchPage, watchPageDraft]);
+
+  useEffect(() => {
+    if (hasLocalAirpodsEdits.current) return;
+    if (airpodsPageDraft) {
+      setAirpodsPageConfigRaw(airpodsPageDraft);
+    } else if (cmsAirpodsPage) {
+      setAirpodsPageConfigRaw(cmsAirpodsPage);
+    }
+  }, [cmsAirpodsPage, airpodsPageDraft]);
+
+  useEffect(() => {
+    if (hasLocalAccessoriesEdits.current) return;
+    if (accessoriesPageDraft) {
+      setAccessoriesPageConfigRaw(accessoriesPageDraft);
+    } else if (cmsAccessoriesPage) {
+      setAccessoriesPageConfigRaw(cmsAccessoriesPage);
+    }
+  }, [cmsAccessoriesPage, accessoriesPageDraft]);
 
   useEffect(() => {
     if (cmsDepartments) {
@@ -592,7 +700,22 @@ export function AdminStorefrontManager() {
                       setActiveSection("mac:sections");
                     } else if (key === "ipad") {
                       setActiveSection("ipad:sections");
-                    } else if (activeSection.startsWith("mac:") || activeSection.startsWith("ipad:")) {
+                    } else if (key === "iphone") {
+                      setActiveSection("iphone:sections");
+                    } else if (key === "watch") {
+                      setActiveSection("watch:sections");
+                    } else if (key === "airpods") {
+                      setActiveSection("airpods:sections");
+                    } else if (key === "accessories") {
+                      setActiveSection("accessories:sections");
+                    } else if (
+                      activeSection.startsWith("mac:") ||
+                      activeSection.startsWith("ipad:") ||
+                      activeSection.startsWith("iphone:") ||
+                      activeSection.startsWith("watch:") ||
+                      activeSection.startsWith("airpods:") ||
+                      activeSection.startsWith("accessories:")
+                    ) {
                       setActiveSection("featured");
                     }
                   }}
@@ -604,7 +727,7 @@ export function AdminStorefrontManager() {
                 >
                   <ShoppingBag size={14} className={isSelected ? "text-[#d4af37]" : "text-slate-400"} />
                   <span>{dept?.label || key.toUpperCase()}</span>
-                  {(key === "mac" || key === "ipad") && (
+                  {(key === "mac" || key === "ipad" || key === "iphone" || key === "watch" || key === "airpods" || key === "accessories") && (
                     <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-[#d4af37]/20 text-amber-900 font-extrabold">
                       CMS
                     </span>
@@ -724,6 +847,153 @@ export function AdminStorefrontManager() {
                     key={tab.key}
                     type="button"
                     data-testid={`ipad-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "iphone" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "iphone:sections", label: "Sections Builder", count: (iphonePageConfig.sections || []).length },
+                  { key: "iphone:hero-nav", label: "Hero, Gallery & Nav", count: (iphonePageConfig.heroGallery?.slides || []).length },
+                  { key: "iphone:lineup", label: "Explore Lineup", count: (iphonePageConfig.lineupSection?.cards || []).length },
+                  { key: "iphone:why-shop", label: "Why Buy & Sell GH", count: (iphonePageConfig.whyShopSection?.cards || []).length },
+                  { key: "iphone:essentials-eco", label: "Essentials & Ecosystem", count: 5 },
+                  { key: "iphone:directory", label: "iPhone Directory Footer", count: (iphonePageConfig.directoryFooter?.columns || []).length },
+                  { key: "listings", label: "All iPhone Listings Grid", count: categoryProducts.length },
+                  { key: "accessories", label: "iPhone Accessories Rail", count: categoryAccessories.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`iphone-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "watch" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "watch:sections", label: "Sections Builder", count: (watchPageConfig.sections || []).length },
+                  { key: "watch:hero-nav", label: "Hero & Chapter Nav", count: (watchPageConfig.chapterNavItems || []).length },
+                  { key: "watch:lineup", label: "Explore Lineup", count: (watchPageConfig.lineupSection?.cards || []).length },
+                  { key: "watch:why-shop", label: "Why Buy & Sell GH", count: (watchPageConfig.whyShopSection?.cards || []).length },
+                  { key: "watch:essentials-eco", label: "Bands & Ecosystem", count: 4 },
+                  { key: "watch:directory", label: "Watch Directory Footer", count: (watchPageConfig.directoryFooter?.columns || []).length },
+                  { key: "listings", label: "All Watch Listings Grid", count: categoryProducts.length },
+                  { key: "accessories", label: "Watch Accessories Rail", count: categoryAccessories.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`watch-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "airpods" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "airpods:sections", label: "Sections Builder", count: (airpodsPageConfig.sections || []).length },
+                  { key: "airpods:heroes", label: "Hero Showcases", count: (airpodsPageConfig.heroShowcases || []).length },
+                  { key: "airpods:compare", label: "Compare 4 Models", count: (airpodsPageConfig.compareSection?.models || []).length },
+                  { key: "airpods:features", label: "Get to Know Cards", count: (airpodsPageConfig.featureCarouselSection?.cards || []).length },
+                  { key: "airpods:banner-footer", label: "Assurance & Footer", count: 4 },
+                  { key: "listings", label: "All AirPods Listings Grid", count: categoryProducts.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`airpods-admin-tab-${tab.key.replace(":", "-")}`}
+                    onClick={() => setActiveSection(tab.key)}
+                    className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    <Sparkles size={13} className={isActive ? "text-[#d4af37]" : "text-slate-400"} />
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[0.65rem] ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : selectedDeptKey === "accessories" ? (
+          <div className="w-full overflow-x-auto scrollbar-none pb-1">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
+              {(
+                [
+                  { key: "accessories:sections", label: "Sections Builder", count: (accessoriesPageConfig.sections || []).length },
+                  { key: "accessories:whats-new", label: "What's New Slides", count: (accessoriesPageConfig.whatsNewSection?.slides || []).length },
+                  { key: "accessories:top-picks", label: "Top Picks Bento", count: (accessoriesPageConfig.topPicksSection?.tabs || []).length },
+                  { key: "accessories:why-footer", label: "Benefits & Footer", count: (accessoriesPageConfig.whyBuySection?.cards || []).length },
+                  { key: "listings", label: "All Accessories Listings", count: categoryProducts.length },
+                ] as { key: StorefrontSection; label: string; count: number }[]
+              ).map((tab) => {
+                const isActive = activeSection === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    data-testid={`accessories-admin-tab-${tab.key.replace(":", "-")}`}
                     onClick={() => setActiveSection(tab.key)}
                     className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive
@@ -1282,8 +1552,124 @@ export function AdminStorefrontManager() {
         />
       )}
 
+      {/* ===================== IPHONE PAGE REDESIGN CMS EDITORS ===================== */}
+      {selectedDeptKey === "iphone" && activeSection.startsWith("iphone:") && (
+        <IphonePageAdminEditor
+          activeSubTab={activeSection.replace("iphone:", "") as IphoneAdminSubTab}
+          config={iphonePageConfig}
+          onChange={setIphonePageConfig}
+          hasDraft={Boolean(iphonePageDraft)}
+          allProducts={activeProducts}
+          onSaveDraft={async () => {
+            const saved = await saveIphonePageDraftConfig(iphonePageConfig);
+            setIphonePageConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateIphonePage(iphonePageConfig);
+            hasLocalIphoneEdits.current = false;
+            setIphonePageConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardIphonePageDraftConfig();
+            hasLocalIphoneEdits.current = false;
+            setIphonePageConfigRaw(cmsIphonePage || defaultIphonePageConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
+
+      {/* ===================== WATCH PAGE REDESIGN CMS EDITORS ===================== */}
+      {selectedDeptKey === "watch" && activeSection.startsWith("watch:") && (
+        <WatchPageAdminEditor
+          activeSubTab={activeSection.replace("watch:", "") as WatchAdminSubTab}
+          config={watchPageConfig}
+          onChange={setWatchPageConfig}
+          hasDraft={Boolean(watchPageDraft)}
+          allProducts={activeProducts}
+          onSaveDraft={async () => {
+            const saved = await saveWatchPageDraftConfig(watchPageConfig);
+            setWatchPageConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateWatchPage(watchPageConfig);
+            hasLocalWatchEdits.current = false;
+            setWatchPageConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardWatchPageDraftConfig();
+            hasLocalWatchEdits.current = false;
+            setWatchPageConfigRaw(cmsWatchPage || defaultWatchPageConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
+
+      {/* ===================== AIRPODS PAGE REDESIGN CMS EDITORS ===================== */}
+      {selectedDeptKey === "airpods" && activeSection.startsWith("airpods:") && (
+        <AirpodsPageAdminEditor
+          activeSubTab={activeSection.replace("airpods:", "") as AirpodsAdminSubTab}
+          config={airpodsPageConfig}
+          onChange={setAirpodsPageConfig}
+          hasDraft={Boolean(airpodsPageDraft)}
+          allProducts={activeProducts}
+          onSaveDraft={async () => {
+            const saved = await saveAirpodsPageDraftConfig(airpodsPageConfig);
+            setAirpodsPageConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateAirpodsPage(airpodsPageConfig);
+            hasLocalAirpodsEdits.current = false;
+            setAirpodsPageConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardAirpodsPageDraftConfig();
+            hasLocalAirpodsEdits.current = false;
+            setAirpodsPageConfigRaw(cmsAirpodsPage || defaultAirpodsPageConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
+
+      {/* ===================== ACCESSORIES PAGE REDESIGN CMS EDITORS ===================== */}
+      {selectedDeptKey === "accessories" && activeSection.startsWith("accessories:") && (
+        <AccessoriesPageAdminEditor
+          activeSubTab={activeSection.replace("accessories:", "") as AccessoriesAdminSubTab}
+          config={accessoriesPageConfig}
+          onChange={setAccessoriesPageConfig}
+          hasDraft={Boolean(accessoriesPageDraft)}
+          allProducts={activeProducts}
+          onSaveDraft={async () => {
+            const saved = await saveAccessoriesPageDraftConfig(accessoriesPageConfig);
+            setAccessoriesPageConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateAccessoriesPage(accessoriesPageConfig);
+            hasLocalAccessoriesEdits.current = false;
+            setAccessoriesPageConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardAccessoriesPageDraftConfig();
+            hasLocalAccessoriesEdits.current = false;
+            setAccessoriesPageConfigRaw(cmsAccessoriesPage || defaultAccessoriesPageConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
+
       {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS (DEPARTMENTS) ===================== */}
-      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && selectedDeptKey !== "ipad" && activeSection === "featured" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && selectedDeptKey !== "ipad" && selectedDeptKey !== "iphone" && selectedDeptKey !== "watch" && selectedDeptKey !== "airpods" && selectedDeptKey !== "accessories" && activeSection === "featured" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>

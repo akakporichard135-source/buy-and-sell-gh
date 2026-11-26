@@ -159,13 +159,18 @@ function PublicShell() {
           <Route path="/accessories/:slug" element={<ProductStoryPage family="accessories" />} />
           <Route path="/learn-more/:slug" element={<ProductStoryPage family="custom" />} />
           <Route path="/campaigns/:slug" element={<ProductStoryPage family="custom" />} />
+          <Route path="/shop/buy-iphone" element={<ProductFamilyPage family="iphone" catalogMode />} />
           <Route path="/shop/buy-iphone/:slug" element={<ProductBuyPage family="iphone" />} />
           <Route path="/shop/buy-mac" element={<ProductFamilyPage family="mac" catalogMode />} />
           <Route path="/shop/buy-mac/:slug" element={<ProductBuyPage family="mac" />} />
           <Route path="/shop/buy-ipad" element={<ProductFamilyPage family="ipad" catalogMode />} />
           <Route path="/shop/buy-ipad/:slug" element={<ProductBuyPage family="ipad" />} />
+          <Route path="/shop/buy-watch" element={<ProductFamilyPage family="watch" catalogMode />} />
           <Route path="/shop/buy-watch/:slug" element={<ProductBuyPage family="watch" />} />
+          <Route path="/shop/buy-airpods" element={<ProductFamilyPage family="airpods" catalogMode />} />
           <Route path="/shop/buy-airpods/:slug" element={<ProductBuyPage family="airpods" />} />
+          <Route path="/shop/buy-accessories" element={<ProductFamilyPage family="accessories" catalogMode />} />
+          <Route path="/shop/buy-accessory" element={<Navigate to="/shop/buy-accessories" replace />} />
           <Route path="/shop/buy-accessory/:slug" element={<ProductBuyPage family="accessories" />} />
           <Route path="/iphones" element={<Navigate to="/iphone" replace />} />
           <Route path="/macbooks" element={<Navigate to="/mac" replace />} />

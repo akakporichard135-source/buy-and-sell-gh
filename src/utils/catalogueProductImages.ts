@@ -133,6 +133,7 @@ export const localCatalogueImageBySlug: Record<string, string> = {
   "apple-240w-usb-c-charge-cable": catalogue240WChargeCablePremium,
   "apple-usb-c-to-magsafe-3-cable": catalogueUsbCToMagsafe3CablePremium,
   "apple-watch-magnetic-fast-charger-usb-c": catalogueWatchFastChargerPremium,
+  "apple-watch-magnetic-fast-charger-to-usb-c-cable": catalogueWatchFastChargerPremium,
   "apple-magsafe-charger": "/products/campaigns/accessory-magsafe-puck.webp",
   "apple-usb-c-to-lightning-cable": catalogueUsbCToLightningPremium,
   "apple-magsafe-iphone-case": catalogueMagsafeIphoneCasePremium,
