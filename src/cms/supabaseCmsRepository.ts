@@ -55,6 +55,10 @@ import {
   defaultAccessoriesPageConfig,
   defaultAccessoriesPageSections,
 } from "./accessoriesPageDefaults";
+import {
+  CURRENT_SHOP_EXPERIENCE_VERSION,
+  defaultShopExperienceConfig,
+} from "./shopExperienceDefaults";
 import { createCategoryPageCmsStore } from "./categoryPageCmsFactory";
 import type {
   CategoryDepartmentConfig,
@@ -75,6 +79,8 @@ import type {
   AirpodsPageSection,
   AccessoriesPageConfig,
   AccessoriesPageSection,
+  ShopCategoryKey,
+  ShopExperienceConfig,
   MacPageConfig,
   MacPageSection,
   MainStoreConfig,
@@ -3561,6 +3567,71 @@ export const fetchAccessoriesPageDraft = accessoriesPageStore.fetchDraft;
 export const saveAccessoriesPageDraft = accessoriesPageStore.saveDraft;
 export const discardAccessoriesPageDraft = accessoriesPageStore.discardDraft;
 export const saveAccessoriesPageContent = accessoriesPageStore.saveContent;
+
+// ============================================================================
+// APPLE-STYLE SHOP EXPERIENCE & INDEPENDENT UK USED CMS PERSISTENCE
+// ============================================================================
+
+const mergeShopExperienceWithDefaults = (
+  incoming?: Partial<ShopExperienceConfig> | null
+): ShopExperienceConfig => {
+  const src = incoming || {};
+  const cats = {} as ShopExperienceConfig["categories"];
+  for (const key of ["mac", "ipad", "iphone", "watch"] as ShopCategoryKey[]) {
+    const defCat = defaultShopExperienceConfig.categories[key];
+    const inCat = src.categories?.[key];
+    cats[key] = {
+      ...defCat,
+      ...(inCat || {}),
+      familyOrder:
+        Array.isArray(inCat?.familyOrder) && inCat.familyOrder.length > 0
+          ? inCat.familyOrder
+          : defCat.familyOrder,
+      hiddenFamilyIds: Array.isArray(inCat?.hiddenFamilyIds)
+        ? inCat.hiddenFamilyIds
+        : defCat.hiddenFamilyIds,
+      curatedAccessorySlugs:
+        Array.isArray(inCat?.curatedAccessorySlugs) && inCat.curatedAccessorySlugs.length > 0
+          ? inCat.curatedAccessorySlugs
+          : defCat.curatedAccessorySlugs,
+      waysToBuyCards:
+        Array.isArray(inCat?.waysToBuyCards) && inCat.waysToBuyCards.length > 0
+          ? inCat.waysToBuyCards
+          : defCat.waysToBuyCards,
+    };
+  }
+  return {
+    version: Math.max(CURRENT_SHOP_EXPERIENCE_VERSION, Number(src.version || 0)),
+    categories: cats,
+    ukUsedOverrides:
+      src.ukUsedOverrides && typeof src.ukUsedOverrides === "object"
+        ? src.ukUsedOverrides
+        : {},
+    hasDraft: Boolean(src.hasDraft),
+    updatedAt: src.updatedAt,
+  };
+};
+
+const shopExperienceStore = createCategoryPageCmsStore<ShopExperienceConfig>({
+  label: "Shop Experience & UK Used",
+  supabaseKey: "shop_experience",
+  supabaseDraftKey: "shop_experience_draft",
+  storageKey: "buyandsell_cms_shop_experience_v1",
+  storageDraftKey: "buyandsell_cms_shop_experience_draft_v1",
+  storageLocalPubKey: "buyandsell_cms_shop_experience_local_pub_v1",
+  broadcastType: "shop-experience",
+  defaultConfig: defaultShopExperienceConfig,
+  mergeWithDefaults: mergeShopExperienceWithDefaults,
+  notifyListeners,
+});
+
+export const getInitialShopExperienceContent = shopExperienceStore.getInitial;
+export const getInitialShopExperienceDraft = shopExperienceStore.getInitialDraft;
+export const fetchShopExperienceContent = shopExperienceStore.fetchContent;
+export const fetchShopExperienceDraft = shopExperienceStore.fetchDraft;
+export const saveShopExperienceDraft = shopExperienceStore.saveDraft;
+export const discardShopExperienceDraft = shopExperienceStore.discardDraft;
+export const saveShopExperienceContent = shopExperienceStore.saveContent;
 
 // Cascades replaced media URLs to homepage content and storefront departments
 async function cascadeMediaUrlUpdate(

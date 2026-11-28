@@ -1,0 +1,1055 @@
+/* ============================================================================
+   BUY & SELL GH — APPLE-STYLE SHOP EXPERIENCE (MAC, IPAD, IPHONE, APPLE WATCH)
+   White & Gold Identity (#ffffff, #f5f5f7, #1d1d1f, #d8a72d, #9a6f08)
+   Zero Apple-Blue Accents
+   ============================================================================ */
+
+.bsg-shop-page {
+  --shop-bg: #f5f5f7;
+  --shop-card: #ffffff;
+  --shop-ink: #1d1d1f;
+  --shop-muted: #6e6e73;
+  --shop-border: rgba(29, 29, 31, 0.1);
+  --shop-gold: #d8a72d;
+  --shop-gold-hover: #c59520;
+  --shop-gold-ink: #111111;
+  --shop-gold-text: #9a6f08;
+  --shop-gold-soft: #fdf8ea;
+  --shop-badge: #bf4800;
+  --shop-container: 1240px;
+  --shop-gutter: clamp(16px, 3.6vw, 44px);
+  background: var(--shop-bg);
+  color: var(--shop-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: clip;
+  padding-bottom: 72px;
+}
+
+.bsg-shop-page * {
+  box-sizing: border-box;
+}
+
+.bsg-shop-container {
+  width: 100%;
+  max-width: calc(var(--shop-container) + var(--shop-gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--shop-gutter);
+}
+
+/* Gold Buttons & Links */
+.bsg-shop-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: var(--shop-gold);
+  color: var(--shop-gold-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.bsg-shop-btn-gold:hover {
+  background: var(--shop-gold-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(216, 167, 45, 0.28);
+}
+
+.bsg-shop-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--shop-border);
+  background: #ffffff;
+  color: var(--shop-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.bsg-shop-btn-outline:hover {
+  border-color: var(--shop-gold);
+  background: var(--shop-gold-soft);
+}
+
+.bsg-shop-link-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--shop-gold-text);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bsg-shop-link-gold:hover {
+  color: #7c5804;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 1. Promo Ribbon */
+.bsg-shop-promo-ribbon {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(29, 29, 31, 0.08);
+  padding: 11px var(--shop-gutter);
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--shop-ink);
+}
+
+.bsg-shop-promo-ribbon a {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--shop-gold-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bsg-shop-promo-ribbon a:hover {
+  text-decoration: underline;
+}
+
+/* 2. Shop Header & Category Switcher */
+.bsg-shop-header {
+  padding: 40px 0 22px;
+}
+
+.bsg-shop-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.bsg-shop-title {
+  margin: 0;
+  font-size: clamp(36px, 4.8vw, 56px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  color: var(--shop-ink);
+}
+
+.bsg-shop-title-dot {
+  color: var(--shop-gold);
+}
+
+.bsg-shop-subtitle {
+  margin: 8px 0 0;
+  font-size: clamp(15px, 1.4vw, 17px);
+  line-height: 1.45;
+  color: var(--shop-muted);
+  max-width: 640px;
+}
+
+.bsg-shop-help-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.bsg-shop-help-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--shop-ink);
+  text-decoration: none;
+}
+
+.bsg-shop-help-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid var(--shop-border);
+  color: var(--shop-gold-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bsg-shop-help-item span strong {
+  color: var(--shop-gold-text);
+  font-weight: 600;
+}
+
+/* Category Cross-Switcher Pills */
+.bsg-shop-cat-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.bsg-shop-cat-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+.bsg-shop-cat-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--shop-border);
+  background: #ffffff;
+  color: var(--shop-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.bsg-shop-cat-pill:hover {
+  border-color: var(--shop-gold);
+}
+
+.bsg-shop-cat-pill.is-active {
+  background: var(--shop-ink);
+  border-color: var(--shop-ink);
+  color: #ffffff;
+}
+
+/* 3. Sticky Navigation + Working Live Search Bar */
+.bsg-shop-toolbar {
+  position: sticky;
+  top: var(--global-header-height, 44px);
+  z-index: 25;
+  background: rgba(245, 245, 247, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(29, 29, 31, 0.06);
+  border-bottom: 1px solid rgba(29, 29, 31, 0.08);
+  padding: 12px 0;
+}
+
+.bsg-shop-toolbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bsg-shop-mode-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid var(--shop-border);
+  border-radius: 999px;
+  padding: 4px;
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+}
+
+.bsg-shop-mode-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.bsg-shop-mode-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--shop-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.16s ease, color 0.16s ease;
+}
+
+.bsg-shop-mode-btn:hover {
+  background: var(--shop-gold-soft);
+}
+
+.bsg-shop-mode-btn.is-active {
+  background: var(--shop-gold);
+  color: var(--shop-gold-ink);
+}
+
+.bsg-shop-mode-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(29, 29, 31, 0.09);
+  color: inherit;
+}
+
+/* Search Box */
+.bsg-shop-search-wrap {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+.bsg-shop-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--shop-muted);
+  pointer-events: none;
+}
+
+.bsg-shop-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 38px 0 40px;
+  border-radius: 999px;
+  border: 1px solid var(--shop-border);
+  background: #ffffff;
+  color: var(--shop-ink);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.bsg-shop-search-input:focus {
+  border-color: var(--shop-gold);
+  box-shadow: 0 0 0 3px rgba(216, 167, 45, 0.22);
+}
+
+.bsg-shop-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(29, 29, 31, 0.09);
+  color: var(--shop-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Anchor Jump Bar */
+.bsg-shop-anchors {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+
+.bsg-shop-anchors::-webkit-scrollbar {
+  display: none;
+}
+
+.bsg-shop-anchor-link {
+  flex: 0 0 auto;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--shop-muted);
+  text-decoration: none;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.bsg-shop-anchor-link:hover {
+  color: var(--shop-ink);
+  border-bottom-color: var(--shop-gold);
+}
+
+/* Live Search Results Panel */
+.bsg-shop-search-panel {
+  margin-top: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(216, 167, 45, 0.35);
+  border-radius: 26px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+}
+
+.bsg-shop-search-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.bsg-shop-search-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bsg-shop-chip {
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--shop-border);
+  background: var(--shop-bg);
+  color: var(--shop-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bsg-shop-chip.is-active {
+  background: var(--shop-ink);
+  border-color: var(--shop-ink);
+  color: #ffffff;
+}
+
+.bsg-shop-search-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bsg-shop-search-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--shop-bg);
+  border: 1px solid rgba(29, 29, 31, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.bsg-shop-search-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.bsg-shop-search-card-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.bsg-shop-search-thumb {
+  width: 78px;
+  height: 78px;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.bsg-shop-search-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.bsg-shop-search-empty {
+  text-align: center;
+  padding: 36px 16px;
+}
+
+/* Section Typography (Apple Store Online "Bold. Muted." style) */
+.bsg-shop-section {
+  padding-top: 44px;
+}
+
+.bsg-shop-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.bsg-shop-section-heading {
+  margin: 0;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--shop-ink);
+}
+
+.bsg-shop-section-heading span {
+  color: var(--shop-muted);
+  font-weight: 600;
+}
+
+.bsg-shop-carousel-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bsg-shop-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--shop-border);
+  background: #ffffff;
+  color: var(--shop-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.bsg-shop-arrow-btn:hover:not(:disabled) {
+  border-color: var(--shop-gold);
+  background: var(--shop-gold-soft);
+}
+
+.bsg-shop-arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Horizontal Apple-Style Shelf Track */
+.bsg-shop-shelf-bleed {
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  padding: 6px var(--shop-gutter) 18px;
+}
+
+.bsg-shop-shelf-bleed::-webkit-scrollbar {
+  display: none;
+}
+
+.bsg-shop-shelf-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  margin-inline: auto;
+  min-width: min(100%, var(--shop-container));
+}
+
+/* Family Discovery Card (Matches Apple Shop Mac/iPad/iPhone/Watch Screenshots) */
+.bsg-shop-family-card {
+  flex: 0 0 360px;
+  width: 360px;
+  min-height: 468px;
+  border-radius: 24px;
+  background: var(--shop-card);
+  border: 2px solid transparent;
+  padding: 26px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.2s ease;
+}
+
+.bsg-shop-family-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
+}
+
+.bsg-shop-family-card.is-selected {
+  border-color: var(--shop-gold);
+  box-shadow: 0 14px 34px rgba(216, 167, 45, 0.18);
+}
+
+.bsg-shop-card-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--shop-badge);
+  min-height: 16px;
+  margin-bottom: 4px;
+}
+
+.bsg-shop-card-title {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--shop-ink);
+}
+
+.bsg-shop-card-tagline {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.42;
+  color: var(--shop-muted);
+}
+
+.bsg-shop-family-media {
+  height: 205px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0 14px;
+}
+
+.bsg-shop-family-media img {
+  max-width: 88%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.bsg-shop-family-card:hover .bsg-shop-family-media img {
+  transform: scale(1.03);
+}
+
+.bsg-shop-swatches-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 16px;
+  margin-bottom: 10px;
+}
+
+.bsg-shop-swatch-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.bsg-shop-size-pills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.bsg-shop-size-pill {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--shop-bg);
+  color: var(--shop-ink);
+}
+
+.bsg-shop-card-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(29, 29, 31, 0.07);
+}
+
+.bsg-shop-price-main {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--shop-ink);
+}
+
+.bsg-shop-stock-note {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.bsg-shop-stock-note.in-stock {
+  color: #15803d;
+}
+
+.bsg-shop-stock-note.out-stock {
+  color: var(--shop-muted);
+}
+
+/* Inline Expanded Family Models Tray (Step 1: Family -> Step 2: Model) */
+.bsg-shop-family-tray {
+  margin-top: 18px;
+  background: #ffffff;
+  border: 1.5px solid rgba(216, 167, 45, 0.45);
+  border-radius: 26px;
+  padding: 26px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+}
+
+.bsg-shop-tray-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.bsg-shop-tray-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bsg-shop-model-tile {
+  border-radius: 20px;
+  background: var(--shop-bg);
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.bsg-shop-model-tile:hover {
+  border-color: var(--shop-gold);
+  transform: translateY(-2px);
+}
+
+.bsg-shop-model-tile-media {
+  height: 136px;
+  background: #ffffff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.bsg-shop-model-tile-media img {
+  max-width: 90%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* UK Used Section (Placed Immediately Before Accessories) */
+.bsg-shop-ukused-shell {
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 32px;
+  border: 1px solid rgba(29, 29, 31, 0.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+}
+
+.bsg-shop-ukused-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--shop-gold-soft);
+  border: 1px solid rgba(216, 167, 45, 0.45);
+  color: var(--shop-gold-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bsg-shop-ukused-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.bsg-shop-ukused-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.bsg-shop-ukused-card {
+  border-radius: 20px;
+  background: var(--shop-bg);
+  border: 1px solid rgba(29, 29, 31, 0.07);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bsg-shop-ukused-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--shop-gold);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.07);
+}
+
+.bsg-shop-ukused-img {
+  height: 170px;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.bsg-shop-ukused-img img {
+  max-width: 92%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Accessories Carousel (Apple "Picks" Shelf) */
+.bsg-shop-acc-editorial-card {
+  position: relative;
+  flex: 0 0 340px;
+  width: 340px;
+  min-height: 410px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #141824;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 26px;
+}
+
+.bsg-shop-acc-editorial-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.72;
+}
+
+.bsg-shop-acc-editorial-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(14, 18, 28, 0.72) 0%, rgba(14, 18, 28, 0.22) 55%, rgba(14, 18, 28, 0.85) 100%);
+}
+
+.bsg-shop-acc-editorial-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.bsg-shop-acc-card {
+  flex: 0 0 286px;
+  width: 286px;
+  min-height: 410px;
+  border-radius: 24px;
+  background: #ffffff;
+  padding: 22px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bsg-shop-acc-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.bsg-shop-acc-img {
+  height: 196px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.bsg-shop-acc-img img {
+  max-width: 86%;
+  max-height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+/* Ways to Buy & Only at Buy & Sell GH Grids */
+.bsg-shop-ways-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.bsg-shop-way-card {
+  border-radius: 24px;
+  padding: 28px 26px;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bsg-shop-way-card.tone-light {
+  background: #ffffff;
+  color: var(--shop-ink);
+  border: 1px solid rgba(29, 29, 31, 0.08);
+}
+
+.bsg-shop-way-card.tone-gold {
+  background: linear-gradient(145deg, #fdf6e3 0%, #f7e6b8 100%);
+  color: var(--shop-ink);
+  border: 1px solid rgba(216, 167, 45, 0.38);
+}
+
+.bsg-shop-way-card.tone-dark {
+  background: #141519;
+  color: #ffffff;
+}
+
+.bsg-shop-perks-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.bsg-shop-perk-card {
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(29, 29, 31, 0.07);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bsg-shop-perk-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--shop-gold-soft);
+  color: var(--shop-gold-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bsg-shop-footnotes {
+  margin-top: 52px;
+  padding-top: 24px;
+  border-top: 1px solid var(--shop-border);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--shop-muted);
+}
+
+/* Responsive Breakpoints (1024px Tablet / 680px Mobile) */
+@media (max-width: 1120px) {
+  .bsg-shop-ukused-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .bsg-shop-perks-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bsg-shop-search-grid,
+  .bsg-shop-tray-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .bsg-shop-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bsg-shop-help-links {
+    align-items: flex-start;
+  }
+  .bsg-shop-ways-grid {
+    grid-template-columns: 1fr;
+  }
+  .bsg-shop-ukused-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .bsg-shop-header {
+    padding: 26px 0 16px;
+  }
+  .bsg-shop-toolbar {
+    padding: 10px 0;
+  }
+  .bsg-shop-toolbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bsg-shop-search-wrap {
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .bsg-shop-family-card {
+    flex: 0 0 306px;
+    width: 306px;
+    min-height: 432px;
+    padding: 22px 18px 20px;
+  }
+  .bsg-shop-acc-editorial-card {
+    flex: 0 0 286px;
+    width: 286px;
+    min-height: 360px;
+  }
+  .bsg-shop-acc-card {
+    flex: 0 0 250px;
+    width: 250px;
+    min-height: 360px;
+  }
+  .bsg-shop-ukused-shell {
+    padding: 20px 16px;
+    border-radius: 22px;
+  }
+  .bsg-shop-ukused-grid,
+  .bsg-shop-search-grid,
+  .bsg-shop-tray-grid,
+  .bsg-shop-perks-grid {
+    grid-template-columns: 1fr;
+  }
+  .bsg-shop-family-tray {
+    padding: 18px 14px;
+  }
+}

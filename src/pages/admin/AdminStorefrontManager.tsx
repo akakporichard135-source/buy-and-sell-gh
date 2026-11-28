@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useCms } from "../../cms/CmsContext";
 import { defaultMainStoreConfig } from "../../cms/defaultCmsData";
 import { defaultMacPageConfig } from "../../cms/macPageDefaults";
@@ -33,6 +34,7 @@ import { defaultIphonePageConfig } from "../../cms/iphonePageDefaults";
 import { defaultWatchPageConfig } from "../../cms/watchPageDefaults";
 import { defaultAirpodsPageConfig } from "../../cms/airpodsPageDefaults";
 import { defaultAccessoriesPageConfig } from "../../cms/accessoriesPageDefaults";
+import { defaultShopExperienceConfig } from "../../cms/shopExperienceDefaults";
 import { useProductCatalog } from "../../catalog/ProductCatalogContext";
 import { familyMatchesProduct, type ProductFamilyKey } from "../../catalog/productExperience";
 import { uploadProductImage } from "../../catalog/supabaseProductRepository";
@@ -52,6 +54,7 @@ import type {
   MainStoreFamilyItem,
   MainStorePromoCard,
   MediaItem,
+  ShopExperienceConfig,
 } from "../../cms/types";
 import { CATEGORY_DEPARTMENTS } from "../../components/store/category/categoryData";
 import { getCategoryRelevantAccessories } from "../../components/store/category/StoreCategoryAccessoriesRail";
@@ -67,6 +70,10 @@ import { WatchPageAdminEditor, type WatchAdminSubTab } from "../../components/ad
 import { AirpodsPageAdminEditor, type AirpodsAdminSubTab } from "../../components/admin/AirpodsPageAdminEditor";
 import { AccessoriesPageAdminEditor, type AccessoriesAdminSubTab } from "../../components/admin/AccessoriesPageAdminEditor";
 import {
+  AdminShopExperienceEditor,
+  type ShopExperienceAdminSubTab,
+} from "../../components/admin/AdminShopExperienceEditor";
+import {
   StoreDifferenceBentoAdminEditor,
   StoreHelpCardsAdminEditor,
   StoreHeroRibbonAdminEditor,
@@ -77,7 +84,7 @@ import {
 } from "../../components/admin/StoreVisualShelfEditors";
 import { AdminMediaLibrary } from "./AdminMediaLibrary";
 
-export type StorefrontDepartmentKey = "main-store" | ProductFamilyKey;
+export type StorefrontDepartmentKey = "main-store" | "shop-experience" | ProductFamilyKey;
 type StorefrontSection =
   | "featured"
   | "listings"
@@ -87,7 +94,8 @@ type StorefrontSection =
   | `iphone:${IphoneAdminSubTab}`
   | `watch:${WatchAdminSubTab}`
   | `airpods:${AirpodsAdminSubTab}`
-  | `accessories:${AccessoriesAdminSubTab}`;
+  | `accessories:${AccessoriesAdminSubTab}`
+  | `shop:${ShopExperienceAdminSubTab}`;
 type MainStoreSection = MainStoreSubTabKey;
 
 export function AdminStorefrontManager() {
@@ -107,6 +115,8 @@ export function AdminStorefrontManager() {
     airpodsPageDraft,
     accessoriesPage: cmsAccessoriesPage,
     accessoriesPageDraft,
+    shopExperience: cmsShopExperience,
+    shopExperienceDraft,
     updateStorefront,
     updateMainStore,
     saveMainStoreDraftConfig,
@@ -129,13 +139,21 @@ export function AdminStorefrontManager() {
     updateAccessoriesPage,
     saveAccessoriesPageDraftConfig,
     discardAccessoriesPageDraftConfig,
+    updateShopExperience,
+    saveShopExperienceDraftConfig,
+    discardShopExperienceDraftConfig,
     uploadMedia,
   } = useCms();
   const { products, activeProducts, saveProduct, backendStatus } = useProductCatalog();
+  const [searchParams] = useSearchParams();
 
   const [departments, setDepartments] = useState<Record<string, CategoryDepartmentConfig>>(cmsDepartments);
-  const [selectedDeptKey, setSelectedDeptKey] = useState<StorefrontDepartmentKey>("main-store");
-  const [activeSection, setActiveSection] = useState<StorefrontSection>("featured");
+  const [selectedDeptKey, setSelectedDeptKey] = useState<StorefrontDepartmentKey>(() =>
+    searchParams.get("dept") === "shop-experience" ? "shop-experience" : "main-store"
+  );
+  const [activeSection, setActiveSection] = useState<StorefrontSection>(() =>
+    searchParams.get("dept") === "shop-experience" ? "shop:uk-used" : "featured"
+  );
   const [activeMainStoreSection, setActiveMainStoreSection] = useState<MainStoreSection>("sections");
   const [mainStoreConfig, setMainStoreConfigRaw] = useState<MainStoreConfig>(
     mainStoreDraft || cmsMainStore || defaultMainStoreConfig
@@ -158,6 +176,9 @@ export function AdminStorefrontManager() {
   const [accessoriesPageConfig, setAccessoriesPageConfigRaw] = useState<AccessoriesPageConfig>(
     accessoriesPageDraft || cmsAccessoriesPage || defaultAccessoriesPageConfig
   );
+  const [shopExperienceConfig, setShopExperienceConfigRaw] = useState<ShopExperienceConfig>(
+    shopExperienceDraft || cmsShopExperience || defaultShopExperienceConfig
+  );
   const hasLocalMainStoreEdits = useRef(false);
   const hasLocalMacEdits = useRef(false);
   const hasLocalIpadEdits = useRef(false);
@@ -165,6 +186,7 @@ export function AdminStorefrontManager() {
   const hasLocalWatchEdits = useRef(false);
   const hasLocalAirpodsEdits = useRef(false);
   const hasLocalAccessoriesEdits = useRef(false);
+  const hasLocalShopExperienceEdits = useRef(false);
 
   const setMainStoreConfig: React.Dispatch<React.SetStateAction<MainStoreConfig>> = (updater) => {
     hasLocalMainStoreEdits.current = true;
@@ -199,6 +221,11 @@ export function AdminStorefrontManager() {
   const setAccessoriesPageConfig: React.Dispatch<React.SetStateAction<AccessoriesPageConfig>> = (updater) => {
     hasLocalAccessoriesEdits.current = true;
     setAccessoriesPageConfigRaw(updater);
+  };
+
+  const setShopExperienceConfig: React.Dispatch<React.SetStateAction<ShopExperienceConfig>> = (updater) => {
+    hasLocalShopExperienceEdits.current = true;
+    setShopExperienceConfigRaw(updater);
   };
 
   useEffect(() => {
@@ -265,6 +292,15 @@ export function AdminStorefrontManager() {
   }, [cmsAccessoriesPage, accessoriesPageDraft]);
 
   useEffect(() => {
+    if (hasLocalShopExperienceEdits.current) return;
+    if (shopExperienceDraft) {
+      setShopExperienceConfigRaw(shopExperienceDraft);
+    } else if (cmsShopExperience) {
+      setShopExperienceConfigRaw(cmsShopExperience);
+    }
+  }, [cmsShopExperience, shopExperienceDraft]);
+
+  useEffect(() => {
     if (cmsDepartments) {
       setDepartments(cmsDepartments);
     }
@@ -300,18 +336,21 @@ export function AdminStorefrontManager() {
   const [productSaveSuccess, setProductSaveSuccess] = useState<string | null>(null);
   const [productSaveError, setProductSaveError] = useState<string | null>(null);
 
-  const currentDeptKey: ProductFamilyKey = selectedDeptKey === "main-store" ? "iphone" : selectedDeptKey;
+  const currentDeptKey: ProductFamilyKey =
+    selectedDeptKey === "main-store" || selectedDeptKey === "shop-experience"
+      ? "iphone"
+      : selectedDeptKey;
   const currentDept = departments[currentDeptKey] || CATEGORY_DEPARTMENTS[currentDeptKey] || CATEGORY_DEPARTMENTS.iphone;
 
   // Filter products for the current department
   const categoryProducts = useMemo(() => {
-    if (selectedDeptKey === "main-store") return [];
+    if (selectedDeptKey === "main-store" || selectedDeptKey === "shop-experience") return [];
     return products.filter((p) => familyMatchesProduct(p, currentDeptKey));
   }, [products, selectedDeptKey, currentDeptKey]);
 
   // Filter accessories for the current department
   const categoryAccessories = useMemo(() => {
-    if (selectedDeptKey === "main-store") return [];
+    if (selectedDeptKey === "main-store" || selectedDeptKey === "shop-experience") return [];
     return getCategoryRelevantAccessories(currentDeptKey);
   }, [selectedDeptKey, currentDeptKey]);
 
@@ -325,9 +364,11 @@ export function AdminStorefrontManager() {
         updateMainStore(mainStoreConfig),
         updateMacPage(macPageConfig),
         updateIpadPage(ipadPageConfig),
+        updateShopExperience(shopExperienceConfig),
       ]);
       hasLocalMacEdits.current = false;
       hasLocalIpadEdits.current = false;
+      hasLocalShopExperienceEdits.current = false;
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
     } catch (err) {
@@ -338,7 +379,7 @@ export function AdminStorefrontManager() {
   };
 
   const updateCurrentDept = (partial: Partial<CategoryDepartmentConfig>) => {
-    if (selectedDeptKey === "main-store") return;
+    if (selectedDeptKey === "main-store" || selectedDeptKey === "shop-experience") return;
     setDepartments((prev) => ({
       ...prev,
       [selectedDeptKey]: {
@@ -686,6 +727,26 @@ export function AdminStorefrontManager() {
               </span>
             </button>
 
+            <button
+              type="button"
+              data-testid="storefront-dept-tab-shop-experience"
+              onClick={() => {
+                setSelectedDeptKey("shop-experience");
+                setActiveSection("shop:uk-used");
+              }}
+              className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                selectedDeptKey === "shop-experience"
+                  ? "bg-white text-slate-900 shadow-sm ring-1 ring-[#d4af37]"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <ShoppingBag size={14} className={selectedDeptKey === "shop-experience" ? "text-[#d4af37]" : "text-slate-400"} />
+              <span>Shop &amp; UK Used</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[0.65rem] bg-amber-100 text-amber-950 font-extrabold">
+                4 Shops + UK Used
+              </span>
+            </button>
+
             {(["iphone", "mac", "ipad", "watch", "airpods", "accessories"] as ProductFamilyKey[]).map((key) => {
               const dept = departments[key] || CATEGORY_DEPARTMENTS[key];
               const isSelected = selectedDeptKey === key;
@@ -740,12 +801,13 @@ export function AdminStorefrontManager() {
       </div>
 
       {/* 3. Step 2: Store Section Tabs */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-          2. Select Store Section to Manage
-        </label>
+      {selectedDeptKey !== "shop-experience" && (
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+            2. Select Store Section to Manage
+          </label>
 
-        {selectedDeptKey === "main-store" ? (
+          {selectedDeptKey === "main-store" ? (
           <div className="w-full overflow-x-auto scrollbar-none pb-1">
             <div className="flex items-center gap-2 border-b border-slate-200 pb-2 min-w-max">
               {(
@@ -1065,6 +1127,43 @@ export function AdminStorefrontManager() {
           </div>
         )}
       </div>
+      )}
+
+      {/* ===================== SHOP EXPERIENCE & INDEPENDENT UK USED CMS ===================== */}
+      {selectedDeptKey === "shop-experience" && (
+        <AdminShopExperienceEditor
+          activeSubTab={
+            activeSection.startsWith("shop:")
+              ? (activeSection.replace("shop:", "") as ShopExperienceAdminSubTab)
+              : "uk-used"
+          }
+          onSelectSubTab={(sub) => setActiveSection(`shop:${sub}`)}
+          config={shopExperienceConfig}
+          onChange={setShopExperienceConfig}
+          hasDraft={Boolean(shopExperienceDraft)}
+          products={products}
+          activeProducts={activeProducts}
+          saveProduct={saveProduct}
+          onSaveDraft={async () => {
+            const saved = await saveShopExperienceDraftConfig(shopExperienceConfig);
+            setShopExperienceConfigRaw(saved);
+          }}
+          onPublish={async () => {
+            const published = await updateShopExperience(shopExperienceConfig);
+            hasLocalShopExperienceEdits.current = false;
+            setShopExperienceConfigRaw(published);
+          }}
+          onDiscardDraft={async () => {
+            await discardShopExperienceDraftConfig();
+            hasLocalShopExperienceEdits.current = false;
+            setShopExperienceConfigRaw(cmsShopExperience || defaultShopExperienceConfig);
+          }}
+          onUploadMedia={uploadMedia}
+          onOpenMediaPicker={(onSelect) =>
+            setMediaPickerTarget({ type: "custom-callback", onSelect })
+          }
+        />
+      )}
 
       {/* ===================== MAIN STORE PAGE EDITORS ===================== */}
       {selectedDeptKey === "main-store" && (
@@ -1669,7 +1768,7 @@ export function AdminStorefrontManager() {
       )}
 
       {/* ===================== SECTION 1: FEATURED SHOWCASE CARDS (DEPARTMENTS) ===================== */}
-      {selectedDeptKey !== "main-store" && selectedDeptKey !== "mac" && selectedDeptKey !== "ipad" && selectedDeptKey !== "iphone" && selectedDeptKey !== "watch" && selectedDeptKey !== "airpods" && selectedDeptKey !== "accessories" && activeSection === "featured" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "shop-experience" && selectedDeptKey !== "mac" && selectedDeptKey !== "ipad" && selectedDeptKey !== "iphone" && selectedDeptKey !== "watch" && selectedDeptKey !== "airpods" && selectedDeptKey !== "accessories" && activeSection === "featured" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
@@ -1839,7 +1938,7 @@ export function AdminStorefrontManager() {
       )}
 
       {/* ===================== SECTION 2: ALL PRODUCT LISTINGS ===================== */}
-      {selectedDeptKey !== "main-store" && activeSection === "listings" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "shop-experience" && activeSection === "listings" && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -2079,7 +2178,7 @@ export function AdminStorefrontManager() {
       )}
 
       {/* ===================== SECTION 3: ESSENTIAL ACCESSORIES ===================== */}
-      {selectedDeptKey !== "main-store" && activeSection === "accessories" && (
+      {selectedDeptKey !== "main-store" && selectedDeptKey !== "shop-experience" && activeSection === "accessories" && (
         <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>

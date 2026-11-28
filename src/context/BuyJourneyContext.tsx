@@ -9,11 +9,14 @@ import { orderRequestWhatsAppUrl } from "../utils/whatsapp";
 import { cartItemKey } from "./cartOperations";
 import { useCart } from "./CartContext";
 
+export type GhanaPaymentPreference = "momo" | "pickup" | "delivery";
+
 export interface CustomerDraft {
   fullName: string;
   whatsapp: string;
   email: string;
   fulfilmentType: FulfilmentType;
+  paymentPreference: GhanaPaymentPreference;
   region: string;
   city: string;
   deliveryAddress: string;
@@ -47,6 +50,7 @@ const initialCustomer: CustomerDraft = {
   whatsapp: "",
   email: "",
   fulfilmentType: "pickup",
+  paymentPreference: "pickup",
   region: DEFAULT_GHANA_REGION,
   city: "",
   deliveryAddress: "",
@@ -57,15 +61,27 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const BuyJourneyContext = createContext<BuyJourneyValue | null>(null);
 
+function resolvePaymentPreference(
+  raw: unknown,
+  fulfilment: FulfilmentType
+): GhanaPaymentPreference {
+  if (raw === "momo") return "momo";
+  if (raw === "pickup" && fulfilment === "pickup") return "pickup";
+  if (raw === "delivery" && fulfilment === "delivery") return "delivery";
+  return fulfilment === "pickup" ? "pickup" : "momo";
+}
+
 function readCustomerDraft(): CustomerDraft {
   try {
     const stored = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
     if (!stored || typeof stored !== "object") return initialCustomer;
+    const fulfilmentType: FulfilmentType = stored.fulfilmentType === "delivery" ? "delivery" : "pickup";
     return {
       fullName: typeof stored.fullName === "string" ? stored.fullName : "",
       whatsapp: typeof stored.whatsapp === "string" ? stored.whatsapp : "",
       email: typeof stored.email === "string" ? stored.email : "",
-      fulfilmentType: stored.fulfilmentType === "delivery" ? "delivery" : "pickup",
+      fulfilmentType,
+      paymentPreference: resolvePaymentPreference(stored.paymentPreference, fulfilmentType),
       region:
         typeof stored.region === "string" && stored.region.trim()
           ? stored.region
@@ -105,6 +121,21 @@ export function validateCustomerDraft(customer: CustomerDraft, quantity: number)
 export function customerDraftToOrderDetails(customer: CustomerDraft): OrderCustomerDetails {
   const whatsapp = cleanCustomerPhone(customer.whatsapp ?? "");
   const resolvedRegion = (customer.region || DEFAULT_GHANA_REGION).trim();
+  const paymentPref = resolvePaymentPreference(customer.paymentPreference, customer.fulfilmentType);
+  const preferredPaymentMethod: OrderCustomerDetails["preferredPaymentMethod"] =
+    paymentPref === "pickup" ? "Pay on Pickup" : "Mobile Money on Confirmation";
+
+  const baseNote = (customer.additionalNote ?? "").trim();
+  const podTag = "[Payment Arrangement: Pay on Delivery — Cash or Mobile Money upon inspection]";
+  const finalNote =
+    paymentPref === "delivery"
+      ? baseNote
+        ? baseNote.includes("Pay on Delivery")
+          ? baseNote
+          : `${baseNote}\n${podTag}`
+        : podTag
+      : baseNote || undefined;
+
   return {
     fullName: (customer.fullName ?? "").trim(),
     phone: whatsapp,
@@ -114,8 +145,8 @@ export function customerDraftToOrderDetails(customer: CustomerDraft): OrderCusto
     region: customer.fulfilmentType === "delivery" ? resolvedRegion : undefined,
     city: customer.fulfilmentType === "delivery" ? (customer.city ?? "").trim() : undefined,
     deliveryAddress: customer.fulfilmentType === "delivery" ? (customer.deliveryAddress ?? "").trim() : undefined,
-    preferredPaymentMethod: customer.fulfilmentType === "pickup" ? "Pay on Pickup" : "Mobile Money on Confirmation",
-    additionalNote: (customer.additionalNote ?? "").trim() || undefined,
+    preferredPaymentMethod,
+    additionalNote: finalNote,
   };
 }
 
@@ -158,13 +189,20 @@ export function BuyJourneyProvider({ children }: { children: React.ReactNode }) 
   const editingItem = useMemo(() => items.find((item) => cartEditKey(item) === editingKey || cartItemKey(item) === editingKey) ?? null, [editingKey, items]);
 
   const updateCustomer: BuyJourneyValue["updateCustomer"] = (field, value) => {
-    setCustomer((current) => ({
-      ...current,
-      [field]: value,
-      ...(field === "fulfilmentType" && value === "delivery" && !current.region.trim()
-        ? { region: DEFAULT_GHANA_REGION }
-        : {}),
-    }));
+    setCustomer((current) => {
+      const next: CustomerDraft = {
+        ...current,
+        [field]: value,
+        ...(field === "fulfilmentType" && value === "delivery" && !current.region.trim()
+          ? { region: DEFAULT_GHANA_REGION }
+          : {}),
+      };
+      if (field === "fulfilmentType") {
+        const nextFulfilment = value as FulfilmentType;
+        next.paymentPreference = resolvePaymentPreference(current.paymentPreference, nextFulfilment);
+      }
+      return next;
+    });
     setErrors((current) => ({ ...current, [field]: undefined }));
     setOrderError("");
   };

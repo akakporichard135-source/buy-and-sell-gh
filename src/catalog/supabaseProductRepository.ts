@@ -2,6 +2,7 @@ import { getSupabaseOrThrow, productImagesBucket, supabase } from "../lib/supaba
 import { assertAdminAal2, isLocalAdminActive } from "../admin/adminAuthorization";
 import type { MainWebsiteSection, Product, ProductCondition, ProductImage, ProductVariant } from "../types/product";
 import { normalizeProduct } from "./productCatalog";
+import { getEffectiveCondition } from "./shopClassification";
 
 export interface VariantRow {
   id: string;
@@ -157,9 +158,18 @@ export const rowToProduct = (row: ProductRow): Product => {
   const isAirpodsPro3 = row.slug === "airpods-pro-3" || row.id === "airpods-pro-3";
   const isIphone18Pro = row.slug === "iphone-18-pro" || row.id === "product-1792163179762";
 
-  const effectiveCondition = isAirpodsPro3 && (row.condition === "To Confirm" || !row.condition)
-    ? "Brand New"
-    : row.condition;
+  const effectiveCondition =
+    isAirpodsPro3 && (row.condition === "To Confirm" || !row.condition)
+      ? "Brand New"
+      : getEffectiveCondition({
+          slug: row.slug,
+          name: row.name,
+          model: row.model,
+          category: row.category,
+          mainWebsiteSection: (row.main_website_section as MainWebsiteSection) || getProductSectionFallback(row),
+          condition: row.condition,
+          tags: row.tags ?? [],
+        });
   const effectiveImages = isAirpodsPro3 && (!row.images || row.images.length === 0)
     ? [{ src: "/products/story/airpods-pro-3-apple.jpg", alt: "AirPods Pro 3" }]
     : (isIphone18Pro && (!row.images || row.images.length === 0)
@@ -449,6 +459,52 @@ export const uploadProductImage = async (file: File, productId: string, onProgre
   const safeName = `${safeBaseName}.${extension}`;
   const safeProductId = productId.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || "product";
   const path = `${safeProductId}/${Date.now()}-${safeName}`;
+  const { error } = await client.storage.from(productImagesBucket).upload(path, file, {
+    cacheControl: "31536000",
+    upsert: false,
+    contentType: file.type,
+  });
+  if (error) throw error;
+  onProgress?.(90);
+  const { data } = client.storage.from(productImagesBucket).getPublicUrl(path);
+  onProgress?.(100);
+  return { src: data.publicUrl, alt };
+};
+
+/**
+ * Dedicated UK Used photograph uploader.
+ * Strictly stores photographs inside `uk-used/<product-slug>/...` in the product-images bucket
+ * so Brand New image files and assignments are NEVER touched or overwritten.
+ */
+export const uploadUkUsedProductImage = async (
+  file: File,
+  productSlugOrId: string,
+  onProgress?: (progress: number) => void
+): Promise<ProductImage> => {
+  await assertAdminAal2();
+  const client = getSupabaseOrThrow();
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+  const maxBytes = 5 * 1024 * 1024;
+  if (!allowedTypes.includes(file.type)) throw new Error("Use JPEG, PNG, WebP or AVIF photographs only.");
+  if (file.size > maxBytes) throw new Error("UK Used photograph must be 5MB or smaller.");
+  if (!(await hasValidImageSignature(file))) throw new Error("The selected file does not contain a valid supported image.");
+
+  onProgress?.(10);
+  const alt = file.name.replace(/\.[^.]+$/, "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 120) || "UK Used product photo";
+  if (isLocalAdminActive()) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Could not read uploaded UK Used photograph."));
+      reader.readAsDataURL(file);
+    });
+    onProgress?.(100);
+    return { src: dataUrl, alt };
+  }
+  const extension = imageExtensions[file.type as keyof typeof imageExtensions];
+  const safeBaseName = file.name.toLowerCase().replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "uk-used-photo";
+  const safeSlug = productSlugOrId.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || "unit";
+  const path = `uk-used/${safeSlug}/${Date.now()}-${safeBaseName}.${extension}`;
   const { error } = await client.storage.from(productImagesBucket).upload(path, file, {
     cacheControl: "31536000",
     upsert: false,

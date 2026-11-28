@@ -23,6 +23,7 @@ export interface PublishedSyncMessage {
     | "watch-page"
     | "airpods-page"
     | "accessories-page"
+    | "shop-experience"
     | "media";
   id?: string;
   timestamp: number;

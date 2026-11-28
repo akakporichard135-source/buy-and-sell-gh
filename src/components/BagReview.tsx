@@ -20,14 +20,39 @@ import { cartItemKey, getItemEffectivePrice } from "../context/cartOperations";
 import type { CartItem } from "../types/product";
 import { formatGhs } from "../utils/format";
 import { resolveCartItemThumbnail } from "../utils/cartThumbnail";
+import { getEffectiveCondition, isUkUsedProduct } from "../catalog/shopClassification";
 import "../styles/apple-bag-checkout.css";
 
 function itemImage(item: CartItem): string {
   return resolveCartItemThumbnail(item);
 }
 
+const OPTION_LABEL_MAP: Record<string, string> = {
+  screenSize: "Display",
+  caseSize: "Case Size",
+  chip: "Chip",
+  memory: "Memory",
+  connectivity: "Connectivity",
+  bandStyle: "Band",
+  bandColor: "Band Colour",
+  bandSize: "Band Size",
+  tradeIn: "Trade-In",
+};
+
 function optionLabel(key: string): string {
+  if (OPTION_LABEL_MAP[key]) return OPTION_LABEL_MAP[key];
   return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (letter) => letter.toUpperCase());
+}
+
+function getStructuredCartOptions(item: CartItem): Array<[string, string]> {
+  const skip = new Set(["storage", "color", "finish", "model", "condition"]);
+  return Object.entries(item.options ?? {}).filter(([name, value]) => {
+    if (!value || !value.trim()) return false;
+    const lower = name.toLowerCase();
+    if (skip.has(lower)) return false;
+    if (lower === "tradein" && value.toLowerCase() === "no") return false;
+    return true;
+  });
 }
 
 export function BagReview() {
@@ -73,13 +98,12 @@ export function BagReview() {
           const isGift = Boolean((item as any).isFreeGift);
           const promoDiscount = (item as any).promotionalDiscount || 0;
           const effectivePrice = isGift ? 0 : getItemEffectivePrice(item);
-          const rawItemPrice = (item as any).originalPrice || item.product.price;
-          const options = Object.entries(item.options ?? {}).filter(
-            ([name, value]) => value && !["storage", "color", "finish"].includes(name.toLowerCase())
-          );
+          const itemCondition = item.options?.condition || getEffectiveCondition(item.product);
+          const itemIsUkUsed = isUkUsedProduct(item.product) || /uk used|used|excellent|very good/i.test(itemCondition);
+          const options = getStructuredCartOptions(item);
 
           return (
-            <article className={`apple-bag-item ${isGift ? "is-free-gift-item" : ""}`} key={key}>
+            <article className={`apple-bag-item ${isGift ? "is-free-gift-item" : ""}`} key={key} data-testid="bag-line-item">
               <div className="apple-bag-item-image">
                 {image ? (
                   <img key={image} src={image} alt={item.product.name} loading="lazy" />
@@ -91,14 +115,25 @@ export function BagReview() {
               <div className="apple-bag-item-content">
                 <div className="apple-bag-item-top">
                   <div>
-                    {isGift && (
-                      <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.75rem", fontWeight: 700, padding: "2px 8px", borderRadius: 999, marginBottom: 4 }}>
-                        Free Promotional Gift
-                      </span>
-                    )}
+                    <div className="apple-bag-item-badges">
+                      {isGift && (
+                        <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.75rem", fontWeight: 700, padding: "2px 8px", borderRadius: 999 }}>
+                          Free Promotional Gift
+                        </span>
+                      )}
+                      {!isGift && (
+                        <span className={`apple-bag-condition-pill ${itemIsUkUsed ? "is-uk-used" : "is-brand-new"}`}>
+                          {itemIsUkUsed
+                            ? itemCondition.toLowerCase() === "uk used"
+                              ? "UK Used"
+                              : `UK Used · ${itemCondition}`
+                            : "Brand New"}
+                        </span>
+                      )}
+                    </div>
                     <h3 className="apple-bag-item-name">{item.product.name}</h3>
                     <p className="apple-bag-item-specs">
-                      {[item.storage, item.color, item.product.condition].filter(Boolean).join(" · ")}
+                      {[item.storage, item.color].filter(Boolean).join(" · ")}
                     </p>
                     {item.product.includedItems && item.product.includedItems.length > 0 && (
                       <div className="bundle-included-items" style={{ marginTop: 6, fontSize: "0.82rem", color: "#475569", background: "#f8fafc", padding: "6px 10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
@@ -111,11 +146,11 @@ export function BagReview() {
                       </div>
                     )}
                     {options.length > 0 && (
-                      <dl className="bag-line-options" style={{ marginTop: 6, fontSize: "0.82rem", color: "#6e6e73" }}>
+                      <dl className="apple-bag-spec-pills bag-line-options">
                         {options.map(([name, value]) => (
-                          <div key={name} style={{ display: "flex", gap: 4 }}>
-                            <dt style={{ fontWeight: 500 }}>{optionLabel(name)}:</dt>
-                            <dd style={{ margin: 0 }}>{value}</dd>
+                          <div key={name} className="apple-bag-spec-pill">
+                            <dt>{optionLabel(name)}:</dt>
+                            <dd>{value}</dd>
                           </div>
                         ))}
                       </dl>
@@ -339,6 +374,9 @@ export function BagDrawer() {
                 const isGift = Boolean((item as any).isFreeGift);
                 const promoDiscount = (item as any).promotionalDiscount || 0;
                 const effectivePrice = isGift ? 0 : getItemEffectivePrice(item);
+                const drawerOptions = getStructuredCartOptions(item);
+                const drawerCondition = item.options?.condition || getEffectiveCondition(item.product);
+                const drawerIsUkUsed = isUkUsedProduct(item.product) || /uk used|used|excellent|very good/i.test(drawerCondition);
 
                 return (
                   <article className={`apple-bag-item ${isGift ? "is-free-gift-item" : ""}`} key={key} style={{ padding: "16px 0" }}>
@@ -353,15 +391,31 @@ export function BagDrawer() {
                     <div className="apple-bag-item-content">
                       <div className="apple-bag-item-top">
                         <div>
-                          {isGift && (
-                            <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 6px", borderRadius: 999, marginBottom: 2 }}>
-                              Free Gift
-                            </span>
-                          )}
+                          <div className="apple-bag-item-badges">
+                            {isGift ? (
+                              <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 6px", borderRadius: 999 }}>
+                                Free Gift
+                              </span>
+                            ) : (
+                              <span className={`apple-bag-condition-pill ${drawerIsUkUsed ? "is-uk-used" : "is-brand-new"}`}>
+                                {drawerIsUkUsed ? "UK Used" : "Brand New"}
+                              </span>
+                            )}
+                          </div>
                           <h4 className="apple-bag-item-name" style={{ fontSize: "1.05rem" }}>{item.product.name}</h4>
                           <p className="apple-bag-item-specs" style={{ fontSize: "0.85rem" }}>
                             {[item.storage, item.color].filter(Boolean).join(" · ")}
                           </p>
+                          {drawerOptions.length > 0 && (
+                            <dl className="apple-bag-spec-pills is-compact">
+                              {drawerOptions.slice(0, 5).map(([name, value]) => (
+                                <div key={name} className="apple-bag-spec-pill">
+                                  <dt>{optionLabel(name)}:</dt>
+                                  <dd>{value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          )}
                           {item.product.includedItems && item.product.includedItems.length > 0 && (
                             <div style={{ marginTop: 4, fontSize: "0.76rem", color: "#64748b" }}>
                               <strong>Includes:</strong> {item.product.includedItems.join(" • ")}

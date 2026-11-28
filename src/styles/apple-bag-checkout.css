@@ -234,12 +234,89 @@
   gap: 16px;
 }
 
+.apple-bag-item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.apple-bag-condition-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  width: fit-content;
+}
+
+.apple-bag-condition-pill.is-xs {
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  margin-bottom: 2px;
+}
+
+.apple-bag-condition-pill.is-brand-new {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.apple-bag-condition-pill.is-uk-used {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.apple-bag-spec-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.apple-bag-spec-pills.is-compact {
+  margin-top: 6px;
+  gap: 4px;
+}
+
+.apple-bag-spec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f5f5f7;
+  border: 1px solid #e5e5ea;
+  font-size: 0.78rem;
+  color: #1d1d1f;
+}
+
+.apple-bag-spec-pills.is-compact .apple-bag-spec-pill {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+}
+
+.apple-bag-spec-pill dt {
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+.apple-bag-spec-pill dd {
+  margin: 0;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
 .apple-bag-action-btn {
   border: none;
   background: transparent;
-  color: #0071e3;
+  color: #9a6f08;
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   padding: 0;
   display: inline-flex;
@@ -251,7 +328,7 @@
 
 .apple-bag-action-btn:hover {
   text-decoration: underline;
-  color: #0077ed;
+  color: #7c5805;
 }
 
 .apple-bag-action-btn.is-danger {
@@ -321,10 +398,10 @@
 .apple-checkout-btn-primary {
   width: 100%;
   min-height: 52px;
-  background: #0071e3;
-  color: #ffffff;
+  background: var(--brand-gold, #d8a72d);
+  color: #111111;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 980px;
   border: none;
   cursor: pointer;
@@ -333,14 +410,14 @@
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.28);
+  box-shadow: 0 4px 14px rgba(216, 167, 45, 0.28);
   transition: all 0.18s ease;
 }
 
 .apple-checkout-btn-primary:hover {
-  background: #0077ed;
+  background: var(--brand-gold-hover, #e0b43c);
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 113, 227, 0.35);
+  box-shadow: 0 6px 18px rgba(216, 167, 45, 0.38);
 }
 
 .apple-checkout-btn-primary.is-gold {
@@ -368,9 +445,9 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: #0071e3;
+  color: #9a6f08;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   transition: color 0.15s ease;
 }
@@ -541,8 +618,8 @@
 .apple-checkout-input:focus,
 .apple-checkout-select:focus,
 .apple-checkout-textarea:focus {
-  border-color: #0071e3;
-  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.16);
+  border-color: #c59f27;
+  box-shadow: 0 0 0 3px rgba(216, 167, 45, 0.2);
 }
 
 .apple-checkout-field.has-error .apple-checkout-input,
@@ -572,7 +649,7 @@
 .apple-checkout-checkbox-row input {
   width: 18px;
   height: 18px;
-  accent-color: #0071e3;
+  accent-color: #c59f27;
   cursor: pointer;
 }
 
@@ -655,8 +732,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(0, 113, 227, 0.1);
-  color: #0071e3;
+  background: rgba(216, 167, 45, 0.14);
+  color: #9a6f08;
   display: flex;
   align-items: center;
   justify-content: center;
