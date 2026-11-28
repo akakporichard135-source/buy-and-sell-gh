@@ -1883,3 +1883,70 @@ export interface AccessoriesPageConfig {
   hasDraft?: boolean;
   updatedAt?: string;
 }
+
+/* ============================================================================
+   APPLE-STYLE SHOP EXPERIENCE & INDEPENDENT UK USED CMS SCHEMA
+   (Mac + iPad + iPhone + Apple Watch Shop Hubs, Search, Configurator & UK Used)
+   ============================================================================ */
+
+export type ShopCategoryKey = "mac" | "ipad" | "iphone" | "watch";
+
+export interface ShopWaysToBuyCard {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  ctaLabel: string;
+  ctaTo: string;
+  tone: "light" | "gold" | "dark";
+}
+
+export interface ShopCategoryExperienceConfig {
+  heading: string;
+  subtitle: string;
+  promoRibbonText: string;
+  promoRibbonLinkLabel: string;
+  promoRibbonLinkTo: string;
+  searchPlaceholder: string;
+  specialistLabel: string;
+  specialistTo: string;
+  showroomLabel: string;
+  showroomTo: string;
+  modelsHeading: string;
+  modelsSubheading: string;
+  ukUsedHeading: string;
+  ukUsedSubheading: string;
+  accessoriesHeading: string;
+  accessoriesSubheading: string;
+  accessoriesEditorialTitle: string;
+  accessoriesEditorialDesc: string;
+  accessoriesEditorialImage: string;
+  showUkUsedSection: boolean;
+  showAccessoriesSection: boolean;
+  showWaysToBuySection: boolean;
+  showOnlyAtSection: boolean;
+  familyOrder: string[];
+  hiddenFamilyIds: string[];
+  curatedAccessorySlugs: string[];
+  waysToBuyCards: ShopWaysToBuyCard[];
+}
+
+export interface UkUsedProductOverride {
+  productIdOrSlug: string;
+  /** Independent UK Used photographs (separate from Brand New product image assignments) */
+  customImages: Array<{ src: string; alt: string }>;
+  displayOrder?: number;
+  visible?: boolean;
+  gradeNote?: string;
+  batteryHealthNote?: string;
+  updatedAt?: string;
+}
+
+export interface ShopExperienceConfig {
+  version?: number;
+  categories: Record<ShopCategoryKey, ShopCategoryExperienceConfig>;
+  /** Keyed by product.id or product.slug for independent UK Used photo & visibility management */
+  ukUsedOverrides: Record<string, UkUsedProductOverride>;
+  hasDraft?: boolean;
+  updatedAt?: string;
+}

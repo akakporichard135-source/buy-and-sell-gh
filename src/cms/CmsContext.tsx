@@ -18,6 +18,7 @@ import {
   discardWatchPageDraft,
   discardAirpodsPageDraft,
   discardAccessoriesPageDraft,
+  discardShopExperienceDraft,
   discardMacPageDraft,
   discardMainStoreDraft,
   fetchFaqs,
@@ -34,6 +35,8 @@ import {
   fetchAirpodsPageDraft,
   fetchAccessoriesPageContent,
   fetchAccessoriesPageDraft,
+  fetchShopExperienceContent,
+  fetchShopExperienceDraft,
   fetchMacPageContent,
   fetchMacPageDraft,
   fetchMainStoreContent,
@@ -56,6 +59,8 @@ import {
   getInitialAirpodsPageDraft,
   getInitialAccessoriesPageContent,
   getInitialAccessoriesPageDraft,
+  getInitialShopExperienceContent,
+  getInitialShopExperienceDraft,
   getInitialMacPageContent,
   getInitialMacPageDraft,
   getInitialMainStoreContent,
@@ -80,6 +85,8 @@ import {
   saveAirpodsPageDraft,
   saveAccessoriesPageContent,
   saveAccessoriesPageDraft,
+  saveShopExperienceContent,
+  saveShopExperienceDraft,
   saveMacPageContent,
   saveMacPageDraft,
   saveMainStoreContent,
@@ -101,6 +108,7 @@ import type {
   WatchPageConfig,
   AirpodsPageConfig,
   AccessoriesPageConfig,
+  ShopExperienceConfig,
   MacPageConfig,
   MainStoreConfig,
   MediaItem,
@@ -127,6 +135,8 @@ interface CmsContextValue {
   airpodsPageDraft: AirpodsPageConfig | null;
   accessoriesPage: AccessoriesPageConfig;
   accessoriesPageDraft: AccessoriesPageConfig | null;
+  shopExperience: ShopExperienceConfig;
+  shopExperienceDraft: ShopExperienceConfig | null;
   media: MediaItem[];
   faqs: FaqItem[];
   pages: PageContentRegistry;
@@ -161,6 +171,9 @@ interface CmsContextValue {
   updateAccessoriesPage: (config: AccessoriesPageConfig) => Promise<AccessoriesPageConfig>;
   saveAccessoriesPageDraftConfig: (config: AccessoriesPageConfig) => Promise<AccessoriesPageConfig>;
   discardAccessoriesPageDraftConfig: () => Promise<void>;
+  updateShopExperience: (config: ShopExperienceConfig) => Promise<ShopExperienceConfig>;
+  saveShopExperienceDraftConfig: (config: ShopExperienceConfig) => Promise<ShopExperienceConfig>;
+  discardShopExperienceDraftConfig: () => Promise<void>;
   uploadMedia: (
     file: File,
     category?: MediaItem["category"],
@@ -259,6 +272,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
   const [airpodsPageDraft, setAirpodsPageDraft] = useState<AirpodsPageConfig | null>(() => getInitialAirpodsPageDraft());
   const [accessoriesPage, setAccessoriesPage] = useState<AccessoriesPageConfig>(() => getInitialAccessoriesPageContent());
   const [accessoriesPageDraft, setAccessoriesPageDraft] = useState<AccessoriesPageConfig | null>(() => getInitialAccessoriesPageDraft());
+  const [shopExperience, setShopExperience] = useState<ShopExperienceConfig>(() => getInitialShopExperienceContent());
+  const [shopExperienceDraft, setShopExperienceDraft] = useState<ShopExperienceConfig | null>(() => getInitialShopExperienceDraft());
   const [media, setMedia] = useState<MediaItem[]>(() => getInitialMediaLibrary());
   const [faqs, setFaqs] = useState<FaqItem[]>(() => getInitialFaqs());
   const [pages, setPages] = useState<PageContentRegistry>(() => getInitialPageContent());
@@ -326,7 +341,10 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
       withTimeoutFallback(fetchAccessoriesPageContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialAccessoriesPageContent(), (v) =>
         startTransition(() => setAccessoriesPage(v))
       ),
-    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes, ipadRes, iphoneRes, watchRes, airpodsRes, accRes]) => {
+      withTimeoutFallback(fetchShopExperienceContent(), PUBLIC_CMS_TIMEOUT_MS, getInitialShopExperienceContent(), (v) =>
+        startTransition(() => setShopExperience(v))
+      ),
+    ]).then(([sRes, fRes, pRes, dRes, msRes, macRes, ipadRes, iphoneRes, watchRes, airpodsRes, accRes, shopRes]) => {
       startTransition(() => {
         if (sRes.status === "fulfilled") setSettings(sRes.value);
         if (fRes.status === "fulfilled") setFaqs(fRes.value);
@@ -339,6 +357,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         if (watchRes.status === "fulfilled") setWatchPage(watchRes.value);
         if (airpodsRes.status === "fulfilled") setAirpodsPage(airpodsRes.value);
         if (accRes.status === "fulfilled") setAccessoriesPage(accRes.value);
+        if (shopRes.status === "fulfilled") setShopExperience(shopRes.value);
       });
     });
 
@@ -355,7 +374,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
           fetchWatchPageDraft(),
           fetchAirpodsPageDraft(),
           fetchAccessoriesPageDraft(),
-        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes, ipadDraftRes, iphoneDraftRes, watchDraftRes, airpodsDraftRes, accDraftRes]) => {
+          fetchShopExperienceDraft(),
+        ]).then(([hDraftRes, hLegacyDraftRes, mRes, msDraftRes, macDraftRes, ipadDraftRes, iphoneDraftRes, watchDraftRes, airpodsDraftRes, accDraftRes, shopDraftRes]) => {
           startTransition(() => {
             if (hDraftRes.status === "fulfilled") setHomepageDraft(hDraftRes.value);
             if (hLegacyDraftRes.status === "fulfilled") setHomepageLegacyDraft(hLegacyDraftRes.value);
@@ -367,6 +387,7 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
             if (watchDraftRes.status === "fulfilled") setWatchPageDraft(watchDraftRes.value);
             if (airpodsDraftRes.status === "fulfilled") setAirpodsPageDraft(airpodsDraftRes.value);
             if (accDraftRes.status === "fulfilled") setAccessoriesPageDraft(accDraftRes.value);
+            if (shopDraftRes.status === "fulfilled") setShopExperienceDraft(shopDraftRes.value);
           });
         })
       : Promise.resolve();
@@ -621,6 +642,24 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
     setAccessoriesPageDraft(null);
   };
 
+  const handleUpdateShopExperience = async (newConfig: ShopExperienceConfig) => {
+    const updated = await saveShopExperienceContent(newConfig);
+    setShopExperience(updated);
+    setShopExperienceDraft(null);
+    return updated;
+  };
+
+  const handleSaveShopExperienceDraft = async (newConfig: ShopExperienceConfig) => {
+    const draft = await saveShopExperienceDraft(newConfig);
+    setShopExperienceDraft(draft);
+    return draft;
+  };
+
+  const handleDiscardShopExperienceDraft = async () => {
+    await discardShopExperienceDraft();
+    setShopExperienceDraft(null);
+  };
+
   return (
     <CmsContext.Provider
       value={{
@@ -642,6 +681,8 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         airpodsPageDraft,
         accessoriesPage,
         accessoriesPageDraft,
+        shopExperience,
+        shopExperienceDraft,
         media,
         faqs,
         pages,
@@ -676,6 +717,9 @@ export function CmsProvider({ children }: { children: React.ReactNode }) {
         updateAccessoriesPage: handleUpdateAccessoriesPage,
         saveAccessoriesPageDraftConfig: handleSaveAccessoriesPageDraft,
         discardAccessoriesPageDraftConfig: handleDiscardAccessoriesPageDraft,
+        updateShopExperience: handleUpdateShopExperience,
+        saveShopExperienceDraftConfig: handleSaveShopExperienceDraft,
+        discardShopExperienceDraftConfig: handleDiscardShopExperienceDraft,
         uploadMedia: handleUploadMedia,
         updateMedia: handleUpdateMedia,
         deleteMedia: handleDeleteMedia,

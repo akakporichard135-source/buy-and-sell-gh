@@ -36,6 +36,7 @@ import { AirpodsPageRenderer } from "../components/store/airpods/AirpodsPageRend
 import { defaultAirpodsPageConfig } from "../cms/airpodsPageDefaults";
 import { AccessoriesPageRenderer } from "../components/store/accessories/AccessoriesPageRenderer";
 import { defaultAccessoriesPageConfig } from "../cms/accessoriesPageDefaults";
+import { AppleShopExperience } from "../components/shop/AppleShopExperience";
 
 export function ProductFamilyPage({
   family,
@@ -142,6 +143,14 @@ export function ProductFamilyPage({
         <AccessoriesPageRenderer />
       </>
     );
+  }
+
+  // Rebuilt Apple-style Shop Hubs for /shop/buy-mac, /shop/buy-ipad, /shop/buy-iphone, /shop/buy-watch
+  if (
+    catalogMode &&
+    (family === "mac" || family === "ipad" || family === "iphone" || family === "watch")
+  ) {
+    return <AppleShopExperience category={family} />;
   }
 
   return (

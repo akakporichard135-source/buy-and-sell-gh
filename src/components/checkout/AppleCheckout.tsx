@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
 import {
+  Banknote,
   ChevronLeft,
   Lock,
   MessageCircle,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Store,
   Truck,
 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
-import { useBuyJourney } from "../../context/BuyJourneyContext";
+import { useBuyJourney, type GhanaPaymentPreference } from "../../context/BuyJourneyContext";
 import { cartItemKey, getItemEffectivePrice } from "../../context/cartOperations";
+import { getEffectiveCondition, isUkUsedProduct } from "../../catalog/shopClassification";
 import { formatGhs } from "../../utils/format";
 import { resolveCartItemThumbnail } from "../../utils/cartThumbnail";
 import type { CartItem } from "../../types/product";
@@ -37,6 +40,30 @@ const GHANA_REGIONS = [
 
 function itemImage(item: CartItem): string {
   return resolveCartItemThumbnail(item);
+}
+
+const CHECKOUT_SPEC_LABELS: Record<string, string> = {
+  screenSize: "Display",
+  caseSize: "Case",
+  chip: "Chip",
+  memory: "RAM",
+  connectivity: "Network",
+  bandStyle: "Band",
+  bandColor: "Band Colour",
+  bandSize: "Size",
+};
+
+function formatCheckoutSpecs(item: CartItem): string[] {
+  const skip = new Set(["storage", "color", "finish", "model", "condition", "tradein"]);
+  return Object.entries(item.options ?? {})
+    .filter(([key, value]) => Boolean(value?.trim()) && !skip.has(key.toLowerCase()))
+    .map(([key, value]) => `${CHECKOUT_SPEC_LABELS[key] || key}: ${value}`);
+}
+
+function paymentArrangementLabel(pref: GhanaPaymentPreference, fulfilment: "pickup" | "delivery"): string {
+  if (pref === "momo") return "Mobile Money (MTN / Telecel / AT)";
+  if (pref === "delivery" && fulfilment === "delivery") return "Pay on Delivery (Inspection First)";
+  return "Payment on Pickup (Dome Pillar 2)";
 }
 
 export function AppleCheckout() {
@@ -147,15 +174,17 @@ export function AppleCheckout() {
               </div>
             </section>
 
-            {/* Step 2: Fulfillment (Store Pickup vs Delivery) */}
-            <section className="apple-checkout-step">
+            {/* Step 2: Fulfilment (Store Pickup vs Delivery) */}
+            <section className="apple-checkout-step" data-testid="checkout-fulfilment-step">
               <div className="apple-checkout-step-header">
                 <span className="apple-checkout-step-num">2.</span>
-                <h3 className="apple-checkout-step-title">Fulfillment Method</h3>
+                <h3 className="apple-checkout-step-title">Fulfilment Method</h3>
               </div>
 
               <div className="apple-checkout-option-cards">
-                <div
+                <button
+                  type="button"
+                  data-testid="fulfilment-pickup"
                   className={`apple-checkout-option-card ${customer.fulfilmentType === "pickup" ? "is-selected" : ""}`}
                   onClick={() => updateCustomer("fulfilmentType", "pickup")}
                 >
@@ -166,20 +195,22 @@ export function AppleCheckout() {
                   <p className="apple-checkout-card-desc">
                     Pick up and inspect your genuine Apple device in Dome Pillar 2, Accra (Near No Visa).
                   </p>
-                </div>
+                </button>
 
-                <div
+                <button
+                  type="button"
+                  data-testid="fulfilment-delivery"
                   className={`apple-checkout-option-card ${customer.fulfilmentType === "delivery" ? "is-selected" : ""}`}
                   onClick={() => updateCustomer("fulfilmentType", "delivery")}
                 >
                   <div className="apple-checkout-card-header">
                     <span className="apple-checkout-card-title">Doorstep Delivery</span>
-                    <Truck size={18} color="#0071e3" />
+                    <Truck size={18} color="#9a6f08" />
                   </div>
                   <p className="apple-checkout-card-desc">
                     Safe rider delivery across Greater Accra &amp; express dispatch across Ghana.
                   </p>
-                </div>
+                </button>
               </div>
 
               {customer.fulfilmentType === "delivery" && (
@@ -243,11 +274,60 @@ export function AppleCheckout() {
               </div>
             </section>
 
-            {/* Step 3: Offline Payment Arrangement Notice */}
-            <section className="apple-checkout-step">
+            {/* Step 3: Ghanaian Payment Arrangement (Strictly separated from Fulfilment) */}
+            <section className="apple-checkout-step" data-testid="checkout-payment-step">
               <div className="apple-checkout-step-header">
                 <span className="apple-checkout-step-num">3.</span>
-                <h3 className="apple-checkout-step-title">Payment &amp; Terms</h3>
+                <h3 className="apple-checkout-step-title">Ghanaian Payment Arrangement</h3>
+              </div>
+
+              <div className="apple-checkout-option-cards">
+                <button
+                  type="button"
+                  data-testid="payment-momo"
+                  className={`apple-checkout-option-card ${customer.paymentPreference === "momo" ? "is-selected" : ""}`}
+                  onClick={() => updateCustomer("paymentPreference", "momo")}
+                >
+                  <div className="apple-checkout-card-header">
+                    <span className="apple-checkout-card-title">Mobile Money</span>
+                    <Smartphone size={18} color="#9a6f08" />
+                  </div>
+                  <p className="apple-checkout-card-desc">
+                    MTN MoMo, Telecel Cash, or AT Money after our Dome team confirms stock and shares your order reference.
+                  </p>
+                </button>
+
+                {customer.fulfilmentType === "pickup" ? (
+                  <button
+                    type="button"
+                    data-testid="payment-pickup"
+                    className={`apple-checkout-option-card ${customer.paymentPreference === "pickup" ? "is-selected" : ""}`}
+                    onClick={() => updateCustomer("paymentPreference", "pickup")}
+                  >
+                    <div className="apple-checkout-card-header">
+                      <span className="apple-checkout-card-title">Payment on Pickup</span>
+                      <Store size={18} color="#9a6f08" />
+                    </div>
+                    <p className="apple-checkout-card-desc">
+                      Inspect and verify your genuine Apple device in person at Dome Pillar 2 before paying via Cash or Mobile Money.
+                    </p>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    data-testid="payment-delivery"
+                    className={`apple-checkout-option-card ${customer.paymentPreference === "delivery" ? "is-selected" : ""}`}
+                    onClick={() => updateCustomer("paymentPreference", "delivery")}
+                  >
+                    <div className="apple-checkout-card-header">
+                      <span className="apple-checkout-card-title">Pay on Delivery</span>
+                      <Banknote size={18} color="#9a6f08" />
+                    </div>
+                    <p className="apple-checkout-card-desc">
+                      Inspect your sealed or verified UK Used device upon doorstep arrival in Greater Accra before paying via Cash or Mobile Money.
+                    </p>
+                  </button>
+                )}
               </div>
 
               <div className="apple-checkout-notice-callout">
@@ -255,9 +335,9 @@ export function AppleCheckout() {
                   <ShieldCheck size={22} />
                 </div>
                 <div className="apple-checkout-notice-body">
-                  <h4>No online payment is required</h4>
+                  <h4>No online card charge — verify before you pay</h4>
                   <p>
-                    Buy &amp; Sell GH does not process online payments. When you submit this order request, our Dome showroom team verifies device stock and contacts you to confirm pickup timing or delivery dispatch.
+                    Buy &amp; Sell GH does not ask for credit/debit cards or process automated charges on this page. Submitting creates an authentic order request; our Dome Pillar 2 team confirms availability and coordinates your selected Ghanaian payment arrangement.
                   </p>
                   <p style={{ marginTop: 6, fontWeight: 600, color: "#1d1d1f" }}>
                     You inspect and verify the physical device before completing payment.
@@ -292,6 +372,9 @@ export function AppleCheckout() {
                   const isGift = Boolean((item as any).isFreeGift);
                   const promoDiscount = (item as any).promotionalDiscount || 0;
                   const effectivePrice = isGift ? 0 : getItemEffectivePrice(item);
+                  const extraSpecs = formatCheckoutSpecs(item);
+                  const itemCondition = item.options?.condition || getEffectiveCondition(item.product);
+                  const itemIsUkUsed = isUkUsedProduct(item.product) || /uk used|used|excellent|very good/i.test(itemCondition);
 
                   return (
                     <div key={key} className={`apple-checkout-mini-item ${isGift ? "is-free-gift-mini" : ""}`}>
@@ -299,15 +382,28 @@ export function AppleCheckout() {
                         {img ? <img key={img} src={img} alt={item.product.name} /> : <ShoppingBag size={20} color="#86868b" />}
                       </div>
                       <div className="apple-checkout-mini-details">
-                        {isGift && (
-                          <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.7rem", fontWeight: 700, padding: "1px 6px", borderRadius: 999, marginBottom: 2 }}>
+                        {isGift ? (
+                          <span style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: "0.7rem", fontWeight: 700, padding: "1px 6px", borderRadius: 999, marginBottom: 2, width: "fit-content" }}>
                             Free Gift
+                          </span>
+                        ) : (
+                          <span className={`apple-bag-condition-pill is-xs ${itemIsUkUsed ? "is-uk-used" : "is-brand-new"}`}>
+                            {itemIsUkUsed
+                              ? itemCondition.toLowerCase() === "uk used"
+                                ? "UK Used"
+                                : `UK Used · ${itemCondition}`
+                              : "Brand New"}
                           </span>
                         )}
                         <h4 className="apple-checkout-mini-title">{item.product.name}</h4>
                         <p className="apple-checkout-mini-specs">
                           {item.quantity} × {[item.storage, item.color].filter(Boolean).join(" · ")}
                         </p>
+                        {extraSpecs.length > 0 && (
+                          <p className="apple-checkout-mini-specs" style={{ color: "#424245" }}>
+                            {extraSpecs.join(" · ")}
+                          </p>
+                        )}
                         {item.product.includedItems && item.product.includedItems.length > 0 && (
                           <div style={{ marginTop: 4, fontSize: "0.74rem", color: "#64748b", lineHeight: 1.3 }}>
                             <strong style={{ color: "#334155" }}>Includes:</strong> {item.product.includedItems.join(" • ")}
@@ -345,8 +441,12 @@ export function AppleCheckout() {
                   </div>
                 )}
                 <div className="apple-bag-summary-row">
-                  <span>Fulfillment</span>
-                  <span>{customer.fulfilmentType === "pickup" ? "Free In-Store Pickup" : "Doorstep Delivery"}</span>
+                  <span>Fulfilment</span>
+                  <span>{customer.fulfilmentType === "pickup" ? "Free In-Store Pickup (Dome Pillar 2)" : "Doorstep Delivery"}</span>
+                </div>
+                <div className="apple-bag-summary-row">
+                  <span>Payment</span>
+                  <span>{paymentArrangementLabel(customer.paymentPreference, customer.fulfilmentType)}</span>
                 </div>
                 <div className="apple-bag-summary-row is-total">
                   <span>Total</span>

@@ -866,6 +866,24 @@ export function AdminProductManager() {
           >
             Out of Stock ({storeCounts.outOfStock})
           </button>
+          <button
+            type="button"
+            onClick={() => setCondition(condition === "UK Used" ? "All" : "UK Used")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
+              condition === "UK Used"
+                ? "bg-amber-700 text-white shadow-sm"
+                : "bg-amber-50 text-amber-900 hover:bg-amber-100"
+            }`}
+          >
+            UK Used Only
+          </button>
+          <Link
+            to="/admin/storefront?dept=shop-experience"
+            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-[#d8a72d]/20 hover:bg-[#d8a72d]/30 text-amber-950 transition inline-flex items-center gap-1"
+          >
+            <ImageIcon size={13} />
+            <span>Shop &amp; UK Used Photo CMS →</span>
+          </Link>
         </div>
       </div>
 
